@@ -1,5 +1,5 @@
-//! # Albert-Test: Scientific Dashboard v2.0.0 (13-Node Evolution)
-//! 
+//! # Albert-Test: Scientific Dashboard v2.1.0 (13-Node Evolution)
+//!
 //! High-fidelity interactive Sandbox for the TIS with real-time telemetry, Smart-Stop, and Scrolling.
 
 use std::io;
@@ -19,7 +19,8 @@ use ratatui::{
     backend::{Backend, CrosstermBackend},
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Clear, Paragraph, Wrap},
+    text::{Line, Span, Text},
+    widgets::{Block, BorderType, Borders, Clear, Paragraph, Wrap},
     Terminal,
 };
 use crossterm::{
@@ -30,22 +31,42 @@ use crossterm::{
 
 const COMMANDS: &[(&str, &str)] = &[
     ("/help",    "list all commands"),
-    ("/prompts", "show the 5 benchmark prompts"),
-    ("/p1",      "fire benchmark prompt 1"),
-    ("/p2",      "fire benchmark prompt 2"),
-    ("/p3",      "fire benchmark prompt 3"),
-    ("/p4",      "fire benchmark prompt 4"),
-    ("/p5",      "fire benchmark prompt 5"),
-    ("/bench",   "run all 5 prompts + auto-export"),
+    ("/prompts", "show all 15 benchmark prompts"),
+    ("/p1",      "Genesis — in the beginning..."),
+    ("/p2",      "EU history — die Geschichte der EU..."),
+    ("/p3",      "TIS — the ternary number system..."),
+    ("/p4",      "fairy tale — once upon a time..."),
+    ("/p5",      "German tech — was ist das ternäre Zahlensystem..."),
+    ("/p6",      "AI Act — EU AI Act entered into force..."),
+    ("/p7",      "German AI — KI verändert die Gesellschaft..."),
+    ("/p8",      "physics — Isaac Newton discovered..."),
+    ("/p9",      "ML — transformer architecture..."),
+    ("/p10",     "German quantum — der Quantencomputer..."),
+    ("/p11",     "MoE — mixture of experts routing..."),
+    ("/p12",     "biology — mitochondria powerhouse..."),
+    ("/p13",     "German Bible — im ersten Buch Mose..."),
+    ("/p14",     "hardware — silicon revolutionized computing..."),
+    ("/p15",     "philosophy — the meaning of life..."),
+    ("/bench",   "run all 15 prompts + auto-export"),
     ("/export",  "export this session to benchmarks/"),
 ];
 
 const BENCH_PROMPTS: &[&str] = &[
     "in the beginning god created the",
-    "User: what language do you speak? Albert:",
-    "die Geschichte der Europäischen Union",
+    "die Geschichte der Europäischen Union begann",
+    "the ternary number system uses three distinct",
     "once upon a time in a kingdom far",
-    "the ternary number system uses three",
+    "was ist das ternäre Zahlensystem und wie funktioniert",
+    "the EU AI Act entered into force on",
+    "die künstliche Intelligenz verändert die Gesellschaft",
+    "Isaac Newton discovered the law of universal gravitation",
+    "the transformer architecture introduced attention mechanisms",
+    "der Quantencomputer nutzt Quantenmechanik um",
+    "mixture of experts models improve efficiency by routing",
+    "the mitochondria is the powerhouse of the",
+    "in der Bibel steht im ersten Buch Mose geschrieben",
+    "silicon has revolutionized computing because it allows",
+    "the meaning of life according to",
 ];
 
 struct BenchResult {
@@ -80,10 +101,11 @@ struct App {
     tokens_to_generate: usize,
     scroll_pos: u16,
     auto_scroll: bool,
+    popup_selected: usize,
 
     // KV-cache decode state
-    need_prefill: bool,   // true on first step after start_generation()
-    kv_seq_pos: usize,    // absolute position of next token to decode
+    need_prefill: bool,
+    kv_seq_pos: usize,
 
     // /bench command state
     bench_mode: bool,
@@ -95,9 +117,9 @@ impl App {
     fn new() -> Self {
         let dev = Device::Cpu;
         let (checkpoint_path, version) = find_latest_checkpoint();
-        
+
         let _metadata = fs::metadata(&checkpoint_path).ok();
-        
+
         let vocab_path = if version.starts_with("v3") { "data/vocab_v3.json" } else { "data/vocab.json" };
         let tokenizer = BpeTokenizer::new(vocab_path);
 
@@ -147,7 +169,7 @@ impl App {
 
         // Pre-ternarize all weights once — avoids re-quantizing on every decode step.
         model.prepare_inference().expect("inference weight cache failed");
-        
+
         let prefix = if version == "v3.0" { "albert" } else { "bible_ternary" };
         let meta_path = format!("models/{}_{}.meta", prefix, version);
         let total_epochs = fs::read_to_string(&meta_path).unwrap_or("0".to_string()).trim().parse::<u32>().unwrap_or(0);
@@ -174,6 +196,7 @@ impl App {
             tokens_to_generate: 0,
             scroll_pos: 0,
             auto_scroll: true,
+            popup_selected: 0,
             need_prefill: false,
             kv_seq_pos: 0,
             bench_mode: false,
@@ -193,11 +216,29 @@ impl App {
         self.messages.push(("User".to_string(), user_msg));
         self.messages.push(("Albert".to_string(), String::new()));
 
-        // Reset KV-cache for new conversation turn.
         self.model.clear_kv_cache();
         self.need_prefill = true;
         self.kv_seq_pos = 0;
 
+        self.is_generating = true;
+        self.tokens_to_generate = 64;
+    }
+
+    // Fire a benchmark prompt without echoing the raw text as a "User:" turn.
+    fn fire_bench_prompt(&mut self, n: usize) {
+        if n >= BENCH_PROMPTS.len() { return; }
+        let prompt = BENCH_PROMPTS[n];
+
+        self.transcript.push_str(&format!("\n[P{}] {}\nAlbert: ", n + 1, prompt));
+
+        self.current_tokens = self.tokenizer.encode(prompt);
+        self.prompt_token_len = self.current_tokens.len();
+        self.messages.push(("Bench".to_string(), format!("P{}", n + 1)));
+        self.messages.push(("Albert".to_string(), String::new()));
+
+        self.model.clear_kv_cache();
+        self.need_prefill = true;
+        self.kv_seq_pos = 0;
         self.is_generating = true;
         self.tokens_to_generate = 64;
     }
@@ -223,7 +264,7 @@ impl App {
             let dims = logits.dims();
             let last_logits = logits.i((0, dims[1] - 1)).unwrap();
 
-            self.kv_seq_pos = context.len(); // next token goes at this position
+            self.kv_seq_pos = context.len();
             self.need_prefill = false;
 
             let pr = candle_nn::ops::softmax(&last_logits, 0).unwrap().to_vec1::<f32>().unwrap();
@@ -248,7 +289,7 @@ impl App {
 
         self.current_tokens.push(next_token);
         self.tokens_to_generate -= 1;
-        
+
         let elapsed = start.elapsed();
         self.token_latency_ms = elapsed.as_millis() as u64;
         if self.token_latency_ms > 0 {
@@ -267,7 +308,7 @@ impl App {
 
             self.transcript.push_str(&delta);
             msg.1 = albert_text;
-            
+
             // Stall detection
             let current_words: Vec<&str> = msg.1.split_whitespace().collect();
             if current_words.len() > 10 {
@@ -283,8 +324,6 @@ impl App {
                 }
             }
         }
-
-        // scroll_pos is computed in ui() when auto_scroll is true
 
         if self.tokens_to_generate == 0 {
             self.is_generating = false;
@@ -304,27 +343,19 @@ impl App {
         match cmd {
             "/help" => {
                 self.transcript.push_str(concat!(
-                    "\n┌─ COMMANDS ─────────────────────────────────┐\n",
-                    "│  /help      list commands                   │\n",
-                    "│  /prompts   show the 5 benchmark prompts    │\n",
-                    "│  /p1..p5    fire one benchmark prompt        │\n",
-                    "│  /bench     run all 5, auto-export results  │\n",
-                    "│  /export    export this session to benchmarks/ │\n",
-                    "└─────────────────────────────────────────────┘\n",
+                    "\n┌─ COMMANDS ──────────────────────────────────────┐\n",
+                    "│  /help      list commands                        │\n",
+                    "│  /prompts   show all 15 benchmark prompts        │\n",
+                    "│  /p1..p15   fire one benchmark prompt            │\n",
+                    "│  /bench     run all 15, auto-export results      │\n",
+                    "│  /export    export this session to benchmarks/   │\n",
+                    "└──────────────────────────────────────────────────┘\n",
                 ));
             }
             "/prompts" => {
                 self.transcript.push_str("\n[BENCHMARK PROMPTS]\n");
                 for (i, p) in BENCH_PROMPTS.iter().enumerate() {
                     self.transcript.push_str(&format!("  /p{}: {}\n", i + 1, p));
-                }
-            }
-            "/p1" | "/p2" | "/p3" | "/p4" | "/p5" => {
-                if let Ok(n) = cmd[2..].parse::<usize>() {
-                    if n >= 1 && n <= BENCH_PROMPTS.len() {
-                        self.input = BENCH_PROMPTS[n - 1].to_string();
-                        self.start_generation();
-                    }
                 }
             }
             "/bench" => {
@@ -334,13 +365,19 @@ impl App {
                 self.transcript.push_str(&format!(
                     "\n━━━ BENCH 1/{} ━━━\n", BENCH_PROMPTS.len()
                 ));
-                self.input = BENCH_PROMPTS[0].to_string();
-                self.start_generation();
+                self.fire_bench_prompt(0);
             }
             "/export" => {
                 match self.export_session() {
                     Ok(path) => self.transcript.push_str(&format!("\n[EXPORT] {}\n", path)),
                     Err(e)   => self.transcript.push_str(&format!("\n[EXPORT ERROR] {}\n", e)),
+                }
+            }
+            _ if cmd.starts_with("/p") => {
+                if let Ok(n) = cmd[2..].parse::<usize>() {
+                    if n >= 1 && n <= BENCH_PROMPTS.len() {
+                        self.fire_bench_prompt(n - 1);
+                    }
                 }
             }
             _ => {
@@ -926,8 +963,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                 app.transcript.push_str(&format!(
                     "\n━━━ BENCH {}/{} ━━━\n", app.bench_step + 1, BENCH_PROMPTS.len()
                 ));
-                app.input = BENCH_PROMPTS[app.bench_step].to_string();
-                app.start_generation();
+                app.fire_bench_prompt(app.bench_step);
             } else {
                 app.bench_mode = false;
                 app.export_bench();
@@ -939,9 +975,15 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
 
         if event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
+                // Popup is active whenever the input starts with '/' and we're not generating.
+                let popup_active = app.input.starts_with('/') && !app.is_generating;
+
                 match key.code {
                     KeyCode::Esc => {
-                        if app.is_generating {
+                        if popup_active {
+                            app.input.clear();
+                            app.popup_selected = 0;
+                        } else if app.is_generating {
                             app.is_generating = false;
                             app.tokens_to_generate = 0;
                             app.bench_mode = false;
@@ -949,14 +991,43 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             return Ok(());
                         }
                     }
-                    KeyCode::Char(c) => {
-                        if !app.is_generating { app.input.push(c); }
+                    KeyCode::Up => {
+                        if popup_active {
+                            app.popup_selected = app.popup_selected.saturating_sub(1);
+                        } else {
+                            app.scroll_pos = app.scroll_pos.saturating_sub(1);
+                            app.auto_scroll = false;
+                        }
                     }
-                    KeyCode::Backspace => {
-                        if !app.is_generating { app.input.pop(); }
+                    KeyCode::Down => {
+                        if popup_active {
+                            let prefix = app.input.as_str();
+                            let match_count = COMMANDS.iter()
+                                .filter(|(cmd, _)| cmd.starts_with(prefix))
+                                .count();
+                            if match_count > 0 {
+                                app.popup_selected = (app.popup_selected + 1).min(match_count - 1);
+                            }
+                        } else {
+                            app.scroll_pos = app.scroll_pos.saturating_add(1);
+                            app.auto_scroll = false;
+                        }
                     }
                     KeyCode::Enter => {
-                        if !app.is_generating {
+                        if popup_active {
+                            let prefix = app.input.as_str();
+                            let matches: Vec<(&str, &str)> = COMMANDS.iter()
+                                .filter(|(cmd, _)| cmd.starts_with(prefix))
+                                .copied()
+                                .collect();
+                            let sel = app.popup_selected.min(matches.len().saturating_sub(1));
+                            if let Some(&(cmd, _)) = matches.get(sel) {
+                                let cmd = cmd.to_string();
+                                app.input.clear();
+                                app.popup_selected = 0;
+                                app.handle_command(&cmd);
+                            }
+                        } else if !app.is_generating {
                             let trimmed = app.input.trim().to_string();
                             if trimmed.starts_with('/') {
                                 app.input.clear();
@@ -966,25 +1037,35 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                             }
                         }
                     }
-                    KeyCode::Up => {
-                        app.scroll_pos = app.scroll_pos.saturating_sub(1);
-                        app.auto_scroll = false;
+                    KeyCode::Char(c) => {
+                        if !app.is_generating {
+                            app.input.push(c);
+                            app.popup_selected = 0;
+                        }
                     }
-                    KeyCode::Down => {
-                        app.scroll_pos = app.scroll_pos.saturating_add(1);
-                        app.auto_scroll = false;
+                    KeyCode::Backspace => {
+                        if !app.is_generating {
+                            app.input.pop();
+                            app.popup_selected = 0;
+                        }
                     }
                     KeyCode::PageUp => {
-                        app.scroll_pos = app.scroll_pos.saturating_sub(10);
-                        app.auto_scroll = false;
+                        if !popup_active {
+                            app.scroll_pos = app.scroll_pos.saturating_sub(10);
+                            app.auto_scroll = false;
+                        }
                     }
                     KeyCode::PageDown => {
-                        app.scroll_pos = app.scroll_pos.saturating_add(10);
-                        app.auto_scroll = false;
+                        if !popup_active {
+                            app.scroll_pos = app.scroll_pos.saturating_add(10);
+                            app.auto_scroll = false;
+                        }
                     }
                     KeyCode::End => {
-                        app.auto_scroll = true;
-                        app.scroll_pos = app.transcript.lines().count() as u16;
+                        if !popup_active {
+                            app.auto_scroll = true;
+                            app.scroll_pos = app.transcript.lines().count() as u16;
+                        }
                     }
                     _ => {}
                 }
@@ -1013,13 +1094,17 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
         )
         .split(area);
 
-    let header = Paragraph::new(format!(" {} | Scientific Dashboard", app.model_id))
-        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(Color::Cyan)))
-        .style(Style::default().add_modifier(Modifier::BOLD));
+    let header = Paragraph::new(format!(" {} | Scientific Dashboard v2.1", app.model_id))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(Color::Cyan))
+        )
+        .style(Style::default().add_modifier(Modifier::BOLD).fg(Color::White));
     f.render_widget(header, chunks[0]);
 
     // Compute scroll offset: when auto-following, anchor to the last line of content.
-    // chunks[1] is the sandbox rect; inner height = total - 2 borders.
     let sandbox_inner_h = chunks[1].height.saturating_sub(2);
     let raw_line_count = app.transcript.lines().count() as u16;
     let scroll_offset = if app.auto_scroll {
@@ -1029,29 +1114,50 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
     };
 
     let scroll_text = if app.auto_scroll {
-        " [AUTO-FOLLOW] ".to_string()
+        " AUTO ".to_string()
     } else {
-        format!(" [SCROLL: {}] ", app.scroll_pos)
+        format!(" L:{} ", app.scroll_pos)
     };
 
     let sandbox = Paragraph::new(app.transcript.as_str())
-        .block(Block::default().borders(Borders::ALL).title(format!(" Sandbox @ Simeon{} ", scroll_text)))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .title(format!(" Sandbox @ Simeon [{}] ", scroll_text.trim()))
+                .border_style(Style::default().fg(Color::DarkGray))
+        )
         .style(Style::default().fg(Color::White))
         .wrap(Wrap { trim: true })
         .scroll((scroll_offset, 0));
     f.render_widget(sandbox, chunks[1]);
 
     let input_title = if app.is_generating && app.bench_mode {
-        " [BENCH — Esc to abort] "
+        " BENCH — Esc to abort "
     } else if app.is_generating {
-        " [THINKING...] (Esc to Stop) "
+        " THINKING  Esc to stop "
+    } else if app.input.starts_with('/') {
+        " COMMAND  ↑↓ navigate  Enter fire  Esc close "
     } else {
-        " Type & Enter  |  /help for commands  |  ↑↓ PgUp/Dn scroll  |  End = follow  |  Esc = quit "
+        " Type & Enter  |  / for commands  |  ↑↓ PgUp/Dn scroll  |  End follow  |  Esc quit "
+    };
+    let input_border_color = if app.input.starts_with('/') && !app.is_generating {
+        Color::Cyan
+    } else if app.is_generating {
+        Color::Yellow
+    } else {
+        Color::DarkGray
     };
     let input = Paragraph::new(app.input.as_str())
-        .block(Block::default().borders(Borders::ALL).title(input_title));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .title(input_title)
+                .border_style(Style::default().fg(input_border_color))
+        );
     f.render_widget(input, chunks[2]);
-    
+
     if !app.is_generating {
         f.set_cursor_position((
             chunks[2].x + app.input.len() as u16 + 1,
@@ -1064,29 +1170,74 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
         .constraints([Constraint::Percentage(33), Constraint::Percentage(33), Constraint::Percentage(34)])
         .split(chunks[3]);
 
-    f.render_widget(Paragraph::new(format!(" Brain: {}", app.checkpoint)).block(Block::default().borders(Borders::ALL).title(" Identity ")), m1_chunks[0]);
-    f.render_widget(Paragraph::new(format!(" Speed: {:.2} tok/s", app.tokens_per_sec)).block(Block::default().borders(Borders::ALL).title(" Performance ")), m1_chunks[1]);
-    f.render_widget(Paragraph::new(format!(" Experts: {}", app.active_experts)).block(Block::default().borders(Borders::ALL).title(" MoE Load ")), m1_chunks[2]);
+    f.render_widget(
+        Paragraph::new(format!(" {}", app.checkpoint))
+            .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title(" Brain ").border_style(Style::default().fg(Color::DarkGray))),
+        m1_chunks[0],
+    );
+    f.render_widget(
+        Paragraph::new(format!(" {:.2} tok/s", app.tokens_per_sec))
+            .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title(" Speed ").border_style(Style::default().fg(Color::DarkGray))),
+        m1_chunks[1],
+    );
+    f.render_widget(
+        Paragraph::new(format!(" {}", app.active_experts))
+            .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title(" MoE Load ").border_style(Style::default().fg(Color::DarkGray))),
+        m1_chunks[2],
+    );
 
     let m2_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(33), Constraint::Percentage(33), Constraint::Percentage(34)])
         .split(chunks[4]);
 
-    f.render_widget(Paragraph::new(format!(" Mileage: {} Epochs", app.total_epochs)).block(Block::default().borders(Borders::ALL).title(" Total Experience ")), m2_chunks[0]);
-    f.render_widget(Paragraph::new(format!(" Load: {:.4} GFLOPS", app.est_gflops)).block(Block::default().borders(Borders::ALL).title(" Intensity ")), m2_chunks[1]);
-    f.render_widget(Paragraph::new(format!(" Latency: {}ms/tok", app.token_latency_ms)).block(Block::default().borders(Borders::ALL).title(" Depth ")), m2_chunks[2]);
+    f.render_widget(
+        Paragraph::new(format!(" {} ep", app.total_epochs))
+            .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title(" Mileage ").border_style(Style::default().fg(Color::DarkGray))),
+        m2_chunks[0],
+    );
+    f.render_widget(
+        Paragraph::new(format!(" {:.4} GFLOPS", app.est_gflops))
+            .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title(" Intensity ").border_style(Style::default().fg(Color::DarkGray))),
+        m2_chunks[1],
+    );
+    f.render_widget(
+        Paragraph::new(format!(" {}ms/tok", app.token_latency_ms))
+            .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title(" Latency ").border_style(Style::default().fg(Color::DarkGray))),
+        m2_chunks[2],
+    );
 
-    // Command autocomplete popup — appears as soon as input starts with '/'.
+    // ── Command popup — navigable, appears when input starts with '/' ────────────
     if app.input.starts_with('/') && !app.is_generating {
         let prefix = app.input.as_str();
         let matches: Vec<(&str, &str)> = COMMANDS.iter()
             .filter(|(cmd, _)| cmd.starts_with(prefix))
             .copied()
             .collect();
+
         if !matches.is_empty() {
-            let popup_h = matches.len() as u16 + 2;
-            let popup_w = 52u16.min(chunks[2].width.saturating_sub(2));
+            let total = matches.len();
+            let sel = app.popup_selected.min(total.saturating_sub(1));
+
+            // Available rows above the input bar (y=0 is top).
+            let available_h = chunks[2].y;
+            // Max item rows = available minus borders; ensure at least 1.
+            let max_items = (available_h.saturating_sub(2)) as usize;
+            let max_items = max_items.max(1);
+
+            // Scrolling viewport: keep selected item visible.
+            let view_start = if total > max_items && sel >= max_items {
+                sel - max_items + 1
+            } else {
+                0
+            };
+            let view_end = (view_start + max_items).min(total);
+            let visible = &matches[view_start..view_end];
+
+            let has_scroll_row = total > max_items;
+            let popup_h = visible.len() as u16 + 2 + if has_scroll_row { 1 } else { 0 };
+            let popup_h = popup_h.min(available_h);
+            let popup_w = 64u16.min(chunks[2].width.saturating_sub(2));
             let popup_y = chunks[2].y.saturating_sub(popup_h);
             let popup_rect = Rect {
                 x: chunks[2].x + 1,
@@ -1094,15 +1245,50 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
                 width: popup_w,
                 height: popup_h,
             };
-            let text: String = matches.iter()
-                .map(|(cmd, desc)| format!("  {:10}  {}", cmd, desc))
-                .collect::<Vec<_>>()
-                .join("\n");
+
+            let mut lines: Vec<Line> = Vec::new();
+            for (vi, &(cmd, desc)) in visible.iter().enumerate() {
+                let abs_idx = view_start + vi;
+                let is_sel = abs_idx == sel;
+                if is_sel {
+                    lines.push(Line::from(vec![
+                        Span::styled(
+                            format!("  {:9}", cmd),
+                            Style::default().fg(Color::Black).bg(Color::Cyan).add_modifier(Modifier::BOLD),
+                        ),
+                        Span::styled(
+                            format!(" {}", desc),
+                            Style::default().fg(Color::Yellow).bg(Color::DarkGray).add_modifier(Modifier::BOLD),
+                        ),
+                    ]));
+                } else {
+                    lines.push(Line::from(vec![
+                        Span::styled(
+                            format!("  {:9}", cmd),
+                            Style::default().fg(Color::Cyan),
+                        ),
+                        Span::styled(
+                            format!(" {}", desc),
+                            Style::default().fg(Color::Gray),
+                        ),
+                    ]));
+                }
+            }
+
+            if has_scroll_row {
+                lines.push(Line::from(Span::styled(
+                    format!("  {}/{} — ↑↓ to scroll", sel + 1, total),
+                    Style::default().fg(Color::DarkGray),
+                )));
+            }
+
+            let text = Text::from(lines);
             f.render_widget(Clear, popup_rect);
             f.render_widget(
                 Paragraph::new(text).block(
                     Block::default()
                         .borders(Borders::ALL)
+                        .border_type(BorderType::Rounded)
                         .title(" COMMANDS ")
                         .border_style(Style::default().fg(Color::Cyan))
                 ),
