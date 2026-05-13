@@ -227,6 +227,13 @@
         .draw-tool-item:hover { background: var(--bg3); }
         .draw-tool-item.active { color: #ffd700; }
         .draw-tool-item.soon { color: var(--muted2); cursor: default; pointer-events: none; }
+        #_noteInput {
+            position: fixed; background: rgba(13,17,23,0.93); color: #ffd700;
+            border: 1px solid rgba(255,215,0,0.55); border-radius: 4px;
+            padding: 3px 8px; font-size: 11px; font-family: "JetBrains Mono", monospace;
+            outline: none; z-index: 9999; min-width: 130px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+        }
         .draw-tool-item small { color: var(--muted2); }
         /* G hotkey — chart-focus mode: hide neural inspector, chart fills full height */
         body.chart-focus #neural-wrap,
@@ -493,7 +500,7 @@
         /* Gradient norm bars (Panel E) */
         #grad-viz {
             display: flex;
-            flex-direction: column;
+            flex-direction: column-reverse;
             gap: 1px;
             flex: 1;
             min-height: 0;
@@ -778,7 +785,7 @@
                 <div class="draw-tool-item" data-tool="hline"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 6h10"/></svg> H-Line <small>resistance / support</small></div>
                 <div class="draw-tool-item" data-tool="vline"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1v10"/></svg> V-Line <small>epoch marker</small></div>
                 <div class="dd-sep"></div>
-                <div class="draw-tool-item soon"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3"><text x="2" y="10" font-size="9" fill="currentColor" stroke="none" font-family="monospace">T</text></svg> Text Note <small>soon</small></div>
+                <div class="draw-tool-item" data-tool="tnote"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3"><text x="2" y="10" font-size="9" fill="currentColor" stroke="none" font-family="monospace">T</text></svg> Text Note</div>
             </div>
         </div>
         <button id="resetBtn" title="Reset zoom"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 2l3 3M10 2L7 5M2 10l3-3M10 10L7 7"/><rect x="4" y="4" width="4" height="4" rx="0.5" stroke-width="1.2"/></svg></button>
@@ -997,11 +1004,13 @@
     let crosshairPos   = null;
     let crosshairRafId = null;
     let drawMode        = false;
-    let drawTool        = 'trendline'; // 'trendline' | 'hline' | 'vline'
+    let drawTool        = 'trendline'; // 'trendline' | 'hline' | 'vline' | 'tnote'
     let pendingLine     = null;       // {x1,y1} data-coords — first endpoint placed
     let trendlines      = [];         // [{x1,y1,x2,y2}]
     let hlines          = [];         // [{y}] — horizontal lines (cyan dashed)
     let vlines          = [];         // [{x}] — vertical lines (violet dashed)
+    let tnotes          = [];         // [{x, y, text}] — text annotations
+    let selectedNoteIdx = null;       // index of selected text note, or null
     let selectedLineIdx = null;       // index of selected trendline, or null
     let hoveredLineIdx  = null;       // index of hovered trendline (visual only)
     let dragState       = null;       // {type:'endpoint'|'body', lineIdx, epIdx?, startDataX, startDataY, origX1, origY1, origX2, origY2}
@@ -1448,10 +1457,41 @@
     Chart.register(crosshairPlugin);
 
     // ── Trendline draw plugin ──────────────────────────────────────────
+    function spawnNoteInput(clientX, clientY, dataX, dataY, editIdx) {
+        const old = document.getElementById('_noteInput');
+        if (old) old.remove();
+        const inp = document.createElement('input');
+        inp.id = '_noteInput';
+        inp.type = 'text';
+        inp.value = editIdx !== null ? tnotes[editIdx].text : '';
+        inp.placeholder = 'type note · Enter';
+        inp.style.left = clientX + 'px';
+        inp.style.top  = (clientY - 28) + 'px';
+        document.body.appendChild(inp);
+        inp.focus();
+        let committed = false;
+        function commit() {
+            if (committed) return; committed = true;
+            const text = inp.value.trim();
+            inp.remove();
+            if (!text) return;
+            if (editIdx !== null) { tnotes[editIdx].text = text; }
+            else { tnotes.push({ x: dataX, y: dataY, text }); }
+            chart.draw();
+        }
+        function cancel() { if (committed) return; committed = true; inp.remove(); }
+        inp.addEventListener('keydown', e => {
+            e.stopPropagation();
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') cancel();
+        });
+        inp.addEventListener('blur', commit);
+    }
+
     const trendlinePlugin = {
         id: 'trendlines',
         afterDraw(chart) {
-            if (!trendlines.length && !pendingLine && !hlines.length && !vlines.length) return;
+            if (!trendlines.length && !pendingLine && !hlines.length && !vlines.length && !tnotes.length) return;
             const { ctx: c2, chartArea: a, scales } = chart;
             c2.save();
             c2.beginPath();
@@ -1543,6 +1583,39 @@
                 c2.fillText(`ep ${Math.round(vl.x)}`, px + 3, a.top + 10);
             }
             c2.setLineDash([]);
+            // Text notes — amber pin dot + label with dark background
+            for (let i = 0; i < tnotes.length; i++) {
+                const tn  = tnotes[i];
+                const npx = scales.x.getPixelForValue(tn.x);
+                const npy = scales.y.getPixelForValue(tn.y);
+                if (npx < a.left || npx > a.right || npy < a.top || npy > a.bottom) continue;
+                const isSel = i === selectedNoteIdx;
+                // Pin dot
+                c2.beginPath();
+                c2.arc(npx, npy, isSel ? 5 : 3.5, 0, Math.PI * 2);
+                c2.fillStyle = isSel ? '#ffd700' : 'rgba(255,215,0,0.75)';
+                c2.fill();
+                if (isSel) {
+                    c2.strokeStyle = '#0d1117'; c2.lineWidth = 1.2; c2.stroke();
+                }
+                // Label with dark pill background
+                c2.font = '10px "JetBrains Mono", monospace';
+                c2.textAlign = 'left'; c2.textBaseline = 'bottom';
+                const tw = c2.measureText(tn.text).width;
+                c2.fillStyle = 'rgba(13,17,23,0.82)';
+                c2.beginPath();
+                c2.roundRect(npx + 7, npy - 17, tw + 8, 15, 3);
+                c2.fill();
+                c2.fillStyle = isSel ? '#ffd700' : 'rgba(255,215,0,0.92)';
+                c2.fillText(tn.text, npx + 11, npy - 4);
+                if (isSel) {
+                    c2.font = '8px "JetBrains Mono", monospace';
+                    c2.fillStyle = 'rgba(255,215,0,0.45)';
+                    c2.textAlign = 'center';
+                    c2.textBaseline = 'top';
+                    c2.fillText('Del to remove', npx, npy + 7);
+                }
+            }
             c2.restore();
         }
     };
@@ -3839,7 +3912,7 @@
     function exitDrawMode() {
         drawMode = false;
         document.getElementById('drawBtn').classList.remove('active');
-        pendingLine = null; selectedLineIdx = null; hoveredLineIdx = null; dragState = null;
+        pendingLine = null; selectedLineIdx = null; hoveredLineIdx = null; dragState = null; selectedNoteIdx = null;
         chart.canvas.style.cursor = 'grab';
         chart.options.plugins.zoom.pan.enabled        = true;
         chart.options.plugins.zoom.zoom.wheel.enabled = true;
@@ -3875,7 +3948,7 @@
             const { chartArea, scales } = chart;
             if (px < chartArea.left || px > chartArea.right || py < chartArea.top || py > chartArea.bottom) return;
 
-            // H-Line / V-Line: single click places immediately
+            // H-Line / V-Line / Text Note: single click places immediately
             if (drawTool === 'hline') {
                 hlines.push({ y: scales.y.getValueForPixel(py) });
                 chart.draw(); return;
@@ -3883,6 +3956,25 @@
             if (drawTool === 'vline') {
                 vlines.push({ x: scales.x.getValueForPixel(px) });
                 chart.draw(); return;
+            }
+            if (drawTool === 'tnote') {
+                // Click near existing note → select it; click empty → spawn input
+                let hitNote = null;
+                for (let i = 0; i < tnotes.length; i++) {
+                    const tn = tnotes[i];
+                    const npx = scales.x.getPixelForValue(tn.x);
+                    const npy = scales.y.getPixelForValue(tn.y);
+                    if (Math.hypot(px - npx, py - npy) < 12) { hitNote = i; break; }
+                }
+                if (hitNote !== null) {
+                    selectedNoteIdx = (selectedNoteIdx === hitNote) ? null : hitNote;
+                    chart.draw();
+                } else {
+                    selectedNoteIdx = null;
+                    spawnNoteInput(e.clientX, e.clientY,
+                        scales.x.getValueForPixel(px), scales.y.getValueForPixel(py), null);
+                }
+                return;
             }
 
             if (pendingLine) {
@@ -3918,7 +4010,26 @@
             chart.draw();
             return;
         }
-        // Outside draw mode: clicking a trendline auto-enters draw mode and selects it
+        // Outside draw mode: clicking a tnote or trendline auto-enters draw mode and selects it
+        if (tnotes.length > 0) {
+            const rect3 = chart.canvas.getBoundingClientRect();
+            const px3 = e.clientX - rect3.left, py3 = e.clientY - rect3.top;
+            const { chartArea: ca3, scales: sc3 } = chart;
+            if (px3 >= ca3.left && px3 <= ca3.right && py3 >= ca3.top && py3 <= ca3.bottom) {
+                for (let i = 0; i < tnotes.length; i++) {
+                    const tn = tnotes[i];
+                    const npx = sc3.x.getPixelForValue(tn.x);
+                    const npy = sc3.y.getPixelForValue(tn.y);
+                    if (Math.hypot(px3 - npx, py3 - npy) < 12) {
+                        drawTool = 'tnote';
+                        enterDrawMode();
+                        selectedNoteIdx = i;
+                        chart.draw();
+                        return;
+                    }
+                }
+            }
+        }
         if (trendlines.length > 0) {
             const rect2 = chart.canvas.getBoundingClientRect();
             const px2 = e.clientX - rect2.left, py2 = e.clientY - rect2.top;
@@ -3982,11 +4093,20 @@
         if (e.key === 'Escape') {
             pendingLine = null;
             selectedLineIdx = null;
+            selectedNoteIdx = null;
+            document.getElementById('_noteInput')?.remove();
             chart.draw();
         } else if (e.key === 'Backspace' || e.key === 'Delete') {
             if (pendingLine) return;
             if (drawTool === 'hline') { hlines.pop(); chart.draw(); return; }
             if (drawTool === 'vline') { vlines.pop(); chart.draw(); return; }
+            if (drawTool === 'tnote') {
+                if (selectedNoteIdx !== null) {
+                    tnotes.splice(selectedNoteIdx, 1);
+                    selectedNoteIdx = null;
+                } else if (tnotes.length) { tnotes.pop(); }
+                chart.draw(); return;
+            }
             if (selectedLineIdx !== null) {
                 trendlines.splice(selectedLineIdx, 1);
                 selectedLineIdx = null;
