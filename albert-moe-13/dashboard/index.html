@@ -686,9 +686,9 @@
             </div>
         </div>
         <select id="viewFilter">
-            <option value="all" selected>ALL</option>
+            <option value="all">ALL</option>
             <option value="200">200 EP</option>
-            <option value="100">100 EP</option>
+            <option value="100" selected>100 EP</option>
             <option value="50">50 EP</option>
             <option value="20">20 EP</option>
             <option value="10">10 EP</option>
@@ -2397,15 +2397,20 @@
             newPointStartIdx = isLive ? merged.length - newPts.length : Infinity;
             chart.update(isLive && !isInteracting ? undefined : 'none');
 
-            // If a live filter is active, advance the viewport with new data (not during pan/zoom)
-            if (!isInteracting) {
+            // Advance viewport with new data (not during pan/zoom)
+            if (!isInteracting && merged.length > 0) {
                 const fv = document.getElementById('viewFilter').value;
-                if (fv !== 'all' && merged.length > 0) {
-                    const maxX = merged[merged.length - 1].x;
+                const maxX = merged[merged.length - 1].x;
+                if (fv !== 'all') {
                     chart.options.scales.x.min = Math.max(0, maxX - parseInt(fv));
                     chart.options.scales.x.max = maxX + 2;
-                    chart.update('none');
+                } else {
+                    // ALL: fit to actual data range — no wild Chart.js future projection
+                    const minX = merged[0].x;
+                    chart.options.scales.x.min = Math.max(0, minX - 2);
+                    chart.options.scales.x.max = maxX + 5;
                 }
+                chart.update('none');
             }
 
             const minPt = newPts.reduce((a, b) => b.y < a.y ? b : a, newPts[newPts.length - 1]);
@@ -2455,9 +2460,10 @@
             const maxX = pts[pts.length - 1].x;
             chart.options.scales.x.min = Math.max(0, maxX - parseInt(fv));
             chart.options.scales.x.max = maxX + 2;
-        } else {
-            chart.options.scales.x.min = undefined;
-            chart.options.scales.x.max = undefined;
+        } else if (pts.length > 0) {
+            // ALL: fit to data extent, no Chart.js future projection
+            chart.options.scales.x.min = Math.max(0, pts[0].x - 2);
+            chart.options.scales.x.max = pts[pts.length - 1].x + 5;
         }
         chart.resetZoom();
         chart.update('none');
