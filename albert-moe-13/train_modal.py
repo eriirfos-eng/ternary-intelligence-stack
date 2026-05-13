@@ -216,9 +216,11 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03):
 
     log_path = "/vol/albert/dashboard/training.log"
 
-    # Note the volume log size before launching — tail_log seeks here so it
-    # streams only the current run's content, not the full volume history.
-    start_pos = os.path.getsize(log_path) if os.path.exists(log_path) else 0
+    # Clear the volume log at the start of each run — prevents unbounded growth
+    # across restarts. The local dashboard log is also cleared by albert-train.
+    with open(log_path, 'w') as _f:
+        pass
+    start_pos = 0
 
     def tail_log(proc):
         while not os.path.exists(log_path):

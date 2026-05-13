@@ -836,9 +836,11 @@
 
     const POLL_MS            = 500;   // T4: ~400ms/batch — one poll per batch
     const MAX_CHART_PTS      = 5000;
+    const INITIAL_WINDOW_BYTES = 512 * 1024; // snap to last 512KB on first load
 
     // ── State ──────────────────────────────────────────────────────────
     let lastBytePos      = 0;   // byte offset into training.log — only fetch new bytes
+    let initialLoad      = true; // true until first successful fetch completes
     let lastLossVal      = null;
     let bestLoss         = Infinity;
     let lastDataMs       = Date.now(); // updated each time poll receives new bytes
@@ -1942,7 +1944,14 @@
     async function poll() {
         try {
             const headers = {};
-            if (lastBytePos > 0) headers['Range'] = `bytes=${lastBytePos}-`;
+            if (initialLoad) {
+                // Snap to tail on first load — avoids replaying the entire log history.
+                // bytes=-N requests the last N bytes; the server responds with the real
+                // byte range so lastBytePos advances correctly for incremental polling.
+                headers['Range'] = `bytes=-${INITIAL_WINDOW_BYTES}`;
+            } else if (lastBytePos > 0) {
+                headers['Range'] = `bytes=${lastBytePos}-`;
+            }
 
             const res = await fetch('training.log?t=' + Date.now(), {
                 cache: 'no-store',
@@ -1957,7 +1966,8 @@
                 if (cr) {
                     const tm = cr.match(/bytes \*\/(\d+)/);
                     if (tm && parseInt(tm[1]) < lastBytePos) {
-                        lastBytePos = 0; // log truncated — re-read from start next poll
+                        lastBytePos = 0;
+                        initialLoad = true; // treat as fresh start
                     }
                 }
                 return;
@@ -1969,7 +1979,7 @@
 
             lastDataMs = Date.now(); // stream watchdog — reset on any new bytes
 
-            // Advance byte position
+            // Advance byte position from Content-Range header (present on all 206 responses)
             if (res.status === 206) {
                 const cr = res.headers.get('Content-Range'); // bytes START-END/TOTAL
                 if (cr) {
@@ -1977,15 +1987,16 @@
                     if (m) lastBytePos = parseInt(m[2]) + 1;
                 }
             } else {
-                // 200 OK (first full load) — advance to current file size
+                // 200 OK — full file (file smaller than INITIAL_WINDOW_BYTES)
                 lastBytePos = new TextEncoder().encode(text).length;
             }
 
             // Parse new lines
             const lines = text.split('\n');
-            // First full-file response (200) = historical replay — suppress event noise.
-            // Partial responses (206) = live incremental data — fire events normally.
-            const isReplay = (res.status === 200);
+            // Suppress event noise during historical replay (initial tail-window load and
+            // any subsequent log-truncation re-reads). Live 206 incremental chunks fire normally.
+            const isReplay = initialLoad;
+            initialLoad = false;
             const liveEvent = (...args) => { if (!isReplay) addEvent(...args); };
             const newPts = [];
             let _routingDirty = false;
