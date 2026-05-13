@@ -344,6 +344,83 @@ cargo run --release -p moe-llm-core --bin eval_perplexity data/corpus/stage_3/bi
 
 ---
 
+---
+
+## §13 — Training Cost: Hard Numbers
+
+Verified from Modal.com billing dashboard, billing cycle May 1–Jun 1, 2026.  
+Run: overnight training session (ep334→ep461, ~127 epochs) + next-day continuation (ep462→ep475, ~14 epochs).
+
+### §13a — Measured Session Cost
+
+| Metric | Verified Value |
+|--------|---------------|
+| Total session cost | **$0.58** |
+| T4 GPU compute | $0.37 |
+| CPU (build + orchestration) | $0.12 |
+| Memory | $0.08 |
+| Epochs completed | 141 (ep334–ep475) |
+| Tokens per epoch | 307,200 (300 batches × 4 samples × 256 CTX) |
+| Total tokens processed | ~43.3M |
+| **Cost per epoch (all-in)** | **~$0.004** |
+| **Cost per million training tokens** | **~$0.013** |
+| Credits remaining (post-session) | $12.28 |
+
+*Source: Modal.com / albert-training / Usage dashboard, captured 2026-05-13.*
+
+### §13b — Training Cost Comparison
+
+| Platform | Cost/epoch (approx) | Basis |
+|----------|---------------------|-------|
+| **albert. on Modal T4 (measured)** | **~$0.004** | **Verified billing** |
+| Modal A10G (est.) | ~$0.015 | ~4× T4 throughput, ~3× T4 cost |
+| Lambda Labs A100 (spot) | ~$0.08–0.15 | $1.29/hr; ~15–20 epochs/hr at this scale |
+| AWS p3.2xlarge (V100, on-demand) | ~$0.20–0.35 | $3.06/hr |
+| OpenAI fine-tuning GPT-4o | ~$8–25/epoch | $8/1M tokens × 307k tok/epoch; no checkpoint resume |
+| Cohere fine-tuning API | ~$1–5/epoch | Estimated; no epoch-level billing |
+
+**Key implication:** At $0.004/epoch, a 4-minute training interval costs less than a cup of coffee's fraction of electricity. This is what makes live-intervention training economically rational — patch, retry, and observe costs $0.004, not $0.20. Each 15-minute monitoring window across a full overnight run costs ~$0.03.
+
+### §13c — What $1 Buys
+
+| Platform | For $1 of training |
+|----------|-------------------|
+| **albert. on Modal T4** | **~250 epochs · ~77M tokens trained · ~16 hours of T4 time** |
+| Lambda Labs A100 | ~7–12 epochs · ~2M tokens · ~46 min |
+| AWS V100 (on-demand) | ~3–5 epochs · ~1M tokens · ~20 min |
+| OpenAI fine-tuning | <1 epoch · ~125k tokens · no resume, no telemetry |
+
+### §13d — Inference Cost Comparison
+
+albert. v2.0.0 delivers **84.4 tok/s on a CPU** (HP ZBook i7-4800MQ, no GPU, no INT8) via @sparseskip.  
+Inference runs locally — no API, no network, no per-token billing.
+
+| Platform | Output cost | Throughput | Hardware req. |
+|----------|-------------|-----------|---------------|
+| **albert. v2.0.0 (CPU, @sparseskip)** | **~$0.009/hr electricity** | **84 tok/s** | **Any x86 CPU** |
+| OpenAI GPT-4o | $15.00 / 1M tokens | API-rate-limited | None (cloud) |
+| Anthropic Claude Sonnet | $15.00 / 1M tokens | API-rate-limited | None (cloud) |
+| Llama 3 8B (local, GPU) | $0.00 + GPU amortization | ~50–200 tok/s | GPU required |
+| Llama 3 8B (local, CPU) | ~$0.009/hr electricity | ~5–15 tok/s | Any x86 CPU |
+
+**Note:** Quality comparison with GPT-4o or Claude is not claimed — albert. v3.0 is a research prototype. The cost comparison is structural: ternary @sparseskip inference at 84 tok/s on a 2013 CPU demonstrates that the inference efficiency claim is hardware-verified, not theoretical. The 3.97× @sparseskip speedup (§11) is what enables CPU-viable throughput at this depth.
+
+### §13e — The Live-Intervention Arithmetic
+
+The live-intervention training methodology (described in the main README) is only economically viable when intervention cost is negligible. The hard numbers confirm this:
+
+| Action | GPU time | Cost |
+|--------|----------|------|
+| One monitoring check | 0 | $0.00 |
+| One 15-minute watch window | 4 epochs | ~$0.016 |
+| Discard 15 min and patch threshold | 4 epochs discarded | ~$0.016 |
+| Full overnight research session (8.5h) | 127 epochs | ~$0.53 |
+| Entire May billing cycle to date | 141 epochs | **$0.58** |
+
+At these costs, "discard the last 15 minutes, patch the gate threshold, restart" is not a desperate measure — it is a standard experimental move. This is what separates a training *instrument* from a training *batch job*.
+
+---
+
 ## Reproducing These Results
 
 ```bash

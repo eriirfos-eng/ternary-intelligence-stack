@@ -88,7 +88,7 @@ const COLLAPSE_STREAK_LIMIT: u32 = 2;
 // then one backward pass covers all N sequences. Mirrors the ternary
 // hold state: withhold the weight update until enough evidence accumulates.
 const GRAD_ACCUM_STEPS: usize = 4;
-const BATCH_SIZE: usize = 13;
+const BATCH_SIZE: usize = 4;   // CTX=256: attention is O(seq²), T4 16GB needs batch ≤ 4
 // Direct LR boost applied after Adam's step for cold layers (norm < THRESHOLD).
 // Adam normalizes away gradient amplification via its second-moment denominator,
 // so we bypass it entirely: a sign-normalized SGD step with lr = current_lr * cold_boost.
