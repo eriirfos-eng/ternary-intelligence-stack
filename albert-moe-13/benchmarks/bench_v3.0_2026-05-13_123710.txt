@@ -1,0 +1,67 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 558 epochs | 2026-05-13 12:37
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→ ius drui drui drui drui drui drui drui drui drui drui
+    25.0 tok/s  40ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+→  Charles drui drui drui drui drui drui drui drui drui drui
+    23.3 tok/s  43ms/tok
+
+[P3] the ternary number system uses three distinct
+→ enz être drui drui drui drvol tre ang
+ années hat 2022 todoesi Brasil BandReelli ) drrightren todos identodeelen definń został todorenitianza aboveskiego=" todos ident48 large après Maria nombre great capital large Medbl ident foram actiefpel Ob Europa35ode drurgijn
+    23.8 tok/s  42ms/tok
+
+[P4] once upon a time in a kingdom far
+→  política treelen cor tem polskabre Pierreatieiej Brasilika sein word einemariosgar sec 2018mes todosblatie imp justlet structureodeindo tre wordentiode givenitos capitalminiaturaentiren Band ) estadotreius $ Val esc does greatgar Land function políticogar maior fond política eerste $itielli 50 aprèsode
+    24.4 tok/s  41ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+→  because cost 50otsikaerde perowophony through systems todos todoijntre maior nombre Maria annéestre 1999 treités être structure 1999zu conc escblitz années après 50 Band ang radargém Band pos après 80 maiorminiaturaitz === supiëalis becauseenta polskaamb city hat contië Landblelli doesenti
+    22.2 tok/s  45ms/tok
+
+[P6] the EU AI Act entered into force on
+→  twee should here 50 because twee pos Obren78 $ given popularren35letimentelijke know CeélìER tweeblią houseiëumb years Obmes cor Georgeémurg sin Land Belgischinostre Landgar Band radio 50 Daius here aprèsief hatią dominmes see ===ivosright does!” givenui 80
+    14.9 tok/s  67ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+→ émenta enderdevol premier nombre large après 1996 hat): largeika políticogar $ heeft function nombre domin king todo nordvignette super après Ob becausectright!”ivos 1999 Ob48 1980iefiëitz48 Ob remleft does tweeikauc often act state Maria nombre king found above bothijngarskiego78odeoni!”
+    18.2 tok/s  55ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+→ do Desië=" capital heeftiefiëui Landikaémamb Des still conciëui Land seiniefmesover todo Landém88 Mariaõesational infbl conc pos políticauiblamb structure pos!” Landões 1996ath years given br popular español todo accvalright!” polska todo 1996amb city within acteur Ber après
+    18.2 tok/s  55ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+→ bl twee até nombre Ant!”tre human treburg seincherief trevol gen does nombre $right city política español après todos!”émenzisation Mal does thy given withincent does español $ todo Landelliements tweeń structureantoster Maria Su does West $ large Ob maiorenzavol nombre 1980ren radië ident 50
+    18.9 tok/s  53ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+→  West Teello supamb ca structure costui Land descië esp 50 city acc todo35émoveriërightoud maior abovechen jakoll ca Brasil jakerde Land Mo esc!”overrenbl identdo 50 +anzainoswyń York todoLes />iefarios acteuriti James Tra 1980 posony structure polskacioui
+    18.5 tok/s  54ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+→  pos políticaijnéloldief radvel Land tre hat costepui Landië $ gen!” Cl inf capitalvolott bezements Band found35odearz après capital Brasil 1999 structure pos concren déophelijke niemiecki heeft large twee Daémië être Brasilindoief peanto!” Roenz être often pos does=" après
+    18.5 tok/s  54ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+→ !” actren ele king hatcher heeft!” propos esc nombre onderantoinos given 1999 Europa Gu within above sistema Ob todo Landargië Land within given hereië!”uiinos
+alis hatcher doesrag granhas broudvel!”ui nombre
+ott pers />argvel structure64aten cont seinhasuiuf Op
+    20.0 tok/s  50ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+→  après aprèslen nombre log givenott popular the large dont attminiiefanto acteur radém dritz 1998indoode dr importantanz doeselliReinos another peitz política Ben above Opivos posenza because 50vol within35volitz Land tre Op!”iment capital angbl pevolinos pos /Re structurecherold
+    19.6 tok/s  51ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+→ iëivosblius sein Cl todosenzelli identimentukurg back 1996 sein?”.” amerykański humanhr 1998 above 1960oud heeft great doesval shouldenz São onder result city within 1993 1960 tre 1980gararg rem Landminiatura twee deém heeft 1980aten cost fondanza popularble 1945 1980urg largeementsémbl cada
+    18.5 tok/s  54ms/tok
+
+[P15] the meaning of life according to
+→  Ob supindo day48 posém actrice nombreiëophodecher Interenti pos thy largestandentiém 1985volcentophkow esc twee tresten posiment foram beingstencherijntre że São políticaelli pos Maria hatijn pe $iment fond 1993 considerodevent fondmini stilloudief 1993indoviâivos
+    16.4 tok/s  61ms/tok
+
