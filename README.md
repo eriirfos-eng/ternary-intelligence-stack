@@ -56,9 +56,13 @@ ternlang run my_program.tern   # explicit form
 
 ## 2. What is albert.? (The Intelligence Layer)
 
+**albert. is an existence proof wearing the shape of a language model. The model is the vehicle. The proof is the cargo.**
+
+Every other AI of consequence right now requires a hyperscaler's data center to train and a GPU to run. albert. trains for fractions of a cent on a rented T4 and runs at 84 tokens/sec on a 2013 laptop. That is not an efficiency improvement. That is a change in who is allowed to build minds — and a proof that the whole foundation could have been built differently, and still can be.
+
 **albert.** is a ternary Mixture-of-Experts language model trained natively from scratch — not quantized from a float model. Every weight is in `{-γ, 0, +γ}` throughout training via Straight-Through Estimator (STE). The architecture expands itself autonomously via Net2Net surgery when it plateaus, guided by the Mandelbrot complexity monitor. The engineering repo label is `albert-moe-13`.
 
-**Current state (2026-05-13):** 15L · 256H · 12E · Top-3 routing · 256CTX · 32,000 vocab (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · training on Modal T4 GPU · v3.0 Global Epoch 621+ · 3rd Net2Net surgery complete (ep611, 14L→15L) · post-surgery loss ~10.29.
+**Current state (2026-05-14):** 17L · 256H · 12E · Top-3 routing · 256CTX · 32,000 vocab (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · training on Modal T4 GPU · v3.0 Global Epoch 791+ · 5 Net2Net surgeries complete (12L→17L) · best loss **10.2199** (ep786).
 
 A live training dashboard streams telemetry in real time at `localhost:8888` during training runs — layer topology, expert routing, gradient norms, TTL state, and loss curve with Fibonacci retracement overlays.
 

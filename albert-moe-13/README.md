@@ -20,7 +20,9 @@ Downloads the model, runs three suites (inference speed · @sparseskip analysis 
 
 ## What it is
 
-Albert MoE-13 is a research model exploring whether ternary weight quantization can match or exceed float32 performance at a fraction of the inference cost. Ternary matmuls reduce to integer additions — no multiplies — making inference 2–5× cheaper per parameter on standard hardware and far cheaper on future ternary silicon.
+Albert MoE-13 is a research organism — a working instance of a philosophy of computing that, until now, only existed as scattered intuitions across sixty years of papers nobody connected. You do not engineer it. You cultivate it: set the substrate, the growth rules, the curriculum ladder, the plateau gates — and observe what develops within those conditions rather than dictating it. The expert specializations, the hot-layer hierarchy, the decision not to grow when growth would interrupt productive learning — these emerge from the system, not from the operator.
+
+The technical substrate: ternary weights `{-γ, 0, +γ}` throughout training reduce matmuls to integer additions — no multiplies — making inference 2–5× cheaper per parameter on standard hardware and far cheaper on future ternary silicon.
 
 The architecture combines:
 - **Straight-Through Estimation (STE)** for end-to-end ternary training
@@ -39,7 +41,7 @@ The architecture combines:
 | Parameter | Value |
 |-----------|-------|
 | Hidden size | 256 |
-| Layers | **15** (v2.0.0: 4L→12L over 10 surgeries; v3.0: ep511 12L→13L, ep547 13L→14L, ep611 14L→15L) |
+| Layers | **17** (v2.0.0: 4L→12L over 10 surgeries; v3.0: ep511 12L→13L, ep547 13L→14L, ep611 14L→15L, ep645 15L→16L, ep701 16L→17L) |
 | Attention heads | 4 |
 | Experts | 12 |
 | Context length | 256 tokens |
@@ -50,7 +52,7 @@ The architecture combines:
 | LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-13):** Global Epoch 621 · best loss **10.2415** (ep461, pre-3rd-surgery) · 3rd Net2Net surgery complete (ep611, 14L→15L) · post-surgery tracking ~10.29 · training on Modal T4 GPU (~380ms/batch)
+**Training state (2026-05-14):** Global Epoch 791+ · best loss **10.2199** (ep786) · 5 Net2Net surgeries complete (12L→17L) · descent rate ~0.015 nats/10 epochs · training on Modal T4 GPU (~400ms/batch)
 
 ---
 

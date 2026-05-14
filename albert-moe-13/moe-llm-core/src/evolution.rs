@@ -20,6 +20,7 @@
 // 610L is the last precomputed entry — unreachable on CPU, but the door is open.
 
 use std::collections::VecDeque;
+use std::fs;
 
 /// Fibonacci depth milestones (F_n ≥ 3). Albert climbs this sequence without a coded ceiling.
 const FIB_TARGETS: &[usize] = &[3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610];
@@ -157,6 +158,40 @@ impl EvolutionManager {
     pub fn reset_history(&mut self) {
         self.loss_history.clear();
         self.cooldown_remaining = self.surgery_cooldown();
+    }
+
+    /// Persist fib_index and cooldown_remaining to a sidecar file.
+    /// Call after every checkpoint save and after promote_fib_target().
+    pub fn save_state(&self, path: &str) {
+        let content = format!("{}\n{}\n", self.fib_index, self.cooldown_remaining);
+        if let Err(e) = fs::write(path, &content) {
+            eprintln!("[evolution] Warning: could not save state to {}: {}", path, e);
+        }
+    }
+
+    /// Restore fib_index and cooldown_remaining from a sidecar file.
+    /// Returns true on success; caller falls back to calibrate() values if false.
+    pub fn load_state(&mut self, path: &str) -> bool {
+        let content = match fs::read_to_string(path) {
+            Ok(s) => s,
+            Err(_) => return false,
+        };
+        let mut lines = content.lines();
+        let fib_index: usize = match lines.next().and_then(|s| s.trim().parse().ok()) {
+            Some(v) => v,
+            None => return false,
+        };
+        let cooldown: usize = match lines.next().and_then(|s| s.trim().parse().ok()) {
+            Some(v) => v,
+            None => return false,
+        };
+        if fib_index >= FIB_TARGETS.len() { return false; }
+        self.fib_index = fib_index;
+        self.max_layers = FIB_TARGETS[fib_index];
+        self.cooldown_remaining = cooldown;
+        println!("[evolution] Restored state — F{}={}L (window={} epochs, cooldown={} remaining)",
+            self.fib_index + 1, self.max_layers, self.history_len(), self.cooldown_remaining);
+        true
     }
 }
 

@@ -718,6 +718,7 @@ fn train_cycle(
     let meta_path       = format!("{r}/models/albert_v3.0.meta");
     let best_meta_path  = format!("{r}/models/albert_v3.0.best_loss");
     let best_epoch_path = format!("{r}/models/albert_v3.0.best_epoch");
+    let evo_path        = format!("{r}/models/albert_v3.0.evolution");
     let log_path        = format!("{r}/dashboard/training.log");
     // Borrow as &str for the many call sites that take &str
     let checkpoint_path = checkpoint_path.as_str();
@@ -725,6 +726,7 @@ fn train_cycle(
     let config_path     = config_path.as_str();
     let meta_path       = meta_path.as_str();
     let best_meta_path  = best_meta_path.as_str();
+    let evo_path        = evo_path.as_str();
     let log_path        = log_path.as_str();
 
     let config_str = fs::read_to_string(config_path).expect("Unable to read config.json");
@@ -1452,6 +1454,7 @@ fn train_cycle(
         // ── Checkpoint (always save latest) ──────────────────────────────────
         save_checkpoint(&varmap, checkpoint_path)?;
         fs::write(meta_path, total_epochs.to_string())?;
+        evolution_manager.save_state(evo_path);
 
         // ── Best Checkpoint (save only when avg_loss improves) — LLB §11.6 ───
         if avg_loss < best_epoch_loss {
@@ -1830,10 +1833,12 @@ fn main() -> Result<()> {
     let config_path     = format!("{r}/models/albert_v3.0.config.json");
     let checkpoint_path = format!("{r}/models/albert_v3.0.safetensors");
     let best_path       = format!("{r}/models/albert_v3.0.best.safetensors");
+    let evo_state_path  = format!("{r}/models/albert_v3.0.evolution");
     let vocab_path      = vocab_path.as_str();
     let config_path     = config_path.as_str();
     let checkpoint_path = checkpoint_path.as_str();
     let best_path       = best_path.as_str();
+    let evo_state_path  = evo_state_path.as_str();
 
     let tokenizer = BpeTokenizer::new(vocab_path);
 
@@ -1847,6 +1852,10 @@ fn main() -> Result<()> {
         .and_then(|v| v["num_layers"].as_u64())
         .unwrap_or(3) as usize;
     evolution_manager.calibrate(initial_layers);
+    if !evolution_manager.load_state(evo_state_path) {
+        println!("[evolution] No saved state — using calibrated defaults (F{}={}L, window={} epochs)",
+            evolution_manager.fib_index + 1, evolution_manager.max_layers, evolution_manager.history_len());
+    }
     let mut mycelium = MyceliumModule::new(initial_layers, 12);
     mycelium.set_lb_off_mode(flags.lb_weight == 0.0);
     let mut wald     = WaldModule::new();
@@ -1870,6 +1879,7 @@ fn main() -> Result<()> {
         if needs_evolution {
             perform_surgery(config_path, checkpoint_path, best_path, &device, &flags.root)?;
             evolution_manager.promote_fib_target();
+            evolution_manager.save_state(evo_state_path);
             mycelium.on_layer_added();
             wald.on_surgery();
             // Log the MAND event so the dashboard can mark surgery epochs visually.

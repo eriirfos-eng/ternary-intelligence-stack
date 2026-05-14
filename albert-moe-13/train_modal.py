@@ -41,6 +41,7 @@ _DOWNLOADS = [
     ("/albert/models/albert_v3.0.best.safetensors", "models/albert_v3.0.best.safetensors"),
     ("/albert/models/albert_v3.0.best_loss",        "models/albert_v3.0.best_loss"),
     ("/albert/models/albert_v3.0.meta",             "models/albert_v3.0.meta"),
+    ("/albert/models/albert_v3.0.evolution",        "models/albert_v3.0.evolution"),
     ("/albert/dashboard/training.log",              "dashboard/training.log"),
 ]
 
@@ -268,4 +269,16 @@ def main():
     ).returncode
     if rc != 0:
         raise SystemExit(f"[main] config sync failed (exit {rc}) — aborting launch")
+
+    # Push evolution state so fib_index survives restarts.
+    # Non-fatal: file absent on first-ever setup; train_bible falls back to calibrate().
+    evo_local = os.path.join(_HERE, "models/albert_v3.0.evolution")
+    if os.path.exists(evo_local):
+        print("[main] syncing evolution state to volume ...")
+        subprocess.run(
+            ["modal", "volume", "put", "--force", _VOL,
+             "models/albert_v3.0.evolution",
+             "/albert/models/albert_v3.0.evolution"],
+            cwd=_HERE,
+        )
     train.remote(gate_diversity=0.3, lb_weight=0.0)

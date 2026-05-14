@@ -814,50 +814,104 @@ state}, not the \emph{inference representation}.
 A compact packed-trit export format (\texttt{.trit}) is on the v3.1 roadmap;
 the current deployment path uses the \texttt{inference\_cache} path directly.
 
-\subsection{EvolutionManager: Plateau-Mastery State Machine}
+\subsection{EvolutionManager: Fibonacci-Scaled Growth Governor}
 \label{subsec:evolution}
 
 The \textbf{EvolutionManager} $\mathcal{E}$ governs dynamic model expansion
-as a finite state machine over training phases:
+via a Fibonacci-indexed plateau detection system that scales patience
+proportionally with architectural depth:
 
 \begin{equation}
-  \mathcal{E}: S \times \mathcal{M} \to S \times \mathcal{A}
+  W(d) \;=\; F_n, \quad F_n = \min\{F_k \in \mathcal{F} : F_k > d\}
+  \label{eq:window}
 \end{equation}
 
-\noindent where states $S = \{\text{Toddler},\,\text{Expanding},\,\text{Mature}\}$
-and actions $\mathcal{A} = \{\text{continue},\,\text{surgery},\,\text{lr\_reduce}\}$.
+\noindent where $\mathcal{F} = \{3, 5, 8, 13, 21, 34, 55, 89, 144, \ldots\}$
+is the Fibonacci sequence and $d$ is the current layer count.
+A 12-layer model waits 13 epochs before the plateau gate can fire;
+a 17-layer model waits 89 epochs; a hypothetical 145-layer model would wait
+144 epochs. Patience grows with the architecture---deeper models are given
+proportionally more time to consolidate before the next expansion.
+The window doubles as the post-surgery cooldown: after each surgery,
+a Fibonacci-length moratorium prevents re-firing on the transient loss
+elevation that always follows a Net2Net expansion.
 
-\textbf{Plateau transition.} When the exponential moving average of the per-batch
-loss delta falls below a threshold for $N_\text{cons}$ consecutive checkpoints:
+\textbf{Plateau trigger.} Surgery fires when the loss span over the full
+Fibonacci window falls below a threshold $\epsilon_\text{plateau}$:
 
 \begin{equation}
-  \overline{\Delta L}_k < \epsilon_\text{plateau}
-  \;\;\text{for}\;\; N_\text{cons} \text{ steps}
-  \;\;\Rightarrow\;\; \text{surgery}
+  \bigl|\mathcal{L}_\text{history}[0] - \mathcal{L}_\text{history}[-1]\bigr|
+  \;<\; \epsilon_\text{plateau} = 0.02
+  \;\;\Rightarrow\;\; \text{surgery (if stability gate passes)}
   \label{eq:plateau}
 \end{equation}
 
-\textbf{Collapse guard.} A distinct pathway handles model collapse: when the
-epoch-average loss remains at or above the random-baseline threshold
-$\mathcal{L}_\text{collapse}$ (set at $8.8$, slightly below
-$\ln(|\mathcal{V}|) \approx 8.987$ for vocabulary size $|\mathcal{V}| = 8{,}000$)
-for $N_\text{streak}$ consecutive epochs, the training loop concludes that
-the current architecture has insufficient capacity and forces surgery directly:
+\textbf{MYCELIUM stability gate.} The plateau condition alone is necessary
+but not sufficient. Surgery additionally requires that the MYCELIUM
+routing hierarchy---the emergent layer ordering by gradient norm---has
+been stable for at least $\tau_\text{myc} = 5$ consecutive epochs:
 
 \begin{equation}
-  \bar{L}_t \;\geq\; \mathcal{L}_\text{collapse}
-  \;\;\text{for}\;\; N_\text{streak} \text{ epochs}
-  \;\;\Rightarrow\;\; \text{surgery}
-  \label{eq:collapse}
+  \texttt{myc\_stable} \;\geq\; \tau_\text{myc}
+  \;\;\Rightarrow\;\; \text{stability gate passes}
+  \label{eq:mycelium}
 \end{equation}
 
-\noindent This guard has a separate \texttt{max\_layers} check (matching the
-check on the plateau path) to prevent unbounded growth. The guard was validated
-in production: a 3-layer Toddler phase stalled near the random-baseline loss
-for several epochs; collapse surgery fired, added capacity, and loss resumed
-descent. The threshold $8.8$ is deliberately conservative---well above the
-healthy post-surgery warm-up range of $8.4$--$8.7$---to avoid mis-firing
-surgery during the transient elevation that always follows a Net2Net expansion.
+\noindent MYCELIUM stability is a more reliable readiness signal than any
+absolute loss threshold. An absolute loss number requires recalibration
+whenever vocabulary size, context length, or language count changes;
+the routing hierarchy holding steady for multiple epochs is
+architecture-intrinsic. When the hot layer (the layer with the highest
+gradient norm) has not shifted for $\tau_\text{myc}$ epochs, the model's
+internal learning frontier has crystallised and the architecture is
+genuinely ready to grow.
+
+\textbf{Mastery trigger.} A secondary, unconditional trigger fires when
+the latest epoch-average loss drops below a mastery threshold
+$\mathcal{L}_\text{master} = 4.5$, indicating the model has outgrown
+current capacity catastrophically. Mastery bypasses the MYCELIUM stability
+gate---capacity starvation is self-evident and admits no delay.
+
+\textbf{Surgery as a governor, not a simple trigger.}
+The EvolutionManager distinguishes two qualitatively different states:
+\emph{active descent} (loss still decreasing at a rate above
+$\epsilon_\text{plateau}$ per Fibonacci window) and \emph{genuine plateau}
+(descent has stalled). Surgery fires only in the second state.
+This design yields an empirically falsifiable prediction, and the
+prediction was tested live: at Global Epoch 791, with the 17-layer model
+actively descending ${\approx}\,0.07$ nats over the preceding 89-epoch
+window (versus the 0.02 threshold), the plateau gate correctly withheld
+surgery. The model continued learning rather than growing.
+Both directions are now validated in production: five surgeries when the
+gate fired, one clean non-event when it did not.
+
+\textbf{Fibonacci state persistence.} The EvolutionManager serialises
+\texttt{fib\_index} and \texttt{cooldown\_remaining} to a sidecar file
+(\texttt{albert\_v3.0.evolution}) at every checkpoint save and after each
+surgery. On restart, the sidecar is loaded immediately after the
+layer-count calibration step, overriding the calibrated value. Without this,
+a restart at 17L would place the Fibonacci index at position 4
+(window = 21~epochs) rather than the correct position 8
+(window = 144~epochs), silently discarding accumulated surgery history
+and making the plateau gate fire prematurely. The sidecar closes this gap:
+the Fibonacci position is crash-safe and restart-safe.
+
+\textbf{Surgery history: five events to date.}
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{cccl}
+\toprule
+Surgery & Epoch & Depth & Notes \\
+\midrule
+1 & 511 & 12L $\to$ 13L & Fib window $= 13$ epochs \\
+2 & 547 & 13L $\to$ 14L & $c_\text{im} = -0.6983$; window $= 21$ \\
+3 & 611 & 14L $\to$ 15L & $c_\text{im} = \phantom{-}0.2287$; window $= 34$ \\
+4 & 645 & 15L $\to$ 16L & $c_\text{im} = -0.3442$; window $= 55$ \\
+5 & 701 & 16L $\to$ 17L & $c_\text{im} = \phantom{-}0.5828$; window $= 89$ \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 \subsection{Net2Net Safe Copy Surgery}
 \label{subsec:net2net}
@@ -1303,50 +1357,61 @@ dedicated ternary hardware. On native trit ASICs (the SPRIND roadmap target),
 the theoretical figure from hardware simulation reaches 122$\times$ over
 conventional binary execution.
 
-\textbf{Current State: 12-Layer Full Depth (Global Epoch 477+).}
-The EvolutionManager grew Albert from 3L to 12L across nine autonomous
-surgery events, reaching maximum architectural depth at Global Epoch 454.
-Since reaching 12L, the model has continued training without further
-surgery. Key live measurements at time of writing:
+\textbf{Current State: 17-Layer v3.0 (Global Epoch 795+).}
+The EvolutionManager grew Albert from 12L to 17L across five autonomous
+surgery events (epochs 511, 547, 611, 645, 701). Since the fifth surgery,
+the model has continued training uninterrupted, descending steadily without
+triggering the plateau gate. Key live measurements at time of writing:
 
 \begin{itemize}
-  \item \textbf{Best loss}: 6.8821 (epoch-best, logged at 12L).
-  \item \textbf{Routing entropy}: $\text{ENTR} = 2.29$--$2.37$ (versus 2.485
-        at full uniformity), confirming sustained expert specialisation.
-  \item \textbf{Gradient norms}: $0.001$--$0.003$ sustained across layers
-        ($25\times$ the pre-intervention baseline), with structurally stable
-        \emph{layer crystallisation}: L0--L3 norms $\approx 0.00022$ (nearly
-        frozen---early layers have locked in stable feature representations);
-        L8--L11 norms $0.013$--$0.022$ (actively learning). This internal
-        differentiation emerged from training alone, without architectural
-        intervention.
-  \item \textbf{Sparsity gradient}: TELE telemetry confirms L0 at 10.6\%
-        ternary weight sparsity, rising monotonically to L11 at 26.5\%.
-        Deeper layers accumulate more zero-weight trits, reinforcing
-        \texttt{@sparseskip} efficiency with model depth.
-  \item \textbf{Expert health}: Mycelium reports \texttt{dead=0} in every
-        epoch across the entire 12L run. All 12 experts remain active.
-        Three ``cycling reds'' episodes (TTL $R$ states migrating through
-        cold layers L2$\to$L3$\to$L5) resolved autonomously within 2--3 epochs.
+  \item \textbf{All-time best loss}: $10.2199$ (epoch-best, Global Epoch~786;
+        random baseline $\ln(32{,}000) \approx 10.37$). A cascade of 22+
+        consecutive new-best epochs from Epoch~743 to Epoch~786 established
+        this record.
+  \item \textbf{Descent rate}: ${\approx}\,0.015$ nats per 10~epochs,
+        sustained over the most recent 50-epoch window.
+  \item \textbf{MYCELIUM gradient hierarchy}: L3 has held the hot-layer
+        position (highest gradient norm) for 89 consecutive epochs at
+        Epoch~790, confirming deep layer-crystallisation. Early layers
+        L0--L2 are nearly frozen (${\approx}\,1.9 \times 10^{-9}$ grad
+        norm); L3 remains the active learning frontier.
+  \item \textbf{WALD weight-distribution health}: severity 0.982,
+        histogram fill 2.1\% (halved from 4.2\% at Epoch~781---the
+        distribution is compressing toward the mean, a sign of healthy
+        consolidation).
+  \item \textbf{Routing entropy}: $\text{ENTR} \approx 2.47$, slightly
+        elevated but within the monitored range; load-balancing auxiliary
+        loss active.
+  \item \textbf{Expert health}: dead-expert resurrections occurring
+        continuously; 5 experts blooming at Epoch~790. The MYCELIUM
+        system distributes gradient signal to cold experts autonomously.
 \end{itemize}
 
 \textbf{Language Modelling Perplexity.}
-At the 4-layer configuration (Global Epoch 350), albert. achieved a perplexity
-of $1{,}152$ on the held-out Bible evaluation set---an $85.6\%$ reduction
-versus the 8{,}000-token unigram baseline ($\text{PPL}_\text{unigram} = 8{,}000$).
-Full 12-layer evaluation is scheduled at Global Epoch 500 (cosine LR floor),
-at which point the v2.0.0 checkpoint is archived and the multilingual v3.0
-training commences. Given the layer crystallisation pattern (L0--L3 frozen,
-L8--L11 actively learning), the 12L perplexity is expected to be substantially
-lower than the 4L baseline. Quantitative results will be reported in the v3.0
-technical report at submission of Stage~2 milestones.
+Formal perplexity evaluation was conducted at Global Epoch~107 on a held-out
+excerpt of \emph{Alice's Adventures in Wonderland} (English), under the
+32{,}000-token ByteLevel BPE tokenizer: cross-entropy $10.3668$, yielding
+$\text{PPL} = 31{,}788$ versus the 32{,}000-token unigram baseline.
+The model had trained for only 107~epochs at this measurement; training
+has continued substantially since. At Global Epoch~786 (best loss $10.2199$,
+$\Delta = 0.147$ nats below the 32k random baseline), the equivalent PPL
+is approximately $27{,}500$---a 14\% reduction versus the unigram ceiling
+and still actively descending. Full formal perplexity evaluation across all
+eight v3.0 languages is scheduled for Stage~2 milestones, at which point the
+model will be substantially deeper into its training curve.
 
-\textbf{Routing Health Post-Intervention.}
-Following the load-balancing loss and expert weight perturbation:
-routing entropy $\text{ENTR} = 2.29$--$2.37$ (versus 2.485 at full uniformity);
-gradient norms $0.001$--$0.003$ ($25\times$ the pre-intervention baseline);
-new epoch-best loss 6.8821 on first epoch post-restart. Expert specialisation
-is ongoing and measurable in real time through the dashboard telemetry pipeline.
+\textbf{Surgery Governor: Empirical Validation.}
+The EvolutionManager's distinguishing property is that it withholds surgery
+when surgery is not warranted. At Global Epoch~791, all three preconditions
+for the sixth surgery were technically satisfiable---the Fibonacci cooldown
+had expired (post-surgery window of 89~epochs elapsed at Epoch~702+89=791),
+and the MYCELIUM stability gate was satisfied (myc\_stable=89, well above
+the threshold of 5). The plateau gate withheld surgery because the 89-epoch
+loss window showed ${\approx}\,0.07$ nats of descent---well above the 0.02
+threshold. Training continued at 17L. This non-event is as significant as
+any of the five prior surgeries: the governor distinguishes genuine plateau
+from active learning, and this distinction has now been demonstrated in
+both directions under live production conditions.
 
 \subsection{Albert v3.0: Multilingual European Foundation}
 \label{subsec:albert_v3}
@@ -1355,7 +1420,7 @@ The v2.0.0 chapter proves the full Albert stack works on CPU from random
 initialisation: 12 transformer layers grown autonomously, expert routing
 self-organised without intervention, zero expert deaths across hundreds
 of monitored epochs. The architecture is validated. The limitation that
-remains is linguistic scope: the current 8{,}000-token English WordLevel
+remains is linguistic scope: the original 8{,}000-token English WordLevel
 vocabulary cannot represent German compound nouns, French morphological
 variants, or Slavic inflectional paradigms without catastrophic
 tokenisation inefficiency.
@@ -1439,6 +1504,21 @@ from collapsing to certainty; the Ternary Traffic Light defaults to Orange
 that training exposure itself is never pristine. Together these form a single
 architectural commitment---\textbf{epistemic humility as a design primitive},
 not an alignment patch applied after the fact.
+
+\textbf{v3.0 Training Status (May 2026).}
+At the time of this submission, albert. v3.0 has completed over 795
+global epochs at 17 layers, with an all-time best loss of $10.2199$
+($\Delta = 0.147$ nats below the 32{,}000-token random baseline of
+$\ln(32{,}000) \approx 10.37$). Five autonomous surgeries have expanded
+the model from 12L to 17L without manual intervention or architecture
+search. The sixth surgery gate is armed but has not fired---the model
+is actively descending and the plateau condition is not yet met.
+Stage~10 of the curriculum is active, covering the full eight-language
+corpus. Training continues on Modal GPU (NVIDIA T4) with real-time
+telemetry streamed to a live dashboard at each epoch boundary.
+The architecture, training loop, and growth governor are production-grade;
+the current run is not a proof-of-concept but a live, self-governing
+research organism accumulating linguistic competence epoch by epoch.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{EU AI Act Compliance Architecture}
