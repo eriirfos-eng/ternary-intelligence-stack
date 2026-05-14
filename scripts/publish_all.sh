@@ -28,7 +28,7 @@ for i in {1..5}; do
     for crate in "${CRATES[@]}"; do
         echo "Attempting to publish $crate..."
         # If it fails, maybe it's already published or dependencies aren't ready yet
-        if ! cargo publish --manifest-path ternlang-root/Cargo.toml -p $crate --allow-dirty --no-verify; then
+        if ! cargo publish --manifest-path ternlang-root/Cargo.toml -p $crate; then
             echo "Failed to publish $crate in iteration $i"
             ALL_SUCCESS=false
         else
@@ -53,7 +53,7 @@ ALBERT_CRATES=(
 
 for crate in "${ALBERT_CRATES[@]}"; do
     echo "Attempting to publish $crate..."
-    cargo publish --manifest-path agent_albert_cli/rust/Cargo.toml -p $crate --allow-dirty --no-verify || echo "Failed to publish $crate"
+    cargo publish --manifest-path agent_albert_cli/rust/Cargo.toml -p $crate || echo "Failed to publish $crate"
     sleep 1
 done
 
