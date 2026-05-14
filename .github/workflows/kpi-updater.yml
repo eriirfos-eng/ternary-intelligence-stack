@@ -23,8 +23,23 @@ jobs:
       - name: Fetch existing KPI data from API
         run: |
           mkdir -p docs/kpi
-          curl -sf -o docs/kpi/ternlang_kpi_log.json    https://ternlang.com/kpi/ternlang_kpi_log.json    || true
-          curl -sf -o docs/kpi/ternlang_gh_traffic.json https://ternlang.com/kpi/ternlang_gh_traffic.json || true
+          # 404 = first run (file not yet created) — treat as ok; any other error is fatal
+          fetch_or_init() {
+            local url="$1" dest="$2"
+            local http_code
+            http_code=$(curl -s -o "$dest" -w "%{http_code}" "$url")
+            if [ "$http_code" = "200" ]; then
+              echo "  fetched $dest ($http_code)"
+            elif [ "$http_code" = "404" ]; then
+              echo "  $dest not found on server (first run) — will create"
+              echo '{}' > "$dest"
+            else
+              echo "::error::Failed to fetch $url — HTTP $http_code"
+              exit 1
+            fi
+          }
+          fetch_or_init https://ternlang.com/kpi/ternlang_kpi_log.json    docs/kpi/ternlang_kpi_log.json
+          fetch_or_init https://ternlang.com/kpi/ternlang_gh_traffic.json docs/kpi/ternlang_gh_traffic.json
 
       - name: Run KPI Generator
         env:
@@ -36,22 +51,25 @@ jobs:
         env:
           KPI_SECRET: ${{ secrets.KPI_SECRET }}
         run: |
-          curl -sf -X POST https://ternlang.com/api/kpi/upload/index.html \
-               -H "X-Kpi-Token: $KPI_SECRET" \
-               -H "Content-Type: text/html" \
-               --data-binary @docs/kpi/index.html
-          curl -sf -X POST https://ternlang.com/api/kpi/upload/ternlang_kpi_log.json \
-               -H "X-Kpi-Token: $KPI_SECRET" \
-               -H "Content-Type: application/json" \
-               --data-binary @docs/kpi/ternlang_kpi_log.json
-          curl -sf -X POST https://ternlang.com/api/kpi/upload/ternlang_gh_traffic.json \
-               -H "X-Kpi-Token: $KPI_SECRET" \
-               -H "Content-Type: application/json" \
-               --data-binary @docs/kpi/ternlang_gh_traffic.json
-          # Upload Albert training telemetry if the file was committed in this run
+          upload() {
+            local file="$1" content_type="$2" filename
+            filename=$(basename "$file")
+            local http_code
+            http_code=$(curl -s -o /dev/null -w "%{http_code}" \
+              -X POST "https://ternlang.com/api/kpi/upload/${filename}" \
+              -H "X-Kpi-Token: $KPI_SECRET" \
+              -H "Content-Type: $content_type" \
+              --data-binary "@$file")
+            if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+              echo "  uploaded $filename ($http_code)"
+            else
+              echo "::error::Upload of $filename failed — HTTP $http_code (token revoked or server error)"
+              exit 1
+            fi
+          }
+          upload docs/kpi/index.html                  "text/html"
+          upload docs/kpi/ternlang_kpi_log.json       "application/json"
+          upload docs/kpi/ternlang_gh_traffic.json    "application/json"
           if [ -f albert-moe-13/dashboard/training_telemetry.json ]; then
-            curl -sf -X POST https://ternlang.com/api/kpi/upload/training_telemetry.json \
-                 -H "X-Kpi-Token: $KPI_SECRET" \
-                 -H "Content-Type: application/json" \
-                 --data-binary @albert-moe-13/dashboard/training_telemetry.json || true
+            upload albert-moe-13/dashboard/training_telemetry.json "application/json"
           fi
