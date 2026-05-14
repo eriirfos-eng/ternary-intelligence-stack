@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Ensure the data directory exists
 mkdir -p /data/kpi
@@ -13,7 +14,11 @@ mkdir -p /data/kpi
     sleep 3600
   done
 ) &
+KPI_PID=$!
 
-# Start the Rust API
+# Kill the background Spine loop when this script exits (crash or SIGTERM from Fly.io)
+trap "kill $KPI_PID 2>/dev/null; wait $KPI_PID 2>/dev/null" EXIT
+
+# Start the Rust API (exec replaces this shell process; trap still fires on exit)
 echo "[API] Starting ternlang-api on port $PORT..."
 exec ternlang-api
