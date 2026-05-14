@@ -966,6 +966,7 @@
 
     let batchLog         = [];   // [{step,global_epoch,batch,layers,loss,grad_norm,layer_norms,route_weights,entropy,tele_sparsity,tele_activity}]
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
+    let smaLog           = [];   // [{x,y}] — unbounded batch point history for SMA computation; dots use merged (capped), SMAs use this
     let totalPts         = 0;
     let newPointStartIdx = Infinity; // index of first "new" pt — only those get drop animation
     let pulseActive      = false;
@@ -2323,7 +2324,7 @@
                     lastLossVal = null; lastKnownEpoch = -1;
                     trailCurrentMin.fill(Infinity);
                     userHasZoomed = false; newPointStartIdx = Infinity;
-                    batchLog = []; // epochLog preserved — epoch averages are valid across restarts
+                    batchLog = []; smaLog = []; // epochLog preserved — epoch averages are valid across restarts
                     document.getElementById('v-loss').textContent  = '—';
                     document.getElementById('v-epoch').textContent = '—';
                     document.getElementById('v-best').textContent  = '—';
@@ -2610,6 +2611,7 @@
                 pendingDivF32  = null;
                 pendingDivGrad = null;
                 batchLog       = [];
+                smaLog         = [];
                 epochLog       = [];
                 lastKnownEpoch = -1;
                 newPointStartIdx = Infinity;
@@ -2645,24 +2647,27 @@
             chart.data.datasets[0].data = merged;   // replace reference, not mutate
             totalPts += newPts.length; // kept for internal accounting
 
-            // Incremental SMA — only recompute the new tail instead of the full array.
-            // Drops `dropped` stale front entries and appends SMA values for newPts.
-            // Falls back to full recompute on first render or after a RUN_START reset.
+            // Accumulate all batch points into smaLog (never trimmed).
+            // Dots render from merged (capped at MAX_CHART_PTS for speed);
+            // SMAs compute from smaLog so they span the full training run.
+            for (const pt of newPts) smaLog.push(pt);
+
+            // Incremental SMA on smaLog — append new tail values only; no front trimming
+            // since smaLog never drops entries. Falls back to full recompute when empty.
             const ds = chart.data.datasets;
             const appended = newPts.length;
             function updateSma(dsIdx, w) {
                 if (ds[dsIdx].hidden) return;
                 const prev = ds[dsIdx].data;
-                if (prev.length === 0 || dropped + appended > prev.length) {
-                    ds[dsIdx].data = sma(merged, w); return;
-                }
-                // Drop stale front entries, then append SMA for new tail points.
-                let updated = dropped > 0 ? prev.slice(dropped) : prev;
-                for (let i = merged.length - appended; i < merged.length; i++) {
+                const n = smaLog.length;
+                if (prev.length === 0) { ds[dsIdx].data = sma(smaLog, w); return; }
+                // Append SMA values for the newly arrived points only.
+                const updated = prev.slice();
+                for (let i = n - appended; i < n; i++) {
                     if (i < w - 1) continue;
                     let sum = 0;
-                    for (let j = i - w + 1; j <= i; j++) sum += merged[j].y;
-                    updated = updated.concat([{ x: merged[i].x, y: sum / w }]);
+                    for (let j = i - w + 1; j <= i; j++) sum += smaLog[j].y;
+                    updated.push({ x: smaLog[i].x, y: sum / w });
                 }
                 ds[dsIdx].data = updated;
             }
@@ -2809,6 +2814,10 @@
     }
     function toggleDataset(idx, checked) {
         chart.data.datasets[idx].hidden = !checked;
+        if (checked && idx >= 1 && idx <= 5) {
+            const smaSizes = [21, 55, 144, 377, 610];
+            chart.data.datasets[idx].data = sma(smaLog, smaSizes[idx - 1]);
+        }
         chart.update('none');
         updateSmaBtnLabel();
     }
