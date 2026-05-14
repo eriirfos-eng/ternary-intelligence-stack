@@ -288,4 +288,4 @@ def main():
         ).returncode
         if evo_rc != 0:
             print(f"[main] evolution sync failed (exit {evo_rc}) — train_bible will recalibrate from scratch")
-    train.remote(gate_diversity=0.3, lb_weight=0.0, stop_at_epoch=900)
+    train.remote(gate_diversity=0.3, lb_weight=0.0)
