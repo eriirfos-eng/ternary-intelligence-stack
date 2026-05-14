@@ -1455,7 +1455,7 @@
             if (!text) return;
             if (editIdx !== null) { tnotes[editIdx].text = text; }
             else { tnotes.push({ x: dataX, y: dataY, text }); }
-            chart.draw();
+            saveDrawings(); chart.draw();
         }
         function cancel() { if (committed) return; committed = true; inp.remove(); }
         inp.addEventListener('keydown', e => {
@@ -3975,12 +3975,12 @@
             if (drawTool === 'hline') {
                 const hitIdx = hlines.findIndex(hl => Math.abs(scales.y.getPixelForValue(hl.y) - py) < 8);
                 if (hitIdx >= 0) { hlines.splice(hitIdx, 1); } else { hlines.push({ y: scales.y.getValueForPixel(py) }); }
-                chart.draw(); return;
+                saveDrawings(); chart.draw(); return;
             }
             if (drawTool === 'vline') {
                 const hitIdx = vlines.findIndex(vl => Math.abs(scales.x.getPixelForValue(vl.x) - px) < 8);
                 if (hitIdx >= 0) { vlines.splice(hitIdx, 1); } else { vlines.push({ x: scales.x.getValueForPixel(px) }); }
-                chart.draw(); return;
+                saveDrawings(); chart.draw(); return;
             }
             if (drawTool === 'tnote') {
                 // Click near existing note → select it; click empty → spawn input
@@ -4006,9 +4006,9 @@
                 // Place second endpoint → commit line
                 trendlines.push({ x1: pendingLine.x1, y1: pendingLine.y1,
                     x2: scales.x.getValueForPixel(px), y2: scales.y.getValueForPixel(py) });
-                selectedLineIdx = trendlines.length - 1; // auto-select the new line
+                selectedLineIdx = trendlines.length - 1;
                 pendingLine = null;
-                chart.draw();
+                saveDrawings(); chart.draw();
                 return;
             }
 
@@ -4147,14 +4147,14 @@
             chart.draw();
         } else if (e.key === 'Backspace' || e.key === 'Delete') {
             if (pendingLine) return;
-            if (drawTool === 'hline') { hlines.pop(); chart.draw(); return; }
-            if (drawTool === 'vline') { vlines.pop(); chart.draw(); return; }
+            if (drawTool === 'hline') { hlines.pop(); saveDrawings(); chart.draw(); return; }
+            if (drawTool === 'vline') { vlines.pop(); saveDrawings(); chart.draw(); return; }
             if (drawTool === 'tnote') {
                 if (selectedNoteIdx !== null) {
                     tnotes.splice(selectedNoteIdx, 1);
                     selectedNoteIdx = null;
                 } else if (tnotes.length) { tnotes.pop(); }
-                chart.draw(); return;
+                saveDrawings(); chart.draw(); return;
             }
             if (selectedLineIdx !== null) {
                 trendlines.splice(selectedLineIdx, 1);
@@ -4162,7 +4162,7 @@
             } else if (trendlines.length) {
                 trendlines.pop();
             }
-            chart.draw();
+            saveDrawings(); chart.draw();
         }
     });
 
@@ -4191,6 +4191,22 @@
         'cbTrail21','cbTrail55','cbTrail144','cbTrail377','cbTrail610',
         'cbFib','cbBB','cbOHLC','cbHA','cbMACD','cbRSI',
     ];
+
+    // ── Drawing persistence ────────────────────────────────────────────
+    const DRAW_KEY = 'albert-drawings';
+    function saveDrawings() {
+        localStorage.setItem(DRAW_KEY, JSON.stringify({ trendlines, hlines, vlines, tnotes }));
+    }
+    function loadDrawings() {
+        try {
+            const d = JSON.parse(localStorage.getItem(DRAW_KEY) || 'null');
+            if (!d) return;
+            if (Array.isArray(d.trendlines)) trendlines.splice(0, trendlines.length, ...d.trendlines);
+            if (Array.isArray(d.hlines))     hlines.splice(0, hlines.length, ...d.hlines);
+            if (Array.isArray(d.vlines))     vlines.splice(0, vlines.length, ...d.vlines);
+            if (Array.isArray(d.tnotes))     tnotes.splice(0, tnotes.length, ...d.tnotes);
+        } catch(e) {}
+    }
 
     function savePrefs() {
         const p = {};
@@ -4226,7 +4242,28 @@
     document.getElementById('taDrop').addEventListener('change', savePrefs);
     document.getElementById('viewFilter').addEventListener('change', savePrefs);
 
-    loadPrefs(); // restore previous session settings
+    loadPrefs();    // restore curve/filter settings
+    loadDrawings(); // restore trendlines, h/v lines, annotations
+
+    // ── Sound & notification permission prompt ─────────────────────────
+    // Shows once if permission hasn't been granted yet. Clicking it
+    // initialises the AudioContext (satisfying the browser gesture
+    // requirement) and requests notification permission simultaneously.
+    if ('Notification' in window && Notification.permission === 'default') {
+        const banner = document.createElement('div');
+        banner.id = 'notif-banner';
+        banner.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:9999;' +
+            'background:#0d1f2d;border:1px solid #22d3ee44;color:#22d3ee;' +
+            'font-family:monospace;font-size:10px;padding:7px 12px;border-radius:6px;' +
+            'cursor:pointer;letter-spacing:.5px;';
+        banner.textContent = '𒀭  enable sounds & notifications';
+        banner.addEventListener('click', () => {
+            ensureAudio();
+            Notification.requestPermission();
+            banner.remove();
+        });
+        document.body.appendChild(banner);
+    }
 
     // Pre-seed smaLog (batch points) and epochLog in parallel before the poll loop.
     // batch_history.csv   — x,y per line; x = global_epoch + batch/300; ~2MB
