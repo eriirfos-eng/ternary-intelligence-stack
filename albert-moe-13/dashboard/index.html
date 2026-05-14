@@ -828,6 +828,7 @@
     <div class="nv-panel" id="tlight-panel">
         <div class="nv-label" style="display:flex;align-items:center;gap:8px;">&#9632; Traffic Light Routing (TTL)<span id="tlight-summary-inline" style="display:flex;gap:4px;align-items:center;"></span></div>
         <div id="tlight-viz"><div id="tlight-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TLIGHT DATA</div></div>
+        <canvas id="tlight-fft-strip" style="display:block;width:100%;height:16px;flex-shrink:0;margin-top:2px;"></canvas>
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
@@ -3435,6 +3436,7 @@
                 : 'Within clip threshold (1.0) — full gradient step applied. Gradients stable.'));
         globalEl.onmouseleave = hideTip;
         renderGradFFT();
+        renderTlightFFT();
     }
 
     function renderGradFFT() {
@@ -3536,17 +3538,7 @@
                 const numL    = tlightHistory[0]?.layers.length || 12;
                 const numT    = tlightHistory.length;
                 const my      = ev.clientY - rect.top;
-                const gridH   = rect.height - TTL_FFT_H;
-                if (my > gridH) {
-                    // FFT strip
-                    const bW = (rect.width - TTL_LABEL_W) / (numT >> 1);
-                    const k  = Math.floor((ev.clientX - rect.left - TTL_LABEL_W) / bW) + 1;
-                    if (k >= 1) {
-                        const period = (numT / k).toFixed(1);
-                        showTip(ev, `<b>TTL Balance FFT</b><br>Freq bin ${k}: dominant period ≈ <b>${period} steps</b><br>Shows oscillation in G vs R balance across layers`);
-                    }
-                    return;
-                }
+                const gridH   = rect.height;
                 const cellH   = gridH / numL;
                 const cellW   = (rect.width - TTL_LABEL_W) / numT;
                 const li = Math.floor(my / cellH);
@@ -3569,9 +3561,9 @@
         // Sync pixel size — enforce minimum row height so the panel scrolls rather than compresses
         const MIN_TTL_ROW_H = 16; // px per layer row minimum
         const numLForSize   = layers.length;
-        const minH          = numLForSize * MIN_TTL_ROW_H + TTL_FFT_H;
+        const minH          = numLForSize * MIN_TTL_ROW_H;
         const W = _tlightCanvas.offsetWidth || wrap.clientWidth;
-        const H = Math.max(wrap.clientHeight - 24, minH);
+        const H = Math.max(wrap.clientHeight, minH);
         if (W <= 0 || H <= 0) return;
         _tlightCanvas.style.height = H + 'px';
         if (_tlightCanvas.width !== W || _tlightCanvas.height !== H) {
@@ -3583,8 +3575,7 @@
         const numL   = tlightHistory[0]?.layers.length || layers.length;
         const numT   = tlightHistory.length;
         const lW     = TTL_LABEL_W;
-        const fH     = TTL_FFT_H;
-        const gridH  = H - fH;
+        const gridH  = H;
         const cellW  = (W - lW) / numT;
         const cellH  = gridH / numL;
 
@@ -3615,8 +3606,20 @@
             }
         }
         ctx2d.globalAlpha = 1;
+    }
 
-        // ── FFT strip — net G/R imbalance frequency spectrum ─────────
+    function renderTlightFFT() {
+        const canvas = document.getElementById('tlight-fft-strip');
+        if (!canvas || tlightHistory.every(s => !s || s.step === null)) return;
+        const lW = TTL_LABEL_W;
+        const fH = TTL_FFT_H;
+        const W  = canvas.offsetWidth || (canvas.parentElement ? canvas.parentElement.clientWidth : 0);
+        if (W <= 0) return;
+        if (canvas.width !== W || canvas.height !== fH) { canvas.width = W; canvas.height = fH; }
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, W, fH);
+
+        const numT     = tlightHistory.length;
         const imbalance = tlightHistory.map(snap => {
             if (!snap || snap.step === null) return 0;
             const totG = snap.layers.reduce((s, l) => s + l.g, 0);
@@ -3630,37 +3633,47 @@
         const maxMagI = Math.max(...magI, 1e-9);
         const numBins = magI.length - 1;
         const bW      = (W - lW) / numBins;
-        const fY      = gridH + 1;
 
-        ctx2d.fillStyle = 'rgba(14,20,32,0.8)';
-        ctx2d.fillRect(lW, fY, W - lW, fH - 1);
-        ctx2d.font = '9px "JetBrains Mono", monospace';
-        ctx2d.fillStyle = '#475569';
-        ctx2d.textAlign = 'right';
-        ctx2d.textBaseline = 'middle';
-        ctx2d.fillText('FFT', lW - 3, fY + fH / 2);
+        ctx.fillStyle = 'rgba(14,20,32,0.8)';
+        ctx.fillRect(lW, 0, W - lW, fH - 1);
+        ctx.font = '9px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#475569';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('FFT', lW - 3, fH / 2);
 
-        // Each bin interpolates G→O→R across the frequency axis (low freq=green, high=red)
         for (let k = 1; k < magI.length; k++) {
             const intensity = magI[k] / maxMagI;
             const barH      = Math.round(intensity * (fH - 3));
-            const pos       = (k - 1) / Math.max(numBins - 1, 1);   // 0=low freq, 1=high freq
+            const pos       = (k - 1) / Math.max(numBins - 1, 1);
             let r, g, b;
             if (pos < 0.5) {
-                // green (#22c55e) → orange (#f59e0b)
                 const t = pos * 2;
                 r = Math.round(34  + t * (245 - 34));
                 g = Math.round(197 + t * (158 - 197));
                 b = Math.round(94  + t * (11  - 94));
             } else {
-                // orange (#f59e0b) → red (#ef4444)
                 const t = (pos - 0.5) * 2;
                 r = Math.round(245 + t * (239 - 245));
                 g = Math.round(158 + t * (68  - 158));
                 b = Math.round(11  + t * (68  - 11));
             }
-            ctx2d.fillStyle = `rgba(${r},${g},${b},${0.2 + intensity * 0.8})`;
-            ctx2d.fillRect(lW + (k - 1) * bW + 0.5, fY + fH - 1 - barH, bW - 1, barH);
+            ctx.fillStyle = `rgba(${r},${g},${b},${0.2 + intensity * 0.8})`;
+            ctx.fillRect(lW + (k - 1) * bW + 0.5, fH - 1 - barH, bW - 1, barH);
+        }
+
+        if (!canvas.dataset.listener) {
+            canvas.dataset.listener = '1';
+            canvas.addEventListener('mousemove', ev => {
+                const rect = canvas.getBoundingClientRect();
+                const bW2  = (rect.width - lW) / (numBins || 1);
+                const k    = Math.floor((ev.clientX - rect.left - lW) / bW2) + 1;
+                if (k >= 1 && k < magI.length) {
+                    const period = (numT / k).toFixed(1);
+                    showTip(ev, `<b>TTL Balance FFT</b><br>Freq bin ${k}: dominant period ≈ <b>${period} steps</b><br>Shows oscillation in G vs R balance across layers`);
+                } else { hideTip(); }
+            });
+            canvas.addEventListener('mouseleave', hideTip);
         }
     }
 
