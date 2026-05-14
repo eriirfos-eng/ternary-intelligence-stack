@@ -28,7 +28,8 @@ weights, targeting inference on edge hardware and low-power devices.
 | Gate linear | F32 |
 | Positional encoding | RoPE (rotate_half) |
 | Optimizer | AdamW, cosine LR decay |
-| Parameters (ternary) | ~13M effective |
+| Parameters (total stored) | ~58M ternary |
+| Parameters (active per token) | ~13M effective (Top-3 of 12 experts) |
 
 The central technical innovation is the **@sparseskip** primitive — a
 learned sparse-skip layer that dynamically bypasses computation paths
@@ -111,6 +112,12 @@ via the open-source `moe-test` binary.
 - No instruction-following fine-tuning has been applied.
 - No RLHF, Constitutional AI, or safety fine-tuning of any kind.
 - Bias evaluation is pending (see below).
+
+**Open research questions (scaling risks):**
+
+- **STE gradient approximation at scale:** Straight-Through Estimation is the training mechanism for ternary weights. Its stability and convergence properties are well-characterised at current scale (~58M params). Whether STE remains stable through training runs at 500M–1B+ parameters is an open empirical question — no published work has demonstrated ternary STE convergence at frontier scale.
+- **@sparseskip speedup baseline:** The 83 tok/s inference figure is measured against albert.'s own F32-weight dense equivalent on the same hardware. It is not a direct comparison with INT4-quantized industry inference (TensorRT-LLM, llama.cpp Q4). The relevant claim is that ternary weights eliminate a quantization step entirely — the speedup over post-hoc INT4 quantization of a larger model is a separate, untested question.
+- **Net2net surgery stability at scale:** All five documented layer-addition surgeries were performed on a model in the 13M–58M parameter range. Whether the Fibonacci-gated surgery protocol remains stable when applied to models at 200M+ parameters has not been tested. The current plateau-gate mechanism assumes continued smooth descent after insertion — this assumption is unverified beyond current scale.
 
 ---
 

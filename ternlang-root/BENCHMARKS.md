@@ -440,13 +440,14 @@ At these costs, "discard the last 15 minutes, patch the gate threshold, restart"
 ## §14 — Training at Scale: Cost & Speed Projections
 
 All projections derived from the verified $0.004/epoch T4 baseline (§13a) and published GPU specifications.  
-Hardware speedup ratios are conservative estimates for albert. v3.0's architecture (58M ternary params, 256CTX, memory-bandwidth-bound at this size).
+Hardware speedup ratios are conservative estimates for albert. v3.0's architecture (58M total ternary params stored; ~13M active per token via Top-3 routing, 256CTX, memory-bandwidth-bound at this size).
 
 ### §14a — OpenAI-Scale Cost Comparison
 
 | Metric | albert. v3.0 | GPT-3 | GPT-4 (est.) |
 |--------|-------------|-------|--------------|
-| Parameters | 58M ternary | 175B fp16 | ~1.8T fp16 |
+| Parameters (stored) | 58M ternary | 175B fp16 | ~1.8T fp16 |
+| Parameters (active/token) | ~13M (Top-3/12 MoE) | 175B | ~1.8T |
 | Weight storage | ~92 MB | ~350 GB | ~3.6 TB |
 | Training tokens (to date) | ~150M | 300B | ~13T |
 | Training cost (to date) | **$1.97** | $4.6M | ~$100M |
