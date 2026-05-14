@@ -2791,9 +2791,11 @@
                         chart.options.scales.x.max = maxX + pad;
                     }
                 } else {
-                    // ALL: fit to actual data range — no wild Chart.js future projection
-                    chart.options.scales.x.min = Math.max(0, minX - 2);
-                    chart.options.scales.x.max = maxX + 5;
+                    // ALL: span from earliest smaLog point (historical backfill) to latest live point
+                    const allMinX = smaLog.length > 0 ? Math.min(smaLog[0].x, minX) : minX;
+                    const allMaxX = smaLog.length > 0 ? Math.max(smaLog[smaLog.length - 1].x, maxX) : maxX;
+                    chart.options.scales.x.min = Math.max(0, allMinX - 2);
+                    chart.options.scales.x.max = allMaxX + 5;
                 }
                 chart.update('none');
             }
