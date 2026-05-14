@@ -57,7 +57,7 @@ OSCAR_MAX_PER_LANG      = 10_000_000    # documents per language
 STACK_FULL_MAX_PER_LANG = 2_000_000     # code files per language
 SE_FULL_MAX_PER_SITE    = 500_000       # Q&A threads per site
 MC4_MAX_PER_LANG        = 5_000_000     # documents per language
-PROOF_MAX               = 500_000       # formal proof statements
+PROOF_MAX               = 2_000         # formal proof statements (2k per repo — git tree API doesn't paginate)
 NEWS_MAX                = 1_000_000     # news articles
 
 OSCAR_LANGUAGES = [
@@ -316,7 +316,12 @@ def build_mc4(out_dir: Path):
         log(f"  language: {lang}")
         count = 0
         try:
-            ds = load_dataset("mc4", lang, split="train", streaming=True)
+            # "mc4" dataset uses deprecated loading scripts — use allenai/c4 for en,
+            # cc100 for other languages (both are non-gated and parquet-backed)
+            if lang == "en":
+                ds = load_dataset("allenai/c4", "en", split="train", streaming=True, trust_remote_code=False)
+            else:
+                ds = load_dataset("cc100", lang=lang, split="train", streaming=True, trust_remote_code=False)
             with open(out_path, "w", encoding="utf-8") as fh:
                 for sample in ds:
                     if count >= MC4_MAX_PER_LANG:
@@ -361,24 +366,19 @@ def build_formal_proofs(out_path: Path):
             }
             ext = exts.get(label, ".lean")
 
-            while count < PROOF_MAX // len(PROOF_REPOS):
-                url = (
-                    f"https://api.github.com/repos/{repo}/git/trees/HEAD"
-                    f"?recursive=1&per_page=100&page={page}"
-                )
-                data = fetch_json(url, headers=headers, delay=1.5)
-                if not data:
-                    break
+            per_repo_limit = PROOF_MAX // len(PROOF_REPOS)
+            # git trees API returns all blobs in one recursive call — no pagination
+            url = f"https://api.github.com/repos/{repo}/git/trees/HEAD?recursive=1"
+            data = fetch_json(url, headers=headers, delay=1.5)
+            if data:
                 files = [
                     f for f in data.get("tree", [])
                     if f.get("type") == "blob" and f.get("path", "").endswith(ext)
                 ]
-                for f in files[:100]:
-                    if count >= PROOF_MAX // len(PROOF_REPOS):
+                for f in files:
+                    if count >= per_repo_limit:
                         break
-                    raw_url = (
-                        f"https://raw.githubusercontent.com/{repo}/HEAD/{f['path']}"
-                    )
+                    raw_url = f"https://raw.githubusercontent.com/{repo}/HEAD/{f['path']}"
                     raw = fetch(raw_url, headers={"User-Agent": UA}, delay=0.3)
                     if not raw:
                         continue
@@ -393,9 +393,6 @@ def build_formal_proofs(out_path: Path):
                     fh.flush()
                     count += 1
                     total += 1
-                page += 1
-                if not data.get("truncated") and len(files) == 0:
-                    break
             log(f"    → {count} proof files")
     log(f"Formal proofs done — {total} total → {out_path.name}")
 
