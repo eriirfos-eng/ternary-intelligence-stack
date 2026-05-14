@@ -54,7 +54,9 @@ def _run(cmd: list[str]) -> int:
 
 def cmd_setup():
     print(f"[setup] creating volume {_VOL} (ok if already exists)")
-    subprocess.run(["modal", "volume", "create", _VOL], cwd=_HERE)
+    result = subprocess.run(["modal", "volume", "create", _VOL], cwd=_HERE)
+    if result.returncode not in (0, 1):  # 1 = volume already exists (modal exit code)
+        print(f"  WARNING: modal volume create exited {result.returncode}")
 
     total = len(_UPLOADS)
     for i, (local, remote) in enumerate(_UPLOADS, 1):
@@ -276,10 +278,12 @@ def main():
     evo_local = os.path.join(_HERE, "models/albert_v3.0.evolution")
     if os.path.exists(evo_local):
         print("[main] syncing evolution state to volume ...")
-        subprocess.run(
+        evo_rc = subprocess.run(
             ["modal", "volume", "put", "--force", _VOL,
              "models/albert_v3.0.evolution",
              "/albert/models/albert_v3.0.evolution"],
             cwd=_HERE,
-        )
+        ).returncode
+        if evo_rc != 0:
+            print(f"[main] evolution sync failed (exit {evo_rc}) — train_bible will recalibrate from scratch")
     train.remote(gate_diversity=0.3, lb_weight=0.0)
