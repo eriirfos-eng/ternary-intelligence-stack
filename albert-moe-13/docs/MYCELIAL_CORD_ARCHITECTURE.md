@@ -145,12 +145,14 @@ New fields in `albert_v3.0.config.json`:
 2. Rename all `blocks.{l}.{module}.{param}` → `blocks.{l}.stream_a.{module}.{param}`, except expert tensors which become `blocks.{l}.experts.{n}.{module}.{param}` (shared)
 3. Copy all stream_a tensors → stream_b equivalents
 4. Apply `MandelbrotSurgery::perturb()` to every stream_b tensor (using `stream_index=1` as the `c_im` seed key)
-5. Initialise anastomosis gate tensors (F32, near-zero, shape `[2*hidden_size → 2]` per fusion layer)
+5. Initialise anastomosis gate tensors: `Linear(2 * hidden_size, 2)`, F32, weight ~ N(0, 0.01), bias = 0. This pins gate activation to sigmoid(~0) ≈ 0.5 at t=0 with near-zero cross-influence, and is fully reproducible — no "near-zero vibes", exact init spec.
 6. Update config: `num_streams = 2`, `fusion_layers = fibonacci_up_to(num_layers)`
 7. Archive pre-surgery best checkpoint
 8. Save new checkpoint
 
-The surgery fires once, manually triggered — it is not part of the EvolutionManager's autonomous plateau gate. It is a conscious architectural decision made by the team when the depth-growth plateau is diagnosed. The EvolutionManager continues to govern depth surgery (new layers added to both streams simultaneously) after the cord is established.
+**Cord surgery trigger:** fires once, manually, via a dedicated flag (`--cord-surgery`). Not part of the EvolutionManager's autonomous plateau gate. The team diagnoses the width wall (MYCELIUM saturation, flattening descent rate across multiple depth surgeries, WALD severity holding stable) and makes the call. A separate invocation of `modal run train_modal.py --cord-surgery` performs the migration and restarts training on the dual-stream checkpoint.
+
+**Post-cord depth surgery:** after the cord is established, the EvolutionManager continues governing depth surgery unchanged. When the plateau gate fires, `perform_surgery()` adds one layer to **both streams simultaneously** — the surgery code detects `num_streams: 2` in config and clones the final layer for each stream independently (with distinct Mandelbrot `c_im` seeds: `layer_index` for stream A, `layer_index + 0.5` offset for stream B). A 17L dual-stream model becomes an 18L dual-stream model. The EvolutionManager does not need to know about streams — it fires when it fires. The surgery implementation handles the rest. Growth remains natural and unforced.
 
 ---
 
@@ -183,7 +185,15 @@ The surgery fires once, manually triggered — it is not part of the EvolutionMa
 | Per-stream loss | separate forward passes, no merge | Track relative stream quality |
 | Stream cosine similarity | cos(h_a, h_b) at each layer | Detect premature convergence |
 
-These metrics will be added to the dashboard training.log output and visualised in a new "Cord" panel alongside TTL.
+**Telemetry delivery:** all four metrics are emitted as new JSON fields in the existing `training.log` stream — same format as `routing`, `tlight`, `grad` entries. No new log format, no schema break. Example line:
+
+```
+CORD step=1234 div_kl=[0.12,0.08,...] gate_act=[0.51,0.49,...] cos_sim=[0.98,0.97,...] loss_a=10.21 loss_b=10.23
+```
+
+The dashboard "Cord" panel consumes these entries. This is additive UI work — existing panels are unaffected. Single-stream checkpoints emit no `CORD` lines; the panel renders empty gracefully.
+
+**Inference path:** `moe-test` detects `num_streams` in config at load time and branches to a dual-stream forward pass. Single-stream checkpoints (no `num_streams` field, or `num_streams: 1`) follow the existing code path unchanged. This is not a breaking change — the inference API is the same, the config drives the branch. The @sparseskip-on-Llama demo is unaffected.
 
 ---
 
