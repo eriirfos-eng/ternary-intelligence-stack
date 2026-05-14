@@ -3691,7 +3691,8 @@
             close.addEventListener('click', e => {
                 e.stopPropagation();
                 hideTip();
-                anomalyEvents.splice(idx, 1);
+                const pos = anomalyEvents.indexOf(ev);
+                if (pos !== -1) anomalyEvents.splice(pos, 1);
                 renderAnomalyFeed();
             });
             pill.appendChild(close);
