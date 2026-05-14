@@ -3991,13 +3991,15 @@
             const { chartArea, scales } = chart;
             if (px < chartArea.left || px > chartArea.right || py < chartArea.top || py > chartArea.bottom) return;
 
-            // H-Line / V-Line / Text Note: single click places immediately
+            // H-Line / V-Line / Text Note: single click places; click within 8px of existing line removes it
             if (drawTool === 'hline') {
-                hlines.push({ y: scales.y.getValueForPixel(py) });
+                const hitIdx = hlines.findIndex(hl => Math.abs(scales.y.getPixelForValue(hl.y) - py) < 8);
+                if (hitIdx >= 0) { hlines.splice(hitIdx, 1); } else { hlines.push({ y: scales.y.getValueForPixel(py) }); }
                 chart.draw(); return;
             }
             if (drawTool === 'vline') {
-                vlines.push({ x: scales.x.getValueForPixel(px) });
+                const hitIdx = vlines.findIndex(vl => Math.abs(scales.x.getPixelForValue(vl.x) - px) < 8);
+                if (hitIdx >= 0) { vlines.splice(hitIdx, 1); } else { vlines.push({ x: scales.x.getValueForPixel(px) }); }
                 chart.draw(); return;
             }
             if (drawTool === 'tnote') {
