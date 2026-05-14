@@ -2735,9 +2735,12 @@
                 ds[7].data = bb.upper;
                 ds[8].data = bb.lower;
             }
-            // MACD and RSI already use epD (computed above).
-            if (macdVisible) ds[9].data = macd(epD, 3, 13);
-            if (rsiVisible)  ds[10].data = rsi(epD, 14);
+            if (macdVisible || rsiVisible) {
+                const epD = epochLog.filter(e => e.avg_loss !== null)
+                                    .map(e => ({ x: e.global_epoch, y: e.avg_loss }));
+                if (macdVisible) ds[9].data  = macd(epD, 3, 13);
+                if (rsiVisible)  ds[10].data = rsi(epD, 14);
+            }
             // SMA trail — track live tip (last point) of each active SMA
             const trailSrc = [ds[1], ds[2], ds[3], ds[4], ds[5]];
             for (let ti = 0; ti < 5; ti++) {
