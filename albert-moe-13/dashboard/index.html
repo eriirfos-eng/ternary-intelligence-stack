@@ -694,6 +694,14 @@
 
 
     <div class="tb-cell controls">
+        <button id="muteBtn" title="Toggle sound" style="background:none;border:none;cursor:pointer;padding:3px 5px;color:#505050;display:flex;align-items:center">
+            <svg id="muteIcon" viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+                <path d="M1 4h2l3-2v8L3 8H1z"/>
+                <path id="muteWave1" d="M8 4.5c.8.5 1 1 1 1.5s-.2 1-.8 1.5"/>
+                <path id="muteWave2" d="M9.5 3c1.3.9 1.8 2 1.8 3s-.5 2.1-1.8 3"/>
+                <line id="muteLine" x1="8" y1="4" x2="11" y2="9" style="display:none"/>
+            </svg>
+        </button>
         <div class="dd-wrap">
             <button id="smaDropBtn" title="Toggle chart overlays"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7Q3 4 5 7Q7 10 9 7Q10.2 5.5 11 6"/></svg> <span id="curves-count">0</span> ▾</button>
             <div class="dd-panel" id="smaDrop">
@@ -2328,6 +2336,8 @@
                     if (lastNumLayers !== null && numLayers > lastNumLayers) {
                         liveEvent('surgery', `SURGERY ${lastNumLayers}L→${numLayers}L`, 'gold',
                             `Net2Net surgery fired — model expanded from ${lastNumLayers} to ${numLayers} layers.<br>New layer inserted with identity mapping. Expect brief loss spike.`);
+                        playSurgery();
+                        notify('albert. — SURGERY', `Model expanded ${lastNumLayers}L → ${numLayers}L. Expect brief loss spike.`);
                     }
                     lastNumLayers = numLayers;
                     lastTeleMs = Date.now();
@@ -2675,6 +2685,8 @@
                         liveEvent('best', `BEST avg ${epochAvg.toFixed(4)}`, 'gold',
                             `New best epoch average: <b>${epochAvg.toFixed(4)}</b>.<br>Previous best: ${prevBest === Infinity ? '—' : prevBest.toFixed(4)}`,
                             lastBatchX, epochAvg);
+                        playBest();
+                        notify('albert. — NEW BEST', `Epoch avg ${epochAvg.toFixed(4)} beats ${prevBest === Infinity ? '—' : prevBest.toFixed(4)}`);
                     } else {
                         liveEvent('epoch', `EPOCH avg ${epochAvg.toFixed(4)}`, 'info',
                             `Epoch completed. Average loss: <b>${epochAvg.toFixed(4)}</b>.`,
@@ -4242,6 +4254,102 @@
     }).finally(() => { poll(); setInterval(poll, POLL_MS); });
 
 
+    // ── Audio + Notifications ──────────────────────────────────────────
+    let audioCtx   = null;
+    let soundMuted = localStorage.getItem('soundMuted') === '1';
+    let sirenOsc   = null, sirenGain = null, sirenSweepTimer = null;
+
+    function ensureAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    function tone(ctx, freq, type, t0, dur, peak) {
+        const osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.type = type; osc.frequency.value = freq;
+        g.gain.setValueAtTime(0, t0);
+        g.gain.linearRampToValueAtTime(peak, t0 + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+        osc.start(t0); osc.stop(t0 + dur);
+    }
+
+    function playSurgery() {
+        if (soundMuted) return;
+        const ctx = ensureAudio(), t = ctx.currentTime;
+        // Cinematic descending impact — DU-DUMMM
+        tone(ctx, 523, 'sawtooth', t,        0.7, 0.30);
+        tone(ctx, 330, 'sawtooth', t + 0.12, 1.0, 0.45);
+        tone(ctx, 196, 'sawtooth', t + 0.28, 1.8, 0.50);
+        tone(ctx, 98,  'sine',     t + 0.35, 2.5, 0.35);
+    }
+
+    function playBest() {
+        if (soundMuted) return;
+        const ctx = ensureAudio(), t = ctx.currentTime;
+        // Short ascending chime — new record
+        [523, 659, 784, 1047].forEach((f, i) => tone(ctx, f, 'sine', t + i * 0.09, 0.5, 0.18));
+    }
+
+    function startSiren() {
+        if (soundMuted || sirenOsc) return;
+        const ctx = ensureAudio();
+        sirenOsc  = ctx.createOscillator();
+        sirenGain = ctx.createGain();
+        sirenOsc.connect(sirenGain); sirenGain.connect(ctx.destination);
+        sirenOsc.type = 'sawtooth';
+        sirenGain.gain.value = 0.12;
+        sirenOsc.start();
+        const sweep = () => {
+            if (!sirenOsc) return;
+            const t = ctx.currentTime;
+            sirenOsc.frequency.setValueAtTime(380, t);
+            sirenOsc.frequency.linearRampToValueAtTime(760, t + 0.55);
+            sirenOsc.frequency.linearRampToValueAtTime(380, t + 1.1);
+            sirenSweepTimer = setTimeout(sweep, 1100);
+        };
+        sweep();
+    }
+
+    function stopSiren() {
+        clearTimeout(sirenSweepTimer);
+        if (sirenOsc) { try { sirenOsc.stop(); } catch(_) {} sirenOsc = null; sirenGain = null; }
+    }
+
+    // Notifications
+    function notify(title, body) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        new Notification(title, { body, silent: true });
+    }
+
+    // Mute toggle button
+    const muteBtn  = document.getElementById('muteBtn');
+    const muteIcon = document.getElementById('muteIcon');
+    function applyMuteUI() {
+        const muted = soundMuted;
+        document.getElementById('muteWave1').style.display = muted ? 'none' : '';
+        document.getElementById('muteWave2').style.display = muted ? 'none' : '';
+        document.getElementById('muteLine').style.display  = muted ? ''     : 'none';
+        muteIcon.style.color = muted ? '#ef4444' : '#505050';
+        if (muted) stopSiren();
+    }
+    applyMuteUI();
+    muteBtn.addEventListener('click', () => {
+        // First click also requests notification permission
+        if ('Notification' in window && Notification.permission === 'default')
+            Notification.requestPermission();
+        soundMuted = !soundMuted;
+        localStorage.setItem('soundMuted', soundMuted ? '1' : '0');
+        applyMuteUI();
+    });
+
+    // Hook sounds + notifications into addEvent
+    const _addEventOrig = addEvent;
+    // Wrap by patching addEvent in place after definition (closure trick via shadowing)
+    // Instead, we call the audio layer directly from the two call-sites below.
+    // (Surgery and Best are the only two that warrant sound; others are UI-only.)
+
     // ── Stream watchdog ────────────────────────────────────────────────
     // Checks every second whether new data arrived in the last 30s.
     // Flips the STREAM pill red + flaring when silent, green when live.
@@ -4262,11 +4370,17 @@
         const now    = Date.now();
         const silent = now - lastDataMs > STALE_MS;
 
+        const wasAlarm = dingirEl.classList.contains('alarm');
         dingirEl.classList.toggle('alarm', silent);
         modelNameEl.classList.toggle('alarm', silent);
         dingirEl.title = silent
             ? `No data for ${Math.round((now - lastDataMs) / 1000)}s — training may have stalled`
             : `Stream active — last data ${Math.round((now - lastDataMs) / 1000)}s ago`;
+        if (silent && !wasAlarm) {
+            startSiren();
+            notify('albert. — STREAM STALE', `No data for ${Math.round((now - lastDataMs) / 1000)}s. Training may have stalled.`);
+        }
+        if (!silent && wasAlarm) stopSiren();
 
         for (const { el, getMs, label: lbl } of panelWatchlist) {
             if (!el) continue;
