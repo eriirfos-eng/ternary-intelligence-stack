@@ -1,6 +1,6 @@
 use candle_core::{Device, DType, Result, Tensor};
 use candle_nn::{Optimizer, VarBuilder, loss, VarMap};
-use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture, clear_entropy_capture, take_entropy_capture, clear_lb_capture, take_lb_capture, clear_tlight_capture, take_tlight_capture, clear_div_capture, take_div_capture, take_div_log_capture, take_div_f32_log_capture, set_div_enabled, set_gate_diversity_scale};
+use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture, clear_entropy_capture, take_entropy_capture, clear_lb_capture, take_lb_capture, clear_tlight_capture, take_tlight_capture, clear_div_capture, take_div_capture, take_div_log_capture, take_div_f32_log_capture, set_div_enabled, set_gate_diversity_scale, clear_cord_captures, take_cord_gate_capture, take_cord_cosim_capture};
 use moe_llm_core::tokenizer::BpeTokenizer;
 use moe_llm_core::evolution::EvolutionManager;
 use moe_llm_core::mycelium::MyceliumModule;
@@ -29,6 +29,9 @@ struct TrainFlags {
     /// Root directory for all data/model/log paths. Default: "." (run from project root).
     /// On a rental machine: --root=/path/to/albert-moe-13
     root: String,
+    /// Perform mycelial cord surgery (dual-stream expansion) and exit. Run once manually
+    /// when the width ceiling is reached. Subsequent restarts train the dual-stream model.
+    cord_surgery: bool,
 }
 
 fn parse_args() -> TrainFlags {
@@ -40,11 +43,13 @@ fn parse_args() -> TrainFlags {
         div_weight_override: None,
         gate_diversity:      0.0,
         root:                ".".to_string(),
+        cord_surgery:        false,
     };
     for arg in &args[1..] {
         match arg.as_str() {
             "--lb-disable"   => flags.lb_weight = 0.0,
             "--seed-experts" => flags.seed_experts = true,
+            "--cord-surgery" => flags.cord_surgery = true,
             _ => {
                 if let Some(v) = arg.strip_prefix("--lb-weight=") {
                     if let Ok(w) = v.parse::<f64>() { flags.lb_weight = w; }
@@ -604,6 +609,20 @@ fn seed_experts_orthogonal(
 }
 
 // Net2Net safe-copy layer surgery — whitepaper §11.2 (EvolutionManager)
+/// Fibonacci fusion layer positions for a model with `num_layers` blocks.
+/// Returns indices in [2, 3, 5, 8, 13, 21, ...] that are < num_layers.
+fn fibonacci_fusion_layers(num_layers: usize) -> Vec<usize> {
+    let mut fibs = Vec::new();
+    let (mut a, mut b) = (2usize, 3usize);
+    while a < num_layers {
+        fibs.push(a);
+        let next = a + b;
+        a = b;
+        b = next;
+    }
+    fibs
+}
+
 fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, device: &Device, root: &str) -> Result<()> {
     println!("[{}] --- INITIATING NEURAL SURGERY: Net2Net Safe Copy ---", timestamp());
 
@@ -611,68 +630,243 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, de
     let mut config_json: Value = serde_json::from_str(&config_str).expect("Invalid JSON in config file.");
     let old_layers = config_json["num_layers"].as_u64().unwrap() as usize;
     let new_layers = old_layers + 1;
-    config_json["num_layers"] = json!(new_layers);
-    fs::write(config_path, serde_json::to_string_pretty(&config_json).unwrap())?;
-    println!("[{}] Evolution: Architecture expanded to {} layers.", timestamp(), new_layers);
+    let num_streams = config_json["num_streams"].as_u64().unwrap_or(1) as usize;
+
+    let mand = MandelbrotSurgery::new();
 
     // Surgery reads from the BEST checkpoint, not the latest — prevents expanding from bad weights.
     let source = if std::path::Path::new(best_path).exists() { best_path } else { checkpoint_path };
     let tensors = candle_core::safetensors::load(source, device)?;
-    let mut new_tensors = HashMap::new();
-
-    let source_layer = old_layers - 1;
-    let target_layer = old_layers;
-
-    for (name, tensor) in tensors.iter() {
-        new_tensors.insert(name.clone(), tensor.clone());
-        let prefix = format!("blocks.{}.", source_layer);
-        if name.starts_with(&prefix) {
-            let new_name = name.replace(&prefix, &format!("blocks.{}.", target_layer));
-            new_tensors.insert(new_name, tensor.clone());
-        }
-    }
-
-    // Break symmetry with Mandelbrot-parameterised perturbation.
-    //
-    // Each surgery maps the new layer to a unique "latitude" in Mandelbrot parameter
-    // space (c_im derived from layer index via golden-ratio sequence). This makes the
-    // perturbation pattern self-similar across layers but never identical — the same
-    // fractal self-similarity property that motivated the module (whitepaper §11.3).
-    //
-    // Weights mapping to the Mandelbrot interior (stable basins) receive near-zero
-    // perturbation — learned features are preserved. Weights near the boundary receive
-    // the largest shake — uncertain, plastic weights are pushed to explore.
-    // No external RNG: perturbation is fully deterministic from (value, index, depth).
-    let mand = MandelbrotSurgery::new();
-    let target_prefix = format!("blocks.{}.", target_layer);
-    let perturb_keys: Vec<String> = new_tensors.keys()
-        .filter(|k| k.starts_with(&target_prefix))
-        .cloned()
+    let mut new_tensors: HashMap<String, Tensor> = tensors.iter()
+        .map(|(k, t)| (k.clone(), t.clone()))
         .collect();
-    let tensor_count = perturb_keys.len();
-    for key in perturb_keys {
-        if let Some(t) = new_tensors.get(&key) {
-            let shape = t.shape().clone();
-            let flat  = t.flatten_all()?.to_vec1::<f32>()?;
-            let perturbed_flat = mand.perturb(&flat, target_layer);
-            let perturbed = Tensor::from_vec(perturbed_flat, &shape, device)?;
-            new_tensors.insert(key, perturbed);
+
+    if num_streams >= 2 {
+        // Dual-stream depth surgery: add one block to both streams simultaneously.
+        // Stream A new layer uses standard Mandelbrot latitude (target_layer).
+        // Stream B new layer uses offset latitude (+1000) — distinct from stream A
+        // at the same depth and from any single-stream layer that existed before cord surgery.
+        let source_layer = old_layers - 1;
+        let target_layer = old_layers;
+
+        let sa_prefix  = format!("blocks.{}.stream_a.", source_layer);
+        let sb_prefix  = format!("blocks.{}.stream_b.", source_layer);
+        let exp_prefix = format!("blocks.{}.experts.",  source_layer);
+
+        let new_sa_prefix  = format!("blocks.{}.stream_a.", target_layer);
+        let new_sb_prefix  = format!("blocks.{}.stream_b.", target_layer);
+        let new_exp_prefix = format!("blocks.{}.experts.",  target_layer);
+
+        let source_keys: Vec<(String, Tensor)> = tensors.iter()
+            .filter(|(k, _)| k.starts_with(&sa_prefix) || k.starts_with(&sb_prefix) || k.starts_with(&exp_prefix))
+            .map(|(k, t)| (k.clone(), t.clone()))
+            .collect();
+
+        for (key, tensor) in &source_keys {
+            let new_key = if key.starts_with(&sa_prefix) {
+                key.replacen(&sa_prefix, &new_sa_prefix, 1)
+            } else if key.starts_with(&sb_prefix) {
+                key.replacen(&sb_prefix, &new_sb_prefix, 1)
+            } else {
+                key.replacen(&exp_prefix, &new_exp_prefix, 1)
+            };
+            new_tensors.insert(new_key, tensor.clone());
         }
+
+        // Perturb stream A new layer at its natural depth latitude
+        let sa_keys: Vec<String> = new_tensors.keys()
+            .filter(|k| k.starts_with(&new_sa_prefix)).cloned().collect();
+        for key in sa_keys {
+            if let Some(t) = new_tensors.get(&key) {
+                let shape = t.shape().clone();
+                let flat  = t.flatten_all()?.to_vec1::<f32>()?;
+                new_tensors.insert(key, Tensor::from_vec(mand.perturb(&flat, target_layer), &shape, device)?);
+            }
+        }
+
+        // Perturb stream B new layer at offset latitude (+1000) to differ from stream A
+        let sb_latitude = target_layer + 1000;
+        let sb_keys: Vec<String> = new_tensors.keys()
+            .filter(|k| k.starts_with(&new_sb_prefix)).cloned().collect();
+        for key in sb_keys {
+            if let Some(t) = new_tensors.get(&key) {
+                let shape = t.shape().clone();
+                let flat  = t.flatten_all()?.to_vec1::<f32>()?;
+                new_tensors.insert(key, Tensor::from_vec(mand.perturb(&flat, sb_latitude), &shape, device)?);
+            }
+        }
+
+        // Check if new Fibonacci fusion layers emerged at this depth
+        let old_fusion = fibonacci_fusion_layers(old_layers);
+        let new_fusion = fibonacci_fusion_layers(new_layers);
+        if new_fusion.len() > old_fusion.len() {
+            let hidden_size = config_json["hidden_size"].as_u64().unwrap() as usize;
+            for k in old_fusion.len()..new_fusion.len() {
+                let gate_w = Tensor::randn(0.0f32, 0.01f32, (2usize, 2 * hidden_size), device)?;
+                let gate_b = Tensor::zeros((2usize,), DType::F32, device)?;
+                new_tensors.insert(format!("anastomosis.{}.gate.weight", k), gate_w);
+                new_tensors.insert(format!("anastomosis.{}.gate.bias", k), gate_b);
+                println!("[{}] New anastomosis gate {} at layer {} initialised.", timestamp(), k, new_fusion[k]);
+            }
+            config_json["fusion_layers"] = json!(new_fusion);
+        }
+
+        config_json["num_layers"] = json!(new_layers);
+        fs::write(config_path, serde_json::to_string_pretty(&config_json).unwrap())?;
+        println!("[{}] Dual-stream surgery: {}L → {}L | stream_a lat={:.4} stream_b lat={}",
+            timestamp(), old_layers, new_layers,
+            moe_llm_core::mandelbrot::layer_c_im(target_layer), sb_latitude);
+    } else {
+        // Single-stream surgery (original behaviour, unchanged).
+        let source_layer = old_layers - 1;
+        let target_layer = old_layers;
+
+        for (name, tensor) in tensors.iter() {
+            let prefix = format!("blocks.{}.", source_layer);
+            if name.starts_with(&prefix) {
+                let new_name = name.replacen(&prefix, &format!("blocks.{}.", target_layer), 1);
+                new_tensors.insert(new_name, tensor.clone());
+            }
+        }
+
+        let target_prefix = format!("blocks.{}.", target_layer);
+        let perturb_keys: Vec<String> = new_tensors.keys()
+            .filter(|k| k.starts_with(&target_prefix)).cloned().collect();
+        let tensor_count = perturb_keys.len();
+        for key in perturb_keys {
+            if let Some(t) = new_tensors.get(&key) {
+                let shape = t.shape().clone();
+                let flat  = t.flatten_all()?.to_vec1::<f32>()?;
+                new_tensors.insert(key, Tensor::from_vec(mand.perturb(&flat, target_layer), &shape, device)?);
+            }
+        }
+        println!("[{}] Symmetry break: Mandelbrot perturbation applied to {} tensors in layer {} (c_im={:.4}).",
+            timestamp(), tensor_count, target_layer,
+            moe_llm_core::mandelbrot::layer_c_im(target_layer));
+
+        config_json["num_layers"] = json!(new_layers);
+        fs::write(config_path, serde_json::to_string_pretty(&config_json).unwrap())?;
+        println!("[{}] Surgery Complete: Layer {} cloned from Layer {}.", timestamp(), target_layer, source_layer);
     }
-    println!("[{}] Symmetry break: Mandelbrot perturbation applied to {} tensors in layer {} (c_im={:.4}).",
-        timestamp(), tensor_count, target_layer,
-        moe_llm_core::mandelbrot::layer_c_im(target_layer));
 
     candle_core::safetensors::save(&new_tensors, checkpoint_path)?;
-    // Archive the pre-surgery best checkpoint with a versioned name instead of deleting it.
-    // Deleting was the original bug: if the new layer can't learn, the good pre-surgery weights
-    // are lost forever. The archive preserves rollback capability.
+
     let archive_path = format!("{}/models/albert_v3.0.best.{}L.safetensors", root, old_layers);
     if std::path::Path::new(best_path).exists() {
         let _ = fs::rename(best_path, &archive_path);
         println!("[{}] Pre-surgery best archived to {}.", timestamp(), archive_path);
     }
-    println!("[{}] Surgery Complete: Layer {} cloned from Layer {}.", timestamp(), target_layer, source_layer);
+    Ok(())
+}
+
+/// Mycelial cord surgery: expand single-stream 256H model into dual-stream 2×256H.
+///
+/// Reads the best checkpoint, renames tensors to stream_a/stream_b/experts namespacing,
+/// applies Mandelbrot perturbation to stream B to break inter-stream symmetry,
+/// initialises anastomosis gate tensors at Fibonacci-indexed fusion layers,
+/// and writes the new checkpoint + updated config.json.
+///
+/// Triggered once manually via `--cord-surgery`. Does not fire autonomously.
+/// Restart training without the flag after this exits.
+fn perform_cord_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, device: &Device, root: &str) -> Result<()> {
+    println!("[{}] --- INITIATING CORD SURGERY: Mycelial Dual-Stream Expansion ---", timestamp());
+
+    let config_str = fs::read_to_string(config_path).expect("Unable to read config.json");
+    let mut config_json: Value = serde_json::from_str(&config_str).expect("Invalid JSON in config file.");
+    let num_layers  = config_json["num_layers"].as_u64().unwrap() as usize;
+    let hidden_size = config_json["hidden_size"].as_u64().unwrap() as usize;
+    let num_streams = config_json["num_streams"].as_u64().unwrap_or(1) as usize;
+
+    if num_streams >= 2 {
+        println!("[{}] Config already shows num_streams={}. Cord surgery already applied — aborting.", timestamp(), num_streams);
+        return Ok(());
+    }
+
+    let fusion_layers = fibonacci_fusion_layers(num_layers);
+    println!("[{}] {}L model → dual-stream | anastomosis at {:?}", timestamp(), num_layers, fusion_layers);
+
+    let source = if std::path::Path::new(best_path).exists() { best_path } else { checkpoint_path };
+    let tensors = candle_core::safetensors::load(source, device)?;
+    let mut new_tensors: HashMap<String, Tensor> = HashMap::new();
+
+    // Migrate every tensor in the checkpoint to the dual-stream naming convention:
+    //   blocks.{i}.attn.*         → blocks.{i}.stream_a.attn.*  (+ stream_b copy)
+    //   blocks.{i}.moe.gate.*     → blocks.{i}.stream_a.moe.gate.*  (+ stream_b copy)
+    //   blocks.{i}.moe.experts.*  → blocks.{i}.experts.*   (shared, no stream prefix)
+    //   blocks.{i}.ln1/ln2.*      → blocks.{i}.stream_a.ln1/ln2.*  (+ stream_b copy)
+    //   embed.*, ln_f.*, lm_head.* → unchanged (shared)
+    for (name, tensor) in tensors.iter() {
+        let mut placed = false;
+        for i in 0..num_layers {
+            let block_pfx = format!("blocks.{}.", i);
+            if name.starts_with(&block_pfx) {
+                let rest = &name[block_pfx.len()..];
+                if rest.starts_with("moe.experts.") {
+                    // Shared experts: strip moe. prefix
+                    let expert_suffix = &rest["moe.".len()..];
+                    new_tensors.insert(format!("blocks.{}.{}", i, expert_suffix), tensor.clone());
+                } else {
+                    // Stream-specific: duplicate as stream_a (unchanged) and stream_b (to be perturbed)
+                    new_tensors.insert(format!("blocks.{}.stream_a.{}", i, rest), tensor.clone());
+                    new_tensors.insert(format!("blocks.{}.stream_b.{}", i, rest), tensor.clone());
+                }
+                placed = true;
+                break;
+            }
+        }
+        if !placed {
+            new_tensors.insert(name.clone(), tensor.clone());
+        }
+    }
+
+    // Apply Mandelbrot perturbation to all stream_b tensors.
+    // Latitude is num_layers + 50 — well beyond any layer index, unique, deterministic.
+    let stream_b_latitude = num_layers + 50;
+    let mand = MandelbrotSurgery::new();
+    let sb_keys: Vec<String> = new_tensors.keys()
+        .filter(|k| k.contains(".stream_b.")).cloned().collect();
+    let perturb_count = sb_keys.len();
+    for key in sb_keys {
+        if let Some(t) = new_tensors.get(&key) {
+            let shape = t.shape().clone();
+            let flat  = t.flatten_all()?.to_vec1::<f32>()?;
+            new_tensors.insert(key, Tensor::from_vec(mand.perturb(&flat, stream_b_latitude), &shape, device)?);
+        }
+    }
+    println!("[{}] Stream B: Mandelbrot perturbation applied to {} tensors (latitude {} → c_im={:.4}).",
+        timestamp(), perturb_count, stream_b_latitude,
+        moe_llm_core::mandelbrot::layer_c_im(stream_b_latitude));
+
+    // Initialise anastomosis gate tensors: Linear(2*hidden → 2), weight~N(0,0.01), bias=0.
+    // sigmoid(near-zero) ≈ 0.5 — minimal cross-stream influence at t=0. Gate learns to open
+    // selectively as streams develop complementary specialisations.
+    for (k, &fusion_layer) in fusion_layers.iter().enumerate() {
+        let gate_w = Tensor::randn(0.0f32, 0.01f32, (2usize, 2 * hidden_size), device)?;
+        let gate_b = Tensor::zeros((2usize,), DType::F32, device)?;
+        new_tensors.insert(format!("anastomosis.{}.gate.weight", k), gate_w);
+        new_tensors.insert(format!("anastomosis.{}.gate.bias",   k), gate_b);
+        println!("[{}] Anastomosis {}: gate at layer {} (Linear({}, 2), w~N(0,0.01), b=0).",
+            timestamp(), k, fusion_layer, 2 * hidden_size);
+    }
+
+    // Update config
+    config_json["num_streams"]   = json!(2);
+    config_json["fusion_layers"] = json!(fusion_layers);
+    fs::write(config_path, serde_json::to_string_pretty(&config_json).unwrap())?;
+
+    // Save new checkpoint
+    candle_core::safetensors::save(&new_tensors, checkpoint_path)?;
+
+    // Archive pre-cord best for rollback
+    let archive_path = format!("{}/models/albert_v3.0.best.{}L.pre_cord.safetensors", root, num_layers);
+    if std::path::Path::new(best_path).exists() {
+        let _ = fs::rename(best_path, &archive_path);
+        println!("[{}] Pre-cord best archived to {}.", timestamp(), archive_path);
+    }
+
+    println!("[{}] Cord Surgery Complete: single-stream → dual-stream 2×{}H | {} anastomosis layers.",
+        timestamp(), hidden_size, fusion_layers.len());
+    println!("[{}] Restart training without --cord-surgery to begin dual-stream training.", timestamp());
     Ok(())
 }
 
@@ -733,12 +927,16 @@ fn train_cycle(
     let config_json: Value = serde_json::from_str(&config_str).expect("Invalid JSON in config file.");
 
     let mut config = TransformerConfig::default();
-    config.vocab_size  = tokenizer.vocab_size();
-    config.hidden_size = config_json["hidden_size"].as_u64().unwrap() as usize;
-    config.num_layers  = config_json["num_layers"].as_u64().unwrap() as usize;
-    config.num_heads   = config_json["num_heads"].as_u64().unwrap() as usize;
-    config.max_seq_len = config_json["max_seq_len"].as_u64().unwrap() as usize;
-    config.num_experts = config_json["num_experts"].as_u64().unwrap() as usize;
+    config.vocab_size    = tokenizer.vocab_size();
+    config.hidden_size   = config_json["hidden_size"].as_u64().unwrap() as usize;
+    config.num_layers    = config_json["num_layers"].as_u64().unwrap() as usize;
+    config.num_heads     = config_json["num_heads"].as_u64().unwrap() as usize;
+    config.max_seq_len   = config_json["max_seq_len"].as_u64().unwrap() as usize;
+    config.num_experts   = config_json["num_experts"].as_u64().unwrap() as usize;
+    config.num_streams   = config_json["num_streams"].as_u64().unwrap_or(1) as usize;
+    config.fusion_layers = config_json["fusion_layers"].as_array()
+        .map(|arr| arr.iter().filter_map(|v| v.as_u64().map(|n| n as usize)).collect())
+        .unwrap_or_default();
 
     println!("[{}] Arch: {}L · {}H · {}E · {}CTX | Vocab: {}",
         timestamp(), config.num_layers, config.hidden_size,
@@ -1290,6 +1488,19 @@ fn train_cycle(
                     }
                 }
                 clear_routing_capture();
+                clear_cord_captures();
+
+                // CORD — dual-stream telemetry (zero-cost no-op in single-stream mode).
+                if config.num_streams >= 2 {
+                    let gate_acts = take_cord_gate_capture();
+                    let cos_sims  = take_cord_cosim_capture();
+                    if !gate_acts.is_empty() || !cos_sims.is_empty() {
+                        let gate_str: Vec<String> = gate_acts.iter().map(|&v| format!("{:.3}", v)).collect();
+                        let cos_str:  Vec<String> = cos_sims.iter().map(|&v| format!("{:.3}", v)).collect();
+                        let _ = writeln!(f, "CORD step={} gate=[{}] cos=[{}]",
+                            *global_step, gate_str.join(","), cos_str.join(","));
+                    }
+                }
 
                 // DIV — per-layer normalized variance of expert outputs. Fires on every
                 // optimizer step batch where div was active. 0=collapsed, ~1=diverse.
@@ -1846,6 +2057,14 @@ fn main() -> Result<()> {
     let checkpoint_path = checkpoint_path.as_str();
     let best_path       = best_path.as_str();
     let evo_state_path  = evo_state_path.as_str();
+
+    // Cord surgery: one-time manual migration from single-stream to dual-stream.
+    // Run: albert-train --cord-surgery
+    // Then restart normally (without the flag) to begin dual-stream training.
+    if flags.cord_surgery {
+        perform_cord_surgery(config_path, checkpoint_path, best_path, &device, r)?;
+        return Ok(());
+    }
 
     let tokenizer = BpeTokenizer::new(vocab_path);
 

@@ -64,13 +64,15 @@ fn main() -> Result<()> {
 
     // ── Build model ───────────────────────────────────────────────────────────
     let config = TransformerConfig {
-        vocab_size:  VOCAB_SIZE,
-        hidden_size: HIDDEN,
-        num_layers:  LAYERS,
-        num_heads:   HEADS,
-        max_seq_len: SEQ_LEN,
-        threshold:   0.02,
-        num_experts: EXPERTS,
+        vocab_size:    VOCAB_SIZE,
+        hidden_size:   HIDDEN,
+        num_layers:    LAYERS,
+        num_heads:     HEADS,
+        max_seq_len:   SEQ_LEN,
+        threshold:     0.02,
+        num_experts:   EXPERTS,
+        num_streams:   1,
+        fusion_layers: vec![],
     };
 
     let varmap = VarMap::new();

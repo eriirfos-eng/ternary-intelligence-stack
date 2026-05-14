@@ -141,6 +141,38 @@ impl MoeBlock {
         })
     }
 
+    /// Dual-stream constructor: gate weights from `vb_stream` (stream-specific),
+    /// expert FFN weights from `vb_experts` (shared between stream A and stream B).
+    /// Both streams accessing the same `vb_experts` prefix in the VarMap means they
+    /// reference identical underlying tensors — gradient from both streams accumulates
+    /// on each expert, not halved.
+    pub fn new_stream(
+        hidden_size: usize,
+        num_experts: usize,
+        vb_stream: VarBuilder,
+        vb_experts: VarBuilder,
+        threshold: f32,
+    ) -> Result<Self> {
+        let gate = candle_nn::linear_no_bias(hidden_size, num_experts, vb_stream.pp("gate"))?;
+        let mut experts = Vec::new();
+        let mut expert_seeds = Vec::new();
+        for i in 0..num_experts {
+            experts.push(Mlp::new(hidden_size, hidden_size * 4, vb_experts.pp(i), threshold)?);
+            let seed = vb_experts.pp(i).get_with_hints(
+                hidden_size, "seed_bias",
+                candle_nn::Init::Uniform { lo: -0.01, up: 0.01 },
+            )?;
+            expert_seeds.push(seed);
+        }
+        Ok(Self {
+            gate,
+            experts,
+            expert_seeds,
+            num_experts,
+            traffic_light: RefCell::new(TrafficLight::new(num_experts)),
+        })
+    }
+
     pub fn prepare_inference(&self) -> Result<()> {
         enter_eval_mode();
         for expert in &self.experts { expert.prepare_inference()?; }

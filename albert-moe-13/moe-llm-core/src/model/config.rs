@@ -7,6 +7,11 @@ pub struct TransformerConfig {
     pub max_seq_len: usize,
     pub threshold: f32,
     pub num_experts: usize,
+    /// Number of parallel streams (1 = single-stream, 2 = mycelial cord dual-stream).
+    pub num_streams: usize,
+    /// Layer indices where anastomosis gates fuse the two streams (Fibonacci positions).
+    /// Empty when num_streams == 1.
+    pub fusion_layers: Vec<usize>,
 }
 
 impl Default for TransformerConfig {
@@ -19,6 +24,8 @@ impl Default for TransformerConfig {
             max_seq_len: 64,
             threshold: 0.02,
             num_experts: 8,
+            num_streams: 1,
+            fusion_layers: vec![],
         }
     }
 }
