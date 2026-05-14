@@ -4410,7 +4410,17 @@
             if (!epochLog.some(e => e.global_epoch === ge))
                 epochLog.push({ local_epoch: ge, global_epoch: ge, layers: null, avg_loss: al, clipped: false, skipped: false });
         }
-    }).finally(() => { poll(); setInterval(poll, POLL_MS); });
+    }).finally(() => {
+        poll(); // first render with real data
+        // re-sync Chart.js dataset visibility — loadPrefs() fires before data exists,
+        // so Chart.js initialises hidden-state from its own defaults on the first update();
+        // re-dispatching here forces the correct state after smaLog is populated.
+        PREF_CBS.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.type === 'checkbox' && el.checked) el.dispatchEvent(new Event('change'));
+        });
+        setInterval(poll, POLL_MS);
+    });
 
 
     // ── Audio + Notifications ──────────────────────────────────────────
