@@ -1017,6 +1017,15 @@
     document.addEventListener('mousemove', ev => {
         if (ttDiv.style.display === 'block') tipPosition(ev.clientX, ev.clientY);
     });
+    // esc() sanitizes user/server data before interpolation into innerHTML contexts
+    function esc(s) {
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
     function showTip(ev, html) {
         ttDiv.innerHTML = html;
         ttDiv.style.display = 'block';
@@ -3699,8 +3708,8 @@
 
             pill.addEventListener('mouseenter', e => showTip(e,
                 (ICON_SVG[ev.icon] ? '<span style="display:inline-flex;align-items:center;gap:5px;vertical-align:middle">' + ICON_SVG[ev.icon] + '</span> ' : '') +
-                '<b>' + ev.text + '</b><br>' +
-                ev.detail + '<br><span style="color:#64748b">' + ev.ts + '</span>' +
+                '<b>' + esc(ev.text) + '</b><br>' +
+                esc(ev.detail) + '<br><span style="color:#64748b">' + esc(ev.ts) + '</span>' +
                 (ev.cx != null ? '<br><span style="color:#334155;font-size:10px">click to locate on chart</span>' : '')));
             pill.addEventListener('mouseleave', hideTip);
             pill.addEventListener('click', () => {
