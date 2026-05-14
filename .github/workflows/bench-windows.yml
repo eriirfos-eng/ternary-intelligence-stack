@@ -17,6 +17,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate release_tag format
+        shell: bash
+        run: |
+          TAG="${{ github.event.inputs.release_tag }}"
+          if ! echo "$TAG" | grep -qE '^bench-v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Invalid release_tag '$TAG'. Must match bench-vMAJOR.MINOR.PATCH"
+            exit 1
+          fi
+
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # stable
 
