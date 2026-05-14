@@ -145,7 +145,7 @@ app = modal.App("albert-training")
     memory=16384,
     cpu=4.0,
 )
-def train(gate_diversity: float = 0.5, lb_weight: float = 0.03):
+def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: int = 0):
     rust_bin = "/root/.cargo/bin"
     cuda_bin = "/usr/local/cuda/bin"
     env = {
@@ -213,6 +213,8 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03):
         f"--lb-weight={lb_weight}",
         "--div-weight=0.001",
     ]
+    if stop_at_epoch > 0:
+        cmd.append(f"--stop-at-epoch={stop_at_epoch}")
     print(f"[modal] {' '.join(cmd)}")
     sys.stdout.flush()
 
@@ -286,4 +288,4 @@ def main():
         ).returncode
         if evo_rc != 0:
             print(f"[main] evolution sync failed (exit {evo_rc}) — train_bible will recalibrate from scratch")
-    train.remote(gate_diversity=0.3, lb_weight=0.0)
+    train.remote(gate_diversity=0.3, lb_weight=0.0, stop_at_epoch=900)

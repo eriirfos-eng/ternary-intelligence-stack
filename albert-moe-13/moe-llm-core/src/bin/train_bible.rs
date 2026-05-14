@@ -32,6 +32,9 @@ struct TrainFlags {
     /// Perform mycelial cord surgery (dual-stream expansion) and exit. Run once manually
     /// when the width ceiling is reached. Subsequent restarts train the dual-stream model.
     cord_surgery: bool,
+    /// Exit cleanly after this many total epochs. Checkpoint is written before exit.
+    /// Useful for milestone checkpoints: albert-train --stop-at-epoch=900
+    stop_at_epoch: Option<u32>,
 }
 
 fn parse_args() -> TrainFlags {
@@ -44,6 +47,7 @@ fn parse_args() -> TrainFlags {
         gate_diversity:      0.0,
         root:                ".".to_string(),
         cord_surgery:        false,
+        stop_at_epoch:       None,
     };
     for arg in &args[1..] {
         match arg.as_str() {
@@ -61,6 +65,8 @@ fn parse_args() -> TrainFlags {
                     if let Ok(w) = v.parse::<f32>() { flags.gate_diversity = w; }
                 } else if let Some(v) = arg.strip_prefix("--root=") {
                     flags.root = v.trim_end_matches('/').to_string();
+                } else if let Some(v) = arg.strip_prefix("--stop-at-epoch=") {
+                    if let Ok(e) = v.parse::<u32>() { flags.stop_at_epoch = Some(e); }
                 }
             }
         }
@@ -1677,6 +1683,17 @@ fn train_cycle(
             println!("[{}] ★ New best epoch loss: {:.4} — best checkpoint saved.", timestamp(), avg_loss);
         }
 
+        // ── Milestone stop: exit cleanly when a --stop-at-epoch target is reached ──────
+        if let Some(stop_at) = flags.stop_at_epoch {
+            if total_epochs >= stop_at {
+                println!("[{}] Reached epoch {} milestone — checkpoint saved, exiting cleanly.",
+                    timestamp(), total_epochs);
+                println!("[{}] Restart albert-train (without --stop-at-epoch) to continue.", timestamp());
+                if let Some(ref mut f) = log_file { let _ = f.flush(); }
+                std::process::exit(0);
+            }
+        }
+
         // ── Hot-swap: file-triggered binary reload (safe — checkpoint already written) ──
         // Workflow: cargo build --release && touch models/.hot_reload
         // At the next epoch boundary the process flushes, exec()s the new binary,
@@ -2087,12 +2104,31 @@ fn main() -> Result<()> {
     let mut wald     = WaldModule::new();
 
     loop {
-        // Read current layer depth to select the right corpus stages.
-        let num_layers: usize = fs::read_to_string(config_path)
-            .ok()
-            .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
-            .and_then(|v| v["num_layers"].as_u64())
-            .unwrap_or(3) as usize;
+        // Read current config — layer depth governs corpus selection; num_streams governs
+        // whether cord surgery should fire before the next train cycle begins.
+        let (num_layers, num_streams) = {
+            let cfg: Value = fs::read_to_string(config_path)
+                .ok()
+                .and_then(|s| serde_json::from_str(&s).ok())
+                .unwrap_or_else(|| json!({}));
+            (
+                cfg["num_layers"].as_u64().unwrap_or(3) as usize,
+                cfg["num_streams"].as_u64().unwrap_or(1) as usize,
+            )
+        };
+
+        // Autonomous cord surgery: fires when the model has grown deep enough that
+        // the width ceiling (256H) limits further improvement. Layer threshold 25 matches
+        // the Stage 11 milestone in CORPUS_EXPANSION_ROADMAP.md. The EvolutionManager
+        // continues governing depth growth after cord surgery — this is additive, not
+        // a replacement for depth surgery.
+        if num_streams < 2 && num_layers >= 25 {
+            println!("[{}] [CORD] Autonomous trigger: {}L ≥ 25L threshold — width ceiling reached.",
+                timestamp(), num_layers);
+            perform_cord_surgery(config_path, checkpoint_path, best_path, &device, r)?;
+            // Loop continues — next iteration loads the dual-stream model from checkpoint.
+            continue;
+        }
 
         let tokens = load_corpus_cached(&tokenizer, num_layers, &flags.root);
         println!("[{}] Total corpus: {} tokens ({}L model, stages ≤{})",
