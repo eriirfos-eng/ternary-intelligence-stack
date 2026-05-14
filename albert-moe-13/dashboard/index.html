@@ -993,6 +993,9 @@
     let dragState       = null;       // {type:'endpoint'|'body', lineIdx, epIdx?, startDataX, startDataY, origX1, origY1, origX2, origY2}
     let noteDragState   = null;       // {noteIdx, startDataX, startDataY, origX, origY}
     let didDrag         = false;      // true if a drag was committed this mousedown cycle
+    let hoveredHlineIdx = null;       // index of hovered h-line (12px radius, visual + hit feedback)
+    let hoveredVlineIdx = null;       // index of hovered v-line (12px radius, visual + hit feedback)
+    let undoStack       = [];         // in-memory undo snapshots [{trendlines,hlines,vlines,tnotes}], max 50
     let lastDojiEp      = -999;
 
     // ── Tooltip ──────────────────────────────────────────────────────
@@ -1453,6 +1456,7 @@
             const text = inp.value.trim();
             inp.remove();
             if (!text) return;
+            pushUndo();
             if (editIdx !== null) { tnotes[editIdx].text = text; }
             else { tnotes.push({ x: dataX, y: dataY, text }); }
             saveDrawings(); chart.draw();
@@ -1469,7 +1473,8 @@
     const trendlinePlugin = {
         id: 'trendlines',
         afterDraw(chart) {
-            if (!trendlines.length && !pendingLine && !hlines.length && !vlines.length && !tnotes.length) return;
+            if (!trendlines.length && !pendingLine && !hlines.length && !vlines.length && !tnotes.length
+                    && !(drawMode && (drawTool === 'hline' || drawTool === 'vline') && crosshairPos)) return;
             const { ctx: c2, chartArea: a, scales } = chart;
             c2.save();
             c2.beginPath();
@@ -1541,24 +1546,64 @@
             }
             // H-Lines — horizontal support/resistance (cyan dashed, single click to place)
             c2.setLineDash([6, 3]);
-            for (const hl of hlines) {
-                const py = scales.y.getPixelForValue(hl.y);
-                if (py < a.top || py > a.bottom) continue;
-                c2.beginPath(); c2.moveTo(a.left, py); c2.lineTo(a.right, py);
-                c2.strokeStyle = 'rgba(34,211,238,0.65)'; c2.lineWidth = 1.2; c2.stroke();
+            for (let i = 0; i < hlines.length; i++) {
+                const hl = hlines[i];
+                const hpy = scales.y.getPixelForValue(hl.y);
+                if (hpy < a.top || hpy > a.bottom) continue;
+                const isHov = i === hoveredHlineIdx;
+                c2.beginPath(); c2.moveTo(a.left, hpy); c2.lineTo(a.right, hpy);
+                c2.strokeStyle = isHov ? 'rgba(34,211,238,0.95)' : 'rgba(34,211,238,0.65)';
+                c2.lineWidth   = isHov ? 1.8 : 1.2;
+                if (isHov) { c2.shadowColor = 'rgba(34,211,238,0.55)'; c2.shadowBlur = 7; }
+                c2.stroke();
+                c2.shadowBlur = 0;
                 c2.font = '9px "JetBrains Mono", monospace';
-                c2.fillStyle = 'rgba(34,211,238,0.8)'; c2.textAlign = 'right';
-                c2.fillText(hl.y.toFixed(4), a.right - 3, py - 3);
+                c2.fillStyle = isHov ? 'rgba(34,211,238,1.0)' : 'rgba(34,211,238,0.8)';
+                c2.textAlign = 'right';
+                c2.fillText(hl.y.toFixed(4), a.right - 3, hpy - 3);
+                if (isHov) {
+                    c2.fillStyle = 'rgba(34,211,238,0.55)'; c2.textAlign = 'left';
+                    c2.fillText('click to remove', a.left + 4, hpy - 3);
+                }
+            }
+            // H-line preview guide (dashed ghost before placing)
+            if (drawTool === 'hline' && hoveredHlineIdx === null && crosshairPos &&
+                    crosshairPos.y >= a.top && crosshairPos.y <= a.bottom) {
+                c2.setLineDash([4, 4]);
+                c2.beginPath(); c2.moveTo(a.left, crosshairPos.y); c2.lineTo(a.right, crosshairPos.y);
+                c2.strokeStyle = 'rgba(34,211,238,0.28)'; c2.lineWidth = 1; c2.stroke();
+                c2.font = '9px "JetBrains Mono", monospace';
+                c2.fillStyle = 'rgba(34,211,238,0.45)'; c2.textAlign = 'right';
+                c2.fillText(scales.y.getValueForPixel(crosshairPos.y).toFixed(4), a.right - 3, crosshairPos.y - 3);
             }
             // V-Lines — vertical epoch markers (violet dashed, single click to place)
-            for (const vl of vlines) {
-                const px = scales.x.getPixelForValue(vl.x);
-                if (px < a.left || px > a.right) continue;
-                c2.beginPath(); c2.moveTo(px, a.top); c2.lineTo(px, a.bottom);
-                c2.strokeStyle = 'rgba(167,139,250,0.65)'; c2.lineWidth = 1.2; c2.stroke();
+            c2.setLineDash([6, 3]);
+            for (let i = 0; i < vlines.length; i++) {
+                const vl = vlines[i];
+                const vpx = scales.x.getPixelForValue(vl.x);
+                if (vpx < a.left || vpx > a.right) continue;
+                const isHov = i === hoveredVlineIdx;
+                c2.beginPath(); c2.moveTo(vpx, a.top); c2.lineTo(vpx, a.bottom);
+                c2.strokeStyle = isHov ? 'rgba(167,139,250,0.95)' : 'rgba(167,139,250,0.65)';
+                c2.lineWidth   = isHov ? 1.8 : 1.2;
+                if (isHov) { c2.shadowColor = 'rgba(167,139,250,0.55)'; c2.shadowBlur = 7; }
+                c2.stroke();
+                c2.shadowBlur = 0;
                 c2.font = '9px "JetBrains Mono", monospace';
-                c2.fillStyle = 'rgba(167,139,250,0.8)'; c2.textAlign = 'left';
-                c2.fillText(`ep ${Math.round(vl.x)}`, px + 3, a.top + 10);
+                c2.fillStyle = isHov ? 'rgba(167,139,250,1.0)' : 'rgba(167,139,250,0.8)';
+                c2.textAlign = 'left';
+                c2.fillText(`ep ${Math.round(vl.x)}`, vpx + 3, a.top + 10);
+                if (isHov) c2.fillText('click to remove', vpx + 3, a.top + 22);
+            }
+            // V-line preview guide
+            if (drawTool === 'vline' && hoveredVlineIdx === null && crosshairPos &&
+                    crosshairPos.x >= a.left && crosshairPos.x <= a.right) {
+                c2.setLineDash([4, 4]);
+                c2.beginPath(); c2.moveTo(crosshairPos.x, a.top); c2.lineTo(crosshairPos.x, a.bottom);
+                c2.strokeStyle = 'rgba(167,139,250,0.28)'; c2.lineWidth = 1; c2.stroke();
+                c2.font = '9px "JetBrains Mono", monospace';
+                c2.fillStyle = 'rgba(167,139,250,0.45)'; c2.textAlign = 'left';
+                c2.fillText(`ep ${Math.round(scales.x.getValueForPixel(crosshairPos.x))}`, crosshairPos.x + 3, a.top + 10);
             }
             c2.setLineDash([]);
             // Text notes — amber pin dot + label with dark background
@@ -1910,6 +1955,7 @@
                 if (pinHit || pillHit) {
                     const dataX = chart.scales.x.getValueForPixel(px);
                     const dataY = chart.scales.y.getValueForPixel(py);
+                    pushUndo();
                     noteDragState = { noteIdx: selectedNoteIdx, startDataX: dataX, startDataY: dataY, origX: tn.x, origY: tn.y };
                     e.stopPropagation();
                 }
@@ -1929,14 +1975,17 @@
                 const t = lenSq ? Math.max(0, Math.min(1, ((px-px1)*dxL+(py-py1)*dyL)/lenSq)) : 0;
                 const dLine = Math.sqrt((px-px1-t*dxL)**2+(py-py1-t*dyL)**2);
                 if (d0 <= 10) {
+                    pushUndo();
                     dragState = { type: 'endpoint', lineIdx: selectedLineIdx, epIdx: 0 };
                     e.stopPropagation();
                 } else if (d1 <= 10) {
+                    pushUndo();
                     dragState = { type: 'endpoint', lineIdx: selectedLineIdx, epIdx: 1 };
                     e.stopPropagation();
                 } else if (dLine <= 8) {
                     const dataX = chart.scales.x.getValueForPixel(px);
                     const dataY = chart.scales.y.getValueForPixel(py);
+                    pushUndo();
                     dragState = { type: 'body', lineIdx: selectedLineIdx,
                         startDataX: dataX, startDataY: dataY,
                         origX1: ln.x1, origY1: ln.y1, origX2: ln.x2, origY2: ln.y2 };
@@ -1949,7 +1998,9 @@
         document.body.style.cursor = 'grabbing';
     });
     document.addEventListener('mouseup', () => {
+        if (noteDragState && didDrag) { saveDrawings(); }
         if (noteDragState) { noteDragState = null; chart.draw(); }
+        if (dragState && didDrag) { saveDrawings(); }
         if (dragState) { dragState = null; chart.draw(); }
         if (document.body.style.cursor === 'grabbing') {
             chart.canvas.style.cursor  = drawMode ? 'crosshair' : 'grab';
@@ -2000,8 +2051,26 @@
                     const pinHit  = Math.hypot(px - npx, py - npy) <= 14;
                     const pillHit = px >= npx + 5 && px <= npx + 7 + pillW && py >= npy - 19 && py <= npy - 2;
                     chart.canvas.style.cursor = (pinHit || pillHit) ? 'move' : 'crosshair';
+                } else if (drawTool === 'hline') {
+                    // H-line hover: find nearest within 12px radius
+                    hoveredHlineIdx = null;
+                    let bestH = 12;
+                    for (let i = 0; i < hlines.length; i++) {
+                        const d = Math.abs(chart.scales.y.getPixelForValue(hlines[i].y) - py);
+                        if (d < bestH) { bestH = d; hoveredHlineIdx = i; }
+                    }
+                    chart.canvas.style.cursor = hoveredHlineIdx !== null ? 'pointer' : 'crosshair';
+                } else if (drawTool === 'vline') {
+                    // V-line hover: find nearest within 12px radius
+                    hoveredVlineIdx = null;
+                    let bestV = 12;
+                    for (let i = 0; i < vlines.length; i++) {
+                        const d = Math.abs(chart.scales.x.getPixelForValue(vlines[i].x) - px);
+                        if (d < bestV) { bestV = d; hoveredVlineIdx = i; }
+                    }
+                    chart.canvas.style.cursor = hoveredVlineIdx !== null ? 'pointer' : 'crosshair';
                 } else {
-                    // Hover detection — find nearest line
+                    // Trendline hover detection — find nearest line
                     let best = null, bestD = 8;
                     for (let i = 0; i < trendlines.length; i++) {
                         const ln = trendlines[i];
@@ -2042,6 +2111,8 @@
     chart.canvas.addEventListener('mouseleave', () => {
         crosshairPos    = null;
         hoveredLineIdx  = null;
+        hoveredHlineIdx = null;
+        hoveredVlineIdx = null;
         if (crosshairRafId) { cancelAnimationFrame(crosshairRafId); crosshairRafId = null; }
         chart.draw();
     });
@@ -3971,14 +4042,16 @@
             const { chartArea, scales } = chart;
             if (px < chartArea.left || px > chartArea.right || py < chartArea.top || py > chartArea.bottom) return;
 
-            // H-Line / V-Line / Text Note: single click places; click within 8px of existing line removes it
+            // H-Line / V-Line / Text Note: single click places; click within 12px of existing line removes it
             if (drawTool === 'hline') {
-                const hitIdx = hlines.findIndex(hl => Math.abs(scales.y.getPixelForValue(hl.y) - py) < 8);
+                const hitIdx = hlines.findIndex(hl => Math.abs(scales.y.getPixelForValue(hl.y) - py) < 12);
+                pushUndo();
                 if (hitIdx >= 0) { hlines.splice(hitIdx, 1); } else { hlines.push({ y: scales.y.getValueForPixel(py) }); }
                 saveDrawings(); chart.draw(); return;
             }
             if (drawTool === 'vline') {
-                const hitIdx = vlines.findIndex(vl => Math.abs(scales.x.getPixelForValue(vl.x) - px) < 8);
+                const hitIdx = vlines.findIndex(vl => Math.abs(scales.x.getPixelForValue(vl.x) - px) < 12);
+                pushUndo();
                 if (hitIdx >= 0) { vlines.splice(hitIdx, 1); } else { vlines.push({ x: scales.x.getValueForPixel(px) }); }
                 saveDrawings(); chart.draw(); return;
             }
@@ -4004,6 +4077,7 @@
 
             if (pendingLine) {
                 // Place second endpoint → commit line
+                pushUndo();
                 trendlines.push({ x1: pendingLine.x1, y1: pendingLine.y1,
                     x2: scales.x.getValueForPixel(px), y2: scales.y.getValueForPixel(py) });
                 selectedLineIdx = trendlines.length - 1;
@@ -4138,24 +4212,40 @@
             setTimeout(() => chart.resize(), 20);
             return;
         }
+        if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey) && tag !== 'INPUT' && tag !== 'SELECT') {
+            e.preventDefault();
+            if (undoStack.length) {
+                const snap = undoStack.pop();
+                trendlines.splice(0, trendlines.length, ...snap.trendlines);
+                hlines.splice(0, hlines.length, ...snap.hlines);
+                vlines.splice(0, vlines.length, ...snap.vlines);
+                tnotes.splice(0, tnotes.length, ...snap.tnotes);
+                selectedLineIdx = null; selectedNoteIdx = null; pendingLine = null;
+                saveDrawings(); chart.draw();
+            }
+            return;
+        }
         if (!drawMode) return;
         if (e.key === 'Escape') {
-            pendingLine = null;
-            selectedLineIdx = null;
-            selectedNoteIdx = null;
             document.getElementById('_noteInput')?.remove();
-            chart.draw();
+            if (pendingLine || selectedLineIdx !== null || selectedNoteIdx !== null) {
+                pendingLine = null; selectedLineIdx = null; selectedNoteIdx = null; chart.draw();
+            } else {
+                exitDrawMode();
+            }
         } else if (e.key === 'Backspace' || e.key === 'Delete') {
             if (pendingLine) return;
-            if (drawTool === 'hline') { hlines.pop(); saveDrawings(); chart.draw(); return; }
-            if (drawTool === 'vline') { vlines.pop(); saveDrawings(); chart.draw(); return; }
+            if (drawTool === 'hline') { pushUndo(); hlines.pop(); saveDrawings(); chart.draw(); return; }
+            if (drawTool === 'vline') { pushUndo(); vlines.pop(); saveDrawings(); chart.draw(); return; }
             if (drawTool === 'tnote') {
+                pushUndo();
                 if (selectedNoteIdx !== null) {
                     tnotes.splice(selectedNoteIdx, 1);
                     selectedNoteIdx = null;
                 } else if (tnotes.length) { tnotes.pop(); }
                 saveDrawings(); chart.draw(); return;
             }
+            pushUndo();
             if (selectedLineIdx !== null) {
                 trendlines.splice(selectedLineIdx, 1);
                 selectedLineIdx = null;
@@ -4192,8 +4282,17 @@
         'cbFib','cbBB','cbOHLC','cbHA','cbMACD','cbRSI',
     ];
 
-    // ── Drawing persistence ────────────────────────────────────────────
+    // ── Drawing persistence + undo ─────────────────────────────────────
     const DRAW_KEY = 'albert-drawings';
+    function pushUndo() {
+        undoStack.push({
+            trendlines: trendlines.map(l => ({ ...l })),
+            hlines:     hlines.map(h => ({ ...h })),
+            vlines:     vlines.map(v => ({ ...v })),
+            tnotes:     tnotes.map(n => ({ ...n })),
+        });
+        if (undoStack.length > 50) undoStack.shift();
+    }
     function saveDrawings() {
         localStorage.setItem(DRAW_KEY, JSON.stringify({ trendlines, hlines, vlines, tnotes }));
     }
