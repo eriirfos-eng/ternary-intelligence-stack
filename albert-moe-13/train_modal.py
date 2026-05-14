@@ -43,6 +43,7 @@ _DOWNLOADS = [
     ("/albert/models/albert_v3.0.meta",             "models/albert_v3.0.meta"),
     ("/albert/models/albert_v3.0.evolution",        "models/albert_v3.0.evolution"),
     ("/albert/dashboard/training.log",              "dashboard/training.log"),
+    ("/albert/dashboard/epoch_history.log",         "dashboard/epoch_history.log"),
 ]
 
 

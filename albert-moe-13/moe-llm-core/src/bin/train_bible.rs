@@ -1515,6 +1515,13 @@ fn train_cycle(
             if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
                 let _ = writeln!(f, "{}", summary_line);
             }
+            // Compact epoch history — append-only across restarts; dashboard reads this
+            // on startup to pre-seed epochLog for SMA-55/144/377/610 without needing
+            // the full (large) training.log in the initial fetch window.
+            let epoch_hist_path = log_path.replace("training.log", "epoch_history.log");
+            if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(&epoch_hist_path) {
+                let _ = writeln!(f, "{}", summary_line);
+            }
             prev_avg_loss = avg_loss;
 
             // Cascade evidence: L0-L3 avg norm at burst-10 vs burst+30, grouped by layer.

@@ -2323,7 +2323,7 @@
                     lastLossVal = null; lastKnownEpoch = -1;
                     trailCurrentMin.fill(Infinity);
                     userHasZoomed = false; newPointStartIdx = Infinity;
-                    batchLog = []; epochLog = [];
+                    batchLog = []; // epochLog preserved — epoch averages are valid across restarts
                     document.getElementById('v-loss').textContent  = '—';
                     document.getElementById('v-epoch').textContent = '—';
                     document.getElementById('v-best').textContent  = '—';
@@ -4242,8 +4242,24 @@
 
     loadPrefs(); // restore previous session settings
 
-    poll();
-    setInterval(poll, POLL_MS);
+    // Pre-seed epochLog from compact epoch_history.log before starting the poll loop.
+    // This file contains only EPOCH_SUMMARY lines, appended across restarts, so it
+    // is tiny (~200 bytes/epoch) and gives SMA-55/144 their full history immediately.
+    fetch('/dashboard/epoch_history.log?t=' + Date.now())
+        .then(r => r.ok ? r.text() : '')
+        .then(text => {
+            for (const line of text.split('\n')) {
+                const m = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)/);
+                if (!m) continue;
+                const ge = parseInt(m[1]), al = parseFloat(m[2]);
+                if (!epochLog.some(e => e.global_epoch === ge)) {
+                    epochLog.push({ local_epoch: ge, global_epoch: ge, layers: null, avg_loss: al, clipped: false, skipped: false });
+                }
+            }
+        })
+        .catch(() => {}) // file absent on first-ever run — silent
+        .finally(() => { poll(); setInterval(poll, POLL_MS); });
+
 
     // ── Stream watchdog ────────────────────────────────────────────────
     // Checks every second whether new data arrived in the last 30s.
