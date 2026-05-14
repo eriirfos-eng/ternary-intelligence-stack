@@ -2,9 +2,27 @@ import http.server
 import socketserver
 import os
 import re
+import time
+from collections import defaultdict
 
 PORT = 8888
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+
+# Simple token-bucket rate limiter: max 10 requests/second per IP for training.log
+_rate_buckets: dict[str, tuple[float, float]] = defaultdict(lambda: (10.0, time.monotonic()))
+_RATE_LIMIT   = 10.0   # requests per second
+_BURST        = 20.0   # burst capacity
+
+def _check_rate(ip: str) -> bool:
+    tokens, last = _rate_buckets[ip]
+    now = time.monotonic()
+    tokens = min(_BURST, tokens + (now - last) * _RATE_LIMIT)
+    if tokens < 1.0:
+        _rate_buckets[ip] = (tokens, now)
+        return False
+    _rate_buckets[ip] = (tokens - 1.0, now)
+    return True
+
 
 class RangeAwareHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -13,6 +31,13 @@ class RangeAwareHandler(http.server.SimpleHTTPRequestHandler):
     def send_head(self):
         # Only intercept range requests for training.log — everything else served normally.
         clean_path = self.path.split('?')[0]
+        if clean_path.endswith('training.log'):
+            ip = self.client_address[0]
+            if not _check_rate(ip):
+                self.send_response(429)
+                self.send_header('Retry-After', '1')
+                self.end_headers()
+                return None
         if not clean_path.endswith('training.log'):
             return super().send_head()
 
