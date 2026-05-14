@@ -2816,6 +2816,16 @@
     }
     function toggleDataset(idx, checked) {
         chart.data.datasets[idx].hidden = !checked;
+        // Epoch-based SMAs (idx 2-5) need an immediate compute — their data is never
+        // filled while hidden, so toggling on without forcing a compute leaves them empty
+        // until the next poll fires. Compute synchronously from the current epochLog.
+        if (checked && idx >= 2 && idx <= 5) {
+            const smaSizes = [55, 144, 377, 610];
+            const w = smaSizes[idx - 2];
+            const epD = epochLog.filter(e => e.avg_loss !== null)
+                                .map(e => ({ x: e.global_epoch, y: e.avg_loss }));
+            chart.data.datasets[idx].data = sma(epD, w);
+        }
         chart.update('none');
         updateSmaBtnLabel();
     }
