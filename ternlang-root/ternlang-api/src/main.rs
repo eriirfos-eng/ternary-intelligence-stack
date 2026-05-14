@@ -642,6 +642,10 @@ async fn kpi_upload(
     headers: HeaderMap,
     body: Bytes,
 ) -> impl axum::response::IntoResponse {
+    // Reject path traversal characters before allowlist check (defense in depth)
+    if filename.contains('/') || filename.contains('\\') || filename.contains("..") {
+        return (StatusCode::BAD_REQUEST, "invalid filename").into_response();
+    }
     const ALLOWED: &[&str] = &["index.html", "ternlang_kpi_log.json", "ternlang_gh_traffic.json", "training_telemetry.json"];
     if !ALLOWED.contains(&filename.as_str()) {
         return (StatusCode::BAD_REQUEST, "invalid filename").into_response();
