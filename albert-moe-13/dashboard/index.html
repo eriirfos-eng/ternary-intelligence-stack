@@ -3541,9 +3541,10 @@
                 const gridH   = rect.height;
                 const cellH   = gridH / numL;
                 const cellW   = (rect.width - TTL_LABEL_W) / numT;
-                const li = Math.floor(my / cellH);
-                const ti = Math.floor((ev.clientX - rect.left - TTL_LABEL_W) / cellW);
-                if (li < 0 || li >= numL || ti < 0 || ti >= numT) { hideTip(); return; }
+                const row = Math.floor(my / cellH);
+                const li  = numL - 1 - row;  // matches reversed draw order
+                const ti  = Math.floor((ev.clientX - rect.left - TTL_LABEL_W) / cellW);
+                if (row < 0 || row >= numL || ti < 0 || ti >= numT) { hideTip(); return; }
                 const snap      = tlightHistory[ti];
                 const layerSnap = snap?.layers.find(l => l.layer === li);
                 if (!layerSnap) return;
@@ -3586,9 +3587,10 @@
         ctx2d.textBaseline = 'middle';
         ctx2d.textAlign = 'right';
 
-        for (let li = 0; li < numL; li++) {
+        for (let row = 0; row < numL; row++) {
+            const li = numL - 1 - row;  // highest layer at top, L0 at bottom
             ctx2d.fillStyle = '#475569';
-            ctx2d.fillText(`L${li}`, lW - 3, (li + 0.5) * cellH);
+            ctx2d.fillText(`L${li}`, lW - 3, (row + 0.5) * cellH);
 
             for (let ti = 0; ti < numT; ti++) {
                 const snap      = tlightHistory[ti];
@@ -3600,7 +3602,7 @@
                 ctx2d.globalAlpha = 0.85;
                 ctx2d.fillRect(
                     lW + ti * cellW + 0.5,
-                    li * cellH + 0.5,
+                    row * cellH + 0.5,
                     cellW - 1, cellH - 1
                 );
             }
