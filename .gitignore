@@ -48,3 +48,4 @@ data/
 *.trit
 *.bin
 *.onnx
+albert-moe-13/exports/promotion_log.jsonl
