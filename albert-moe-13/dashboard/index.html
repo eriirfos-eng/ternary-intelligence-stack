@@ -2568,6 +2568,8 @@
                 const epoch  = parseInt(m[2]);
                 const batch  = parseInt(m[3]);
                 const loss   = parseFloat(m[4]);
+                // Reject warmup-phase spikes and any non-finite value — protects Y-axis scale
+                if (!isFinite(loss) || loss < 1 || loss > 50) continue;
                 const bx     = epoch + batch / BATCHES_PER_EPOCH;
                 lastBatchX   = bx;
                 lastBatchY   = loss;
@@ -4378,7 +4380,7 @@
             if (comma < 0) continue;
             const x = parseFloat(line.slice(0, comma));
             const y = parseFloat(line.slice(comma + 1));
-            if (!isNaN(x) && !isNaN(y)) smaLog.push({ x, y });
+            if (isFinite(x) && isFinite(y) && x >= 0 && y > 1 && y < 50) smaLog.push({ x, y });
         }
         for (const line of epochText.split('\n')) {
             const m = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)/);
