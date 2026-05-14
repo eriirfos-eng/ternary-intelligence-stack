@@ -4244,23 +4244,30 @@
 
     loadPrefs(); // restore previous session settings
 
-    // Pre-seed epochLog from compact epoch_history.log before starting the poll loop.
-    // This file contains only EPOCH_SUMMARY lines, appended across restarts, so it
-    // is tiny (~200 bytes/epoch) and gives SMA-55/144 their full history immediately.
-    fetch('/dashboard/epoch_history.log?t=' + Date.now())
-        .then(r => r.ok ? r.text() : '')
-        .then(text => {
-            for (const line of text.split('\n')) {
-                const m = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)/);
-                if (!m) continue;
-                const ge = parseInt(m[1]), al = parseFloat(m[2]);
-                if (!epochLog.some(e => e.global_epoch === ge)) {
-                    epochLog.push({ local_epoch: ge, global_epoch: ge, layers: null, avg_loss: al, clipped: false, skipped: false });
-                }
-            }
-        })
-        .catch(() => {}) // file absent on first-ever run — silent
-        .finally(() => { poll(); setInterval(poll, POLL_MS); });
+    // Pre-seed smaLog (batch points) and epochLog in parallel before the poll loop.
+    // batch_history.csv   — x,y per line; x = global_epoch + batch/300; ~2MB
+    // epoch_history.log   — EPOCH_SUMMARY lines only; ~200 bytes/epoch
+    Promise.all([
+        fetch('/dashboard/batch_history.csv?t=' + Date.now())
+            .then(r => r.ok ? r.text() : '').catch(() => ''),
+        fetch('/dashboard/epoch_history.log?t=' + Date.now())
+            .then(r => r.ok ? r.text() : '').catch(() => ''),
+    ]).then(([batchText, epochText]) => {
+        for (const line of batchText.split('\n')) {
+            const comma = line.indexOf(',');
+            if (comma < 0) continue;
+            const x = parseFloat(line.slice(0, comma));
+            const y = parseFloat(line.slice(comma + 1));
+            if (!isNaN(x) && !isNaN(y)) smaLog.push({ x, y });
+        }
+        for (const line of epochText.split('\n')) {
+            const m = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)/);
+            if (!m) continue;
+            const ge = parseInt(m[1]), al = parseFloat(m[2]);
+            if (!epochLog.some(e => e.global_epoch === ge))
+                epochLog.push({ local_epoch: ge, global_epoch: ge, layers: null, avg_loss: al, clipped: false, skipped: false });
+        }
+    }).finally(() => { poll(); setInterval(poll, POLL_MS); });
 
 
     // ── Stream watchdog ────────────────────────────────────────────────
