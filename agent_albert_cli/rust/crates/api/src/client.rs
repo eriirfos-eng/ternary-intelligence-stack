@@ -206,12 +206,8 @@ impl TernlangClient {
                 } else {
                     format!("models/{}", request.model)
                 };
-                let base = format!("{}/v1beta/{}:generateContent", self.base_url.trim_end_matches('/'), model_id);
-                request_url = if let Some(key) = self.auth.api_key() {
-                    format!("{}?key={}", base, key)
-                } else {
-                    base
-                };
+                // Key passed as header (not URL param) to keep it out of server logs and Referer headers
+                request_url = format!("{}/v1beta/{}:generateContent", self.base_url.trim_end_matches('/'), model_id);
                 translate_to_gemini(request)
             }
             LlmProvider::Anthropic => translate_to_anthropic(request),
@@ -229,6 +225,11 @@ impl TernlangClient {
 
         if self.provider == LlmProvider::Anthropic {
             request_builder = request_builder.header("anthropic-version", "2023-06-01");
+        }
+        if self.provider == LlmProvider::Google {
+            if let Some(key) = self.auth.api_key() {
+                request_builder = request_builder.header("x-goog-api-key", key);
+            }
         }
 
         let request_builder = self.auth.apply(self.provider, request_builder);
@@ -337,12 +338,12 @@ impl TernlangClient {
         match self.provider {
             LlmProvider::Google => {
                 let base = self.base_url.trim_end_matches('/');
-                let url = if let Some(key) = self.auth.api_key() {
-                    format!("{}/v1beta/models?key={}", base, key)
-                } else {
-                    format!("{}/v1beta/models", base)
-                };
-                let res = self.http.get(&url).send().await.map_err(ApiError::from)?;
+                let url = format!("{}/v1beta/models", base);
+                let mut req = self.http.get(&url);
+                if let Some(key) = self.auth.api_key() {
+                    req = req.header("x-goog-api-key", key);
+                }
+                let res = req.send().await.map_err(ApiError::from)?;
                 let json: serde_json::Value = res.json().await.map_err(ApiError::from)?;
                 let mut models = vec![];
                 if let Some(list) = json.get("models").and_then(|m| m.as_array()) {
@@ -509,12 +510,7 @@ impl TernlangClient {
         _config: OAuthConfig,
         _request: &OAuthTokenExchangeRequest,
     ) -> Result<RuntimeTokenSet, ApiError> {
-        Ok(RuntimeTokenSet {
-            access_token: "dummy_token".to_string(),
-            refresh_token: None,
-            expires_at: None,
-            scopes: vec![],
-        })
+        Err(ApiError::Config("OAuth token exchange is not yet implemented".to_string()))
     }
 
     /// Check crates.io for the latest version of albert-cli.
