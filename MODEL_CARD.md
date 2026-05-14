@@ -3,7 +3,7 @@
 **Version:** v3.0 (ternary MoE)  
 **Maintainer:** RFI-IRFOS, rfi.irfos@gmail.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
-**License:** LGPL-3.0-or-later  
+**License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
 **Last updated:** 2026-05-14
 
 ---
