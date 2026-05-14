@@ -2666,18 +2666,11 @@
                 }
                 ds[dsIdx].data = updated;
             }
-            // SMA-21 stays on batch data for short-term detail.
-            // SMA-55 and longer use epoch history (full unbounded curve, not capped by MAX_CHART_PTS).
-            const epD = epochLog.filter(e => e.avg_loss !== null).map(e => ({x: e.global_epoch, y: e.avg_loss}));
-            function updateEpochSma(dsIdx, w) {
-                if (ds[dsIdx].hidden) return;
-                ds[dsIdx].data = sma(epD, w);
-            }
             updateSma(1, 21);
-            updateEpochSma(2, 55);
-            updateEpochSma(3, 144);
-            updateEpochSma(4, 377);
-            updateEpochSma(5, 610);
+            updateSma(2, 55);
+            updateSma(3, 144);
+            updateSma(4, 377);
+            updateSma(5, 610);
             if (!ds[6].hidden) ds[6].data = tma(merged, 30);
             // Bollinger Bands on SMA-144 window
             if (bbVisible) {
@@ -2816,16 +2809,6 @@
     }
     function toggleDataset(idx, checked) {
         chart.data.datasets[idx].hidden = !checked;
-        // Epoch-based SMAs (idx 2-5) need an immediate compute — their data is never
-        // filled while hidden, so toggling on without forcing a compute leaves them empty
-        // until the next poll fires. Compute synchronously from the current epochLog.
-        if (checked && idx >= 2 && idx <= 5) {
-            const smaSizes = [55, 144, 377, 610];
-            const w = smaSizes[idx - 2];
-            const epD = epochLog.filter(e => e.avg_loss !== null)
-                                .map(e => ({ x: e.global_epoch, y: e.avg_loss }));
-            chart.data.datasets[idx].data = sma(epD, w);
-        }
         chart.update('none');
         updateSmaBtnLabel();
     }
