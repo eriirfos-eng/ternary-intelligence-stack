@@ -1,4 +1,5 @@
 training.log
 training.pid
 *.log
+!dashboard/epoch_history.log
 .env
