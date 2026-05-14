@@ -67,15 +67,18 @@ jobs:
         cargo test -p ternlang-compat  --lib --verbose
         cargo test -p ternlang-hdl     --lib --verbose
 
-  # Job 3: Deploy (Always runs if either logic OR frontend changed)
+  # Job 3: Deploy (runs only when relevant files changed AND build passed or was not needed)
   deploy:
     runs-on: ubuntu-latest
     needs: [changes, build]
-    # Run if logic changed (and build passed) OR if ONLY frontend changed
+    # Require build success when logic changed; allow skipped only for frontend-only changes
+    # but ONLY if the build job was genuinely skipped (logic unchanged), not failed.
     if: |
       always() &&
       (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.logic == 'true') &&
-      (needs.build.result == 'success' || needs.build.result == 'skipped')
+      needs.build.result != 'failure' &&
+      needs.build.result != 'cancelled' &&
+      (needs.build.result == 'success' || needs.changes.outputs.logic != 'true')
     steps:
     - uses: actions/checkout@v4
     - name: Install flyctl
