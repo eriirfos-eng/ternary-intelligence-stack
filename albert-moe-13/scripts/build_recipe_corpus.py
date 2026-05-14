@@ -31,7 +31,7 @@ CORPUS_DIR = SCRIPT_DIR.parent / "data" / "corpus" / "stage_10"
 CORPUS_DIR.mkdir(parents=True, exist_ok=True)
 OUT_PATH   = CORPUS_DIR / "gourmet_recipes.txt"
 
-UA = "AlbertMoE13CorpusBot/1.0 (training corpus; contact rfi.irfos@gmail.com)"
+UA = "AlbertMoE13CorpusBot/1.0 (training corpus; contact contact@ternlang.com)"
 
 
 # ── utilities ────────────────────────────────────────────────────────────────

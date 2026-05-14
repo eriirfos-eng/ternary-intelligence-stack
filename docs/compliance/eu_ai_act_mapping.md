@@ -170,4 +170,4 @@ The ternary weight representation `{-1, 0, +1}` offers a structural compliance a
 
 ---
 
-*For questions: rfi.irfos@gmail.com · Patent Pending A50296/2026 · Graz, Austria*
+*For questions: contact@ternlang.com · Patent Pending A50296/2026 · Graz, Austria*

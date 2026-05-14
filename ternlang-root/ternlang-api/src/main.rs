@@ -2269,7 +2269,7 @@ fn mcp_trit_upgrade() -> Result<Value, String> {
             "calls":      "unlimited",
             "sla":        "enterprise — priority support + uptime commitment",
             "extras":     "custom rate limits · team key management · invoice billing · on-premise option",
-            "contact":    "rfi.irfos@gmail.com",
+            "contact":    "contact@ternlang.com",
         },
 
         "why_upgrade": [

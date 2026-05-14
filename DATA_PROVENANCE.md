@@ -1,7 +1,7 @@
 # Data Provenance — albert. Training Corpus
 
 **Model:** albert. v3.0  
-**Maintainer:** RFI-IRFOS, rfi.irfos@gmail.com  
+**Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Last updated:** 2026-05-14
 
 This document satisfies the data governance and provenance requirements
@@ -19,7 +19,7 @@ General-Purpose AI model.
 
 2. **Opt-out contact.** Any source operator or rights holder who wishes
    to dispute inclusion of their content should contact
-   rfi.irfos@gmail.com. Disputed content will be reviewed and removed
+   contact@ternlang.com. Disputed content will be reviewed and removed
    from future training runs within 30 days.
 
 3. **Reproducibility.** All ingestion scripts are version-controlled in
@@ -45,7 +45,7 @@ General-Purpose AI model.
 | Approximate share | ~30% of training tokens |
 | Legal basis | Public domain (pre-1928 works; Gutenberg license) |
 | Copyright status | No copyright — all works are confirmed public domain |
-| User-Agent disclosed | `AlbertCorpusBot/1.0 (rfi.irfos@gmail.com)` |
+| User-Agent disclosed | `AlbertCorpusBot/1.0 (contact@ternlang.com)` |
 
 No copyright exceptions are needed. All Gutenberg texts used are
 explicitly released to the public domain by Project Gutenberg.
@@ -63,7 +63,7 @@ explicitly released to the public domain by Project Gutenberg.
 | Legal basis | Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0) |
 | Attribution | Wikimedia Foundation / Wikipedia contributors |
 | Terms compliance | Non-commercial research use; no redistribution of raw dumps |
-| User-Agent disclosed | `AlbertCorpusBot/1.0 (rfi.irfos@gmail.com)` |
+| User-Agent disclosed | `AlbertCorpusBot/1.0 (contact@ternlang.com)` |
 
 CC BY-SA 4.0 permits use in ML training datasets provided attribution is
 maintained. Attribution is recorded in this document and in the corpus
@@ -182,6 +182,6 @@ All corpus text undergoes the following pipeline before tokenization:
 ## Contact for Data Governance Inquiries
 
 **Organisation:** RFI-IRFOS  
-**Email:** rfi.irfos@gmail.com  
+**Email:** s.kepp@ternlang.com  
 **Response time:** Within 30 days of receipt  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack

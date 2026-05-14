@@ -58,5 +58,5 @@ Full specification texts are in `docs/standards/`.
 ---
 
 **Organisation:** RFI-IRFOS (ZVR: 1015608684)  
-**Contact:** rfi.irfos@gmail.com  
+**Contact:** contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack

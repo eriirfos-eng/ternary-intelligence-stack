@@ -260,4 +260,4 @@ Remove @sparseskip and throughput drops to ~42M tokens/hour — still useful, bu
 ---
 
 **Patent:** @sparseskip sparse routing primitive — A50296/2026 (pending)  
-**Contact:** RFI-IRFOS · rfi.irfos@gmail.com · ternlang.com
+**Contact:** RFI-IRFOS · contact@ternlang.com · ternlang.com

@@ -49,7 +49,7 @@ MULTI_DIR     = os.path.join(CORPUS_DIR, "multilingual")
 ACADEMIC_DIR  = os.path.join(CORPUS_DIR, "academic")
 
 DEFAULT_TARGET_MB = 25
-UA = "AlbertV3ChaosBuilder/1.0 (rfi.irfos@gmail.com)"
+UA = "AlbertV3ChaosBuilder/1.0 (contact@ternlang.com)"
 
 RNG = random.Random(42)   # reproducible chaos
 

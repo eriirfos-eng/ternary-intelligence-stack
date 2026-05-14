@@ -2,7 +2,7 @@
 name = "ternaudit-guard"
 version = "1.3.6"
 edition = "2024"
-authors = ["Simeon Kepp <rfi.irfos@gmail.com>"]
+authors = ["Simeon Kepp <s.kepp@ternlang.com>"]
 description = "Production-grade Sovereign Compliance SDK for EU AI Act Articles 13, 14, & 15. Native audit transparency for ternary-logic decision agents."
 keywords = ["sovereign-ai", "eu-ai-act", "compliance", "transparency", "ternary-logic"]
 repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"

@@ -38,7 +38,7 @@ REPO_ROOT  = os.path.dirname(SCRIPT_DIR)
 OUT_DIR    = os.path.join(REPO_ROOT, "data", "corpus", "fulltext")
 
 DEFAULT_TARGET_MB = 30
-UA = "AlbertV3FulltextBuilder/1.0 (rfi.irfos@gmail.com)"
+UA = "AlbertV3FulltextBuilder/1.0 (contact@ternlang.com)"
 
 ALL_LANGS = ["en", "fr", "es", "pt", "de", "it", "nl", "pl"]
 

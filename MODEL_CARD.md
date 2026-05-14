@@ -1,7 +1,7 @@
 # Model Card — albert. (Albert-MoE-13)
 
 **Version:** v3.0 (ternary MoE)  
-**Maintainer:** RFI-IRFOS, rfi.irfos@gmail.com  
+**Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
 **Last updated:** 2026-05-14
@@ -175,7 +175,7 @@ albert. is developed in the European Union and is subject to Regulation
 | Bias/fairness assessment | Art. 53(1)(b) | Planned v3.1 |
 
 For questions about compliance or to report concerns:
-rfi.irfos@gmail.com
+contact@ternlang.com
 
 ---
 
@@ -183,6 +183,6 @@ rfi.irfos@gmail.com
 
 **Lead Architect:** Simeon Ari  
 **Organisation:** RFI-IRFOS  
-**Email:** rfi.irfos@gmail.com  
+**Email:** s.kepp@ternlang.com  
 **Website:** https://ternlang.com  
 **Issues:** https://github.com/eriirfos-eng/ternary-intelligence-stack/issues

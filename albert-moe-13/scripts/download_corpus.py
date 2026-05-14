@@ -23,7 +23,7 @@ import re
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "corpus_staged")
 os.makedirs(OUT_DIR, exist_ok=True)
 
-UA = "AlbertCorpusBot/1.0 (training corpus; contact rfi.irfos@gmail.com)"
+UA = "AlbertCorpusBot/1.0 (training corpus; contact contact@ternlang.com)"
 
 def log(msg):
     print(f"[corpus] {msg}", flush=True)

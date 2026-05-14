@@ -5,13 +5,13 @@ Active run: v3.0 — 12L · 32k vocab · 635 MB multilingual corpus (2026-05-10)
 
 ---
 
-## v3.0 — 12L Multilingual Training Run (2026-05-10, active)
+## v3.0 — Active Training Run (2026-05-14, ongoing)
 
-Architecture: 12 layers · 256 hidden · 12 experts · 4 heads · 128 ctx · **32,000 vocab** (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL)  
-Corpus: ~635 MB (Wikipedia CC BY-SA + Europarl + Gutenberg fulltext + academic texts + 10% chaos layer)  
-Optimizer: AdamW, cosine LR 3e-4 → 1e-5 / 500 steps  
-Hardware: HP ZBook (CPU-only)  
-Weights: transferred from v2.0.0 best checkpoint (loss 6.8821); embed and lm\_head re-initialized for 32k vocab
+Architecture: **17 layers** · 256 hidden · 12 experts · Top-3 routing · **256 ctx** · **32,000 vocab** (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL)  
+Corpus: Stage 10 corpus active — stages [3,6,7,8,9,10] · 10% chaos layer invariant enforced  
+Optimizer: AdamW, cosine LR, GRAD_ACCUM=4, BATCH=4  
+Hardware: **Modal.com T4 GPU** (~$0.003/epoch at CTX=256)  
+Weights: transferred from v2.0.0 best checkpoint (loss 6.8821); 5 net2net surgeries applied since ep46
 
 Random baseline: `ln(32000) = 10.373` — the expected starting loss for a model with no prior knowledge over a 32k vocabulary.
 
@@ -34,26 +34,29 @@ during this phase. Growing the architecture while the output projection is still
 uninitialised capacity on top of a model that cannot yet use its existing capacity. Surgery is
 correct only after the vocabulary transfer plateau breaks.
 
-**Training started 2026-05-10. Epoch averages appended as runs complete.**
+**Training started 2026-05-10. Surgery log and key milestones below.**
 
-| Epoch (Global) | Avg Loss | Δ vs prev | Notes |
-|----------------|----------|-----------|-------|
-| Ep 1 (G35) | ~10.373 | — | Corpus cache miss — 15m cold start; baseline |
-| Ep 2–7 (G36–41) | 10.37–10.36 | ~−0.002/ep | Slow descent; embed/lm_head mapping begins |
-| Ep 8–11 (G42–45) | 10.363–10.342 | −0.005/ep avg | Three plateau breaks observed; upper layer gradients activating |
-| Ep 12 (G46) | **10.3412** | — | New best (batch-level); L6–L11 gradients 0.017–0.018; TTL showing 25% RED suppression |
+| Epoch | Architecture | Loss (avg) | Notes |
+|-------|-------------|-----------|-------|
+| Ep 1 (G35) | 12L | ~10.373 | Random baseline; vocab transfer plateau begins |
+| Ep 12 (G46) | 12L | 10.3412 | Embed/lm_head alignment break; L6–L11 gradients activating |
+| Ep 511 | **12L → 13L** | — | Net2Net surgery (Fibonacci window=13) |
+| Ep 547 | **13L → 14L** | — | Net2Net surgery (Mandelbrot c_im=−0.6983, window=21) |
+| Ep 611 | **14L → 15L** | — | Net2Net surgery (Mandelbrot c_im=0.2287, 69 tensors, window=34) |
+| Ep 645–646 | **15L → 16L** | — | Net2Net surgery (Mandelbrot c_im=−0.3442, window→55) |
+| Ep 701–702 | **16L → 17L** | — | Net2Net surgery (Mandelbrot c_im=0.5828, window→89); Stage 10 corpus unlocked |
+| Ep 786 | 17L | 10.2199 | Previous all-time best; 22+ ATBs in overnight cascade |
+| Ep 849 | 17L | **10.2050** | **All-time best** |
+| Ep 876+ | 17L | ~10.22 | Active as of 2026-05-14; Modal T4 GPU; ~$0.003/epoch |
 
-**Best batch-level loss observed:** 10.3412 (Global Epoch 46, 2026-05-11)  
-**EvolutionManager status:** surgery suppressed — loss above `min_loss_for_plateau = 8.4` (correct behavior)
+**All-time best loss:** 10.2050 (ep849, 2026-05-14)  
+**Surgery governor status:** F9 window = 144 epochs; plateau gate requires <0.02 nats span over any 144-epoch window + myc_stable ≥ 5. Not imminent — model still actively descending.
 
-### Expected trajectory
+### Net2Net surgery outcomes
 
-Once embed/lm\_head alignment crosses the threshold, expect rapid descent toward the v2.0.0
-carry-over semantic minimum. Expert routing differentiation (SEM/LNG/ABS specialisation already
-visible at epoch 46) is an early signal that the internal representations are beginning to map
-correctly to the 32k token space. The EvolutionManager will resume surgery consideration once
-loss drops below 8.4 — the first 12L→13L Net2Net surgery will mark the beginning of the
-autonomous scaling phase for v3.0.
+All five surgeries completed cleanly with no divergence spikes. Loss resumed descent within 1–3 epochs of each surgery. The Fibonacci-gated plateau detector correctly suppressed surgery during active descent and fired only when the model had stalled — this is the intended behavior of the surgery governor (see `docs/EVOLUTION_EVIDENCE.md`).
+
+Each surgery used a Mandelbrot-parameterised perturbation signal for weight initialization of the new layer, providing a deterministic, reproducible plasticity impulse derived from the model's current loss at the time of insertion.
 
 ---
 

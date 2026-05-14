@@ -41,7 +41,7 @@ REPO_ROOT  = os.path.dirname(SCRIPT_DIR)
 OUT_DIR    = os.path.join(REPO_ROOT, "data", "corpus", "academic")
 
 DEFAULT_TARGET_MB = 12
-UA = "AlbertV3AcademicBuilder/1.0 (rfi.irfos@gmail.com)"
+UA = "AlbertV3AcademicBuilder/1.0 (contact@ternlang.com)"
 
 # OAI-PMH namespace
 NS = {

@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-**Contact:** rfi.irfos@gmail.com  
+**Contact:** contact@ternlang.com  
 **Response time:** We aim to acknowledge reports within 48 hours and
 provide a resolution timeline within 7 days.
 
@@ -67,7 +67,7 @@ Under Article 3(49) of the EU AI Act, a serious incident includes:
 4. Post-incident report within 30 days
 
 **Internal contact for incident escalation:**  
-rfi.irfos@gmail.com (Lead Architect, Simeon Ari)
+contact@ternlang.com (Lead Architect, Simeon Ari)
 
 ---
 

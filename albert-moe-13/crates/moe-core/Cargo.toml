@@ -3,7 +3,7 @@ name = "moe-core"
 version = "1.3.6"
 edition = "2024"
 description = "Internal core engine for MoE-13 ternary inference and routing."
-license = "MIT"
+license = "LGPL-3.0-or-later"
 repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"
 documentation = "https://docs.rs/moe-core"
 

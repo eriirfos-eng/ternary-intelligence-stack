@@ -32,7 +32,7 @@ OUT_DIR    = os.path.join(REPO_ROOT, "data", "corpus", "multilingual")
 
 DEFAULT_TARGET_MB = 60
 CHUNK_SIZE = 128 * 1024  # 128KB read chunks
-UA = "AlbertV3CorpusBuilder/1.0 (rfi.irfos@gmail.com)"
+UA = "AlbertV3CorpusBuilder/1.0 (contact@ternlang.com)"
 
 LANGUAGES = ["de", "fr", "es", "pt", "it", "nl", "pl"]
 

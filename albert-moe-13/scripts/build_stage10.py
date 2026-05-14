@@ -35,7 +35,7 @@ SCRIPT_DIR = Path(__file__).parent
 CORPUS_DIR = SCRIPT_DIR.parent / "data" / "corpus" / "stage_10"
 CORPUS_DIR.mkdir(parents=True, exist_ok=True)
 
-UA = "AlbertMoE13CorpusBot/1.0 (training corpus; contact rfi.irfos@gmail.com)"
+UA = "AlbertMoE13CorpusBot/1.0 (training corpus; contact contact@ternlang.com)"
 
 # ── tuning ───────────────────────────────────────────────────────────────────
 SE_MIN_SCORE        = 5      # question quality floor

@@ -8,4 +8,4 @@ TernAudit Guard is the security and compliance auditing module for the Ternary I
 - Seamless integration with Ternary Runtime.
 
 ## Licensing
-This component is licensed under the MIT License.
+This component is licensed under LGPL-3.0-or-later, consistent with the rest of the albert. open core.

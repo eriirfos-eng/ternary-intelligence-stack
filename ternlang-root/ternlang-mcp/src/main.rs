@@ -2566,7 +2566,7 @@ fn initialize_response() -> Value {
             "icon":        "https://ternlang.com/favicon.ico",
             "author": {
                 "name":  "RFI-IRFOS",
-                "email": "rfi.irfos@gmail.com",
+                "email": "contact@ternlang.com",
                 "url":   "https://ternlang.com"
             }
         }
