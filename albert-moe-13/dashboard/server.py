@@ -58,7 +58,8 @@ class RangeAwareHandler(http.server.SimpleHTTPRequestHandler):
         if 'training.log' not in (args[0] if args else ''):
             super().log_message(format, *args)
 
-with socketserver.TCPServer(("", PORT), RangeAwareHandler) as httpd:
+with socketserver.TCPServer(("127.0.0.1", PORT), RangeAwareHandler) as httpd:
     httpd.allow_reuse_address = True
     print(f"Dashboard serving at http://localhost:{PORT}")
+    print(f"(bound to 127.0.0.1 — use ssh -L {PORT}:localhost:{PORT} for remote access)")
     httpd.serve_forever()

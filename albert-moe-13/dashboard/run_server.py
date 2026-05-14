@@ -44,7 +44,7 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Accept-Ranges', 'bytes')
         self.send_header('Content-Range', f'bytes {start}-{end}/{file_size}')
         self.send_header('Content-Length', str(end - start + 1))
-        self.send_header('Access-Control-Allow-Origin', '*') # Safety for dashboard
+        self.send_header('Access-Control-Allow-Origin', 'http://localhost:8888')
         self.end_headers()
 
         with open(path, 'rb') as f:
@@ -62,9 +62,10 @@ def main():
     socketserver.TCPServer.allow_reuse_address = True
     
     try:
-        with socketserver.TCPServer(("", PORT), RangeRequestHandler) as httpd:
+        with socketserver.TCPServer(("127.0.0.1", PORT), RangeRequestHandler) as httpd:
             print(f"--- MoE-13 v2.2 HIGH-SPEED DASHBOARD SERVER ACTIVE ---")
             print(f"URL: http://localhost:{PORT}")
+            print(f"(bound to 127.0.0.1 — use ssh -L {PORT}:localhost:{PORT} for remote access)")
             httpd.serve_forever()
     except Exception as e:
         print(f"Server Fatal Error: {e}", file=sys.stderr)
