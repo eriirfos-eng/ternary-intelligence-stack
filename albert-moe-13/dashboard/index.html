@@ -3529,7 +3529,7 @@
         // ── Canvas (created once) ─────────────────────────────────────
         if (!_tlightCanvas) {
             _tlightCanvas = document.createElement('canvas');
-            _tlightCanvas.className = 'canvas-panel';
+            _tlightCanvas.style.cssText = 'display:block;width:100%;flex-shrink:0;cursor:crosshair;';
             wrap.appendChild(_tlightCanvas);
 
             _tlightCanvas.addEventListener('mousemove', ev => {

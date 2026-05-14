@@ -8,12 +8,16 @@ albert-train — one command to start GPU training + local dashboard
   albert-train pull           # pull latest checkpoint from Modal volume
 """
 
-import os, sys, subprocess, threading, signal, time, shutil, argparse
+import os, sys, subprocess, threading, signal, time, shutil, argparse, re
 
-HERE     = os.path.dirname(os.path.abspath(__file__))
-LOG      = os.path.join(HERE, "dashboard", "training.log")
-DASH_SRV = os.path.join(HERE, "dashboard", "run_server.py")
-MODAL_PY = os.path.join(HERE, "train_modal.py")
+HERE          = os.path.dirname(os.path.abspath(__file__))
+LOG           = os.path.join(HERE, "dashboard", "training.log")
+BATCH_HISTORY = os.path.join(HERE, "dashboard", "batch_history.csv")
+DASH_SRV      = os.path.join(HERE, "dashboard", "run_server.py")
+MODAL_PY      = os.path.join(HERE, "train_modal.py")
+
+BATCHES_PER_EPOCH = 300
+_BATCH_RE = re.compile(r'Epoch\s+\d+\s+\(Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)')
 
 # ---------------------------------------------------------------------------
 # pull subcommand — just delegate to train_modal.py
@@ -61,7 +65,8 @@ print(f"[albert-train] launching:  {' '.join(modal_cmd)}")
 print(f"[albert-train] log → {LOG}")
 print()
 
-log_f = open(LOG, "w")  # overwrite — each run starts with a clean local log
+log_f        = open(LOG,           "w")  # overwrite — each run starts with a clean local log
+batch_hist_f = open(BATCH_HISTORY, "a")  # append — preserves history across runs
 
 modal_proc = subprocess.Popen(
     modal_cmd,
@@ -78,6 +83,14 @@ def stream():
         sys.stdout.flush()
         log_f.write(line)
         log_f.flush()
+        m = _BATCH_RE.match(line.strip())
+        if m:
+            epoch = int(m.group(1))
+            batch = int(m.group(2))
+            loss  = m.group(3)
+            x = epoch + batch / BATCHES_PER_EPOCH
+            batch_hist_f.write(f"{x:.6f},{loss}\n")
+            batch_hist_f.flush()
 
 stream_thread = threading.Thread(target=stream, daemon=True)
 stream_thread.start()
@@ -95,6 +108,7 @@ signal.signal(signal.SIGINT, on_sigint)
 modal_proc.wait()
 stream_thread.join(timeout=3)
 log_f.close()
+batch_hist_f.close()
 
 print("\n[albert-train] Modal run ended.")
 print("[albert-train] Dashboard still running at http://localhost:8888")
