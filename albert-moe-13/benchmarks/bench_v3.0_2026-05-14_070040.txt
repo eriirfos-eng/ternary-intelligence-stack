@@ -1,0 +1,64 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 791 epochs | 2026-05-14 07:00
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→  Keuw 1991 following musuw 1991 following musuw 1991 following musuw 1991
+    22.7 tok/s  44ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+→  Keuw 1991 following musuw 1991 following musuw 1991 following musuw 1991
+    21.3 tok/s  47ms/tok
+
+[P3] the ternary number system uses three distinct
+→  aktor National 1991 following musuw 1991 following musuw 1991 following musuw
+    20.8 tok/s  48ms/tok
+
+[P4] once upon a time in a kingdom far
+→  musuw 1991 following musuw 1991 mus French mussen95 followingieraankister ===ede Ke está questo mus jakgiyt nad 1991ges". pa so ca 1991omb Bel aktor National posyt approachede 1991ya pa11anti serie pawie 1991gesanto Da leur mus approach graanda super 1991 sowie own campo presidente
+    21.7 tok/s  46ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+→  ca Ke rad wy Ke 1991ologypol so 1991 uso Keika Ke loroham Ke my following wurden Keenda sowie each need NationalOs presidente tro 1991 Keellen 1991 trovisOsello effect World Ke nad J following ===yt Bel ===antovisjącismo uso French Thereble11 followingvis sl ) presidente National leurs sl
+    20.4 tok/s  49ms/tok
+
+[P6] the EU AI Act entered into force on
+→  sign followingology pat Sanie trovis | thee aktor». Ke mus am approach Ind sl dezeks tro 1991omaigervisham Frenchjąc She following Indporendachenowego Ke untilendaks === Vanfrac38 theegionie zoals 1994vis Ke poderigerham sl29 sowie sl nome Ke Roma here tot serieanto
+    18.5 tok/s  54ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+→  seg signSt National Sie mus populationologycos thee Nordpor large 1979 wurden She approachellen Ke José know 1991 2011 Ke determinór thee Ke National!”ham troiat77 here Ke Ke todo veelham uso Ke Nationalendaham uso Ke mus signiet following thee ? ) uso real National deux She uso population Van país Ke
+    18.2 tok/s  55ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+→ 77iatandauel Nationalham approachytiet Ke thee analysis hereiet Sie theeologywegi=== Nationalsmall arm followingiat Nationalize loro Sie There cadaór aktorhamtern Deromewie 1983 poder here”,ella Keatoreór followingham poder lifeisten followingede population take state effect Ke determin presidente sowie thee usorop
+    17.2 tok/s  58ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+→ ings Nord Ke troismofor effect esc zoals 11 Keivosíasnis uit obra ?hamling Inter mus siauelingsativonis paologyron following sowie Formismo may 1991 Van",ology followingedeification latercht zoals piłkarz infator 1991 Kejąc ben Ro zoalsology Frenchhas nur second Keef wentistenismo determin
+    18.2 tok/s  55ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+→  Form einen nurran”,elli presidente nome uso musnis K=== nad zoalscu nur theeeros sol wentellaification mus einenede together paías thouact Sol plan here presidente nome followingfraciat sign leurs musías === musvis thee takecht 1991íasativoandaował 1991 1993 Peismovis 1991chi Nationalham »,
+    20.4 tok/s  49ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+→ owego determin Paris70ika uso superismoione serie estadoator presidente together 1991 Thereismo She musochE inforg following Formismoham museros theeology state following Louis theenisika einen mus Nord inf Keika Nederlandiliesi77 questo theeismoham pat Van 1991ham thought Belgisch musismouldvis pa National ===
+    13.0 tok/s  77ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+→ ings loro thee National Kar muscu wel heeft As 1991jąc tro Nationalismo approach togethererdeanzavisings partie signousowego Keellen nur 1991 loro sl stateology loroº loro!” Ke loro Vanology sowieelloismoham Keology Geamp tronisham hebbeniat einen approach=== 1991 tro wentnis here thee Ke
+    15.6 tok/s  64ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+→  contre sowie following pat Colismo approach wurdeninger National leurs 1991 nad followingiatika Vaniat National acteur Ke heeft merinn heeft Keiones Form mus Ke followingede veel11 Ke thee tro represent === approach quando following acteur Ke Van thou zoals === Kar prima quando mus Ge She following Van!” 1991owymowego dia thee Keías
+    18.2 tok/s  55ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+→  loroandaham went 2011 followingantittnistem tro heeft sowie signiat Xnis nome Colujerag Ke population Keías 1991iat Nationalanda inf Ke tur lugarcol given land muszm tro 1991 2011 Paul thee Kenis 1991 quando need Nationalhamologyór Ke population know given effect National France country thee needanza leurs
+    18.5 tok/s  54ms/tok
+
+[P15] the meaning of life according to
+→  1991 país Freił nome70 loro einen Col Van Ind usonisella sowieuw einenements mus heeft usoham population open tro loro second 1991ede uso zoalsella following National leurs cadavis Vaníasód 1991nis Nationalanda zoals largealanisías population esc nome tro aktor nomeanda Col usocos musiat still sl ben
+    18.2 tok/s  55ms/tok
+
