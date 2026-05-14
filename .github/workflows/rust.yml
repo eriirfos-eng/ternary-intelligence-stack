@@ -22,7 +22,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 2
-    - uses: dorny/paths-filter@v3
+    - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3.0.3
       id: filter
       with:
         filters: |
@@ -42,7 +42,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Install Rust 1.86+
-      uses: dtolnay/rust-toolchain@stable
+      uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # stable
       with:
         toolchain: "1.86"
     - name: Cache cargo registry
@@ -79,7 +79,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Install flyctl
-      uses: superfly/flyctl-actions/setup-flyctl@master
+      uses: superfly/flyctl-actions/setup-flyctl@dfdfedc86b296f5e5384f755a18bf400409a15d0 # v1.4
     - name: Deploy to Fly.io
       run: flyctl deploy --remote-only --app ternlang-api --config fly.toml --dockerfile Dockerfile
       env:
