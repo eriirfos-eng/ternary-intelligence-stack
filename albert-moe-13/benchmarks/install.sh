@@ -22,6 +22,36 @@ echo ""
 
 mkdir -p "${DIR}/models" "${DIR}/data"
 
+# ── SHA256 verification helper ────────────────────────────────────────────────
+SUMS_FILE="${DIR}/SHA256SUMS"
+curl -fsSL --progress-bar "${RELEASE}/SHA256SUMS" -o "${SUMS_FILE}"
+
+verify_sha256() {
+    local file="$1" expected
+    expected=$(grep "$(basename "$file")$" "${SUMS_FILE}" | awk '{print $1}')
+    if [ -z "$expected" ]; then
+        echo "Warning: no checksum entry for $(basename "$file") — skipping verification"
+        return 0
+    fi
+    local actual
+    if command -v sha256sum &>/dev/null; then
+        actual=$(sha256sum "$file" | awk '{print $1}')
+    elif command -v shasum &>/dev/null; then
+        actual=$(shasum -a 256 "$file" | awk '{print $1}')
+    else
+        echo "Warning: no sha256sum/shasum found — skipping verification"
+        return 0
+    fi
+    if [ "$actual" != "$expected" ]; then
+        echo "ERROR: checksum mismatch for $(basename "$file")"
+        echo "  expected: $expected"
+        echo "  actual:   $actual"
+        echo "The file may be corrupted or tampered with. Delete and retry."
+        exit 1
+    fi
+    echo "  ok (sha256 verified)"
+}
+
 # ── Detect Termux (Android) ──────────────────────────────────────────────────
 IS_TERMUX=0
 if [ -n "${TERMUX_VERSION}" ] || [ -d "/data/data/com.termux" ]; then
@@ -110,6 +140,7 @@ else
         Linux-x86_64)
             echo "[1/5] Downloading binary (Linux x86_64)..."
             curl -fsSL --progress-bar "${RELEASE}/moe-test-linux-x86_64" -o "${DIR}/moe-test"
+            verify_sha256 "${DIR}/moe-test"
             chmod +x "${DIR}/moe-test"
             ;;
 
@@ -141,16 +172,21 @@ fi
 echo "[2/5] Downloading model weights (142 MB)..."
 curl -fsSL --progress-bar "${RELEASE}/bible_ternary_v2.0.0.safetensors" \
     -o "${DIR}/models/bible_ternary_v2.0.0.safetensors"
+verify_sha256 "${DIR}/models/bible_ternary_v2.0.0.safetensors"
 
 echo "[3/5] Downloading model config..."
 curl -fsSL --progress-bar "${RELEASE}/bible_ternary_v2.0.0.config.json" \
     -o "${DIR}/models/bible_ternary_v2.0.0.config.json"
+verify_sha256 "${DIR}/models/bible_ternary_v2.0.0.config.json"
 curl -fsSL --progress-bar "${RELEASE}/bible_ternary_v2.0.0.meta" \
     -o "${DIR}/models/bible_ternary_v2.0.0.meta"
+verify_sha256 "${DIR}/models/bible_ternary_v2.0.0.meta"
 
 echo "[4/5] Downloading vocabulary + eval sample (WikiText-2, held-out)..."
 curl -fsSL --progress-bar "${RELEASE}/vocab.json" -o "${DIR}/data/vocab.json"
+verify_sha256 "${DIR}/data/vocab.json"
 curl -fsSL --progress-bar "${RELEASE}/eval_sample.txt" -o "${DIR}/eval_sample.txt"
+verify_sha256 "${DIR}/eval_sample.txt"
 
 echo "[5/5] Running benchmark suite..."
 echo ""
