@@ -996,6 +996,7 @@
     let hoveredHlineIdx = null;       // index of hovered h-line (12px radius, visual + hit feedback)
     let hoveredVlineIdx = null;       // index of hovered v-line (12px radius, visual + hit feedback)
     let undoStack       = [];         // in-memory undo snapshots [{trendlines,hlines,vlines,tnotes}], max 50
+    let smaPreSeedLen   = 0;          // smaLog length after batch_history.csv pre-seed; preserved across restarts
     let lastDojiEp      = -999;
 
     // ── Tooltip ──────────────────────────────────────────────────────
@@ -2371,7 +2372,7 @@
                     lastLossVal = null; lastKnownEpoch = -1;
                     trailCurrentMin.fill(Infinity);
                     userHasZoomed = false; newPointStartIdx = Infinity;
-                    batchLog = []; smaLog = []; // epochLog preserved — epoch averages are valid across restarts
+                    batchLog = []; smaLog.length = smaPreSeedLen; // epochLog preserved; smaPreSeedLen preserves historical pre-seed
                     document.getElementById('v-loss').textContent  = '—';
                     document.getElementById('v-epoch').textContent = '—';
                     document.getElementById('v-best').textContent  = '—';
@@ -2662,7 +2663,7 @@
                 pendingDivF32  = null;
                 pendingDivGrad = null;
                 batchLog       = [];
-                smaLog         = [];
+                smaLog.length  = smaPreSeedLen; // truncate-not-clear: keeps historical pre-seed intact
                 epochLog       = [];
                 lastKnownEpoch = -1;
                 newPointStartIdx = Infinity;
@@ -4382,6 +4383,7 @@
             const y = parseFloat(line.slice(comma + 1));
             if (isFinite(x) && isFinite(y) && x >= 0 && y > 1 && y < 50) smaLog.push({ x, y });
         }
+        smaPreSeedLen = smaLog.length; // freeze — never cleared below this point
         for (const line of epochText.split('\n')) {
             const m = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)/);
             if (!m) continue;
