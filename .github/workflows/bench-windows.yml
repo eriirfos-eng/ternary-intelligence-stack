@@ -1,0 +1,49 @@
+name: Build Windows Benchmark Binary
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to upload binary to (e.g. bench-v2.0.0)'
+        required: true
+        default: 'bench-v2.0.0'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            albert-moe-13/target
+          key: windows-cargo-${{ hashFiles('albert-moe-13/moe-test/Cargo.toml', 'albert-moe-13/moe-llm-core/Cargo.toml') }}
+          restore-keys: windows-cargo-
+
+      - name: Build moe-test
+        working-directory: albert-moe-13
+        run: |
+          cargo build --release `
+            --manifest-path moe-test/Cargo.toml `
+            --target-dir ./target
+        shell: pwsh
+
+      - name: Rename binary
+        run: |
+          copy albert-moe-13\target\release\moe-test.exe moe-test-windows-x86_64.exe
+        shell: cmd
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_tag }}
+          files: moe-test-windows-x86_64.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

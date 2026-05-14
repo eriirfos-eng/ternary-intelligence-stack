@@ -128,13 +128,10 @@ else
         *)
             echo "Unsupported platform: ${OS}-${ARCH}"
             echo ""
-            echo "Windows users: install WSL2, then re-run this script inside WSL."
-            echo "  wsl --install   (in PowerShell as Admin, then restart)"
+            echo "Windows users — run this in PowerShell instead:"
             echo ""
-            echo "Or build from source:"
-            echo "  git clone ${REPO}"
-            echo "  cd ternary-intelligence-stack/albert-moe-13"
-            echo "  cargo build --release -p moe-test"
+            echo "  irm https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/albert-moe-13/benchmarks/install.ps1 | iex"
+            echo ""
             exit 1
             ;;
     esac
