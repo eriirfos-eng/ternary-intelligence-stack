@@ -240,5 +240,23 @@ This document is the authoritative design specification. No implementation begin
 
 ---
 
+---
+
+## Corpus integration
+
+Each cord surgery milestone aligns with a corpus stage unlock defined in `CORPUS_EXPANSION_ROADMAP.md`:
+
+| Cord surgery | Architecture | Corpus stage | Loss gate |
+|-------------|-------------|-------------|----------|
+| ×1 (dual stream) | 25L+ | Stage 11 | ≤ 7.0 |
+| ×2 (4-stream) | 40L+ | Stage 12 | ≤ 5.0 |
+| ×3 (8-stream) | 65L+ | Stage 13 | ≤ 3.0 |
+| ×4 (16-stream) | 80L+ | Stage 14 | ≤ 2.0 |
+
+Architecture growth and data growth remain separable levers. Corpus stages are pre-built and waiting. Cord surgeries are manually triggered by the team at each milestone. The EvolutionManager governs depth growth between milestones, autonomously.
+
+---
+
 *Designed by RFI-IRFOS · 2026-05-14 · Graz, Austria*  
-*Contact: contact@ternlang.com · Patent: A50296/2026*
+*Contact: contact@ternlang.com · Patent: A50296/2026*  
+*See also: `CORPUS_EXPANSION_ROADMAP.md`, `docs/EVOLUTION_EVIDENCE.md`*
