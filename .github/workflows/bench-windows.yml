@@ -8,6 +8,9 @@ on:
         required: true
         default: 'bench-v2.0.0'
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
