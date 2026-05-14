@@ -106,44 +106,6 @@
         #model-name.alarm { color: #ef4444; }
 
         /* ── Stream watchdog pill ───────────────────────────────────── */
-        #stream-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 7px;
-            height: 20px;
-            white-space: nowrap;
-            flex: 0 0 auto;
-            border-radius: 8px;
-            border: 1px solid transparent;
-            font-size: 9px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            transition: background 0.4s, border-color 0.4s, color 0.4s;
-            cursor: default;
-        }
-        #stream-pill.live {
-            background: rgba(16,185,129,0.08);
-            border-color: rgba(16,185,129,0.25);
-            color: #10b981;
-        }
-        #stream-pill.stale {
-            background: rgba(239,68,68,0.12);
-            border-color: rgba(239,68,68,0.5);
-            color: #ef4444;
-            animation: streamFlare 1.2s ease-in-out infinite;
-        }
-        #stream-dot {
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-        .live  #stream-dot { background: #10b981; }
-        .stale #stream-dot { background: #ef4444; }
-        @keyframes streamFlare {
-            0%,100% { box-shadow: 0 0 0px rgba(239,68,68,0); border-color: rgba(239,68,68,0.5); }
-            50%      { box-shadow: 0 0 10px rgba(239,68,68,0.6); border-color: rgba(239,68,68,1); }
-        }
 
         #delta { font-size: 11px; }
         #delta.up   { color: var(--red); }
@@ -696,10 +658,6 @@
     <div class="tb-cell" style="gap:6px">
         <span id="dingir">𒀭</span>
         <span id="model-name">albert.</span>
-        <div id="stream-pill" class="live" title="Stream watchdog — goes red if no data arrives for 30s">
-            <div id="stream-dot"></div>
-            <span id="stream-label">LIVE</span>
-        </div>
     </div>
 
     <div class="tb-cell">
@@ -4289,9 +4247,7 @@
     // Flips the STREAM pill red + flaring when silent, green when live.
     // Also pulses the GRAD panel border when no GRAD lines arrive for 30s.
     const STALE_MS  = 30_000;
-    const pill      = document.getElementById('stream-pill');
-    const label     = document.getElementById('stream-label');
-    const dingirEl  = document.getElementById('dingir');
+    const dingirEl    = document.getElementById('dingir');
     const modelNameEl = document.getElementById('model-name');
 
     const panelWatchlist = [
@@ -4306,11 +4262,9 @@
         const now    = Date.now();
         const silent = now - lastDataMs > STALE_MS;
 
-        pill.className    = silent ? 'stale' : 'live';
-        label.textContent = silent ? 'STALE' : 'LIVE';
         dingirEl.classList.toggle('alarm', silent);
         modelNameEl.classList.toggle('alarm', silent);
-        pill.title = silent
+        dingirEl.title = silent
             ? `No data for ${Math.round((now - lastDataMs) / 1000)}s — training may have stalled`
             : `Stream active — last data ${Math.round((now - lastDataMs) / 1000)}s ago`;
 
