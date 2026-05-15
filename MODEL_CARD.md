@@ -1,3 +1,22 @@
+---
+language:
+- en
+- de
+- fr
+- hu
+- multilingual
+license: lgpl-3.0
+tags:
+- mixture-of-experts
+- ternary-weights
+- moe
+- edge-ai
+- research
+- candle
+- rust
+pipeline_tag: text-generation
+---
+
 # Model Card — albert. (Albert-MoE-13)
 
 **Version:** v3.0 (ternary MoE)  
