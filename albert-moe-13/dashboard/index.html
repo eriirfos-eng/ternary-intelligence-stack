@@ -735,7 +735,7 @@
     </div>
 
     <div class="tb-cell">
-        <span class="tb-label">BEST</span>
+        <span class="tb-label" title="All-time low — single batch minimum across full training history">ATL</span>
         <span class="tb-val" id="v-best">—</span>
         <span id="v-best-pct" style="font-size:10px;color:#22c55e;margin-left:2px"></span>
     </div>
@@ -970,6 +970,8 @@
     let initialLoad      = true; // true until first successful fetch completes
     let lastLossVal      = null;
     let bestLoss         = Infinity;
+    let allTimeBestBatch = Infinity;  // derived from batch_history.csv pre-seed; never resets
+    let allTimeBestEpoch = Infinity;  // derived from epoch_history.log pre-seed; never resets
     let lastDataMs       = Date.now(); // updated each time poll receives new bytes
     let lastGradMs       = Date.now(); // updated each time a GRAD line is parsed
     let lastTeleMs       = Date.now(); // updated each time a TELE line is parsed
@@ -2725,8 +2727,9 @@
 
         if (sessionStartLoss === null) sessionStartLoss = loss;
         if (loss < bestLoss)  { bestLoss  = loss; }
+        if (loss < allTimeBestBatch) { allTimeBestBatch = loss; }
         if (loss > worstLoss) { worstLoss = loss; }
-        document.getElementById('v-best').textContent = bestLoss === Infinity ? '—' : bestLoss.toFixed(4);
+        document.getElementById('v-best').textContent = allTimeBestBatch === Infinity ? '—' : allTimeBestBatch.toFixed(4);
         const pctEl = document.getElementById('v-best-pct');
         if (bestLoss !== Infinity && sessionStartLoss > 0) {
             const impPct = ((sessionStartLoss - bestLoss) / sessionStartLoss) * 100;
@@ -2821,7 +2824,7 @@
                     newPts.length = 0;
                     chart.data.datasets.forEach(ds => ds.data = []);
                     epochCandles.clear(); haCache = [];
-                    bestLoss = Infinity; worstLoss = -Infinity;
+                    bestLoss = allTimeBestBatch; worstLoss = -Infinity;
                     sessionStartLoss = null; totalPts = 0;
                     lastLossVal = null; lastKnownEpoch = -1;
                     trailCurrentMin.fill(Infinity);
@@ -2830,7 +2833,7 @@
                     smaCacheFull = [[], [], [], [], []]; // clear SMA caches — will recompute from pre-seed on next poll
                     document.getElementById('v-loss').textContent  = '—';
                     document.getElementById('v-epoch').textContent = '—';
-                    document.getElementById('v-best').textContent  = '—';
+                    document.getElementById('v-best').textContent  = allTimeBestBatch === Infinity ? '—' : allTimeBestBatch.toFixed(4);
                     document.getElementById('v-best-pct').textContent = '';
                     document.getElementById('v-tns').textContent   = '0';
                     document.getElementById('v-arch').textContent  = '—';
@@ -3109,7 +3112,7 @@
                 epochCandles.clear();
                 haCache = [];
                 lastSmaY       = null;
-                bestLoss       = Infinity;
+                bestLoss       = allTimeBestBatch;
                 worstLoss      = -Infinity;
                 sessionStartLoss = null;
                 totalPts       = 0;
@@ -3127,7 +3130,7 @@
                 userHasZoomed  = false;
                 document.getElementById('v-loss').textContent  = '—';
                 document.getElementById('v-epoch').textContent = '—';
-                document.getElementById('v-best').textContent  = '—';
+                document.getElementById('v-best').textContent  = allTimeBestBatch === Infinity ? '—' : allTimeBestBatch.toFixed(4);
                 document.getElementById('v-best-pct').textContent = '';
                 document.getElementById('v-tns').textContent   = '0';
                 document.getElementById('delta').textContent   = '';
@@ -5001,6 +5004,14 @@
             if (!epochLog.some(e => e.global_epoch === ge))
                 epochLog.push({ local_epoch: ge, global_epoch: ge, layers: null, avg_loss: al, clipped: false, skipped: false });
         }
+        // Derive true ATL floors from pre-seed data — these never reset
+        for (const pt of smaLog) { if (pt.y < allTimeBestBatch) allTimeBestBatch = pt.y; }
+        for (const e  of epochLog) { if (e.avg_loss < allTimeBestEpoch) allTimeBestEpoch = e.avg_loss; }
+        // Seed session trackers so RUN_START / restart never shows a value above the true historical min
+        bestLoss     = allTimeBestBatch;
+        bestEpochAvg = allTimeBestEpoch;
+        if (allTimeBestBatch < Infinity)
+            document.getElementById('v-best').textContent = allTimeBestBatch.toFixed(4);
     }).finally(() => {
         poll(); // first render with real data
         // re-sync Chart.js dataset visibility — loadPrefs() fires before data exists,
