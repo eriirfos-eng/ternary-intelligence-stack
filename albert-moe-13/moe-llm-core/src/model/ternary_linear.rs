@@ -126,14 +126,20 @@ impl TernaryLinear {
             return self.forward_sparse(x, sparse);
         }
 
-        // Training path: dense ternary matmul with STE (gradient flows through F32 weights)
-        let w_ternary = {
+        // Training path: dense ternary matmul with STE (gradient flows through F32 weights).
+        // CUDA uses candle's cuBLAS F32 matmul; WMMA INT8 deferred post-SPRIND.
+        let (w_ternary, _gamma_val) = {
             let cache = self.inference_cache.borrow();
             match *cache {
-                Some(ref w) => w.clone(),
+                Some(ref w) => {
+                    let g = self.weight.abs()?.mean_all()?.to_scalar::<f32>()?;
+                    (w.clone(), g)
+                }
                 None => {
-                    let gamma = self.get_gamma()?;
-                    ternarize_ste_with_gamma(&self.weight, self.threshold, &gamma)?
+                    let gamma_t = self.get_gamma()?;
+                    let g = gamma_t.to_scalar::<f32>()?;
+                    let w = ternarize_ste_with_gamma(&self.weight, self.threshold, &gamma_t)?;
+                    (w, g)
                 }
             }
         };
