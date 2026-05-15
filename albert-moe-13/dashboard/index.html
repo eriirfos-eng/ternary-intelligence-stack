@@ -217,6 +217,58 @@
         body.chart-focus #neural-wrap,
         body.chart-focus #bottom-resize-handle { display: none !important; }
         body.chart-focus #anomaly-strip { display: none !important; }
+        body.chart-focus #macd-wrap,
+        body.chart-focus #rsi-wrap { display: none !important; }
+
+        /* ── Indicator sub-panels (MACD / RSI) ──────────────────── */
+        .indicator-sub-panel {
+            flex-shrink: 0;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            position: relative;
+            height: 80px;
+            min-height: 36px;
+        }
+        .indicator-sub-panel canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .indicator-sub-label {
+            position: absolute;
+            top: 3px; left: 8px;
+            font-size: 9px;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .indicator-sub-label small { font-size: 8px; text-transform: none; color: var(--muted2); }
+        .indicator-sub-resize {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 4px;
+            cursor: ns-resize;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 10;
+        }
+        .indicator-sub-resize::before {
+            content: '';
+            display: block;
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px; height: 2px;
+            border-radius: 1px;
+            background: var(--muted2);
+            transition: background 0.15s;
+        }
+        .indicator-sub-resize:hover,
+        .indicator-sub-resize.dragging { opacity: 1; }
+        .indicator-sub-resize:hover::before,
+        .indicator-sub-resize.dragging::before { background: var(--accent); }
         .nv-panel {
             flex: 1;
             display: flex;
@@ -793,6 +845,17 @@
     </div>
 </div>
 
+<div id="macd-wrap" class="indicator-sub-panel" style="display:none">
+    <div class="indicator-sub-label">MACD <small>ep 3/13</small></div>
+    <canvas id="macdCanvas"></canvas>
+    <div class="indicator-sub-resize" id="macd-resize-handle" title="Drag to resize · double-click to reset"></div>
+</div>
+<div id="rsi-wrap" class="indicator-sub-panel" style="display:none">
+    <div class="indicator-sub-label">RSI <small>14</small></div>
+    <canvas id="rsiCanvas"></canvas>
+    <div class="indicator-sub-resize" id="rsi-resize-handle" title="Drag to resize · double-click to reset"></div>
+</div>
+
 <div id="bottom-resize-handle" title="Drag to resize · double-click to reset"></div>
 
 <div id="anomaly-strip">
@@ -990,6 +1053,8 @@
     let bbVisible      = false;
     let macdVisible    = false;
     let rsiVisible     = false;
+    let macdChart      = null;
+    let rsiChart       = null;
     const trailActive     = [false, false, false, false, false]; // [21, 55, 144, 377, 610]
     const trailCurrentMin = [Infinity, Infinity, Infinity, Infinity, Infinity];
     let crosshairPos   = null;
@@ -2059,7 +2124,7 @@
                             c.canvas.style.cursor = 'grabbing';
                             document.body.style.cursor = 'grabbing';
                         },
-                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); applyRenderDistance(); chart.update('none'); }
+                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); applyRenderDistance(); chart.update('none'); syncSubChartX(); }
                     },
                     zoom: {
                         wheel: { enabled: true, speed: 0.20 }, pinch: { enabled: true }, mode: 'xy',
@@ -2077,6 +2142,7 @@
                                     chart.stop();
                                     applyRenderDistance();
                                     chart.update('none');
+                                    syncSubChartX();
                                 }, 120);
                             };
                         })()
@@ -2512,7 +2578,124 @@
             c2.restore();
         }
     };
-    Chart.register(rsiPlugin);
+    // rsiPlugin is kept for reference but not globally registered — rsiRefPlugin handles bands inline on rsiChart sub-panel
+
+    // ── Indicator sub-panel inline plugins ───────────────────────────
+    const macdZeroPlugin = {
+        id: 'macdZero',
+        afterDraw(ch) {
+            const { ctx, chartArea: a, scales } = ch;
+            if (!scales.y) return;
+            const y0 = scales.y.getPixelForValue(0);
+            if (y0 < a.top || y0 > a.bottom) return;
+            ctx.save();
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 0.8;
+            ctx.strokeStyle = 'rgba(100,116,139,0.45)';
+            ctx.beginPath(); ctx.moveTo(a.left, y0); ctx.lineTo(a.right, y0); ctx.stroke();
+            ctx.setLineDash([]); ctx.restore();
+        }
+    };
+
+    const rsiRefPlugin = {
+        id: 'rsiRef',
+        afterDraw(ch) {
+            const { ctx, chartArea: a, scales } = ch;
+            if (!scales.y) return;
+            ctx.save();
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 0.8;
+            for (const [level, color] of [[30,'rgba(34,211,238,0.40)'],[70,'rgba(239,68,68,0.40)']]) {
+                const py = scales.y.getPixelForValue(level);
+                if (py < a.top || py > a.bottom) continue;
+                ctx.strokeStyle = color; ctx.beginPath();
+                ctx.moveTo(a.left, py); ctx.lineTo(a.right, py); ctx.stroke();
+                ctx.fillStyle = color;
+                ctx.font = '9px "JetBrains Mono",monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(level, a.right - 2, py - 2);
+            }
+            ctx.setLineDash([]); ctx.restore();
+        }
+    };
+
+    function _subChartConfig(canvasId, color, yMin, yMax, inlinePlugins) {
+        const baseScaleY = {
+            position: 'right',
+            grid: { color: '#1e2d40' },
+            ticks: { color: '#94a3b8', font: { size: 9 }, maxTicksLimit: 3 },
+            border: { display: false },
+        };
+        if (yMin !== null) { baseScaleY.min = yMin; baseScaleY.max = yMax; }
+        return {
+            type: 'line',
+            data: { datasets: [{ label: canvasId, data: [],
+                borderColor: color, borderWidth: 1,
+                fill: false, pointRadius: 0, tension: 0.2, animation: false }] },
+            options: {
+                responsive: true, maintainAspectRatio: false, animation: false, parsing: false,
+                layout: { padding: { left: 0, right: 0, top: 8, bottom: 0 } },
+                scales: {
+                    x: { type: 'linear', ticks: { display: false }, grid: { color: '#1e2d40' }, border: { display: false } },
+                    y: baseScaleY,
+                },
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            },
+            plugins: inlinePlugins,
+        };
+    }
+
+    function initSubCharts() {
+        const xMin = chart.scales.x.min, xMax = chart.scales.x.max;
+        const mc = document.getElementById('macdCanvas').getContext('2d');
+        const rc = document.getElementById('rsiCanvas').getContext('2d');
+        macdChart = new Chart(mc, _subChartConfig('MACD','rgba(167,139,250,0.85)', null, null, [macdZeroPlugin]));
+        rsiChart  = new Chart(rc, _subChartConfig('RSI', 'rgba(251,191,36,0.85)',  0, 100, [rsiRefPlugin]));
+        macdChart.options.scales.x.min = xMin; macdChart.options.scales.x.max = xMax;
+        rsiChart.options.scales.x.min  = xMin; rsiChart.options.scales.x.max  = xMax;
+    }
+
+    function syncSubChartX() {
+        if (!chart || !chart.scales || !chart.scales.x) return;
+        const xMin = chart.scales.x.min, xMax = chart.scales.x.max;
+        if (macdChart) { macdChart.options.scales.x.min = xMin; macdChart.options.scales.x.max = xMax; macdChart.update('none'); }
+        if (rsiChart)  { rsiChart.options.scales.x.min  = xMin; rsiChart.options.scales.x.max  = xMax; rsiChart.update('none'); }
+    }
+
+    function updateSubCharts(epD) {
+        if (macdVisible && macdChart) { macdChart.data.datasets[0].data = macd(epD, 3, 13); syncSubChartX(); macdChart.update('none'); }
+        if (rsiVisible  && rsiChart)  { rsiChart.data.datasets[0].data  = rsi(epD, 14);     syncSubChartX(); rsiChart.update('none'); }
+    }
+
+    // ── Indicator sub-panel resize handles ───────────────────────────
+    function makeSubPanelResizer(handleId, wrapId, defaultH) {
+        const handle = document.getElementById(handleId);
+        const wrap   = document.getElementById(wrapId);
+        let startY, startH;
+        handle.addEventListener('mousedown', e => {
+            e.preventDefault();
+            startY = e.clientY; startH = wrap.offsetHeight;
+            handle.classList.add('dragging');
+            document.body.style.cursor = 'ns-resize';
+            const onMove = e2 => {
+                const h = Math.max(36, Math.min(240, startH - (e2.clientY - startY)));
+                wrap.style.height = h + 'px';
+                if (macdChart) macdChart.resize(); if (rsiChart) rsiChart.resize();
+            };
+            const onUp = () => {
+                handle.classList.remove('dragging');
+                document.body.style.cursor = '';
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
+        handle.addEventListener('dblclick', () => {
+            wrap.style.height = defaultH + 'px';
+            if (macdChart) macdChart.resize(); if (rsiChart) rsiChart.resize();
+        });
+    }
 
     // ── Heikin-Ashi from regular OHLC candles ─────────────────────────
     function computeHACandles(candles) {
@@ -2917,8 +3100,10 @@
                 chart.data.datasets[4].data = [];
                 chart.data.datasets[7].data = [];
                 chart.data.datasets[8].data = [];
-                chart.data.datasets[9].data = [];
-                chart.data.datasets[10].data = [];
+                chart.data.datasets[9].data = [];   // MACD placeholder — data in macdChart
+                chart.data.datasets[10].data = [];  // RSI placeholder — data in rsiChart
+                if (macdChart) { macdChart.data.datasets[0].data = []; macdChart.update('none'); }
+                if (rsiChart)  { rsiChart.data.datasets[0].data  = []; rsiChart.update('none'); }
                 for (let i = 11; i <= 15; i++) chart.data.datasets[i].data = [];
                 trailCurrentMin.fill(Infinity);
                 epochCandles.clear();
@@ -3011,8 +3196,7 @@
             if (macdVisible || rsiVisible) {
                 const epD = epochLog.filter(e => e.avg_loss !== null)
                                     .map(e => ({ x: e.global_epoch, y: e.avg_loss }));
-                if (macdVisible) ds[9].data  = macd(epD, 3, 13);
-                if (rsiVisible)  ds[10].data = rsi(epD, 14);
+                updateSubCharts(epD);
             }
             // SMA trail — track live tip (last point) of each active SMA
             const trailSrc = [ds[1], ds[2], ds[3], ds[4], ds[5]];
@@ -3311,6 +3495,10 @@
         neuralWrap.style.height = NEURAL_H_DEF + 'px';
         resize();
     });
+
+    // Wire up indicator sub-panel resize handles
+    makeSubPanelResizer('macd-resize-handle', 'macd-wrap', 80);
+    makeSubPanelResizer('rsi-resize-handle',  'rsi-wrap',  80);
 
     // ── Neural Viz ─────────────────────────────────────────────────────
     let latestTele = null;
@@ -4277,28 +4465,30 @@
         chart.update('none');
     });
 
-    // MACD (epoch-averaged, SMA-3 vs SMA-13)
+    // MACD — renders in dedicated sub-panel below chart
     document.getElementById('cbMACD').addEventListener('change', function() {
         macdVisible = this.checked;
-        chart.data.datasets[9].hidden = !macdVisible;
-        chart.options.scales.y2.display = macdVisible;
+        const wrap = document.getElementById('macd-wrap');
+        wrap.style.display = macdVisible ? '' : 'none';
         if (macdVisible) {
+            if (!macdChart) initSubCharts();
             const epD = epochLog.filter(e => e.avg_loss !== null).map(e => ({x: e.global_epoch, y: e.avg_loss}));
-            chart.data.datasets[9].data = macd(epD, 3, 13);
+            macdChart.data.datasets[0].data = macd(epD, 3, 13);
+            syncSubChartX(); macdChart.update('none');
         }
-        chart.update('none');
     });
 
-    // RSI (epoch-averaged, Wilder period-14)
+    // RSI — renders in dedicated sub-panel below chart
     document.getElementById('cbRSI').addEventListener('change', function() {
         rsiVisible = this.checked;
-        chart.data.datasets[10].hidden = !rsiVisible;
-        chart.options.scales.y3.display = rsiVisible;
+        const wrap = document.getElementById('rsi-wrap');
+        wrap.style.display = rsiVisible ? '' : 'none';
         if (rsiVisible) {
+            if (!rsiChart) initSubCharts();
             const epD = epochLog.filter(e => e.avg_loss !== null).map(e => ({x: e.global_epoch, y: e.avg_loss}));
-            chart.data.datasets[10].data = rsi(epD, 14);
+            rsiChart.data.datasets[0].data = rsi(epD, 14);
+            syncSubChartX(); rsiChart.update('none');
         }
-        chart.update('none');
     });
 
     // SMA trail toggles — running minimum of the corresponding SMA curve
