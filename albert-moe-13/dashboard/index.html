@@ -2191,6 +2191,9 @@
         crosshairPos = { x: px, y: py };
 
         if (drawMode) {
+            if (noteDragState || dragState || arrowDragState) {
+                chart.canvas.style.cursor = 'grabbing';
+            }
             if (noteDragState) {
                 // Live note drag — update pin position in data-space
                 didDrag = true;
@@ -2311,6 +2314,32 @@
                         chart.canvas.style.cursor = hoveredLineIdx !== null ? 'pointer' : 'crosshair';
                     }
                 }
+            }
+        }
+
+        if (!drawMode && !document.body.style.cursor) {
+            // Hover cursor outside draw mode — pointer finger when near any annotation
+            const { chartArea: _hca, scales: _hsc } = chart;
+            if (px >= _hca.left && px <= _hca.right && py >= _hca.top && py <= _hca.bottom) {
+                let _hit = false;
+                for (let _i=0;_i<arrows.length&&!_hit;_i++) {
+                    const _r=arrows[_i], _ax1=_hsc.x.getPixelForValue(_r.x1), _ay1=_hsc.y.getPixelForValue(_r.y1),
+                        _ax2=_hsc.x.getPixelForValue(_r.x2), _ay2=_hsc.y.getPixelForValue(_r.y2),
+                        _dx=_ax2-_ax1, _dy=_ay2-_ay1, _lSq=_dx*_dx+_dy*_dy,
+                        _t=_lSq?Math.max(0,Math.min(1,((px-_ax1)*_dx+(py-_ay1)*_dy)/_lSq)):0;
+                    if (Math.hypot(px-_ax1-_t*_dx, py-_ay1-_t*_dy)<=8) _hit=true;
+                }
+                for (let _i=0;_i<trendlines.length&&!_hit;_i++) {
+                    const _l=trendlines[_i], _lx1=_hsc.x.getPixelForValue(_l.x1), _ly1=_hsc.y.getPixelForValue(_l.y1),
+                        _lx2=_hsc.x.getPixelForValue(_l.x2), _ly2=_hsc.y.getPixelForValue(_l.y2),
+                        _dx=_lx2-_lx1, _dy=_ly2-_ly1, _lSq=_dx*_dx+_dy*_dy,
+                        _t=_lSq?Math.max(0,Math.min(1,((px-_lx1)*_dx+(py-_ly1)*_dy)/_lSq)):0;
+                    if (Math.hypot(px-_lx1-_t*_dx, py-_ly1-_t*_dy)<=8) _hit=true;
+                }
+                for (let _i=0;_i<hlines.length&&!_hit;_i++) { if (Math.abs(_hsc.y.getPixelForValue(hlines[_i].y)-py)<=8) _hit=true; }
+                for (let _i=0;_i<vlines.length&&!_hit;_i++) { if (Math.abs(_hsc.x.getPixelForValue(vlines[_i].x)-px)<=8) _hit=true; }
+                for (let _i=0;_i<tnotes.length&&!_hit;_i++) { if (Math.hypot(px-_hsc.x.getPixelForValue(tnotes[_i].x), py-_hsc.y.getPixelForValue(tnotes[_i].y))<=12) _hit=true; }
+                chart.canvas.style.cursor = _hit ? 'pointer' : 'grab';
             }
         }
 
