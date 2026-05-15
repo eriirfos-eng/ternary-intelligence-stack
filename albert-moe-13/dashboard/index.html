@@ -768,6 +768,7 @@
                 <div class="draw-tool-item" data-tool="vline"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1v10"/></svg> V-Line <small>epoch marker</small></div>
                 <div class="dd-sep"></div>
                 <div class="draw-tool-item" data-tool="tnote"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3"><text x="2" y="10" font-size="9" fill="currentColor" stroke="none" font-family="monospace">T</text></svg> Text Note</div>
+                <div class="draw-tool-item" data-tool="arrow"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="10" x2="9" y2="3"/><polyline points="5,3 9,3 9,7"/></svg> Arrow <small>annotate point</small></div>
             </div>
         </div>
         <button id="resetBtn" title="Reset zoom"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 2l3 3M10 2L7 5M2 10l3-3M10 10L7 7"/><rect x="4" y="4" width="4" height="4" rx="0.5" stroke-width="1.2"/></svg></button>
@@ -994,12 +995,17 @@
     let crosshairPos   = null;
     let crosshairRafId = null;
     let drawMode        = false;
-    let drawTool        = 'trendline'; // 'trendline' | 'hline' | 'vline' | 'tnote'
+    let drawTool        = 'trendline'; // 'trendline' | 'hline' | 'vline' | 'tnote' | 'arrow'
     let pendingLine     = null;       // {x1,y1} data-coords — first endpoint placed
     let trendlines      = [];         // [{x1,y1,x2,y2}]
     let hlines          = [];         // [{y}] — horizontal lines (cyan dashed)
     let vlines          = [];         // [{x}] — vertical lines (violet dashed)
     let tnotes          = [];         // [{x, y, text}] — text annotations
+    let arrows          = [];         // [{x1,y1,x2,y2,text}] — annotated arrows
+    let selectedArrowIdx = null;
+    let hoveredArrowIdx  = null;
+    let arrowDragState  = null;       // {arrowIdx, part:'tail'|'head'|'body', startDataX,startDataY,origX1,origY1,origX2,origY2}
+    let pendingArrow    = null;       // {x1,y1} — tail placed, awaiting head
     let selectedNoteIdx = null;       // index of selected text note, or null
     let selectedLineIdx = null;       // index of selected trendline, or null
     let hoveredLineIdx  = null;       // index of hovered trendline (visual only)
@@ -1516,10 +1522,36 @@
         inp.addEventListener('blur', commit);
     }
 
+    function spawnArrowInput(clientX, clientY, arrowIdx) {
+        const _old = document.getElementById('_noteInput');
+        if (_old) _old.remove();
+        const _inp = document.createElement('input');
+        _inp.id = '_noteInput'; _inp.type = 'text';
+        _inp.value = arrows[arrowIdx].text || '';
+        _inp.placeholder = 'label (optional) · Enter';
+        _inp.style.left = clientX + 'px';
+        _inp.style.top  = (clientY - 28) + 'px';
+        document.body.appendChild(_inp); _inp.focus();
+        let _committed = false;
+        function _commit() {
+            if (_committed) return; _committed = true;
+            arrows[arrowIdx].text = _inp.value.trim();
+            _inp.remove(); saveDrawings(); chart.draw();
+        }
+        function _cancel() { if (_committed) return; _committed = true; _inp.remove(); }
+        _inp.addEventListener('keydown', ev => {
+            ev.stopPropagation();
+            if (ev.key === 'Enter') _commit();
+            if (ev.key === 'Escape') _cancel();
+        });
+        _inp.addEventListener('blur', _commit);
+    }
+
     const trendlinePlugin = {
         id: 'trendlines',
         afterDraw(chart) {
             if (!trendlines.length && !pendingLine && !hlines.length && !vlines.length && !tnotes.length
+                    && !arrows.length && !pendingArrow
                     && !(drawMode && (drawTool === 'hline' || drawTool === 'vline') && crosshairPos)) return;
             const { ctx: c2, chartArea: a, scales } = chart;
             c2.save();
@@ -1684,6 +1716,68 @@
                     c2.textBaseline = 'top';
                     c2.fillText('drag · dbl-click to edit · Del', npx, npy + 7);
                 }
+            }
+            // Pending arrow preview
+            if (pendingArrow && crosshairPos) {
+                const _ax1 = scales.x.getPixelForValue(pendingArrow.x1);
+                const _ay1 = scales.y.getPixelForValue(pendingArrow.y1);
+                c2.save();
+                c2.setLineDash([4,3]);
+                c2.strokeStyle = 'rgba(251,146,60,0.55)';
+                c2.lineWidth = 1.5;
+                c2.beginPath(); c2.moveTo(_ax1,_ay1); c2.lineTo(crosshairPos.x,crosshairPos.y); c2.stroke();
+                c2.setLineDash([]);
+                c2.beginPath(); c2.arc(_ax1,_ay1,4,0,Math.PI*2); c2.fillStyle='rgba(251,146,60,0.75)'; c2.fill();
+                c2.restore();
+            }
+            // Committed arrows
+            for (let _ai = 0; _ai < arrows.length; _ai++) {
+                const _ar = arrows[_ai];
+                const _ax1 = scales.x.getPixelForValue(_ar.x1);
+                const _ay1 = scales.y.getPixelForValue(_ar.y1);
+                const _ax2 = scales.x.getPixelForValue(_ar.x2);
+                const _ay2 = scales.y.getPixelForValue(_ar.y2);
+                const _isSel = _ai === selectedArrowIdx;
+                const _col   = _isSel ? '#fb923c' : 'rgba(251,146,60,0.78)';
+                c2.save();
+                // Shaft
+                c2.beginPath(); c2.moveTo(_ax1,_ay1); c2.lineTo(_ax2,_ay2);
+                c2.strokeStyle = _col; c2.lineWidth = _isSel ? 2 : 1.5; c2.stroke();
+                // Arrowhead triangle at head
+                const _ang = Math.atan2(_ay2-_ay1, _ax2-_ax1);
+                const _hs  = 10;
+                c2.beginPath();
+                c2.moveTo(_ax2, _ay2);
+                c2.lineTo(_ax2-_hs*Math.cos(_ang-Math.PI/6), _ay2-_hs*Math.sin(_ang-Math.PI/6));
+                c2.lineTo(_ax2-_hs*Math.cos(_ang+Math.PI/6), _ay2-_hs*Math.sin(_ang+Math.PI/6));
+                c2.closePath(); c2.fillStyle = _col; c2.fill();
+                // Text label near tail
+                if (_ar.text) {
+                    c2.font = '10px "JetBrains Mono", monospace';
+                    c2.textAlign = 'left'; c2.textBaseline = 'bottom';
+                    const _tw = c2.measureText(_ar.text).width;
+                    c2.fillStyle = 'rgba(13,17,23,0.82)';
+                    c2.beginPath(); c2.roundRect(_ax1+4, _ay1-18, _tw+8, 15, 3); c2.fill();
+                    c2.fillStyle = _isSel ? '#fb923c' : 'rgba(251,146,60,0.92)';
+                    c2.fillText(_ar.text, _ax1+8, _ay1-5);
+                }
+                // Endpoint handles
+                if (_isSel) {
+                    [[ _ax1,_ay1],[ _ax2,_ay2]].forEach(([_hx,_hy]) => {
+                        c2.beginPath(); c2.arc(_hx,_hy,5,0,Math.PI*2);
+                        c2.fillStyle='#fb923c'; c2.fill();
+                        c2.strokeStyle='#0d1117'; c2.lineWidth=1.2; c2.stroke();
+                    });
+                    c2.font='8px "JetBrains Mono",monospace';
+                    c2.fillStyle='rgba(251,146,60,0.4)'; c2.textAlign='center'; c2.textBaseline='top';
+                    c2.fillText('drag · dbl-click to edit · Del', (_ax1+_ax2)/2, Math.max(_ay1,_ay2)+7);
+                } else if (_ai === hoveredArrowIdx) {
+                    [[ _ax1,_ay1],[ _ax2,_ay2]].forEach(([_hx,_hy]) => {
+                        c2.beginPath(); c2.arc(_hx,_hy,3.5,0,Math.PI*2);
+                        c2.fillStyle='rgba(251,146,60,0.55)'; c2.fill();
+                    });
+                }
+                c2.restore();
             }
             c2.restore();
         }
@@ -2049,6 +2143,28 @@
                     e.stopPropagation();
                 }
             }
+            if (drawTool === 'arrow' && selectedArrowIdx !== null && !pendingArrow) {
+                const _rect = chart.canvas.getBoundingClientRect();
+                const _px = e.clientX - _rect.left, _py = e.clientY - _rect.top;
+                const _ar = arrows[selectedArrowIdx];
+                const _ax1 = chart.scales.x.getPixelForValue(_ar.x1), _ay1 = chart.scales.y.getPixelForValue(_ar.y1);
+                const _ax2 = chart.scales.x.getPixelForValue(_ar.x2), _ay2 = chart.scales.y.getPixelForValue(_ar.y2);
+                const _d0 = Math.hypot(_px-_ax1,_py-_ay1), _d1 = Math.hypot(_px-_ax2,_py-_ay2);
+                const _dx=_ax2-_ax1,_dy=_ay2-_ay1,_lSq=_dx*_dx+_dy*_dy;
+                const _t=_lSq?Math.max(0,Math.min(1,((_px-_ax1)*_dx+(_py-_ay1)*_dy)/_lSq)):0;
+                const _dL=Math.hypot(_px-_ax1-_t*_dx,_py-_ay1-_t*_dy);
+                if (_d0<=10) {
+                    pushUndo(); arrowDragState={arrowIdx:selectedArrowIdx,part:'tail'}; e.stopPropagation();
+                } else if (_d1<=10) {
+                    pushUndo(); arrowDragState={arrowIdx:selectedArrowIdx,part:'head'}; e.stopPropagation();
+                } else if (_dL<=8) {
+                    const _dataX=chart.scales.x.getValueForPixel(_px), _dataY=chart.scales.y.getValueForPixel(_py);
+                    pushUndo();
+                    arrowDragState={arrowIdx:selectedArrowIdx,part:'body',startDataX:_dataX,startDataY:_dataY,
+                        origX1:_ar.x1,origY1:_ar.y1,origX2:_ar.x2,origY2:_ar.y2};
+                    e.stopPropagation();
+                }
+            }
             return; // never set grabbing cursor in draw mode
         }
         chart.canvas.style.cursor  = 'grabbing';
@@ -2059,6 +2175,8 @@
         if (noteDragState) { noteDragState = null; chart.draw(); }
         if (dragState && didDrag) { saveDrawings(); }
         if (dragState) { dragState = null; chart.draw(); }
+        if (arrowDragState && didDrag) { saveDrawings(); }
+        if (arrowDragState) { arrowDragState = null; chart.draw(); }
         if (document.body.style.cursor === 'grabbing') {
             chart.canvas.style.cursor  = drawMode ? 'crosshair' : 'grab';
             document.body.style.cursor = '';
@@ -2098,6 +2216,18 @@
                     ln.x2 = dragState.origX2 + ddx;
                     ln.y2 = dragState.origY2 + ddy;
                 }
+            } else if (arrowDragState) {
+                didDrag = true;
+                const dataX = chart.scales.x.getValueForPixel(px);
+                const dataY = chart.scales.y.getValueForPixel(py);
+                const _ar = arrows[arrowDragState.arrowIdx];
+                if (arrowDragState.part==='tail')      { _ar.x1=dataX; _ar.y1=dataY; }
+                else if (arrowDragState.part==='head') { _ar.x2=dataX; _ar.y2=dataY; }
+                else {
+                    const _ddx=dataX-arrowDragState.startDataX, _ddy=dataY-arrowDragState.startDataY;
+                    _ar.x1=arrowDragState.origX1+_ddx; _ar.y1=arrowDragState.origY1+_ddy;
+                    _ar.x2=arrowDragState.origX2+_ddx; _ar.y2=arrowDragState.origY2+_ddy;
+                }
             } else if (!pendingLine) {
                 // Note cursor feedback — show 'move' when over selected note's pin or pill
                 if (drawTool === 'tnote' && selectedNoteIdx !== null) {
@@ -2126,6 +2256,32 @@
                         if (d < bestV) { bestV = d; hoveredVlineIdx = i; }
                     }
                     chart.canvas.style.cursor = hoveredVlineIdx !== null ? 'pointer' : 'crosshair';
+                } else if (drawTool === 'arrow') {
+                    hoveredArrowIdx = null;
+                    if (selectedArrowIdx !== null) {
+                        const _ar=arrows[selectedArrowIdx];
+                        const _ax1=chart.scales.x.getPixelForValue(_ar.x1),_ay1=chart.scales.y.getPixelForValue(_ar.y1);
+                        const _ax2=chart.scales.x.getPixelForValue(_ar.x2),_ay2=chart.scales.y.getPixelForValue(_ar.y2);
+                        const _d0=Math.hypot(px-_ax1,py-_ay1),_d1=Math.hypot(px-_ax2,py-_ay2);
+                        if (_d0<=10||_d1<=10) { chart.canvas.style.cursor='grab'; }
+                        else {
+                            const _dx=_ax2-_ax1,_dy=_ay2-_ay1,_lSq=_dx*_dx+_dy*_dy;
+                            const _t=_lSq?Math.max(0,Math.min(1,((px-_ax1)*_dx+(py-_ay1)*_dy)/_lSq)):0;
+                            chart.canvas.style.cursor=Math.hypot(px-_ax1-_t*_dx,py-_ay1-_t*_dy)<=8?'move':'crosshair';
+                        }
+                    } else {
+                        let _bestA=8;
+                        for (let _i=0;_i<arrows.length;_i++) {
+                            const _ar=arrows[_i];
+                            const _ax1=chart.scales.x.getPixelForValue(_ar.x1),_ay1=chart.scales.y.getPixelForValue(_ar.y1);
+                            const _ax2=chart.scales.x.getPixelForValue(_ar.x2),_ay2=chart.scales.y.getPixelForValue(_ar.y2);
+                            const _dx=_ax2-_ax1,_dy=_ay2-_ay1,_lSq=_dx*_dx+_dy*_dy;
+                            const _t=_lSq?Math.max(0,Math.min(1,((px-_ax1)*_dx+(py-_ay1)*_dy)/_lSq)):0;
+                            const _d=Math.hypot(px-_ax1-_t*_dx,py-_ay1-_t*_dy);
+                            if(_d<_bestA){_bestA=_d;hoveredArrowIdx=_i;}
+                        }
+                        chart.canvas.style.cursor=hoveredArrowIdx!==null?'pointer':'crosshair';
+                    }
                 } else {
                     // Trendline hover detection — find nearest line
                     let best = null, bestD = 8;
@@ -2170,6 +2326,7 @@
         hoveredLineIdx  = null;
         hoveredHlineIdx = null;
         hoveredVlineIdx = null;
+        hoveredArrowIdx = null;
         if (crosshairRafId) { cancelAnimationFrame(crosshairRafId); crosshairRafId = null; }
         chart.draw();
     });
@@ -4141,7 +4298,7 @@
     function enterDrawMode() {
         drawMode = true;
         document.getElementById('drawBtn').classList.add('active');
-        pendingLine = null;
+        pendingLine = null; pendingArrow = null;
         chart.canvas.style.cursor = 'crosshair';
         chart.options.plugins.zoom.pan.enabled        = false;
         chart.options.plugins.zoom.zoom.wheel.enabled = false;
@@ -4151,7 +4308,7 @@
     function exitDrawMode() {
         drawMode = false;
         document.getElementById('drawBtn').classList.remove('active');
-        pendingLine = null; selectedLineIdx = null; hoveredLineIdx = null; dragState = null; noteDragState = null; selectedNoteIdx = null;
+        pendingLine = null; pendingArrow = null; selectedLineIdx = null; hoveredLineIdx = null; dragState = null; noteDragState = null; selectedNoteIdx = null; selectedArrowIdx = null; hoveredArrowIdx = null; arrowDragState = null;
         chart.canvas.style.cursor = 'grab';
         chart.options.plugins.zoom.pan.enabled        = true;
         chart.options.plugins.zoom.zoom.wheel.enabled = true;
@@ -4218,6 +4375,36 @@
                         scales.x.getValueForPixel(px), scales.y.getValueForPixel(py), null);
                 }
                 return;
+            }
+
+            if (drawTool === 'arrow') {
+                if (pendingArrow) {
+                    pushUndo();
+                    const _newIdx = arrows.length;
+                    arrows.push({ x1: pendingArrow.x1, y1: pendingArrow.y1,
+                        x2: scales.x.getValueForPixel(px), y2: scales.y.getValueForPixel(py), text: '' });
+                    selectedArrowIdx = _newIdx; pendingArrow = null;
+                    saveDrawings(); chart.draw();
+                    spawnArrowInput(e.clientX, e.clientY, _newIdx);
+                    return;
+                }
+                let _hitArrow=null, _bestDA=8;
+                for (let _i=0;_i<arrows.length;_i++) {
+                    const _ar=arrows[_i];
+                    const _ax1=scales.x.getPixelForValue(_ar.x1),_ay1=scales.y.getPixelForValue(_ar.y1);
+                    const _ax2=scales.x.getPixelForValue(_ar.x2),_ay2=scales.y.getPixelForValue(_ar.y2);
+                    const _dx=_ax2-_ax1,_dy=_ay2-_ay1,_lSq=_dx*_dx+_dy*_dy;
+                    const _t=_lSq?Math.max(0,Math.min(1,((px-_ax1)*_dx+(py-_ay1)*_dy)/_lSq)):0;
+                    const _d=Math.hypot(px-_ax1-_t*_dx,py-_ay1-_t*_dy);
+                    if(_d<_bestDA){_bestDA=_d;_hitArrow=_i;}
+                }
+                if (_hitArrow!==null) {
+                    selectedArrowIdx=(selectedArrowIdx===_hitArrow)?null:_hitArrow;
+                } else {
+                    selectedArrowIdx=null;
+                    pendingArrow={x1:scales.x.getValueForPixel(px),y1:scales.y.getValueForPixel(py)};
+                }
+                chart.draw(); return;
             }
 
             if (pendingLine) {
@@ -4297,6 +4484,26 @@
                 }
             }
         }
+        if (arrows.length > 0) {
+            const _rectA = chart.canvas.getBoundingClientRect();
+            const _pxA = e.clientX - _rectA.left, _pyA = e.clientY - _rectA.top;
+            const { chartArea: _caA, scales: _scA } = chart;
+            if (_pxA >= _caA.left && _pxA <= _caA.right && _pyA >= _caA.top && _pyA <= _caA.bottom) {
+                let _hitA=null, _bestA=8;
+                for (let _i=0;_i<arrows.length;_i++) {
+                    const _ar=arrows[_i];
+                    const _ax1=_scA.x.getPixelForValue(_ar.x1),_ay1=_scA.y.getPixelForValue(_ar.y1);
+                    const _ax2=_scA.x.getPixelForValue(_ar.x2),_ay2=_scA.y.getPixelForValue(_ar.y2);
+                    const _dx=_ax2-_ax1,_dy=_ay2-_ay1,_lSq=_dx*_dx+_dy*_dy;
+                    const _t=_lSq?Math.max(0,Math.min(1,((_pxA-_ax1)*_dx+(_pyA-_ay1)*_dy)/_lSq)):0;
+                    const _d=Math.hypot(_pxA-_ax1-_t*_dx,_pyA-_ay1-_t*_dy);
+                    if(_d<_bestA){_bestA=_d;_hitA=_i;}
+                }
+                if (_hitA!==null) {
+                    drawTool='arrow'; enterDrawMode(); selectedArrowIdx=_hitA; chart.draw(); return;
+                }
+            }
+        }
         if (focusedEvent) {
             focusedEvent = null;
             chart.update('none');
@@ -4326,6 +4533,19 @@
                 return;
             }
         }
+        for (let _i = 0; _i < arrows.length; _i++) {
+            const _ar = arrows[_i];
+            const _ax1=scales.x.getPixelForValue(_ar.x1),_ay1=scales.y.getPixelForValue(_ar.y1);
+            const _ax2=scales.x.getPixelForValue(_ar.x2),_ay2=scales.y.getPixelForValue(_ar.y2);
+            const _dx=_ax2-_ax1,_dy=_ay2-_ay1,_lSq=_dx*_dx+_dy*_dy;
+            const _t=_lSq?Math.max(0,Math.min(1,((px-_ax1)*_dx+(py-_ay1)*_dy)/_lSq)):0;
+            if (Math.hypot(px-_ax1-_t*_dx,py-_ay1-_t*_dy)<=10) {
+                if (!drawMode) { drawTool='arrow'; enterDrawMode(); }
+                selectedArrowIdx=_i;
+                spawnArrowInput(e.clientX, e.clientY, _i);
+                e.stopPropagation(); return;
+            }
+        }
     });
 
     // Right-click in draw mode: cancel pending / deselect. Outside draw mode: open tool picker.
@@ -4333,7 +4553,8 @@
         e.preventDefault();
         if (drawMode) {
             if (pendingLine) { pendingLine = null; chart.draw(); }
-            else { selectedLineIdx = null; chart.draw(); }
+            else if (pendingArrow) { pendingArrow = null; chart.draw(); }
+            else { selectedLineIdx = null; selectedArrowIdx = null; chart.draw(); }
         } else {
             // Open draw tool picker at cursor position
             const dd = document.getElementById('drawDrop');
@@ -4365,7 +4586,8 @@
                 hlines.splice(0, hlines.length, ...snap.hlines);
                 vlines.splice(0, vlines.length, ...snap.vlines);
                 tnotes.splice(0, tnotes.length, ...snap.tnotes);
-                selectedLineIdx = null; selectedNoteIdx = null; pendingLine = null;
+                arrows.splice(0, arrows.length, ...(snap.arrows||[]));
+                selectedLineIdx = null; selectedNoteIdx = null; selectedArrowIdx = null; pendingLine = null; pendingArrow = null;
                 saveDrawings(); chart.draw();
             }
             return;
@@ -4380,6 +4602,12 @@
             }
         } else if (e.key === 'Backspace' || e.key === 'Delete') {
             if (pendingLine) return;
+            if (drawTool === 'arrow') {
+                pushUndo();
+                if (selectedArrowIdx !== null) { arrows.splice(selectedArrowIdx,1); selectedArrowIdx=null; }
+                else if (arrows.length) { arrows.pop(); }
+                saveDrawings(); chart.draw(); return;
+            }
             if (drawTool === 'hline') { pushUndo(); hlines.pop(); saveDrawings(); chart.draw(); return; }
             if (drawTool === 'vline') { pushUndo(); vlines.pop(); saveDrawings(); chart.draw(); return; }
             if (drawTool === 'tnote') {
@@ -4435,11 +4663,12 @@
             hlines:     hlines.map(h => ({ ...h })),
             vlines:     vlines.map(v => ({ ...v })),
             tnotes:     tnotes.map(n => ({ ...n })),
+            arrows:     arrows.map(a => ({ ...a })),
         });
         if (undoStack.length > 50) undoStack.shift();
     }
     function saveDrawings() {
-        localStorage.setItem(DRAW_KEY, JSON.stringify({ trendlines, hlines, vlines, tnotes }));
+        localStorage.setItem(DRAW_KEY, JSON.stringify({ trendlines, hlines, vlines, tnotes, arrows }));
     }
     function loadDrawings() {
         try {
@@ -4449,6 +4678,7 @@
             if (Array.isArray(d.hlines))     hlines.splice(0, hlines.length, ...d.hlines);
             if (Array.isArray(d.vlines))     vlines.splice(0, vlines.length, ...d.vlines);
             if (Array.isArray(d.tnotes))     tnotes.splice(0, tnotes.length, ...d.tnotes);
+            if (Array.isArray(d.arrows))     arrows.splice(0, arrows.length, ...d.arrows);
         } catch(e) {}
     }
 
