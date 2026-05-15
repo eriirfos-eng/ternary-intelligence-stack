@@ -1968,13 +1968,24 @@
                         onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); applyRenderDistance(); chart.update('none'); }
                     },
                     zoom: {
-                        wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy',
+                        wheel: { enabled: true, speed: 0.05 }, pinch: { enabled: true }, mode: 'xy',
                         onZoomStart: () => {
                             userHasZoomed = true;
                             isInteracting = true;
                             pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
                         },
-                        onZoomComplete: () => { isInteracting = false; chart.stop(); applyRenderDistance(); chart.update('none'); }
+                        onZoomComplete: (() => {
+                            let _t = null;
+                            return () => {
+                                clearTimeout(_t);
+                                _t = setTimeout(() => {
+                                    isInteracting = false;
+                                    chart.stop();
+                                    applyRenderDistance();
+                                    chart.update('none');
+                                }, 120);
+                            };
+                        })()
                     }
                 }
             }
