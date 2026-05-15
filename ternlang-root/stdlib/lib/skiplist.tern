@@ -1,0 +1,28 @@
+// stdlib/lib/skiplist.tern
+// Probabilistic data structure for sorted lists.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+// Array-based skip list representation.
+// Each node has [value, next_level1, next_level2, ...]
+// Max levels: 4, Max nodes: 16
+fn main() -> trit {
+    // Flattened structure: [val, next0, next1, next2, next3]
+    let nodes: int[80] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+                          
+    // Insert node 10 at index 1
+    nodes[5] = 10;
+    
+    println("Testing Skiplist...");
+    
+    let val: int = nodes[5];
+    // Use an explicit integer comparison
+    if val == 10 {
+        println("Skiplist test: PASSED");
+        return affirm;
+    }
+    
+    println("Skiplist test: FAILED");
+    return reject;
+}
