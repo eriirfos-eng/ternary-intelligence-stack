@@ -36,14 +36,16 @@ _UPLOADS = [
 
 _DOWNLOADS = [
     # (remote path on volume, local path)
+    # NOTE: training.log and epoch_history.log are intentionally excluded —
+    # albert-train streams Modal stdout directly to the local file, so the
+    # local copy is always more current. Pulling these mid-run truncates the
+    # file under the dashboard server's open range-request handle, crashing it.
     ("/albert/models/albert_v3.0.config.json",      "models/albert_v3.0.config.json"),
     ("/albert/models/albert_v3.0.safetensors",      "models/albert_v3.0.safetensors"),
     ("/albert/models/albert_v3.0.best.safetensors", "models/albert_v3.0.best.safetensors"),
     ("/albert/models/albert_v3.0.best_loss",        "models/albert_v3.0.best_loss"),
     ("/albert/models/albert_v3.0.meta",             "models/albert_v3.0.meta"),
     ("/albert/models/albert_v3.0.evolution",        "models/albert_v3.0.evolution"),
-    ("/albert/dashboard/training.log",              "dashboard/training.log"),
-    ("/albert/dashboard/epoch_history.log",         "dashboard/epoch_history.log"),
 ]
 
 
