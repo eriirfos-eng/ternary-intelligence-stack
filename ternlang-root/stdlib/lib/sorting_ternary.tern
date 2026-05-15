@@ -1,0 +1,92 @@
+// Basic sorting algorithms for integer arrays
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+fn bubble_sort(data: int[], size: int) -> trit {
+    let i: int = 0;
+    while i < size {
+        let j: int = 0;
+        while j < (size - i - 1) {
+            if data[j] > data[j+1] {
+                let temp: int = data[j];
+                data[j] = data[j+1];
+                data[j+1] = temp;
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn insertion_sort(data: int[], size: int) -> trit {
+    let i: int = 1;
+    while i < size {
+        let key: int = data[i];
+        let j: int = i - 1;
+        // Manual short-circuit for j >= 0 && data[j] > key
+        while j >= 0 {
+            if data[j] > key {
+                data[j + 1] = data[j];
+                j = j - 1;
+            } else {
+                break;
+            }
+        }
+        data[j + 1] = key;
+        i = i + 1;
+    }
+    return 1;
+}
+
+fn main() -> trit {
+    let arr: int[5];
+    arr[0] = 5; arr[1] = 2; arr[2] = 9; arr[3] = 1; arr[4] = 56;
+    
+    print("Sorting [5, 2, 9, 1, 56]\n");
+    bubble_sort(arr, 5);
+    
+    print("Sorted (Bubble): [");
+    print(arr[0]); print(", ");
+    print(arr[1]); print(", ");
+    print(arr[2]); print(", ");
+    print(arr[3]); print(", ");
+    print(arr[4]); print("]\n");
+    
+    // Check if sorted
+    if arr[0] != 1 || arr[1] != 2 || arr[2] != 5 || arr[3] != 9 || arr[4] != 56 {
+        print("Bubble sort failed!\n");
+        return -1;
+    }
+    
+    // Reset for Insertion Sort
+    arr[0] = 10; arr[1] = -5; arr[2] = 30; arr[3] = 0; arr[4] = 7;
+    print("Sorting [10, -5, 30, 0, 7]\n");
+    insertion_sort(arr, 5);
+    
+    print("Sorted (Insertion): [");
+    print(arr[0]); print(", ");
+    print(arr[1]); print(", ");
+    print(arr[2]); print(", ");
+    print(arr[3]); print(", ");
+    print(arr[4]); print("]\n");
+    
+    // Check if sorted
+    if arr[0] != -5 || arr[1] != 0 || arr[2] != 7 || arr[3] != 10 || arr[4] != 30 {
+        print("Insertion sort failed!\n");
+        return -1;
+    }
+    
+    print("All sorting tests passed.\n");
+    
+    // Test match logic on array elements
+    match (arr[0] < 0) {
+        1 => {
+            print("First element is negative (expected)\n");
+            return 1;
+        }
+        _ => {
+            print("First element is non-negative (unexpected)\n");
+            return -1;
+        }
+    }
+}
