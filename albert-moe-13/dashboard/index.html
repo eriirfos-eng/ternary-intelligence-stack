@@ -1968,7 +1968,7 @@
                         onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); applyRenderDistance(); chart.update('none'); }
                     },
                     zoom: {
-                        wheel: { enabled: true, speed: 0.05 }, pinch: { enabled: true }, mode: 'xy',
+                        wheel: { enabled: true, speed: 0.15 }, pinch: { enabled: true }, mode: 'xy',
                         onZoomStart: () => {
                             userHasZoomed = true;
                             isInteracting = true;
