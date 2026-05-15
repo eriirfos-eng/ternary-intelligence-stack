@@ -670,27 +670,38 @@ impl BetVm {
                     let col = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let row = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let rf = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    let r = match row { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", row) }) };
-                    let c = match col { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", col) }) };
-                    
-                    let (idx, pos) = self.get_pos(&rf, r, c)?;
-                    let tensor = &self.tensors[idx];
-                    let data_len = tensor.data.len();
-                    if pos >= data_len {
-                        return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: data_len });
-                    }
-                    let pushed = match &tensor.data {
-                        TensorData::Trit(v) => Value::Trit(v[pos]),
-                        TensorData::PackedTrit(v, _) => {
-                            let byte_idx = pos / 5;
-                            let trit_idx = pos % 5;
-                            let trits = crate::trit::unpack_5_trits(v[byte_idx]);
-                            Value::Trit(trits[trit_idx])
+                    let r = match &row { Value::Int(v) => *v, Value::Trit(t) => *t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", row) }) };
+                    // String indexing: s[i] → single-char string (fixes BET-007)
+                    if let Value::String(s) = &rf {
+                        let chars: Vec<char> = s.chars().collect();
+                        if r < 0 || r as usize >= chars.len() {
+                            return Err(VmError::RuntimeError(format!(
+                                "[BET-007] String index {} out of bounds (len={}). Use len(s) to guard.",
+                                r, chars.len()
+                            )));
                         }
-                        TensorData::Float(v) => Value::Float(v[pos]),
-                        TensorData::Int(v) => Value::Int(v[pos]),
-                    };
-                    self.stack.push(pushed);
+                        self.stack.push(Value::String(chars[r as usize].to_string()));
+                    } else {
+                        let c = match col { Value::Int(v) => v, Value::Trit(t) => t as i64, _ => return Err(VmError::TypeMismatch { expected: "Int or Trit".into(), found: format!("{:?}", col) }) };
+                        let (idx, pos) = self.get_pos(&rf, r, c)?;
+                        let tensor = &self.tensors[idx];
+                        let data_len = tensor.data.len();
+                        if pos >= data_len {
+                            return Err(VmError::TensorIndexOutOfBounds { tensor_id: idx, index: pos, size: data_len });
+                        }
+                        let pushed = match &tensor.data {
+                            TensorData::Trit(v) => Value::Trit(v[pos]),
+                            TensorData::PackedTrit(v, _) => {
+                                let byte_idx = pos / 5;
+                                let trit_idx = pos % 5;
+                                let trits = crate::trit::unpack_5_trits(v[byte_idx]);
+                                Value::Trit(trits[trit_idx])
+                            }
+                            TensorData::Float(v) => Value::Float(v[pos]),
+                            TensorData::Int(v) => Value::Int(v[pos]),
+                        };
+                        self.stack.push(pushed);
+                    }
                 }
                 0x23 => { // Tset
                     let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;

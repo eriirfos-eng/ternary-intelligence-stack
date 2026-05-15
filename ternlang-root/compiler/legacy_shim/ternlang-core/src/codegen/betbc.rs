@@ -1079,7 +1079,15 @@ impl BytecodeEmitter {
                 if let Expr::Ident(obj_name) = object.as_ref() {
                     let key = format!("{}.{}", obj_name, field);
                     if let Some(&r) = self.symbols.get(&key) {
+                        // Fast path: field has its own named register (locally-created struct)
                         self.code.push(0x09); self.code.push(r); // TLOAD
+                    } else if let Some(&r) = self.symbols.get(obj_name) {
+                        // Fallback: struct stored as Value::Struct in one register (function return)
+                        // Fixes BET-001 stack underflow on struct-returning functions
+                        self.code.push(0x09); self.code.push(r); // TLOAD struct
+                        self.code.push(0x41); // Tfield
+                        self.code.push(field.len() as u8);
+                        self.code.extend_from_slice(field.as_bytes());
                     }
                 }
             }
