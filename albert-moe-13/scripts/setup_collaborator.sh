@@ -5,13 +5,14 @@
 #   curl -sSL https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/albert-moe-13/scripts/setup_collaborator.sh | bash
 #
 # What this does:
+#   0. Installs GitHub CLI (gh) + authenticates
 #   1. Installs Rust (if missing)
-#   2. Installs Modal CLI + Python deps
-#   3. Clones the training repo
+#   2. Installs Python deps (safetensors, numpy; modal optional)
+#   3. Clones the training repo via gh
 #   4. Builds albert-train / albert-test binaries
-#   5. Installs the albert-* commands into ~/bin
-#   6. Clones the spores repo (albert-spores)
-#   7. Prints next steps for Modal auth
+#   5. Installs albert-train (CPU), albert-test, albert-spore into ~/bin
+#   6. Clones the private albert-spores repo via gh
+#   7. Prints next steps
 
 set -euo pipefail
 
@@ -21,10 +22,9 @@ ok()    { echo -e "${GREEN}[albert-setup]${R} $*"; }
 warn()  { echo -e "${YELLOW}[albert-setup]${R} $*"; }
 die()   { echo -e "${RED}[albert-setup] ERROR:${R} $*"; exit 1; }
 
-REPO_URL="https://github.com/eriirfos-eng/ternary-intelligence-stack.git"
-SPORES_URL="https://github.com/eriirfos-eng/albert-spores.git"
 PROJECT_DIR="$HOME/projects/ternary-intelligence-stack"
 ALBERT_DIR="$PROJECT_DIR/albert-moe-13"
+SPORES_DIR="$HOME/projects/albert-spores"
 BIN_DIR="$HOME/bin"
 
 echo ""
@@ -32,6 +32,39 @@ echo -e "${BOLD}═════════════════════�
 echo -e "${BOLD}  albert. collaborator setup                      ${R}"
 echo -e "${BOLD}══════════════════════════════════════════════════${R}"
 echo ""
+
+# ── 0. GitHub CLI ────────────────────────────────────────────────────────────
+if ! command -v gh &>/dev/null; then
+    info "Installing GitHub CLI (gh)..."
+    if command -v apt-get &>/dev/null; then
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+            | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg 2>/dev/null
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+            | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+        sudo apt-get update -qq && sudo apt-get install -y gh
+    elif command -v dnf &>/dev/null; then
+        sudo dnf install -y gh
+    elif command -v pacman &>/dev/null; then
+        sudo pacman -S --noconfirm github-cli
+    else
+        die "Cannot auto-install gh — install manually: https://cli.github.com and re-run"
+    fi
+    ok "GitHub CLI installed: $(gh --version | head -1)"
+else
+    ok "GitHub CLI already installed: $(gh --version | head -1)"
+fi
+
+# Authenticate with GitHub if not already
+if ! gh auth status &>/dev/null; then
+    echo ""
+    echo -e "${BOLD}  GitHub login required — a browser window will open.${R}"
+    echo -e "  Follow the prompts, then return here."
+    echo ""
+    gh auth login --web --git-protocol https
+    ok "GitHub authenticated as $(gh api user --jq .login)"
+else
+    ok "GitHub already authenticated as $(gh api user --jq .login)"
+fi
 
 # ── 1. Rust ──────────────────────────────────────────────────────────────────
 if ! command -v cargo &>/dev/null; then
@@ -46,10 +79,10 @@ fi
 
 # ── 2. Python deps ───────────────────────────────────────────────────────────
 info "Installing Python dependencies..."
-pip3 install --quiet --upgrade modal safetensors numpy 2>/dev/null || \
-    pip install --quiet --upgrade modal safetensors numpy 2>/dev/null || \
-    warn "pip install had warnings — modal/safetensors may need manual install"
-ok "Python deps installed"
+pip3 install --quiet --upgrade safetensors numpy 2>/dev/null || \
+    pip  install --quiet --upgrade safetensors numpy 2>/dev/null || \
+    warn "pip install had warnings — safetensors/numpy may need manual install"
+ok "Python deps ready"
 
 # ── 3. Clone main repo ───────────────────────────────────────────────────────
 mkdir -p "$HOME/projects"
@@ -57,58 +90,98 @@ if [ -d "$PROJECT_DIR/.git" ]; then
     info "Repo already cloned — pulling latest..."
     git -C "$PROJECT_DIR" pull --ff-only
 else
-    info "Cloning training repo..."
-    git clone "$REPO_URL" "$PROJECT_DIR"
+    info "Cloning training repo via gh..."
+    gh repo clone eriirfos-eng/ternary-intelligence-stack "$PROJECT_DIR"
 fi
 ok "Repo ready at $PROJECT_DIR"
 
 # ── 4. Build binaries ────────────────────────────────────────────────────────
 info "Building moe-llm-core binaries (first build ~3-5 min)..."
 cd "$ALBERT_DIR"
-cargo build --release -p train_bible -p moe-test 2>&1 | grep -E "^(   Compiling|   Finished|error)" | head -20 || true
+cargo build --release --bin train_bible --bin moe-test 2>&1 \
+    | grep -E "^(   Compiling|   Finished|error\[)" | tail -10 || true
 if [ ! -f "$ALBERT_DIR/target/release/moe-test" ]; then
     die "Build failed — check Cargo errors above"
+fi
+if [ ! -f "$ALBERT_DIR/target/release/train_bible" ]; then
+    die "train_bible build failed — check Cargo errors above"
 fi
 ok "Binaries built"
 
 # ── 5. Install albert-* commands ─────────────────────────────────────────────
 mkdir -p "$BIN_DIR"
-info "Installing albert-train / albert-test / albert-run into $BIN_DIR..."
-cp "$HOME/projects/ternary-intelligence-stack/albert-moe-13/../$(basename $ALBERT_DIR)/../albert-moe-13"/../bin/albert-train "$BIN_DIR/" 2>/dev/null || true
+info "Installing albert-train (CPU), albert-test, albert-spore into $BIN_DIR..."
 
-# Write albert-train adapted to this machine
+# albert-train — runs LOCAL CPU training by default; pass --modal for GPU
 cat > "$BIN_DIR/albert-train" << 'TRAIN_EOF'
 #!/usr/bin/env python3
-"""albert-train — start GPU training on Modal + local dashboard"""
-import os, sys, subprocess, threading, signal, time, webbrowser, re
+"""
+albert-train — run albert. training
+
+  albert-train             # local CPU training (default for collaborators)
+  albert-train --modal     # GPU training on Modal (requires modal token new)
+  albert-train pull        # pull checkpoint from Modal volume
+"""
+import os, sys, subprocess, threading, signal, time, webbrowser
 
 PROJECT  = os.path.expanduser("~/projects/ternary-intelligence-stack/albert-moe-13")
+BINARY   = os.path.join(PROJECT, "target", "release", "train_bible")
 MODAL_PY = os.path.join(PROJECT, "train_modal.py")
 LOG      = os.path.join(PROJECT, "dashboard", "training.log")
 DASH_SRV = os.path.join(PROJECT, "dashboard", "run_server.py")
 
-R="\033[0m"; BLUE="\033[38;5;33m"; GREEN="\033[1;92m"; CYAN="\033[96m"; BOLD="\033[1;94m"
+R="\033[0m"; CYAN="\033[96m"; GREEN="\033[1;92m"; BOLD="\033[1;94m"; YELLOW="\033[93m"
 
+# pull subcommand — syncs from Modal volume
 if len(sys.argv) > 1 and sys.argv[1] == "pull":
     os.chdir(PROJECT)
     sys.exit(subprocess.run([sys.executable, MODAL_PY, "pull"]).returncode)
 
-detach     = "--detach"     in sys.argv
+use_modal  = "--modal"      in sys.argv
 no_browser = "--no-browser" in sys.argv
 
-print(f"{BOLD}--- albert. Training Orchestrator (Modal GPU) ---{R}")
-server_proc = subprocess.Popen([sys.executable, DASH_SRV], cwd=os.path.join(PROJECT,"dashboard"),
-                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+# Rebuild if binary missing
+if not use_modal and not os.path.exists(BINARY):
+    print(f"{YELLOW}[albert-train] binary not found — rebuilding...{R}")
+    r = subprocess.run(["cargo","build","--release","--bin","train_bible"], cwd=PROJECT)
+    if r.returncode != 0:
+        sys.exit(r.returncode)
+
+# Start dashboard server
+server_proc = subprocess.Popen(
+    [sys.executable, DASH_SRV],
+    cwd=os.path.join(PROJECT, "dashboard"),
+    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+)
 time.sleep(0.5)
 if not no_browser:
     try: webbrowser.open("http://localhost:8888/dashboard/")
     except: pass
 
-modal_cmd = ["modal", "run"] + (["--detach"] if detach else []) + [MODAL_PY]
+if use_modal:
+    print(f"{BOLD}--- albert. Training (Modal GPU) ---{R}")
+    detach = "--detach" in sys.argv
+    cmd    = ["modal","run"] + (["--detach"] if detach else []) + [MODAL_PY]
+else:
+    print(f"{BOLD}--- albert. Training (CPU — spore mode) ---{R}")
+    print(f"{CYAN}Dashboard: http://localhost:8888/dashboard/{R}")
+    print(f"{CYAN}Stop with Ctrl-C — then run  albert-spore --name yourname  to push a spore{R}\n")
+    cmd = [
+        BINARY,
+        f"--root={PROJECT}",
+        "--gate-diversity=0.01",
+        "--lb-weight=0.01",
+        "--div-weight=0.001",
+    ]
+
 open(LOG, "w").close()
 log_f = open(LOG, "a")
-train_proc = subprocess.Popen(modal_cmd, cwd=PROJECT, stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT, text=True, bufsize=1)
+
+train_proc = subprocess.Popen(
+    cmd, cwd=PROJECT,
+    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    text=True, bufsize=1,
+)
 
 def stream():
     global log_f
@@ -122,21 +195,24 @@ threading.Thread(target=stream, daemon=True).start()
 signal.signal(signal.SIGINT, lambda s,f: train_proc.send_signal(signal.SIGINT))
 train_proc.wait()
 log_f.close()
-print(f"\n{CYAN}Dashboard: http://localhost:8888/dashboard/{R}")
+
+print(f"\n{BOLD}--- Training stopped ---{R}")
+print(f"{CYAN}Push your spore:  albert-spore --name yourname{R}")
+print(f"{CYAN}Dashboard:        http://localhost:8888/dashboard/{R}")
 TRAIN_EOF
 chmod +x "$BIN_DIR/albert-train"
 
-# albert-test
+# albert-test — interactive TUI
 cat > "$BIN_DIR/albert-test" << 'TEST_EOF'
 #!/usr/bin/env python3
-"""albert-test — interactive TUI for albert."""
+"""albert-test — interactive TUI for albert. (chat, /bench, /export)"""
 import os, sys, subprocess
 
 PROJECT = os.path.expanduser("~/projects/ternary-intelligence-stack/albert-moe-13")
 BINARY  = os.path.join(PROJECT, "target", "release", "moe-test")
 
 if "--rebuild" in sys.argv or not os.path.exists(BINARY):
-    r = subprocess.run(["cargo", "build", "--release", "-p", "moe-test"], cwd=PROJECT)
+    r = subprocess.run(["cargo","build","--release","--bin","moe-test"], cwd=PROJECT)
     if r.returncode != 0: sys.exit(r.returncode)
 
 args = [a for a in sys.argv[1:] if a != "--rebuild"]
@@ -145,37 +221,39 @@ os.execv(BINARY, [BINARY] + args)
 TEST_EOF
 chmod +x "$BIN_DIR/albert-test"
 
-# albert-spore (produce a spore from current checkpoint)
+# albert-spore — export checkpoint and push to albert-spores
 cat > "$BIN_DIR/albert-spore" << 'SPORE_EOF'
 #!/usr/bin/env bash
-# albert-spore — produce and push a spore from the current best checkpoint
+# albert-spore — produce a spore from current checkpoint and push to albert-spores
 PROJECT="$HOME/projects/ternary-intelligence-stack/albert-moe-13"
 SPORES="$HOME/projects/albert-spores"
+if [ ! -d "$SPORES/.git" ]; then
+    echo "[albert-spore] albert-spores repo not found at $SPORES"
+    echo "               Run setup again or: gh repo clone eriirfos-eng/albert-spores $SPORES"
+    exit 1
+fi
 python3 "$PROJECT/scripts/produce_spore.py" --spores-repo "$SPORES" "$@"
 SPORE_EOF
 chmod +x "$BIN_DIR/albert-spore"
 
-ok "Commands installed: albert-train, albert-test, albert-spore"
+ok "Commands installed: albert-train (CPU), albert-test, albert-spore"
 
 # ── 6. PATH setup ────────────────────────────────────────────────────────────
 SHELL_RC="$HOME/.bashrc"
-if ! grep -q 'export PATH="$HOME/bin:' "$SHELL_RC" 2>/dev/null; then
-    echo '' >> "$SHELL_RC"
-    echo '# albert. CLI' >> "$SHELL_RC"
-    echo 'export PATH="$HOME/bin:$HOME/.cargo/bin:$PATH"' >> "$SHELL_RC"
+if ! grep -q 'PATH="$HOME/bin' "$SHELL_RC" 2>/dev/null; then
+    { echo ''; echo '# albert. CLI'; echo 'export PATH="$HOME/bin:$HOME/.cargo/bin:$PATH"'; } >> "$SHELL_RC"
     info "Added ~/bin to PATH in .bashrc"
 fi
 export PATH="$BIN_DIR:$HOME/.cargo/bin:$PATH"
 
 # ── 7. Clone spores repo ─────────────────────────────────────────────────────
-SPORES_DIR="$HOME/projects/albert-spores"
 if [ -d "$SPORES_DIR/.git" ]; then
-    info "Spores repo already cloned — pulling..."
+    info "albert-spores already cloned — pulling..."
     git -C "$SPORES_DIR" pull --ff-only 2>/dev/null || true
 else
-    info "Cloning albert-spores (private — needs GitHub access)..."
-    git clone "$SPORES_URL" "$SPORES_DIR" 2>/dev/null || \
-        warn "Could not clone albert-spores — ask Simeon to add your GitHub account as collaborator"
+    info "Cloning albert-spores (private)..."
+    gh repo clone eriirfos-eng/albert-spores "$SPORES_DIR" || \
+        warn "Could not clone albert-spores — accept the GitHub invitation first, then run: gh repo clone eriirfos-eng/albert-spores ~/projects/albert-spores"
 fi
 
 # ── Done ─────────────────────────────────────────────────────────────────────
@@ -184,22 +262,23 @@ echo -e "${GREEN}═════════════════════
 echo -e "${GREEN}  Setup complete!                                 ${R}"
 echo -e "${GREEN}══════════════════════════════════════════════════${R}"
 echo ""
-echo -e "  ${BOLD}Next steps:${R}"
+echo -e "  ${BOLD}Your commands:${R}"
 echo ""
-echo -e "  1. Authenticate with Modal (one-time):"
-echo -e "     ${CYAN}modal token new${R}"
+echo -e "  ${CYAN}albert-train${R}               start CPU training + dashboard"
+echo -e "  ${CYAN}albert-train --modal${R}       GPU training on Modal (optional)"
+echo -e "  ${CYAN}albert-test${R}                chat with albert."
+echo -e "  ${CYAN}albert-spore --name you${R}    push spore to the colony"
 echo ""
-echo -e "  2. Pull the current albert. checkpoint from Modal volume:"
-echo -e "     ${CYAN}albert-train pull${R}"
+echo -e "  ${BOLD}First-time steps:${R}"
 echo ""
-echo -e "  3. Start training:"
-echo -e "     ${CYAN}albert-train${R}"
+echo -e "  Pull the current checkpoint from Modal:"
+echo -e "    ${CYAN}albert-train pull${R}"
 echo ""
-echo -e "  4. Chat with albert.:"
-echo -e "     ${CYAN}albert-test${R}"
+echo -e "  Then start training:"
+echo -e "    ${CYAN}albert-train${R}"
 echo ""
-echo -e "  5. Produce a spore (after training):"
-echo -e "     ${CYAN}albert-spore --name yourname${R}"
+echo -e "  When ready to contribute:"
+echo -e "    ${CYAN}albert-spore --name yourname${R}"
 echo ""
-echo -e "  Reload your shell or run: ${CYAN}source ~/.bashrc${R}"
+echo -e "  Reload shell: ${CYAN}source ~/.bashrc${R}"
 echo ""
