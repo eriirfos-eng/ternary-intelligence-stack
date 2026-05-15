@@ -760,6 +760,13 @@
                 <line id="muteLine" x1="8" y1="4" x2="11" y2="9" style="display:none"/>
             </svg>
         </button>
+        <button id="waldToggleBtn" title="Toggle WALD markers" style="background:none;border:none;cursor:pointer;padding:3px 5px;display:flex;align-items:center">
+            <svg viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="6,1 10.5,8 1.5,8" fill="currentColor" stroke="none" opacity="0.85"/>
+                <polygon points="6,4 9.5,9.5 2.5,9.5" fill="currentColor" stroke="none" opacity="0.65"/>
+                <rect x="5" y="9.5" width="2" height="2" rx="0.3" fill="currentColor" stroke="none" opacity="0.7"/>
+            </svg>
+        </button>
         <div class="dd-wrap">
             <button id="smaDropBtn" title="Toggle chart overlays"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7Q3 4 5 7Q7 10 9 7Q10.2 5.5 11 6"/></svg> <span id="curves-count">0</span> ▾</button>
             <div class="dd-panel" id="smaDrop">
@@ -1044,6 +1051,7 @@
     let bestEpochAvg  = Infinity;
     let spikeFiredEp  = -1;
     let waldEvents       = [];   // permanent dead-zone markers — never capped
+    let waldVisible      = localStorage.getItem('waldVisible') !== '0'; // default on
     let lastWaldDeadLow  = '';   // dead_low string of last fired Wald event
     let lastWaldDeadHigh = '';   // dead_high string of last fired Wald event
 
@@ -1279,7 +1287,7 @@
             ctx2.clip();
 
             // Wald dead-zone vertical markers — dashed red lines, never evicted
-            if (waldEvents.length) {
+            if (waldVisible && waldEvents.length) {
                 const xMin = x.min - 5, xMax = x.max + 5;
                 ctx2.setLineDash([3, 4]);
                 ctx2.strokeStyle = 'rgba(239,68,68,0.55)';
@@ -5113,6 +5121,20 @@
         soundMuted = !soundMuted;
         localStorage.setItem('soundMuted', soundMuted ? '1' : '0');
         applyMuteUI();
+    });
+
+    const waldToggleBtn = document.getElementById('waldToggleBtn');
+    function applyWaldToggleUI() {
+        waldToggleBtn.style.color = waldVisible ? '#4ade80' : '#374151';
+        waldToggleBtn.style.opacity = waldVisible ? '1' : '0.45';
+        waldToggleBtn.title = waldVisible ? 'WALD markers ON — click to hide' : 'WALD markers OFF — click to show';
+        chart.update('none');
+    }
+    applyWaldToggleUI();
+    waldToggleBtn.addEventListener('click', () => {
+        waldVisible = !waldVisible;
+        localStorage.setItem('waldVisible', waldVisible ? '1' : '0');
+        applyWaldToggleUI();
     });
 
     // Hook sounds + notifications into addEvent
