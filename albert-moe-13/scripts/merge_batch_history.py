@@ -15,6 +15,10 @@ import os
 import sys
 from pathlib import Path
 
+# Reject rows from other training runs — this run never went below ~10.2.
+LOSS_MIN    = 9.5
+LOSS_MAX    = 13.0
+
 DOWNLOADS   = Path.home() / "Desktop" / "Downloads"
 REPO_ROOT   = Path(__file__).parent.parent
 HIST_PATH   = REPO_ROOT / "dashboard" / "batch_history.csv"
@@ -50,6 +54,8 @@ def parse_csv(path: Path) -> dict[float, float]:
                     batch        = int(parts[2])
                     loss         = float(parts[4])
                     x = global_epoch + batch / 300.0
+                    if not (LOSS_MIN <= loss <= LOSS_MAX):
+                        continue  # skip rows from other training runs
                     rows[x] = loss
                 except (ValueError, IndexError):
                     continue
