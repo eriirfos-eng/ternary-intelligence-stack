@@ -127,8 +127,7 @@ impl TernaryLinear {
         }
 
         // Training path: dense ternary matmul with STE (gradient flows through F32 weights).
-        // CUDA uses candle's cuBLAS F32 matmul; WMMA INT8 deferred post-SPRIND.
-        let (w_ternary, _gamma_val) = {
+        let (w_ternary, gamma_val) = {
             let cache = self.inference_cache.borrow();
             match *cache {
                 Some(ref w) => {
@@ -146,9 +145,35 @@ impl TernaryLinear {
 
         let dims = x.dims();
 
-        // WMMA fused kernel disabled — numerics bug under investigation.
-        // cuBLAS F32 path used on CUDA (candle handles dispatch automatically).
+        // CUDA path: fused WMMA INT8 kernel (tensor cores, SM7.2+).
+        // Dispatches through TernaryGemmOp which quantises W f32→i8 then calls
+        // ternary_gemm_forward (per-row quantise X + WMMA + dequant, all in one kernel).
+        #[cfg(feature = "cuda")]
+        if x.device().is_cuda() {
+            use crate::cuda_kernel::TernaryGemmOp;
+            let x2d = if dims.len() == 3 {
+                let (b, s, h) = (dims[0], dims[1], dims[2]);
+                x.reshape((b * s, h))?
+            } else {
+                x.clone()
+            };
+            let m = x2d.dims()[0];
+            let k = x2d.dims()[1];
+            let n = w_ternary.dims()[0];
+            let op = TernaryGemmOp { gamma: gamma_val, m, n, k };
+            let y2d = x2d.apply_op2(&w_ternary, op)?;
+            let out = if dims.len() == 3 {
+                y2d.reshape((dims[0], dims[1], n))?
+            } else {
+                y2d
+            };
+            return match &self.bias {
+                None       => Ok(out),
+                Some(bias) => out.broadcast_add(bias),
+            };
+        }
 
+        // CPU fallback: cuBLAS F32 matmul (candle handles dispatch automatically).
         let out = if dims.len() == 3 {
             let (b, s, h) = (dims[0], dims[1], dims[2]);
             let x2 = x.reshape((b * s, h))?;
