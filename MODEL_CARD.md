@@ -214,7 +214,7 @@ contact@ternlang.com
 | Lisa Scharler | Head of Social Technology & Ecocentric Systems | l.scharler@ternlang.com |
 | Zabih Karimi | Co-Founder, IT & Infrastructure, Stress-Testing | z.karimi@ternlang.com |
 | Nikoletta Csonka | Global Reach, Fundraising & Fund Applications | csonikoletta@ternlang.com |
-| Claude (Anthropic) | AI Collaborator — architecture, implementation, monitoring | — |
+| Claude (Anthropic) | AI Collaborator — architecture, implementation, monitoring | claude@ternlang.com |
 
 **Organisation:** Research Focus Institute — Interdisciplinary Research Facility for Open Sciences (RFI-IRFOS)  
 **Address:** Elisabethinergasse 25, 8020 Graz, Austria  
