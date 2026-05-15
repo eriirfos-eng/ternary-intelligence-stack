@@ -16,6 +16,9 @@ pub struct BytecodeEmitter {
     /// Snapshots of the local symbol table for each function, keyed by function name.
     /// Captured just before scope is restored so callers can map reg→varname after execution.
     function_symbols: std::collections::HashMap<String, std::collections::HashMap<String, u8>>,
+    /// True while emitting a function decorated with @sparseskip.
+    /// When set, matmul() emits 0x38 TSparseMatmul instead of 0x10 TCALL.
+    in_sparseskip: bool,
 }
 
 impl BytecodeEmitter {
@@ -32,6 +35,7 @@ impl BytecodeEmitter {
             agent_type_ids: std::collections::HashMap::new(),
             agent_handlers: Vec::new(),
             function_symbols: std::collections::HashMap::new(),
+            in_sparseskip: false,
         }
     }
 
@@ -146,10 +150,9 @@ impl BytecodeEmitter {
         }
         let parent_symbols = self.symbols.clone();
         let parent_next_reg = self.next_reg;
+        let parent_in_sparseskip = self.in_sparseskip;
         self.next_reg = 0;
-
-        // If function has @sparseskip, we could emit a special header here.
-        // For now, it's just a marker in the AST.
+        self.in_sparseskip = func.directive.as_deref() == Some("sparseskip");
 
         for (name, ty) in func.params.iter().rev() {
             if let Type::Named(s_name) = ty {
@@ -181,6 +184,7 @@ impl BytecodeEmitter {
         self.function_symbols.insert(func.name.clone(), self.symbols.clone());
         self.symbols = parent_symbols;
         self.next_reg = parent_next_reg;
+        self.in_sparseskip = parent_in_sparseskip;
         self.code.push(0x11); // TRET
     }
 
@@ -913,6 +917,41 @@ impl BytecodeEmitter {
                     "truth" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Affirm])); }
                     "hold" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend])); }
                     "conflict" => { self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Reject])); }
+                    // @sparseskip enforcement: when inside a sparseskip function, matmul()
+                    // emits TSparseMatmul (0x38) with wildcard dims (0) so the VM reads
+                    // actual tensor dims at runtime and skips zero-weight positions.
+                    "matmul" => {
+                        if args.len() == 2 {
+                            for a in args { self.emit_expr(a); }
+                            if self.in_sparseskip {
+                                self.code.push(0x38); // TSparseMatmul
+                                self.code.push(0x00); // a_rows  — wildcard, VM reads from tensor
+                                self.code.push(0x00); // a_cols  — wildcard
+                                self.code.push(0x00); // b_cols  — wildcard
+                            } else {
+                                self.code.push(0x10); // TCALL
+                                if let Some(&addr) = self.func_addrs.get("matmul") {
+                                    self.code.extend_from_slice(&addr.to_le_bytes());
+                                } else {
+                                    let patch = self.code.len();
+                                    self.code.extend_from_slice(&[0, 0]);
+                                    self.function_patches.entry("matmul".to_string()).or_default().push(patch);
+                                }
+                            }
+                        } else {
+                            self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend]));
+                        }
+                    }
+                    // trace::explain(label, value) — XAI decision trace.
+                    // Emits both args, then 0x60 TEXPLAIN which pops them and logs to trace_log.
+                    // Return value is hold() (pushed by the 0x01 stub below).
+                    "explain" => {
+                        if args.len() == 2 {
+                            for a in args { self.emit_expr(a); }
+                            self.code.push(0x60); // TEXPLAIN
+                        }
+                        self.code.push(0x01); self.code.extend(pack_trits(&[Trit::Tend]));
+                    }
                     _ => {
                         for a in args {
                             // If argument is a struct, we need to push all its flattened fields + root dummy

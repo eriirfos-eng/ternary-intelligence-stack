@@ -245,6 +245,7 @@ impl OwletParser {
         if !main_body.is_empty() {
             functions.push(Function {
                 name:        "main".to_string(),
+                type_params: vec![],
                 params:      vec![],
                 return_type: Type::Trit,
                 body:        main_body,
@@ -276,6 +277,7 @@ fn parse_fn_def(items: &[Sexp]) -> Result<Function, String> {
     let body_expr = sexp_to_expr(&items[3])?;
     Ok(Function {
         name,
+        type_params: vec![],
         params,
         return_type: Type::Trit,
         body: vec![Stmt::Return(body_expr)],

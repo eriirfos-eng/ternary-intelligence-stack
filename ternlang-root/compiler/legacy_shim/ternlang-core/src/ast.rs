@@ -195,6 +195,9 @@ pub enum Type {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function {
     pub name: String,
+    /// Generic size parameters, e.g. `<N, K>` in `fn foo<N, K>(a: trit[N]) -> trit[K]`.
+    /// Each is a name bound to a wildcard TritTensor dim (dim=0) during type-checking.
+    pub type_params: Vec<String>,
     pub params: Vec<(String, Type)>,
     pub return_type: Type,
     pub body: Vec<Stmt>,

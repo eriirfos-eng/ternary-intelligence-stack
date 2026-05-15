@@ -158,6 +158,8 @@ pub struct BetVm {
     bindings: std::collections::HashMap<usize, Value>,
     _instructions_count: u64,
     pub print_log: Vec<String>,
+    /// Structured XAI decision trace, populated by the 0x60 TEXPLAIN opcode.
+    pub trace_log: Vec<String>,
 }
 
 impl BetVm {
@@ -180,13 +182,18 @@ impl BetVm {
             bindings: std::collections::HashMap::new(),
             _instructions_count: 0,
             print_log: Vec::new(),
+            trace_log: Vec::new(),
         }
     }
-
 
     /// Drain all lines printed by `print()`/`println()` during execution.
     pub fn take_output(&mut self) -> Vec<String> {
         std::mem::take(&mut self.print_log)
+    }
+
+    /// Drain the XAI decision trace accumulated by `explain()` calls during execution.
+    pub fn take_trace_log(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.trace_log)
     }
 
     pub fn set_node_id(&mut self, node_id: String) {
@@ -960,19 +967,21 @@ impl BetVm {
                 }
                 0x38 => { // TSparseMatmul (@sparseskip)
                     // Layout: [opcode] [a_rows: u8] [a_cols: u8] [b_cols: u8]
+                    // Dim bytes = 0 mean "wildcard" — read actual dims from the tensor at runtime.
+                    // Codegen emits 0x00 0x00 0x00 when the sizes are generic (not statically known).
                     // Pops: A_tensor, B_tensor
                     // Pushes: Result_tensor
-                    let a_rows = self.read_u8()? as usize;
-                    let a_cols = self.read_u8()? as usize;
-                    let b_cols = self.read_u8()? as usize;
+                    let bc_a_rows = self.read_u8()? as usize;
+                    let bc_a_cols = self.read_u8()? as usize;
+                    let bc_b_cols = self.read_u8()? as usize;
                     let b_ref = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let a_ref = self.stack.pop().ok_or(VmError::StackUnderflow)?;
-                    
+
                     if let (Value::TensorRef(a_idx), Value::TensorRef(b_idx)) = (a_ref, b_ref) {
-                        let (a_data, b_data) = {
+                        let (a_rows, a_cols, b_cols, a_data, b_data) = {
                             let a = self.tensors.get(a_idx).ok_or(VmError::TensorNotAllocated(a_idx))?;
                             let b = self.tensors.get(b_idx).ok_or(VmError::TensorNotAllocated(b_idx))?;
-                            
+
                             let a_data = match &a.data {
                                 TensorData::Trit(v) => v,
                                 _ => return Err(VmError::TypeMismatch { expected: "TritTensor".into(), found: "Other".into() }),
@@ -981,7 +990,11 @@ impl BetVm {
                                 TensorData::Trit(v) => v,
                                 _ => return Err(VmError::TypeMismatch { expected: "TritTensor".into(), found: "Other".into() }),
                             };
-                            (a_data.clone(), b_data.clone())
+                            // Use bytecode dims if specified; fall back to tensor metadata (wildcard=0).
+                            let a_rows = if bc_a_rows > 0 { bc_a_rows } else { a.rows };
+                            let a_cols = if bc_a_cols > 0 { bc_a_cols } else { a.cols };
+                            let b_cols = if bc_b_cols > 0 { bc_b_cols } else { b.cols };
+                            (a_rows, a_cols, b_cols, a_data.clone(), b_data.clone())
                         };
 
                         let mut result = vec![Trit::Tend; a_rows * b_cols];
@@ -1197,6 +1210,26 @@ impl BetVm {
                     } else {
                         return Err(VmError::TypeMismatch { expected: "TensorRef, TensorRef".into(), found: "Unknown".into() });
                     }
+                }
+                0x60 => { // TEXPLAIN — XAI decision trace
+                    // Layout: [opcode]
+                    // Stack (top → bottom): value, label
+                    // Pops label (String) and value, formats to "label: value", appends to trace_log.
+                    // Return value is pushed by codegen's hold() stub — this opcode pushes nothing.
+                    let val   = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let label = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let label_str = match label {
+                        Value::String(s) => s,
+                        other => format!("{:?}", other),
+                    };
+                    let val_str = match &val {
+                        Value::Trit(t)   => format!("{:?}", t),
+                        Value::Int(i)    => format!("{}", i),
+                        Value::Float(f)  => format!("{}", f),
+                        Value::String(s) => s.clone(),
+                        other            => format!("{:?}", other),
+                    };
+                    self.trace_log.push(format!("{}: {}", label_str, val_str));
                 }
                 0x00 => return Ok(()),
                 _ => return Err(VmError::InvalidOpcode(opcode)),

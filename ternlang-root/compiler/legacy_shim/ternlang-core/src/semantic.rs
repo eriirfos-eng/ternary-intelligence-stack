@@ -39,7 +39,7 @@ impl std::fmt::Display for SemanticError {
             Self::PropagateOnNonTrit { found } =>
                 write!(f, "[PROP-001] '?' used on a {found:?} expression. Only trit-returning functions carry the three-valued signal. The third state requires a trit.\n            → details: stdlib/errors/PROP-001.tern  |  ternlang errors PROP-001"),
             Self::NonExhaustiveMatch(msg) =>
-                write!(f, "Non-exhaustive match: {msg}"),
+                write!(f, "[MATCH-001] Non-exhaustive match: {msg}. Ternary has three states — all must be covered.\n            → details: stdlib/errors/MATCH-001.tern  |  ternlang errors MATCH-001"),
         }
     }
 }
@@ -111,6 +111,11 @@ impl SemanticAnalyzer {
 
         // ── type coercion ──────────────────────────────────────────────────
         sigs.insert("cast".into(),     FunctionSig::variadic(Type::Trit));
+
+        // ── trace / XAI ────────────────────────────────────────────────────
+        // explain(label: str, value: any) -> trit
+        // Logs a structured decision trace entry; returns hold().
+        sigs.insert("explain".into(),  FunctionSig::variadic(Type::Trit));
 
         Self {
             scopes: vec![std::collections::HashMap::new()],

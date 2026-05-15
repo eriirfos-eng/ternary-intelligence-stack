@@ -4,6 +4,9 @@ use logos::{Logos, Lexer};
 
 pub struct Parser<'a> {
     lex: Lexer<'a, Token>,
+    /// Generic type params in scope for the current function being parsed (e.g. ["N", "K"]).
+    /// Set before parsing a function's parameter types so `trit[N]` maps to a wildcard dim.
+    current_type_params: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -31,7 +34,7 @@ impl std::fmt::Display for ParseError {
 
 impl<'a> Parser<'a> {
     pub fn new(input: &'a str) -> Self {
-        Self { lex: Token::lexer(input) }
+        Self { lex: Token::lexer(input), current_type_params: Vec::new() }
     }
 
     pub fn parse_program(&mut self) -> Result<Program, ParseError> {
@@ -88,6 +91,7 @@ impl<'a> Parser<'a> {
                 // No explicit main — synthesize one as before
                 functions.push(Function {
                     name: "main".to_string(),
+                    type_params: vec![],
                     params: vec![],
                     return_type: Type::Trit,
                     body: toplevel_stmts,
@@ -155,6 +159,27 @@ impl<'a> Parser<'a> {
             t => return Err(ParseError::ExpectedToken("function name".into(), format!("{:?}", t))),
         };
 
+        // Parse optional generic type params: fn foo<N, K>(...)
+        let type_params = if let Ok(Token::LAngle) = self.peek_token() {
+            self.next_token()?; // consume <
+            let mut params = Vec::new();
+            loop {
+                match self.next_token()? {
+                    Token::Ident(n) => params.push(n),
+                    t => return Err(ParseError::ExpectedToken("type parameter name".into(), format!("{:?}", t))),
+                }
+                match self.peek_token()? {
+                    Token::Comma  => { self.next_token()?; }
+                    Token::RAngle => { self.next_token()?; break; }
+                    t => return Err(ParseError::ExpectedToken("',' or '>'".into(), format!("{:?}", t))),
+                }
+            }
+            params
+        } else {
+            Vec::new()
+        };
+        self.current_type_params = type_params.clone();
+
         self.expect(Token::LParen)?;
         let mut params = Vec::new();
         if self.peek_token()? != Token::RParen {
@@ -176,7 +201,8 @@ impl<'a> Parser<'a> {
             Stmt::Block(stmts) => stmts,
             _ => unreachable!(),
         };
-        Ok(Function { name, params, return_type, body, directive })
+        self.current_type_params = Vec::new();
+        Ok(Function { name, type_params, params, return_type, body, directive })
     }
 
     fn next_token(&mut self) -> Result<Token, ParseError> {
@@ -793,10 +819,14 @@ impl<'a> Parser<'a> {
                 self.expect(Token::TritType)?;
                 if let Ok(Token::LBracket) = self.peek_token() {
                     self.next_token()?;
-                    let dim = if let Ok(Token::Int(n)) = self.peek_token() {
-                        self.next_token()?;
-                        n as usize
-                    } else { 0 };
+                    let peek = self.peek_token();
+                    let dim = match peek {
+                        Ok(Token::Int(n))     => { self.next_token()?; n as usize }
+                        Ok(Token::Ident(ref s)) if self.current_type_params.contains(s) => {
+                            self.next_token()?; 0 // wildcard for generic param
+                        }
+                        _ => 0,
+                    };
                     self.expect(Token::RBracket)?;
                     Ok(Type::PackedTritTensor { dims: vec![dim] })
                 } else {
@@ -806,10 +836,14 @@ impl<'a> Parser<'a> {
             Token::TritType   => {
                 if let Ok(Token::LBracket) = self.peek_token() {
                     self.next_token()?;
-                    let dim = if let Ok(Token::Int(n)) = self.peek_token() {
-                        self.next_token()?;
-                        n as usize
-                    } else { 0 };
+                    let peek = self.peek_token();
+                    let dim = match peek {
+                        Ok(Token::Int(n))     => { self.next_token()?; n as usize }
+                        Ok(Token::Ident(ref s)) if self.current_type_params.contains(s) => {
+                            self.next_token()?; 0 // wildcard for generic param
+                        }
+                        _ => 0,
+                    };
                     self.expect(Token::RBracket)?;
                     Ok(Type::TritTensor { dims: vec![dim] })
                 } else {
