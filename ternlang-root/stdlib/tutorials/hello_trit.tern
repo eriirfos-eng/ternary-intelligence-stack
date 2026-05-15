@@ -1,0 +1,48 @@
+// Tutorial: Hello Trit!
+// This is the simplest possible Ternlang program.
+// It introduces the three states of a trit: affirm, tend, and reject.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+fn main() -> trit {
+    // Ternlang has three built-in trit literals:
+    let val_pos: trit = affirm; // Positive (Yes / True / +1)
+    let val_neu: trit = tend;   // Neutral (Maybe / Unknown / Hold / 0)
+    let val_neg: trit = reject; // Negative (No / False / -1)
+
+    print("Hello, Ternary World!\n");
+    print("In Ternlang, we use trits instead of bits.\n");
+    print("---------------------------------------\n");
+    
+    print("State affirm: "); 
+    print(val_pos); 
+    print("\n");
+    
+    print("State tend:   "); 
+    print(val_neu);   
+    print("\n");
+    
+    print("State reject: "); 
+    print(val_neg); 
+    print("\n");
+
+    // We can use 'match' to branch based on these states.
+    // This is the core of ternary decision logic.
+    print("\nDecision matching:\n");
+    let signal: trit = tend;
+    
+    match signal {
+        affirm => {
+            print("-> The signal is Affirmative.\n");
+        }
+        tend => {
+            print("-> The signal is Neutral (Tend).\n");
+        }
+        reject => {
+            print("-> The signal is Rejective.\n");
+        }
+    }
+
+    print("\nTutorial complete. You have mastered the three truths.\n");
+    
+    return affirm; // Exit with success
+}
