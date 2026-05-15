@@ -72,9 +72,26 @@ def git_short_sha(path):
     except Exception:
         return "unknown"
 
+def gh_username():
+    """Return the authenticated GitHub username, or fall back to the OS login."""
+    try:
+        name = subprocess.check_output(
+            ["gh", "api", "user", "--jq", ".login"],
+            stderr=subprocess.DEVNULL,
+        ).decode().strip()
+        if name:
+            return name
+    except Exception:
+        pass
+    try:
+        return subprocess.check_output(["whoami"], stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        return "contributor"
+
+
 def main():
     parser = argparse.ArgumentParser(description="Export albert. checkpoint as a spore")
-    parser.add_argument("--name",        required=True,   help="Contributor name (e.g. zabih)")
+    parser.add_argument("--name",        default=None,    help="Contributor name — defaults to your GitHub login")
     parser.add_argument("--spores-repo", default=None,    help="Path to albert-spores git repo (default: ~/projects/albert-spores)")
     parser.add_argument("--epoch",       type=int,        help="Override epoch number")
     parser.add_argument("--loss",        type=float,      help="Override loss value")
@@ -82,6 +99,10 @@ def main():
     parser.add_argument("--notes",       default="",      help="Free-form notes about this spore")
     parser.add_argument("--dry-run",     action="store_true", help="Print what would happen without writing")
     args = parser.parse_args()
+
+    if not args.name:
+        args.name = gh_username()
+        print(f"[produce_spore] contributor: {args.name} (from gh auth)")
 
     spores_repo = args.spores_repo or os.path.expanduser("~/projects/albert-spores")
 

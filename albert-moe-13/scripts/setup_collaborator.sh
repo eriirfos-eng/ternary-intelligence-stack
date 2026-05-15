@@ -165,7 +165,7 @@ if use_modal:
 else:
     print(f"{BOLD}--- albert. Training (CPU — spore mode) ---{R}")
     print(f"{CYAN}Dashboard: http://localhost:8888/dashboard/{R}")
-    print(f"{CYAN}Stop with Ctrl-C — then run  albert-spore --name yourname  to push a spore{R}\n")
+    print(f"{CYAN}Stop with Ctrl-C — then run  albert-spore  to push a spore{R}\n")
     cmd = [
         BINARY,
         f"--root={PROJECT}",
@@ -197,7 +197,7 @@ train_proc.wait()
 log_f.close()
 
 print(f"\n{BOLD}--- Training stopped ---{R}")
-print(f"{CYAN}Push your spore:  albert-spore --name yourname{R}")
+print(f"{CYAN}Push your spore:  albert-spore{R}")
 print(f"{CYAN}Dashboard:        http://localhost:8888/dashboard/{R}")
 TRAIN_EOF
 chmod +x "$BIN_DIR/albert-train"
@@ -267,7 +267,7 @@ echo ""
 echo -e "  ${CYAN}albert-train${R}               start CPU training + dashboard"
 echo -e "  ${CYAN}albert-train --modal${R}       GPU training on Modal (optional)"
 echo -e "  ${CYAN}albert-test${R}                chat with albert."
-echo -e "  ${CYAN}albert-spore --name you${R}    push spore to the colony"
+echo -e "  ${CYAN}albert-spore${R}               push spore to the colony"
 echo ""
 echo -e "  ${BOLD}First-time steps:${R}"
 echo ""
@@ -278,7 +278,7 @@ echo -e "  Then start training:"
 echo -e "    ${CYAN}albert-train${R}"
 echo ""
 echo -e "  When ready to contribute:"
-echo -e "    ${CYAN}albert-spore --name yourname${R}"
+echo -e "    ${CYAN}albert-spore${R}              (uses your GitHub login automatically)"
 echo ""
 echo -e "  Reload shell: ${CYAN}source ~/.bashrc${R}"
 echo ""
