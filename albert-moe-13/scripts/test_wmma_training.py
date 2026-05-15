@@ -51,9 +51,9 @@ TRAIN_SRC = textwrap.dedent(r"""
 #include <math.h>
 #include <string.h>
 
-#define M      32
-#define N      256
-#define K      256
+#define TM     32
+#define TN     256
+#define TK     256
 #define STEPS  100
 #define LR     0.01f
 #define REPORT 10
@@ -74,7 +74,7 @@ extern "C" {
 static float mse_and_grad(
     const float* Y, const float* Y_target,
     const float* X_float, const float* W_float,
-    float* dW,          // [N, K] — accumulated gradient
+    float* dW,          // [TN, TK] — accumulated gradient
     int m, int n, int k
 ) {
     float loss = 0.f;
@@ -97,40 +97,40 @@ int main() {
     srand(42);
 
     // --- Fixed random inputs (X never changes — we're learning W) ---
-    float* h_X = (float*)malloc(M * K * sizeof(float));
-    for (int i = 0; i < M * K; i++)
+    float* h_X = (float*)malloc(TM * TK * sizeof(float));
+    for (int i = 0; i < TM * TK; i++)
         h_X[i] = ((float)rand() / RAND_MAX) * 2.f - 1.f;
 
     // --- Fixed random target ---
-    float* h_Ytar = (float*)malloc(M * N * sizeof(float));
-    for (int i = 0; i < M * N; i++)
+    float* h_Ytar = (float*)malloc(TM * TN * sizeof(float));
+    for (int i = 0; i < TM * TN; i++)
         h_Ytar[i] = ((float)rand() / RAND_MAX) * 2.f - 1.f;
 
     // --- Float shadow weights (initialised small, like ternary_linear.rs) ---
-    float* h_W = (float*)malloc(N * K * sizeof(float));
-    for (int i = 0; i < N * K; i++)
+    float* h_W = (float*)malloc(TN * TK * sizeof(float));
+    for (int i = 0; i < TN * TK; i++)
         h_W[i] = (((float)rand() / RAND_MAX) * 2.f - 1.f) * 0.05f;
 
-    float* h_dW = (float*)malloc(N * K * sizeof(float));
-    float* h_Y  = (float*)malloc(M * N * sizeof(float));
+    float* h_dW = (float*)malloc(TN * TK * sizeof(float));
+    float* h_Y  = (float*)malloc(TM * TN * sizeof(float));
 
     // --- GPU buffers ---
     float       *d_X, *d_Y;
     signed char *d_W_i8;
     void        *d_scratch_x_i8, *d_scratch_scales, *d_scratch_y_i32;
 
-    cudaMalloc(&d_X,   M * K * sizeof(float));
-    cudaMalloc(&d_Y,   M * N * sizeof(float));
-    cudaMalloc(&d_W_i8, N * K * sizeof(signed char));
-    cudaMalloc(&d_scratch_x_i8,   M * K * sizeof(signed char));
-    cudaMalloc(&d_scratch_scales, M * sizeof(float));
-    cudaMalloc(&d_scratch_y_i32,  M * N * sizeof(int));
+    cudaMalloc(&d_X,   TM * TK * sizeof(float));
+    cudaMalloc(&d_Y,   TM * TN * sizeof(float));
+    cudaMalloc(&d_W_i8, TN * TK * sizeof(signed char));
+    cudaMalloc(&d_scratch_x_i8,   TM * TK * sizeof(signed char));
+    cudaMalloc(&d_scratch_scales, TM * sizeof(float));
+    cudaMalloc(&d_scratch_y_i32,  TM * TN * sizeof(int));
 
-    cudaMemcpy(d_X, h_X, M * K * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_X, h_X, TM * TK * sizeof(float), cudaMemcpyHostToDevice);
 
     // --- Temp GPU buffer for float W (for ternary_quantize input) ---
     float* d_W_f32;
-    cudaMalloc(&d_W_f32, N * K * sizeof(float));
+    cudaMalloc(&d_W_f32, TN * TK * sizeof(float));
 
     printf("step  loss\n");
     printf("----  --------\n");
@@ -138,16 +138,16 @@ int main() {
     for (int step = 0; step < STEPS; step++) {
         // 1. Compute gamma = mean(|W_float|)
         float gamma = 0.f;
-        for (int i = 0; i < N * K; i++) gamma += fabsf(h_W[i]);
-        gamma /= (float)(N * K);
+        for (int i = 0; i < TN * TK; i++) gamma += fabsf(h_W[i]);
+        gamma /= (float)(TN * TK);
         if (gamma < 1e-9f) gamma = 1e-9f;
 
         // 2. Upload float W, quantize to i8 on GPU
-        cudaMemcpy(d_W_f32, h_W, N * K * sizeof(float), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_W_f32, h_W, TN * TK * sizeof(float), cudaMemcpyHostToDevice);
         ternary_quantize(
             (unsigned long long)d_W_f32,
             (unsigned long long)d_W_i8,
-            N * K, nullptr
+            TN * TK, nullptr
         );
 
         // 3. WMMA forward
@@ -158,16 +158,16 @@ int main() {
             (unsigned long long)d_scratch_x_i8,
             (unsigned long long)d_scratch_scales,
             (unsigned long long)d_scratch_y_i32,
-            M, N, K, gamma, nullptr
+            TM, TN, TK, gamma, nullptr
         );
         cudaDeviceSynchronize();
 
         // 4. Copy Y back, compute MSE + STE gradient on CPU
-        cudaMemcpy(h_Y, d_Y, M * N * sizeof(float), cudaMemcpyDeviceToHost);
-        float loss = mse_and_grad(h_Y, h_Ytar, h_X, h_W, h_dW, M, N, K);
+        cudaMemcpy(h_Y, d_Y, TM * TN * sizeof(float), cudaMemcpyDeviceToHost);
+        float loss = mse_and_grad(h_Y, h_Ytar, h_X, h_W, h_dW, TM, TN, TK);
 
         // 5. SGD update
-        for (int i = 0; i < N * K; i++)
+        for (int i = 0; i < TN * TK; i++)
             h_W[i] -= LR * h_dW[i];
 
         if ((step % REPORT) == 0 || step == STEPS - 1)
