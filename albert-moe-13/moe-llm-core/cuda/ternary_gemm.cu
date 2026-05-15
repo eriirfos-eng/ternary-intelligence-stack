@@ -4,15 +4,15 @@
 // ternary_gemm_forward: X_f32[M,K] × W_i8[N,K]^T → Y_f32[M,N]
 //
 //   Step 1: per-row abs-max quantise X_f32 → X_i8, store per-row scale
-//   Step 2: WMMA INT8 GEMM (8×8×32 tiles, SM7.5+)  Y_i32 = X_i8 @ W_i8^T
+//   Step 2: WMMA INT8 GEMM (16×16×16 tiles, SM7.2+)  Y_i32 = X_i8 @ W_i8^T
 //   Step 3: dequantise  Y_f32[m,n] = Y_i32[m,n] * x_scale[m] * gamma
 //
 // W is stored [N,K] row-major; treated as [K,N] col-major in WMMA (= W^T).
-// K=256, N=256 for albert. — both are tile-aligned.  M is padded to ×8 in
-// ternary_gemm_forward before the kernel is launched.
+// K=256, N=256 for albert. — both are tile-aligned (256 % 16 == 0).
+// M is padded to ×16 in ternary_gemm_forward before the kernel is launched.
 //
-// Root cause of previous "incomplete type" failures: only cuda_runtime.h was
-// included.  WMMA specialisations live in mma.h and require nvcuda namespace.
+// Tile shape: 16×16×16 (INT8, SM7.2+).  8×8×32 is sub-int8 (INT4) — wrong shape
+// for signed char and the root cause of the earlier "incomplete type" errors.
 
 #include <cuda_runtime.h>
 #include <mma.h>
@@ -21,11 +21,11 @@
 using namespace nvcuda;
 
 // ---------------------------------------------------------------------------
-// Tile constants for WMMA 8×8×32 INT8 (SM7.5+)
+// Tile constants for WMMA 16×16×16 INT8 (SM7.2+)
 // ---------------------------------------------------------------------------
-#define WMMA_M 8
-#define WMMA_N 8
-#define WMMA_K 32
+#define WMMA_M 16
+#define WMMA_N 16
+#define WMMA_K 16
 
 // ---------------------------------------------------------------------------
 // Kernel 1: per-row abs-max quantise X_f32 → X_i8, store inverse scale
@@ -88,10 +88,10 @@ __global__ void wmma_int8_gemm_kernel(
         wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, signed char, wmma::row_major> a_frag;
         wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, signed char, wmma::col_major> b_frag;
 
-        // A tile: X[tile_m*8 : tile_m*8+8, k : k+32], stride = K
+        // A tile: X[tile_m*16 : +16, k : k+16], stride = K
         wmma::load_matrix_sync(a_frag, X + tile_m * WMMA_M * K + k, K);
 
-        // B tile (col_major W^T): W[tile_n*8 : tile_n*8+8, k : k+32], stride = K
+        // B tile (col_major W^T): W[tile_n*16 : +16, k : k+16], stride = K
         wmma::load_matrix_sync(b_frag, W + tile_n * WMMA_N * K + k, K);
 
         wmma::mma_sync(c_frag, a_frag, b_frag, c_frag);
@@ -143,7 +143,7 @@ void ternary_quantize(uint64_t w_f32, uint64_t w_i8, int size, cudaStream_t stre
 // x_i8_buf:   caller-allocated [M_pad * K] int8  scratch
 // scales_buf: caller-allocated [M]         f32   scratch
 // y_i32_buf:  caller-allocated [M_pad * N] int32 scratch
-// M_pad:      M rounded up to next multiple of WMMA_M (8) — caller must pass this
+// M_pad:      M rounded up to next multiple of WMMA_M (16) — caller must pass this
 //             and allocate buffers accordingly.  y_f32 is [M * N] (not padded).
 void ternary_gemm_forward(
     uint64_t x_f32,      // [M,     K] f32  input activations
