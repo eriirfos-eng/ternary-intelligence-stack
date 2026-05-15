@@ -4497,12 +4497,16 @@
         fetch('/dashboard/epoch_history.log?t=' + Date.now())
             .then(r => r.ok ? r.text() : '').catch(() => ''),
     ]).then(([batchText, epochText]) => {
+        let _lastPreseedX = -Infinity;
         for (const line of batchText.split('\n')) {
             const comma = line.indexOf(',');
             if (comma < 0) continue;
             const x = parseFloat(line.slice(0, comma));
             const y = parseFloat(line.slice(comma + 1));
-            if (isFinite(x) && isFinite(y) && x >= 0 && y > 1 && y < 50) smaLog.push({ x, y });
+            if (isFinite(x) && isFinite(y) && x >= 0 && y > 1 && y < 50 && x !== _lastPreseedX) {
+                smaLog.push({ x, y });
+                _lastPreseedX = x;
+            }
         }
         smaPreSeedLen = smaLog.length; // freeze — never cleared below this point
         for (const line of epochText.split('\n')) {
