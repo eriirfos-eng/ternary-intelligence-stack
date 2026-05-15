@@ -828,7 +828,7 @@
     <div class="nv-panel" id="tlight-panel">
         <div class="nv-label" style="display:flex;align-items:center;gap:8px;">&#9632; Traffic Light Routing (TTL)<span id="tlight-summary-inline" style="display:flex;gap:4px;align-items:center;"></span></div>
         <div id="tlight-viz"><div id="tlight-waiting" style="color:#475569;font-size:10px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;letter-spacing:1px">WAITING FOR TLIGHT DATA</div></div>
-        <canvas id="tlight-fft-strip" style="display:block;width:100%;height:16px;flex-shrink:0;margin-top:2px;"></canvas>
+        <canvas id="tlight-fft-strip" style="display:block;width:100%;height:10px;flex-shrink:0;margin-top:1px;"></canvas>
     </div>
     <div class="panel-resize-handle" title="Drag to resize · double-click to reset"></div>
 
@@ -3493,8 +3493,8 @@
     }
 
     // ── Ternary Traffic Light Panel (canvas) ─────────────────────────
-    const TTL_LABEL_W = 22;   // px reserved for layer labels on left (10px font needs ~22)
-    const TTL_FFT_H   = 16;   // px — net G/R imbalance FFT strip at bottom
+    const TTL_LABEL_W = 16;   // px reserved for layer labels on left (8px font needs ~16)
+    const TTL_FFT_H   = 10;   // px — net G/R imbalance FFT strip at bottom
 
     function renderTlight(layers, step) {
         const wrap = document.getElementById('tlight-viz');
@@ -3560,7 +3560,7 @@
         }
 
         // Sync pixel size — enforce minimum row height so the panel scrolls rather than compresses
-        const MIN_TTL_ROW_H = 16; // px per layer row minimum
+        const MIN_TTL_ROW_H = 8;  // px per layer row minimum
         const numLForSize   = layers.length;
         const minH          = numLForSize * MIN_TTL_ROW_H;
         const W = _tlightCanvas.offsetWidth || wrap.clientWidth;
@@ -3583,7 +3583,7 @@
         ctx2d.clearRect(0, 0, W, H);
 
         // Layer labels + cells
-        ctx2d.font = '10px "JetBrains Mono", monospace';
+        ctx2d.font = '8px "JetBrains Mono", monospace';
         ctx2d.textBaseline = 'middle';
         ctx2d.textAlign = 'right';
 
