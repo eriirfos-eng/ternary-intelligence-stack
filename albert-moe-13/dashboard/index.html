@@ -893,6 +893,7 @@
         ttl_green:  `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="#22c55e" stroke="none"/></svg>`,
         ttl_stress: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="#ef4444" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/></svg>`,
         doji: `<svg viewBox="0 0 12 12" fill="none" stroke="#ffd700" stroke-width="1.3" width="12" height="12"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor"/><rect x="2.5" y="4.5" width="7" height="3" rx="0.5" fill="rgba(255,215,0,0.2)"/></svg>`,
+        wald: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="12" height="12"><circle cx="6" cy="5.5" r="3.8"/><line x1="6" y1="3.5" x2="6" y2="5.8"/><circle cx="6" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg>`,
     };
 
     const POLL_MS            = 500;   // T4: ~400ms/batch — one poll per batch
@@ -948,7 +949,9 @@
 
     let batchLog         = [];   // [{step,global_epoch,batch,layers,loss,grad_norm,layer_norms,route_weights,entropy,tele_sparsity,tele_activity}]
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
-    let smaLog           = [];   // [{x,y}] — unbounded batch point history for SMA computation; dots use merged (capped), SMAs use this
+    let smaLog           = [];   // [{x,y}] — full batch point history; source of truth for SMA computation
+    let smaCacheFull     = [[], [], [], [], []]; // pre-computed SMA values: [21, 55, 144, 377, 610] — full history, never passed directly to Chart.js
+    const SMA_SIZES      = [21, 55, 144, 377, 610]; // Fibonacci SMA periods matching ds indices 1-5
     let totalPts         = 0;
     let newPointStartIdx = Infinity; // index of first "new" pt — only those get drop animation
     let pulseActive      = false;
@@ -973,6 +976,9 @@
     let lastTtlStressStep= -999;  // TTL surge-red   (≥25% experts Red   across all layers)
     let bestEpochAvg  = Infinity;
     let spikeFiredEp  = -1;
+    let waldEvents       = [];   // permanent dead-zone markers — never capped
+    let lastWaldDeadLow  = '';   // dead_low string of last fired Wald event
+    let lastWaldDeadHigh = '';   // dead_high string of last fired Wald event
 
     // ── Candle / HA / BB / MACD / draw-tool state ─────────────────────
     const epochCandles = new Map(); // global_epoch → {epoch,open,high,low,close,finalized,doji}
@@ -1191,12 +1197,37 @@
     const annotationPlugin = {
         id: 'anomalyAnnotations',
         afterDraw(c) {
-            if (!anomalyEvents.length) return;
+            if (!anomalyEvents.length && !waldEvents.length) return;
             const x = c.scales.x, y = c.scales.y, a = c.chartArea, ctx2 = c.ctx;
             ctx2.save();
             ctx2.beginPath();
             ctx2.rect(a.left, a.top, a.width, a.height);
             ctx2.clip();
+
+            // Wald dead-zone vertical markers — dashed red lines, never evicted
+            if (waldEvents.length) {
+                const xMin = x.min - 5, xMax = x.max + 5;
+                ctx2.setLineDash([3, 4]);
+                ctx2.strokeStyle = 'rgba(239,68,68,0.55)';
+                ctx2.lineWidth = 1;
+                for (const we of waldEvents) {
+                    if (we.epoch < xMin || we.epoch > xMax) continue;
+                    const px = x.getPixelForValue(we.epoch);
+                    ctx2.beginPath();
+                    ctx2.moveTo(px, a.top);
+                    ctx2.lineTo(px, a.bottom);
+                    ctx2.stroke();
+                    ctx2.setLineDash([]);
+                    ctx2.font = '9px monospace';
+                    ctx2.fillStyle = 'rgba(239,68,68,0.75)';
+                    ctx2.textAlign = 'left';
+                    ctx2.fillText('W', px + 2, a.top + 10);
+                    ctx2.setLineDash([3, 4]);
+                }
+                ctx2.setLineDash([]);
+            }
+
+            // Diamond anomaly markers
             for (const ev of anomalyEvents) {
                 if (ev.cx == null || ev.cy == null) continue;
                 const px = x.getPixelForValue(ev.cx);
@@ -1207,7 +1238,6 @@
                 ctx2.globalAlpha = focused ? 1.0 : 0.7;
                 ctx2.strokeStyle = col;
                 ctx2.lineWidth   = focused ? 2 : 1.5;
-                // Diamond marker
                 ctx2.beginPath();
                 ctx2.moveTo(px,     py - s);
                 ctx2.lineTo(px + s, py);
@@ -1216,7 +1246,6 @@
                 ctx2.closePath();
                 ctx2.stroke();
                 if (focused) {
-                    // Outer ring
                     ctx2.globalAlpha = 0.35;
                     ctx2.lineWidth = 1;
                     ctx2.beginPath();
@@ -1935,7 +1964,7 @@
                             c.canvas.style.cursor = 'grabbing';
                             document.body.style.cursor = 'grabbing';
                         },
-                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); chart.update('none'); }
+                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); applyRenderDistance(); chart.update('none'); }
                     },
                     zoom: {
                         wheel: { enabled: true }, pinch: { enabled: true }, mode: 'xy',
@@ -1944,7 +1973,7 @@
                             isInteracting = true;
                             pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
                         },
-                        onZoomComplete: () => { isInteracting = false; chart.stop(); chart.update('none'); }
+                        onZoomComplete: () => { isInteracting = false; chart.stop(); applyRenderDistance(); chart.update('none'); }
                     }
                 }
             }
@@ -2146,6 +2175,35 @@
             if (i >= w - 1) result.push({ x: data[i].x, y: sum / w });
         }
         return result;
+    }
+
+    // ── Render-distance helpers ─────────────────────────────────────────
+    // Binary search: first index where arr[i].x >= x.
+    function lowerBound(arr, x) {
+        let lo = 0, hi = arr.length;
+        while (lo < hi) { const m = (lo + hi) >> 1; arr[m].x < x ? lo = m + 1 : hi = m; }
+        return lo;
+    }
+    // Slice a pre-computed SMA array to the current chart viewport + overhang buffer.
+    // Passes only visible points to Chart.js — reduces rendered nodes by 10-100x when zoomed in.
+    function smaVisibleSlice(fullArr) {
+        if (!fullArr.length) return fullArr;
+        const scale = chart.scales.x;
+        if (!scale) return fullArr;
+        const span = Math.max(scale.max - scale.min, 10);
+        const buf  = span * 0.30 + 20; // 30% overhang each side + 20ep fixed pad
+        const lo   = Math.max(0, lowerBound(fullArr, scale.min - buf));
+        const hi   = Math.min(fullArr.length, lowerBound(fullArr, scale.max + buf));
+        return fullArr.slice(lo, hi);
+    }
+    // Re-apply render distance to all visible SMA datasets (call after zoom/pan/reset).
+    function applyRenderDistance() {
+        const ds = chart.data.datasets;
+        for (let i = 0; i < 5; i++) {
+            if (!ds[i + 1].hidden && smaCacheFull[i].length) {
+                ds[i + 1].data = smaVisibleSlice(smaCacheFull[i]);
+            }
+        }
     }
 
     // ── TMA — Ternary Moving Average ───────────────────────────────────
@@ -2388,6 +2446,7 @@
                     trailCurrentMin.fill(Infinity);
                     userHasZoomed = false; newPointStartIdx = Infinity;
                     batchLog = []; smaLog.length = smaPreSeedLen; // epochLog preserved; smaPreSeedLen preserves historical pre-seed
+                    smaCacheFull = [[], [], [], [], []]; // clear SMA caches — will recompute from pre-seed on next poll
                     document.getElementById('v-loss').textContent  = '—';
                     document.getElementById('v-epoch').textContent = '—';
                     document.getElementById('v-best').textContent  = '—';
@@ -2719,30 +2778,31 @@
             // SMAs compute from smaLog so they span the full training run.
             for (const pt of newPts) smaLog.push(pt);
 
-            // Incremental SMA on smaLog — append new tail values only; no front trimming
-            // since smaLog never drops entries. Falls back to full recompute when empty.
+            // Incremental SMA — append new tail values to smaCacheFull[ci] only.
+            // Chart datasets receive a viewport-sliced view (render distance) so
+            // Chart.js only processes visible points even when smaLog has 300k+ entries.
             const ds = chart.data.datasets;
             const appended = newPts.length;
-            function updateSma(dsIdx, w) {
-                if (ds[dsIdx].hidden) return;
-                const prev = ds[dsIdx].data;
+            function updateSma(dsIdx, w, ci) {
+                const cache = smaCacheFull[ci];
                 const n = smaLog.length;
-                if (prev.length === 0) { ds[dsIdx].data = sma(smaLog, w); return; }
-                // Append SMA values for the newly arrived points only.
-                const updated = prev.slice();
-                for (let i = n - appended; i < n; i++) {
-                    if (i < w - 1) continue;
-                    let sum = 0;
-                    for (let j = i - w + 1; j <= i; j++) sum += smaLog[j].y;
-                    updated.push({ x: smaLog[i].x, y: sum / w });
+                if (cache.length === 0) {
+                    smaCacheFull[ci] = sma(smaLog, w); // full recompute on first call
+                } else {
+                    for (let i = n - appended; i < n; i++) {
+                        if (i < w - 1) continue;
+                        let sum = 0;
+                        for (let j = i - w + 1; j <= i; j++) sum += smaLog[j].y;
+                        cache.push({ x: smaLog[i].x, y: sum / w });
+                    }
                 }
-                ds[dsIdx].data = updated;
+                if (!ds[dsIdx].hidden) ds[dsIdx].data = smaVisibleSlice(smaCacheFull[ci]);
             }
-            updateSma(1, 21);
-            updateSma(2, 55);
-            updateSma(3, 144);
-            updateSma(4, 377);
-            updateSma(5, 610);
+            updateSma(1, 21,  0);
+            updateSma(2, 55,  1);
+            updateSma(3, 144, 2);
+            updateSma(4, 377, 3);
+            updateSma(5, 610, 4);
             if (!ds[6].hidden) ds[6].data = tma(merged, 30);
             // Bollinger Bands on SMA-144 window
             if (bbVisible) {
@@ -2784,8 +2844,8 @@
                             `Epoch completed. Average loss: <b>${epochAvg.toFixed(4)}</b>.`,
                             lastBatchX, epochAvg);
                     }
-                    // epochLog is kept unbounded — epoch entries are tiny (~100 bytes each)
-                    // and the full history is needed for epoch-based SMA curves.
+                    // epochLog capped at 10000 entries — sufficient for any realistic training run.
+                    if (epochLog.length > 10000) epochLog.splice(0, epochLog.length - 10000);
                     const esm = line.match(/=== Epoch (\d+)L?\s*done \| Avg Loss:\s*[\d.]+ \| Clipped:\s*(\d+) \| Skipped:\s*(\d+)/);
                     epochLog.push({
                         local_epoch:  esm ? parseInt(esm[1]) : null,
@@ -2827,6 +2887,29 @@
                                 [...epochCandles.values()].filter(c => c.finalized).sort((a, b) => a.epoch - b.epoch)
                             );
                         }
+                    }
+                }
+
+                // WALD dead-zone event — fires only when the dead signature changes
+                const wm = line.match(/^WALD epoch=(\d+) step=\d+ fill=[\d.]+% mass=[\d.]+ dead_low=(\S+) dead_high=(\S+) severity=/);
+                if (wm) {
+                    const wEp = parseInt(wm[1]), wDL = wm[2], wDH = wm[3];
+                    const active  = wDL !== 'none' || wDH !== 'none';
+                    const changed = wDL !== lastWaldDeadLow || wDH !== lastWaldDeadHigh;
+                    if (active && changed && !isReplay) {
+                        lastWaldDeadLow  = wDL;
+                        lastWaldDeadHigh = wDH;
+                        waldEvents.push({ epoch: wEp, dead_low: wDL, dead_high: wDH });
+                        const parts = [];
+                        if (wDL !== 'none') parts.push(`dead_low=${wDL}`);
+                        if (wDH !== 'none') parts.push(`dead_high=${wDH}`);
+                        addEvent('wald', `WALD ep${wEp} ${parts.join(' ')}`, 'crit',
+                            `Dead zone shift at ep${wEp}:<br>${parts.join(', ')}<br>Trit weight mass collapsed to edge — routing may be impaired.`,
+                            wEp, null, /*permanent*/ true);
+                    } else if (!active && (lastWaldDeadLow !== '' || lastWaldDeadHigh !== '')) {
+                        // Dead zone cleared — reset so next re-activation fires fresh
+                        lastWaldDeadLow  = '';
+                        lastWaldDeadHigh = '';
                     }
                 }
             }
@@ -2889,8 +2972,9 @@
     function toggleDataset(idx, checked) {
         chart.data.datasets[idx].hidden = !checked;
         if (checked && idx >= 1 && idx <= 5) {
-            const smaSizes = [21, 55, 144, 377, 610];
-            chart.data.datasets[idx].data = sma(smaLog, smaSizes[idx - 1]);
+            const ci = idx - 1;
+            if (!smaCacheFull[ci].length) smaCacheFull[ci] = sma(smaLog, SMA_SIZES[ci]);
+            chart.data.datasets[idx].data = smaVisibleSlice(smaCacheFull[ci]);
         }
         chart.update('none');
         updateSmaBtnLabel();
@@ -2937,6 +3021,7 @@
                 chart.options.scales.x.min = Math.max(0, minX - 2);
                 chart.options.scales.x.max = maxX + 5;
             }
+            applyRenderDistance();
             chart.update('none');
         }
     });
@@ -3680,12 +3765,13 @@
     }
 
     // ── Anomaly Event Feed ────────────────────────────────────────────
-    function addEvent(icon, text, level, detail, cx, cy) {
+    function addEvent(icon, text, level, detail, cx, cy, permanent) {
         const ts = new Date().toTimeString().slice(0, 8);
         anomalyEvents.unshift({ icon, text, level, ts, detail: detail || text,
             cx: cx !== undefined ? cx : lastBatchX,
-            cy: cy !== undefined ? cy : null });
-        if (anomalyEvents.length > ANOMALY_MAX) anomalyEvents.pop();
+            cy: cy !== undefined ? cy : null,
+            permanent: !!permanent });
+        if (!permanent && anomalyEvents.length > ANOMALY_MAX) anomalyEvents.pop();
         scheduleAnomalyRender();   // debounced — coalesces rapid bursts into one RAF
         scheduleChartUpdate();     // debounced — avoids duplicate chart.update per poll
     }
@@ -3714,17 +3800,19 @@
             label.style.marginLeft = '5px';
             pill.appendChild(label);
 
-            const close = document.createElement('span');
-            close.className = 'ev-close';
-            close.textContent = '×';
-            close.addEventListener('click', e => {
-                e.stopPropagation();
-                hideTip();
-                const pos = anomalyEvents.indexOf(ev);
-                if (pos !== -1) anomalyEvents.splice(pos, 1);
-                renderAnomalyFeed();
-            });
-            pill.appendChild(close);
+            if (!ev.permanent) {
+                const close = document.createElement('span');
+                close.className = 'ev-close';
+                close.textContent = '×';
+                close.addEventListener('click', e => {
+                    e.stopPropagation();
+                    hideTip();
+                    const pos = anomalyEvents.indexOf(ev);
+                    if (pos !== -1) anomalyEvents.splice(pos, 1);
+                    renderAnomalyFeed();
+                });
+                pill.appendChild(close);
+            }
 
             pill.addEventListener('mouseenter', e => showTip(e,
                 (ICON_SVG[ev.icon] ? '<span style="display:inline-flex;align-items:center;gap:5px;vertical-align:middle">' + ICON_SVG[ev.icon] + '</span> ' : '') +
