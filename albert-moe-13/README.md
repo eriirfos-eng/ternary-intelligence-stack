@@ -250,7 +250,7 @@ Standard MoE uses float32 weights and routes for capacity, not sparsity. Albert 
 
 ---
 
-<img width="1863" height="930" alt="image" src="https://github.com/user-attachments/assets/d2d60f92-b857-403d-adc5-3a7b0b2fa589" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/8dc9b488-a65d-43e3-a731-003c2e01a7bc" />
 
 ---
 
