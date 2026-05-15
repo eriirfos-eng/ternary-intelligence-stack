@@ -146,29 +146,9 @@ impl TernaryLinear {
 
         let dims = x.dims();
 
-        // WMMA INT8 16×16×16 tensor-core path — only compiled when cuda feature is enabled.
-        #[cfg(feature = "cuda")]
-        if x.device().is_cuda() {
-            use crate::cuda_kernel::TernaryGemmOp;
-            let out = if dims.len() == 3 {
-                let (b, s, h) = (dims[0], dims[1], dims[2]);
-                let x2 = x.reshape((b * s, h))?;
-                let (m, k) = (x2.dim(0)?, x2.dim(1)?);
-                let n = w_ternary.dim(0)?;
-                let y = x2.apply_op2(&w_ternary, TernaryGemmOp { gamma: _gamma_val, m, n, k })?;
-                y.reshape((b, s, n))?
-            } else {
-                let (m, k) = (x.dim(0)?, x.dim(1)?);
-                let n = w_ternary.dim(0)?;
-                x.apply_op2(&w_ternary, TernaryGemmOp { gamma: _gamma_val, m, n, k })?
-            };
-            return match &self.bias {
-                None       => Ok(out),
-                Some(bias) => out.broadcast_add(bias),
-            };
-        }
+        // WMMA fused kernel disabled — numerics bug under investigation.
+        // cuBLAS F32 path used on CUDA (candle handles dispatch automatically).
 
-        // CPU / candle cuBLAS fallback.
         let out = if dims.len() == 3 {
             let (b, s, h) = (dims[0], dims[1], dims[2]);
             let x2 = x.reshape((b * s, h))?;
