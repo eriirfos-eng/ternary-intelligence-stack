@@ -1054,6 +1054,7 @@
     let waldVisible      = localStorage.getItem('waldVisible') !== '0'; // default on
     let lastWaldDeadLow  = '';   // dead_low string of last fired Wald event
     let lastWaldDeadHigh = '';   // dead_high string of last fired Wald event
+    let sporeEvents      = [];   // permanent spore ingestion markers
 
     // ── Candle / HA / BB / MACD / draw-tool state ─────────────────────
     const epochCandles = new Map(); // global_epoch → {epoch,open,high,low,close,finalized,doji}
@@ -1279,7 +1280,7 @@
     const annotationPlugin = {
         id: 'anomalyAnnotations',
         afterDraw(c) {
-            if (!anomalyEvents.length && !waldEvents.length) return;
+            if (!anomalyEvents.length && !waldEvents.length && !sporeEvents.length) return;
             const x = c.scales.x, y = c.scales.y, a = c.chartArea, ctx2 = c.ctx;
             ctx2.save();
             ctx2.beginPath();
@@ -1305,6 +1306,29 @@
                     ctx2.textAlign = 'left';
                     ctx2.fillText('W', px + 2, a.top + 10);
                     ctx2.setLineDash([3, 4]);
+                }
+                ctx2.setLineDash([]);
+            }
+
+            // Spore ingestion markers — dashed green lines
+            if (sporeEvents.length) {
+                const xMin = x.min - 5, xMax = x.max + 5;
+                ctx2.setLineDash([4, 3]);
+                ctx2.strokeStyle = 'rgba(34,197,94,0.60)';
+                ctx2.lineWidth = 1.2;
+                for (const se of sporeEvents) {
+                    if (se.epoch < xMin || se.epoch > xMax) continue;
+                    const px = x.getPixelForValue(se.epoch);
+                    ctx2.beginPath();
+                    ctx2.moveTo(px, a.top);
+                    ctx2.lineTo(px, a.bottom);
+                    ctx2.stroke();
+                    ctx2.setLineDash([]);
+                    ctx2.font = '9px monospace';
+                    ctx2.fillStyle = 'rgba(34,197,94,0.85)';
+                    ctx2.textAlign = 'left';
+                    ctx2.fillText('S', px + 2, a.top + 22);
+                    ctx2.setLineDash([4, 3]);
                 }
                 ctx2.setLineDash([]);
             }
@@ -3299,11 +3323,24 @@
                         addEvent('wald', `WALD ep${wEp} ${wFill}% n=${wN}`, 'crit',
                             `Dead zone shift at ep${wEp}:<br>${parts.join(', ')}<br>fill=${wFill}%, n=${wN} dead experts`,
                             wEp, lastBatchY, /*permanent*/ true);
+                        notify('albert. — WALD', `Dead zone ep${wEp} · fill=${wFill}% · n=${wN} dead experts`);
                     } else if (!active && (lastWaldDeadLow !== '' || lastWaldDeadHigh !== '')) {
                         // Dead zone cleared — reset so next re-activation fires fresh
                         lastWaldDeadLow  = '';
                         lastWaldDeadHigh = '';
                     }
+                }
+
+                // SPORE_INGEST — collaborator weight merge event
+                const sm = line.match(/^SPORE_INGEST contributor=(\S+) epoch_produced=(\d+) spore_loss=([\d.]+) alpha=([\d.]+) merged=(\d+) skipped=(\d+)/);
+                if (sm && !isReplay) {
+                    const contrib = sm[1], epProd = sm[2], sLoss = sm[3], alpha = sm[4], merged = sm[5];
+                    sporeEvents.push({ epoch: lastKnownEpoch, contributor: contrib, ep_produced: parseInt(epProd), loss: parseFloat(sLoss) });
+                    addEvent('spore', `SPORE ${contrib} ep${epProd}`, 'info',
+                        `Spore ingested from <b>${contrib}</b><br>ep${epProd} · loss=${sLoss} · α=${alpha} · merged=${merged} tensors`,
+                        lastKnownEpoch, lastBatchY, /*permanent*/ true);
+                    notify('albert. — SPORE INGESTED', `${contrib} · ep${epProd} · loss=${sLoss} · α=${alpha}`);
+                    requestAnimationFrame(() => chart.render());
                 }
             }
 
@@ -3349,7 +3386,12 @@
             }
 
             const minPt = newPts.reduce((a, b) => b.y < a.y ? b : a, newPts[newPts.length - 1]);
+            const prevATL = allTimeBestBatch;
             updateTopbar(minPt.y < bestLoss ? minPt : newPts[newPts.length - 1]);
+            if (!isReplay && allTimeBestBatch < prevATL && prevATL < Infinity) {
+                const impPct = ((prevATL - allTimeBestBatch) / prevATL * 100).toFixed(3);
+                notify('albert. — NEW ATL', `${allTimeBestBatch.toFixed(4)} · ↓${impPct}% vs ${prevATL.toFixed(4)}`);
+            }
         } catch (e) {
             console.error('poll error', e);
         }

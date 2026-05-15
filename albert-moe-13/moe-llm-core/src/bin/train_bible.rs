@@ -5,6 +5,7 @@ use moe_llm_core::tokenizer::BpeTokenizer;
 use moe_llm_core::evolution::EvolutionManager;
 use moe_llm_core::mycelium::MyceliumModule;
 use moe_llm_core::wald::{WaldModule, format_wald_line};
+use moe_llm_core::spore::SporeManager;
 use moe_llm_core::mandelbrot::{MandelbrotSurgery, format_mandelbrot_line};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -21,6 +22,9 @@ struct TrainFlags {
     lb_ramp_epochs: usize,
     /// Seed F32 shadow expert weights with orthogonal Householder rotations on startup.
     seed_experts: bool,
+    /// Reset gate weights to kaiming-uniform and add σ=0.15 noise to expert weights.
+    /// Only needed when routing has collapsed; off by default to preserve learned routing.
+    break_symmetry: bool,
     /// Override the scheduled DIV loss weight with a fixed value for this run.
     div_weight_override: Option<f64>,
     /// Fixed per-expert gate logit bias spread (0.0 = disabled). Expert E-1 gets +scale,
@@ -35,6 +39,10 @@ struct TrainFlags {
     /// Exit cleanly after this many total epochs. Checkpoint is written before exit.
     /// Useful for milestone checkpoints: albert-train --stop-at-epoch=900
     stop_at_epoch: Option<u32>,
+    /// Path to the albert-spores/spores/ directory.
+    /// Default: ~/projects/albert-spores/spores (auto-detected from HOME).
+    /// Empty string = auto-detect. Pass --spores-dir=none to disable scanning.
+    spores_dir: String,
 }
 
 fn parse_args() -> TrainFlags {
@@ -43,17 +51,20 @@ fn parse_args() -> TrainFlags {
         lb_weight:           0.03,
         lb_ramp_epochs:      5,
         seed_experts:        false,
+        break_symmetry:      false,
         div_weight_override: None,
         gate_diversity:      0.0,
         root:                ".".to_string(),
         cord_surgery:        false,
         stop_at_epoch:       None,
+        spores_dir:          String::new(),
     };
     for arg in &args[1..] {
         match arg.as_str() {
             "--lb-disable"   => flags.lb_weight = 0.0,
-            "--seed-experts" => flags.seed_experts = true,
-            "--cord-surgery" => flags.cord_surgery = true,
+            "--seed-experts"    => flags.seed_experts = true,
+            "--break-symmetry"  => flags.break_symmetry = true,
+            "--cord-surgery"    => flags.cord_surgery = true,
             _ => {
                 if let Some(v) = arg.strip_prefix("--lb-weight=") {
                     if let Ok(w) = v.parse::<f64>() { flags.lb_weight = w; }
@@ -67,6 +78,8 @@ fn parse_args() -> TrainFlags {
                     flags.root = v.trim_end_matches('/').to_string();
                 } else if let Some(v) = arg.strip_prefix("--stop-at-epoch=") {
                     if let Ok(e) = v.parse::<u32>() { flags.stop_at_epoch = Some(e); }
+                } else if let Some(v) = arg.strip_prefix("--spores-dir=") {
+                    flags.spores_dir = v.to_string();
                 }
             }
         }
@@ -910,6 +923,7 @@ fn train_cycle(
     wald: &mut WaldModule,
     global_step: &mut usize,
     flags: &TrainFlags,
+    spore_manager: &mut SporeManager,
 ) -> Result<bool> {
     let r = &flags.root;
     let checkpoint_path = format!("{r}/models/albert_v3.0.safetensors");
@@ -958,10 +972,12 @@ fn train_cycle(
         println!("[{}] Loaded {} tensors from checkpoint.", timestamp(), loaded);
     }
 
-    // Reset gate weights to kaiming-uniform to break the routing symmetry baked in
-    // by 250+ epochs of near-uniform routing. Expert weights are preserved — they hold
-    // 250 epochs of valuable signal. Only the gate needs fresh signal to differentiate.
-    {
+    // Reset gate weights + expert noise when either:
+    //   (a) --break-symmetry was passed explicitly, OR
+    //   (b) the evolution manager detected near-uniform routing for 34+ consecutive epochs.
+    // In case (b) the flag is consumed (cleared) here so subsequent restarts don't re-apply.
+    let do_break = flags.break_symmetry || evolution_manager.consume_symmetry_break();
+    if do_break {
         let gate_vars: Vec<_> = {
             let all_vars = varmap.data().lock().unwrap();
             all_vars.iter()
@@ -982,14 +998,8 @@ fn train_cycle(
         }
     }
 
-    // Expert weight perturbation: independent Gaussian noise per expert tensor.
-    // σ=0.02 was too small — ternary weights cluster near their quantized values so
-    // 0.02 flips almost no weights between bins, leaving all experts weight-identical.
-    // σ=0.15 flips ~20-30% of near-threshold weights per expert, giving each a distinct
-    // enough representation that CE gradient can route between them meaningfully.
-    // At current loss ≈ ln(vocab) the experts hold no useful signal anyway — the cost
-    // of disruption is near-zero vs the benefit of breaking symmetry.
-    {
+    // Expert weight perturbation — gated on the same do_break decision.
+    if do_break {
         let expert_vars: Vec<_> = {
             let all_vars = varmap.data().lock().unwrap();
             all_vars.iter()
@@ -1007,6 +1017,12 @@ fn train_cycle(
             println!("[{}] Expert symmetry break: σ={} noise applied to {} expert tensors.",
                 timestamp(), sigma, expert_vars.len());
         }
+    }
+
+    // If the evolution manager's symmetry break flag was just consumed, persist the cleared
+    // state immediately so a crash-restart doesn't re-apply the break unintentionally.
+    if do_break {
+        evolution_manager.save_state(evo_path);
     }
 
     // F32 shadow weight seeding — breaks Nash deadlock by placing each expert at a
@@ -1136,6 +1152,9 @@ fn train_cycle(
         // Per-epoch routing accumulator for expert dominance tripwire.
         let mut epoch_route_acc: Vec<f32>  = vec![0.0; config.num_experts];
         let mut epoch_route_count: usize   = 0;
+        // Per-epoch entropy accumulator for evolution symmetry-break detection.
+        let mut epoch_entr_sum: f32  = 0.0;
+        let mut epoch_entr_count: usize = 0;
         // Effective LB weight this epoch, applying ramp when re-enabling from disabled.
         if flags.lb_weight > 0.0 { lb_ramp_epoch += 1; }
         let effective_lb = if flags.lb_weight == 0.0 {
@@ -1473,6 +1492,8 @@ fn train_cycle(
                     let entr_per_layer = if config.num_layers > 0 {
                         -entropy_scalar / config.num_layers as f32
                     } else { 0.0 };
+                    epoch_entr_sum   += entr_per_layer;
+                    epoch_entr_count += 1;
                     let _ = writeln!(f, "ENTR step={} avg={:.4}", *global_step, entr_per_layer);
                     // LB — load-balancing loss value. Should decrease as routing diversifies.
                     let _ = writeln!(f, "LB step={} val={:.4}", *global_step, lb_scalar);
@@ -1565,6 +1586,10 @@ fn train_cycle(
         }
 
         evolution_manager.add_loss(avg_loss);
+        if epoch_entr_count > 0 {
+            let epoch_avg_entr = epoch_entr_sum / epoch_entr_count as f32;
+            evolution_manager.record_routing_entropy(epoch_avg_entr, config.num_experts);
+        }
 
         // ── LB status log + expert dominance tripwire ─────────────────────────
         {
@@ -1681,6 +1706,31 @@ fn train_cycle(
             fs::write(best_meta_path, avg_loss.to_string())?;
             fs::write(&best_epoch_path, total_epochs.to_string())?;
             println!("[{}] ★ New best epoch loss: {:.4} — best checkpoint saved.", timestamp(), avg_loss);
+        }
+
+        // ── Spore ingestion — scan albert-spores for new collaborator checkpoints ─
+        {
+            let arch = (config.num_layers, config.hidden_size, config.num_experts, config.vocab_size);
+            let candidates = spore_manager.scan_pending(best_epoch_loss);
+            if !candidates.is_empty() {
+                println!("[{}] [spore] {} candidate(s) found — blending into colony.",
+                    timestamp(), candidates.len());
+                for candidate in candidates {
+                    match spore_manager.ingest(&varmap, device, candidate, arch) {
+                        Ok(log_line) => {
+                            println!("[{}] [spore] {}", timestamp(), log_line);
+                            if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
+                                let _ = writeln!(f, "{}", log_line);
+                            }
+                            // Persist blended weights immediately.
+                            if let Err(e) = save_checkpoint(&varmap, checkpoint_path) {
+                                eprintln!("[spore] Warning: checkpoint re-save failed: {e}");
+                            }
+                        }
+                        Err(e) => eprintln!("[{}] [spore] Ingestion failed: {e}", timestamp()),
+                    }
+                }
+            }
         }
 
         // ── Milestone stop: exit cleanly when a --stop-at-epoch target is reached ──────
@@ -2054,10 +2104,11 @@ fn main() -> Result<()> {
     println!("--- ALBERT EVOLUTIONARY ORCHESTRATOR v3.0 (Multilingual · Mandelbrot Surgery · Chaos Protocol) ---");
 
     // Print flag summary so every log knows what run configuration was used.
-    println!("[flags] lb_weight={} lb_ramp={} seed_experts={} div_override={}",
+    println!("[flags] lb_weight={} lb_ramp={} seed_experts={} break_symmetry={} div_override={}",
         flags.lb_weight,
         flags.lb_ramp_epochs,
         flags.seed_experts,
+        flags.break_symmetry,
         flags.div_weight_override.map(|v| format!("{:.2e}", v)).unwrap_or_else(|| "schedule".into()),
     );
 
@@ -2087,6 +2138,18 @@ fn main() -> Result<()> {
 
     let mut evolution_manager = EvolutionManager::new();
     let mut global_step       = 0_usize;
+
+    let spore_state_path = format!("{r}/models/albert_v3.0.spore_state");
+    let spores_dir = if flags.spores_dir == "none" {
+        String::new() // disabled
+    } else if flags.spores_dir.is_empty() {
+        std::env::var("HOME")
+            .map(|h| format!("{h}/projects/albert-spores/spores"))
+            .unwrap_or_default()
+    } else {
+        flags.spores_dir.clone()
+    };
+    let mut spore_manager = SporeManager::new(spores_dir, spore_state_path);
 
     // Read initial layer count so MyceliumModule is sized correctly from the start.
     let initial_layers: usize = fs::read_to_string(config_path)
@@ -2136,7 +2199,7 @@ fn main() -> Result<()> {
 
         let needs_evolution = train_cycle(
             &tokens, &tokenizer, &device, &mut evolution_manager, &mut mycelium, &mut wald,
-            &mut global_step, &flags
+            &mut global_step, &flags, &mut spore_manager
         )?;
         if needs_evolution {
             perform_surgery(config_path, checkpoint_path, best_path, &device, &flags.root)?;
