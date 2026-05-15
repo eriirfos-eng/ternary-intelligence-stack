@@ -4,7 +4,7 @@
 **Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
-**Last updated:** 2026-05-14
+**Last updated:** 2026-05-15
 
 ---
 
@@ -90,11 +90,12 @@ noisy inputs.
 
 **Benchmark results (benchmark suite v2.0.0):**
 
-| Epoch | Loss (avg) | All-time best | Tok/s (T4 GPU) |
-|-------|-----------|--------------|----------------|
-| Ep54  | ~10.35 | 10.35 | 11.24 (CPU) |
-| Ep111 | ~10.36 | 10.36 | 18.52 |
-| Ep849 | ~10.21 | 10.2050 | pending |
+| Epoch | Loss (avg) | Epoch ATL | Batch ATL | Tok/s (T4 GPU) |
+|-------|-----------|-----------|-----------|----------------|
+| Ep54  | ~10.35 | 10.35 | — | 11.24 (CPU) |
+| Ep111 | ~10.36 | 10.36 | — | 18.52 |
+| Ep849 | ~10.22 | 10.2050 | — | pending |
+| Ep1177 | 10.2076 | **10.2059** (ep1158) | **10.1738** (ep1155) | pending |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
@@ -102,7 +103,7 @@ via the open-source `moe-test` binary.
 
 **Known limitations:**
 
-- At current training depth (~850 epochs), output quality is pre-fluency:
+- At current training depth (~1177 epochs), output quality is pre-fluency:
   the model produces partially coherent text in familiar domains but lacks
   consistent grammatical structure across longer sequences.
 - Context window of 256 tokens is shorter than contemporary LLMs; cannot
@@ -145,14 +146,20 @@ albert. is a research model under active development. The following
 oversight mechanisms are in place:
 
 1. **Training dashboard:** Real-time monitoring of loss curves, expert
-   routing, gradient norms, and anomaly events by the RFI-IRFOS team.
-2. **Surgery governor:** Automated architectural growth (layer addition)
-   is gated by a plateau detector that requires human review of the
-   training state before triggering structural changes.
-3. **Checkpoint promotion:** No trained checkpoint is deployed to any
+   routing, gradient norms, WALD dead-zone events, and anomaly events
+   by the RFI-IRFOS team.
+2. **Surgery governor:** Architectural growth (layer addition via net2net)
+   is fully autonomous — the `EvolutionManager` fires on a Fibonacci-gated
+   plateau detector with no human intervention required. Five surgeries
+   (12L→17L) have been executed autonomously to date.
+3. **SPORE federated training:** Collaborators can contribute CPU-trained
+   checkpoints as cryptographically-identified weight spores via the
+   `albert-spores` private repository. The `SporeManager` blends spores
+   at α=0.08 each epoch with fitness and architecture guards.
+4. **Checkpoint promotion:** No trained checkpoint is deployed to any
    external service without explicit human review and approval by the
    lead architect.
-4. **Rollback capability:** All checkpoints and best-loss weights are
+5. **Rollback capability:** All checkpoints and best-loss weights are
    preserved on persistent storage. Any version can be reverted.
 
 See [SECURITY.md](SECURITY.md) for the incident reporting process.
@@ -179,10 +186,19 @@ contact@ternlang.com
 
 ---
 
-## Contact
+## Team
 
-**Lead Architect:** Simeon Ari  
-**Organisation:** RFI-IRFOS  
-**Email:** s.kepp@ternlang.com  
+| Name | Role | Contact |
+|------|------|---------|
+| Simeon Kepp | Lead Architect — full stack (compiler, BET VM, training, MCP) | s.kepp@ternlang.com |
+| Louis Paul Ehrig | Head of Public Affairs, Dataset Curation, Corporate Secretary | l.ehrig@ternlang.com |
+| Lisa Scharler | Head of Social Technology & Ecocentric Systems | l.scharler@ternlang.com |
+| Zabih Karimi | Co-Founder, IT & Infrastructure, Stress-Testing | z.karimi@ternlang.com |
+| Nikoletta Csonka | Global Reach, Fundraising & Fund Applications | csonikoletta@ternlang.com |
+| Claude (Anthropic) | AI Collaborator — architecture, implementation, monitoring | — |
+
+**Organisation:** Research Focus Institute — Interdisciplinary Research Facility for Open Sciences (RFI-IRFOS)  
+**Address:** Elisabethinergasse 25, 8020 Graz, Austria  
 **Website:** https://ternlang.com  
-**Issues:** https://github.com/eriirfos-eng/ternary-intelligence-stack/issues
+**Issues:** https://github.com/eriirfos-eng/ternary-intelligence-stack/issues  
+**General contact:** contact@ternlang.com
