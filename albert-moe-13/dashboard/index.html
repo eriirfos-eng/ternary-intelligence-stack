@@ -618,10 +618,11 @@
         #anomaly-scroll::-webkit-scrollbar { display: none; }
         .ev-pill {
             display: flex; align-items: center; gap: 4px;
-            padding: 3px 10px; border-radius: 10px;
+            padding: 0 10px; border-radius: 10px;
             font-size: 10px; white-space: nowrap;
             flex-shrink: 0; cursor: default;
             border: 1px solid transparent;
+            height: 22px; box-sizing: border-box;
         }
         .ev-pill.info   { background: rgba(34,211,238,0.08);  border-color: rgba(34,211,238,0.25);  color: var(--cyan); }
         .ev-pill.warn   { background: rgba(245,158,11,0.08);  border-color: rgba(245,158,11,0.30);  color: var(--amber); }
@@ -649,7 +650,7 @@
             padding: 1px 5px;
             opacity: 0.4;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 10px;
             line-height: 1;
             border-radius: 6px;
             flex-shrink: 0;
@@ -2891,9 +2892,9 @@
                 }
 
                 // WALD dead-zone event — fires only when the dead signature changes
-                const wm = line.match(/^WALD epoch=(\d+) step=\d+ fill=[\d.]+% mass=[\d.]+ dead_low=(\S+) dead_high=(\S+) severity=/);
+                const wm = line.match(/^WALD epoch=(\d+) step=\d+ fill=([\d.]+)% mass=[\d.]+ dead_low=(\S+) dead_high=(\S+) severity=[\d.]+ n=(\d+)/);
                 if (wm) {
-                    const wEp = parseInt(wm[1]), wDL = wm[2], wDH = wm[3];
+                    const wEp = parseInt(wm[1]), wFill = wm[2], wDL = wm[3], wDH = wm[4], wN = wm[5];
                     const active  = wDL !== 'none' || wDH !== 'none';
                     const changed = wDL !== lastWaldDeadLow || wDH !== lastWaldDeadHigh;
                     if (active && changed && !isReplay) {
@@ -2903,9 +2904,9 @@
                         const parts = [];
                         if (wDL !== 'none') parts.push(`dead_low=${wDL}`);
                         if (wDH !== 'none') parts.push(`dead_high=${wDH}`);
-                        addEvent('wald', `WALD ep${wEp} ${parts.join(' ')}`, 'crit',
-                            `Dead zone shift at ep${wEp}:<br>${parts.join(', ')}<br>Trit weight mass collapsed to edge — routing may be impaired.`,
-                            wEp, null, /*permanent*/ true);
+                        addEvent('wald', `WALD ep${wEp} ${wFill}% n=${wN}`, 'crit',
+                            `Dead zone shift at ep${wEp}:<br>${parts.join(', ')}<br>fill=${wFill}%, n=${wN} dead experts`,
+                            wEp, lastBatchY, /*permanent*/ true);
                     } else if (!active && (lastWaldDeadLow !== '' || lastWaldDeadHigh !== '')) {
                         // Dead zone cleared — reset so next re-activation fires fresh
                         lastWaldDeadLow  = '';
