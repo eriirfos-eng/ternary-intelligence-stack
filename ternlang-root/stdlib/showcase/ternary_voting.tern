@@ -1,0 +1,83 @@
+// Ternary Weighted Voting System
+// Demonstrates hybrid decision logic combining ternary signals and float weights.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+fn weighted_vote(votes: trit[], weights: float[], size: int) -> trit {
+    let score: float = 0.0;
+    let i: int = 0;
+    while i < size {
+        // cast(trit) converts -1, 0, 1 to float -1.0, 0.0, 1.0
+        score = score + cast(votes[i]) * weights[i];
+        i = i + 1;
+    }
+    
+    // thresholding logic to map back to ternary
+    if score > 0.5 {
+        return 1; // Affirmative majority
+    } else if score < -0.5 {
+        return -1; // Rejective majority
+    } else {
+        return 0; // Uncertainty / Balanced
+    }
+}
+
+fn main() -> trit {
+    let votes: trit[3];
+    votes[0] = 1;  // Agent A affirms
+    votes[1] = -1; // Agent B rejects
+    votes[2] = 1;  // Agent C affirms
+    
+    let weights: float[3];
+    weights[0] = 0.2; // Agent A weight
+    weights[1] = 0.7; // Agent B weight (Strong influence)
+    weights[2] = 0.1; // Agent C weight
+    
+    // Calculation: 1*0.2 + (-1)*0.7 + 1*0.1 = -0.4
+    let result: trit = weighted_vote(votes, weights, 3);
+    
+    print("Ternary Weighted Vote Showcase\n");
+    print("------------------------------\n");
+    print("Agent A: Affirm (weight 0.2)\n");
+    print("Agent B: Reject (weight 0.7)\n");
+    print("Agent C: Affirm (weight 0.1)\n");
+    
+    print("Aggregated result: ");
+    match result {
+        1 => { print("Affirm (+1)\n"); }
+        0 => { print("Tend (0)\n"); }
+        -1 => { print("Reject (-1)\n"); }
+    }
+    
+    if result == 0 {
+        print("✓ Successfully reached 'Tend' state due to weighted balance.\n");
+    } else {
+        print("✗ Unexpected result.\n");
+        return -1;
+    }
+
+    // Example 2: Increase Agent C weight to shift consensus
+    weights[2] = 0.6; 
+    // New Calculation: 1*0.2 + (-1)*0.7 + 1*0.6 = 0.1
+    // Still 0 (Tend) but closer to +1
+    
+    result = weighted_vote(votes, weights, 3);
+    print("\nIncreasing Agent C weight to 0.6...\n");
+    print("New result: ");
+    match result {
+        0 => { print("Tend (0) - logic stable\n"); }
+        _ => { print("Unexpected shift\n"); return -1; }
+    }
+
+    // Example 3: Agent A becomes more decisive
+    weights[0] = 0.9;
+    // New Calculation: 1*0.9 + (-1)*0.7 + 1*0.6 = 0.8
+    result = weighted_vote(votes, weights, 3);
+    print("\nIncreasing Agent A weight to 0.9...\n");
+    print("New result: ");
+    match result {
+        1 => { print("Affirm (+1) - consensus reached\n"); }
+        _ => { print("Failed to shift\n"); return -1; }
+    }
+
+    return 1;
+}
