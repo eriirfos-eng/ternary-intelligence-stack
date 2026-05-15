@@ -5,9 +5,10 @@
 // ternary_gemm_forward:      public entry point (calls fused kernel)
 //
 // Fused kernel per-block (one warp = 32 threads, one [16×16] output tile):
-//   Shared memory layout  (20KB per block, well within T4's 64KB/SM):
-//     [0, 16KB)   Xf  — X tile as float32   [WMMA_M=16][K=256]
-//     [16KB, 20KB) Xi — X tile as int8      [WMMA_M=16][K=256]
+//   Shared memory layout  (21.5KB per block, well within T4's 64KB/SM):
+//     [0, 1KB)    Ys  — int32 accumulator    [WMMA_M=16][WMMA_N=16]
+//     [1KB, 17KB) Xf  — X tile as float32   [WMMA_M=16][K=256]
+//     [17KB, 21KB) Xi — X tile as int8      [WMMA_M=16][K=256]
 //
 //   1. Load X_f32 tile from global → Xf smem  (1 global read, no write)
 //   2. Warp-shuffle per-row abs-max → scale[16] in registers (all threads identical)
@@ -15,7 +16,8 @@
 //   4. K-loop WMMA:  a_frag ← Xi smem          (smem read, fast)
 //                    b_frag ← W_i8 global       (one read, already int8)
 //                    mma_sync accumulate
-//   5. Store int32 accumulator to Xf smem (reused), dequantise → Y_f32 global  (1 write)
+//   5. Store int32 accumulator → Ys smem, dequantise → Y_f32 global  (1 write)
+//      Ys is a dedicated int32 buffer (no float alias) — strict aliasing safe.
 //
 // Eliminates vs the previous 3-kernel pipeline:
 //   - M*K global write + read for X_i8
@@ -48,7 +50,7 @@ __global__ void quantize_kernel(const float* w_f32, signed char* w_i8, int size)
 //
 // Grid  : (N/WMMA_N, M_pad/WMMA_M)   — one block per [16×16] output tile
 // Block : 32 threads (one warp)
-// Smem  : WMMA_M * K * (sizeof(float) + sizeof(signed char))  = 20KB for K=256
+// Smem  : WMMA_M*WMMA_N*4 + WMMA_M*K*5 = 1024 + 20480 = 21504 bytes for K=256
 //
 // W_i8 is [N, K] row-major and is treated as [K, N] col-major in WMMA (= W^T).
 // K and N must both be multiples of 16.  M is padded to a multiple of 16 by the
@@ -66,8 +68,11 @@ __global__ void wmma_int8_fused_kernel(
     const int tid    = threadIdx.x;  // 0..31
 
     extern __shared__ char smem[];
-    float*       Xf = (float*)smem;                      // [WMMA_M][K] f32
-    signed char* Xi = (signed char*)(Xf + WMMA_M * K);  // [WMMA_M][K] i8
+    // Ys must be its own buffer — aliasing float* as int* is UB and NVCC will
+    // serve stale cached float values for the post-store read of Ys[idx].
+    int*         Ys = (int*)smem;                                   // [WMMA_M*WMMA_N] i32 = 1 KB
+    float*       Xf = (float*)(Ys + WMMA_M * WMMA_N);              // [WMMA_M][K]     f32 = 16 KB
+    signed char* Xi = (signed char*)(Xf + WMMA_M * K);             // [WMMA_M][K]     i8  = 4 KB
 
     // -----------------------------------------------------------------------
     // 1. Load X_f32 tile into shared memory.
@@ -131,11 +136,9 @@ __global__ void wmma_int8_fused_kernel(
     }
 
     // -----------------------------------------------------------------------
-    // 5. Store int32 accumulator → reused Xf smem, then dequantise → Y_f32.
-    //    Xf is 16KB; the accumulator is 16×16×4 = 1KB — safe to alias.
+    // 5. Store int32 accumulator → dedicated Ys smem, then dequantise → Y_f32.
     //    Each thread writes WMMA_M*WMMA_N/32 = 8 output elements.
     // -----------------------------------------------------------------------
-    int* Ys = (int*)Xf;
     wmma::store_matrix_sync(Ys, c_frag, WMMA_N, wmma::mem_row_major);
     __syncwarp();
 
@@ -176,8 +179,9 @@ void ternary_gemm_forward(
 
     int M_pad = ((M + WMMA_M - 1) / WMMA_M) * WMMA_M;
 
-    // smem: Xf [WMMA_M][K] f32 + Xi [WMMA_M][K] i8
-    size_t smem_bytes = (size_t)WMMA_M * K * (sizeof(float) + sizeof(signed char));
+    // smem: Ys [WMMA_M*WMMA_N] i32 (1KB) + Xf [WMMA_M][K] f32 (16KB) + Xi [WMMA_M][K] i8 (4KB)
+    size_t smem_bytes = (size_t)WMMA_M * WMMA_N * sizeof(int)
+                      + (size_t)WMMA_M * K * (sizeof(float) + sizeof(signed char));
 
     dim3 grid(N / WMMA_N, M_pad / WMMA_M);
     wmma_int8_fused_kernel<<<grid, 32, smem_bytes, stream>>>(

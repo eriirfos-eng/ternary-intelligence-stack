@@ -31,6 +31,6 @@ __global__ void fused_smem_test() {
 
 extern "C" void wmma_test(cudaStream_t stream) {
     wmma_fragment_instantiation_test<<<1, 32, 0, stream>>>();
-    // smem: 16*256*(4+1) = 20480 bytes
-    fused_smem_test<<<1, 32, 20480, stream>>>();
+    // smem: 16*16*4 + 16*256*(4+1) = 1024 + 20480 = 21504 bytes
+    fused_smem_test<<<1, 32, 21504, stream>>>();
 }
