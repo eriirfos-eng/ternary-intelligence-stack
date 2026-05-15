@@ -182,7 +182,7 @@ Surgery with no new corpus produces slower descent than surgery with a simultane
 | Early respecialisation (ep 5–30) | ~0.005–0.010 nats / 10ep | New layer gradient activation |
 | Sustained descent (ep 30+) | ~0.003–0.007 nats / 10ep | Slower than corpus-unlock surgeries |
 
-Compare: the ep701 surgery (16L→17L + Stage 10 corpus) produced ~0.015 nats/10ep in the weeks following. The next surgery, corpus-only, is projected at roughly half that rate.
+Compare: the ep701 surgery (16L→17L + Stage 10 corpus) produced ~0.015 nats/10ep in the weeks following. The next surgery (17L→18L, corpus unchanged), projected at roughly half that rate. As of ep1189, the model is at epoch-ATL 10.1993 — active descent continues, plateau gate (F9 window = 144 epochs) has not fired.
 
 ### The two levers are separable
 
@@ -200,4 +200,4 @@ This separability is a property of the @sparseskip + MoE architecture: sparse ro
 
 ---
 
-*This document satisfies SPRIND audit blocker #4: EvolutionManager scaling evidence. Updated 2026-05-14 to include v3.0 surgery history (17L, ep849 ATB 10.2050) and pre-registered prediction for 18L surgery without corpus expansion.*
+*This document satisfies SPRIND audit blocker #4: EvolutionManager scaling evidence. Updated 2026-05-15 to include v3.0 surgery history (17L, epoch-ATL 10.1993 at ep1189 — first sub-10.20) and pre-registered prediction for 18L surgery without corpus expansion.*

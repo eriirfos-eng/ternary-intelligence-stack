@@ -1,5 +1,7 @@
 # Albert-MoE-13: Ground Truth Learning Substrate Execution Test Report
 
+> **HISTORICAL ARTIFACT — 2026-05-03.** This report confirmed that the candle tensor backend could perform gradient-based learning — the first proof that the TIS stack could host a real neural model. That milestone is long past; albert. now runs 17L ternary MoE training at Global Epoch 1189+ on Modal T4 GPU. Preserved as a development record.
+
 ## 1. Single Parameter Learning Experiment
 *   Target: $y = w \cdot x$
 *   Dataset: $x=2.0, y^*=10.0$

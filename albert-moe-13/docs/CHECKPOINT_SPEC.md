@@ -1,4 +1,10 @@
-//! # ALBERT-MoE-13 Checkpoint Specification (v0.1)
+//! # ALBERT-MoE-13 Checkpoint Specification (v0.1 — HISTORICAL)
+//!
+//! > **Note (2026-05-15):** This spec describes the early binary `.trit`/`snapshot.bin` format,
+//! > predating the safetensors checkpoint format used in v2.0.0 and v3.0. The binary `albert-run`
+//! > referenced here was replaced by `moe-test` and `train_bible`. Current checkpoints are
+//! > `models/albert_v3.0.safetensors` (safetensors format, float32 training weights).
+//! > This document is preserved as a format lineage reference.
 //! 
 //! This document defines the serialized state format used by `albert-run`
 //! to load trained model snapshots into memory.

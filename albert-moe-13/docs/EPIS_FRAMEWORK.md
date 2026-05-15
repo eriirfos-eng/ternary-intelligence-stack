@@ -1,5 +1,7 @@
 # TIS Architecture: EPIS Framing
 
+> **Context (2026-05-15):** This document describes the EPIS conceptual framing from the early TIS design phase. Albert. has since crossed the EPIS→Emergent threshold described in §"Path to Emergent Specialization" — routing is now fully learned via differentiable gating (Top-3 softmax, TTL EMA, expert seed biases), not engineered partitioning. The document is preserved as architectural lineage and theoretical foundation.
+
 This document clarifies the official framing of the MoE-13 system within the Ternary Intelligence Stack (TIS).
 
 ## Definition of EPIS

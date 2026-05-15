@@ -3,7 +3,7 @@
 **Project:** Albert-MoE-13 / Ternary Intelligence Stack  
 **Prepared by:** RFI-IRFOS  
 **Date:** 2026-05-14  
-**Status:** Pre-implementation design — no code exists yet  
+**Status:** Implemented (commit 9c1cc8e23, 2026-05-14) — not yet activated; awaiting width wall signal  
 **Patent basis:** Extension of A50296/2026 (@sparseskip method); cord architecture is a distinct novel contribution
 
 ---
@@ -236,7 +236,7 @@ This architecture extends patent A50296/2026 and will be documented as a continu
 5. Dashboard — Cord panel with per-stream routing heatmap and gate activation strip
 6. `moe-test` inference binary — dual-stream forward pass for benchmarking
 
-This document is the authoritative design specification. No implementation begins before this document is reviewed and the design decisions above are confirmed.
+This document is the authoritative design specification. Implementation complete as of 2026-05-14 (anastomosis.rs, dual-stream transformer.rs, cord telemetry). Cord surgery is triggered via `albert-train --cord-surgery` when the team diagnoses the width wall.
 
 ---
 

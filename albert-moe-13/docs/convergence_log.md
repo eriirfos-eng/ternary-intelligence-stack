@@ -1,7 +1,7 @@
 # Albert MoE-13 — Convergence Log
 
 Empirical training loss data from native ternary training from random initialization.
-Active run: v3.0 — 12L · 32k vocab · 635 MB multilingual corpus (2026-05-10).
+Active run: v3.0 — 17L · 32k vocab · 635 MB multilingual corpus (2026-05-10, ongoing).
 
 ---
 
@@ -46,11 +46,15 @@ correct only after the vocabulary transfer plateau breaks.
 | Ep 645–646 | **15L → 16L** | — | Net2Net surgery (Mandelbrot c_im=−0.3442, window→55) |
 | Ep 701–702 | **16L → 17L** | — | Net2Net surgery (Mandelbrot c_im=0.5828, window→89); Stage 10 corpus unlocked |
 | Ep 786 | 17L | 10.2199 | Previous all-time best; 22+ ATBs in overnight cascade |
-| Ep 849 | 17L | **10.2050** | **All-time best** |
-| Ep 876+ | 17L | ~10.22 | Active as of 2026-05-14; Modal T4 GPU; ~$0.003/epoch |
+| Ep 849 | 17L | 10.2050 | Former epoch ATL (now surpassed) |
+| Ep 1155 | 17L | ~10.22 | New batch ATL: 10.1738; descent accelerating |
+| Ep 1185 | 17L | ~10.21 | **New batch ATL: 10.1600** (−0.45% vs prev 10.1738); hot layer shift L8→L10 (structural) |
+| Ep 1189 | 17L | **10.1993** | **EPOCH ATL — FIRST SUB-10.20 IN ALBERT. V3.0 HISTORY** |
+| Ep 1191+ | 17L | ~10.198 | Active as of 2026-05-15; Modal T4 GPU; ~$0.003/epoch |
 
-**All-time best loss:** 10.2050 (ep849, 2026-05-14)  
-**Surgery governor status:** F9 window = 144 epochs; plateau gate requires <0.02 nats span over any 144-epoch window + myc_stable ≥ 5. Not imminent — model still actively descending.
+**All-time best (epoch avg):** 10.1993 (ep1189, 2026-05-15) — first sub-10.20  
+**All-time best (intra-batch):** 10.1600 (ep1185, 2026-05-15)  
+**Surgery governor status:** F9 window = 144 epochs; plateau gate requires <0.02 nats span over any 144-epoch window. Not imminent — model still actively descending toward 10.19 barrier.
 
 ### Net2Net surgery outcomes
 

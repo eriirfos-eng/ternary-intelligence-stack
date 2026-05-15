@@ -50,9 +50,9 @@ cargo run --release --bin sparseskip_throughput -p moe-llm-core
 
 ---
 
-## The 83 tok/s Figure
+## The 84.4 tok/s Figure
 
-The 83 tokens/second sustained decode figure (measured 2026-05-07) reflects the full inference stack combining three contributions:
+The 84.4 tokens/second sustained decode figure (measured on HP ZBook 15 i7-4800MQ, 2013, CPU-only; benchmark suite v2.0.0) reflects the full inference stack combining three contributions:
 
 1. **@sparseskip expert routing** — 9/12 experts not executing per decode step (4.58× contribution at 75% sparsity)
 2. **KV-cache** — single query token attends over cached K/V, eliminating recomputation of past context
@@ -60,7 +60,7 @@ The 83 tokens/second sustained decode figure (measured 2026-05-07) reflects the 
 
 These three combine multiplicatively in the inference loop. The benchmark above isolates contribution #1.
 
-**Hardware context:** ThinkPad-class laptop CPU, 8 threads (Rayon), Ubuntu 24.04, Rust release build. No GPU. No INT8 kernel. No framework acceleration.
+**Hardware context:** HP ZBook 15 (i7-4800MQ, 2013), Ubuntu 24.04, Rust release build. No GPU. No INT8 kernel. No framework acceleration. 11.8 ms/tok · 75% expert skip rate confirmed by benchmark suite.
 
 ---
 

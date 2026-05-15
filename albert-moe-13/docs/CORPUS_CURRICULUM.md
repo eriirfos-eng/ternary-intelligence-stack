@@ -22,21 +22,25 @@ The mechanism is in `train_bible.rs:load_corpus()`: stages are loaded for all `s
 | `stage_6` | 6+ layers | 12 Gutenberg novels | ~12.0 MB | Complex narrative, wider vocabulary, varied author voice. Crime & Punishment, Moby Dick, War & Peace, Ulysses, Pride & Prejudice, Frankenstein, Sherlock Holmes, Huck Finn, Great Expectations, Tale of Two Cities, The Picture of Dorian Gray, The Prince. |
 | `stage_7` | 7+ layers | Simple Wikipedia | ~9.9 MB | Factual, topic-diverse, encyclopedic structure. Contrasts with narrative — teaches the model that different registers exist. |
 | `stage_9` | 9+ layers | QA instruction pairs | ~0.5 MB | User:/Albert: instruction format. Teaches the model to respond, not just continue. |
-| `stage_11` | 11+ layers | Linux documentation | ~0.4 MB | Technical, structured, domain-specific. Extends beyond natural language into command-and-effect reasoning. |
+| `stage_10` | 16+ layers | dev_blogs, github_bugs, hn_discussions, gourmet_recipes, repair_guides, trails_travel | ~varied | Real-world diverse internet text; unlocked at ep701 (16L→17L surgery). |
+| `stage_11` | 11+ layers | Linux documentation, EU AI Act | ~0.4 MB | Technical, structured, domain-specific. Extends beyond natural language into command-and-effect reasoning. |
 
-**Total corpus at full depth (11+ layers): ~27.6 MB, ~5.5M tokens (BPE, 8k vocab)**
+**v3.0 (all stages active at 17L):** 32k ByteLevel BPE vocab (EN/DE/FR/ES/PT/IT/NL/PL), 256-token context windows. Total corpus ~635 MB including multilingual, academic, fulltext, and chaos layers.
 
 ---
 
 ## Cumulative Token Count by Stage
 
-| Depth reached | Active stages | Approx. tokens |
+| Depth reached | Active stages | Approx. tokens (8k vocab) |
 |---|---|---|
 | 3–5 layers | stage_3 | ~900k |
 | 6 layers | stage_3 + stage_6 | ~3.3M |
 | 7–8 layers | stage_3 + stage_6 + stage_7 | ~5.3M |
-| 9–10 layers | + stage_9 | ~5.4M |
-| 11+ layers | all stages | ~5.5M |
+| 9–15 layers | + stage_9 | ~5.4M |
+| 16+ layers | + stage_10 | ~5.4M+ |
+| all stages | + stage_11 | ~5.5M+ |
+
+**v3.0 (17L, 32k vocab):** The above stage corpus is supplemented by the v3.0 corpus layers (multilingual ~446 MB, academic ~46 MB, fulltext ~68 MB, chaos ~43 MB = ~635 MB total). Context window: 256 tokens.
 
 ---
 
@@ -73,5 +77,7 @@ The train/test split for evaluation is deterministic: seed 42, 5% holdout by lin
 **Run the perplexity evaluation:**
 ```
 cd albert-moe-13
-python3 scripts/eval_perplexity.py --checkpoint models/bible_ternary_v2.0.0.best.4L.safetensors
+cargo run --release -p moe-llm-core --bin eval_perplexity
+# or against a specific file:
+cargo run --release -p moe-llm-core --bin eval_perplexity data/corpus/stage_3/alice.txt
 ```

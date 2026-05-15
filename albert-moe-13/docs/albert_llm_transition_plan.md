@@ -1,5 +1,7 @@
 # Albert-MoE-13: LLM Transition Plan (Ternary Transformer)
 
+> **HISTORICAL ARTIFACT — 2026-05-03. TRANSITION COMPLETE.** This document planned the move from a symbolic system to a real ternary transformer. That plan was executed in full: albert. is now a 17L ternary MoE LLM trained from scratch with STE, MoE routing, @sparseskip, and a full BPE tokenizer. All items in the plan below are complete. Preserved as a development record.
+
 ## 1. Architecture Diagram
 ```text
                ┌──────────────┐

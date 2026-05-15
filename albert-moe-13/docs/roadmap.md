@@ -2,7 +2,7 @@
 
 ---
 
-## Completed — v2.0.0 (Current Run)
+## Completed — v2.0.0 (Global Ep454, 12L, best loss 6.8821)
 
 *   [x] Straight-Through Estimator (STE) ternary training from random init — weights constrained to `{-γ, 0, +γ}` throughout
 *   [x] MoE architecture — 12 experts, Top-3 routing, @sparseskip (patent pending A50296/2026)
@@ -18,58 +18,41 @@
 
 ---
 
-## Phase Next — Complete Current Run
+## Active — v3.0 — Current Run (ep1191+, 17L, epoch-ATL 10.1993)
 
-*   [ ] Run to Global Epoch 500 (cosine LR floor — 23 epochs remaining as of 2026-05-10)
-*   [ ] Perplexity evaluation at 12L final checkpoint: `./target/release/moe-test --eval data/corpus/stage_7/simple_wikipedia.txt`
-*   [ ] Full benchmark suite at 12L: `./target/release/moe-test --bench --csv albert_12L_final.csv`
-*   [ ] Archive final checkpoint as `bible_ternary_v2.0.0_final.safetensors`
-*   [ ] Extract 12L transformer block weights (`blocks.0`–`blocks.11`) for v3.0 initialization
+**Status (2026-05-15):** Global Epoch 1191+, Modal T4 GPU (~$0.003/epoch). First sub-10.20 epoch average achieved at ep1189 (10.1993). Five autonomous Net2Net surgeries completed (12L→17L). Stage 10 corpus active.
 
----
+### Completed milestones
+*   [x] 32k multilingual ByteLevel BPE vocabulary (EN/DE/FR/ES/PT/IT/NL/PL)
+*   [x] Weight transfer from v2.0.0 (12L→v3.0 init); embed + lm_head rebuilt at 32k
+*   [x] Wikipedia + Europarl multilingual corpus (~446 MB), academic (~46 MB), fulltext (~68 MB), chaos (~43 MB) — 635 MB total
+*   [x] Net2Net surgery ×5: 12L→13L (ep511) · 13L→14L (ep547) · 14L→15L (ep611) · 15L→16L (ep645) · 16L→17L (ep701)
+*   [x] Stage 10 corpus unlocked at 16L: dev_blogs, github_bugs, hn_discussions, gourmet_recipes, repair_guides, trails_travel
+*   [x] WALD module — loss-space coverage analysis, dead-zone detection, early-layer gradient amplification
+*   [x] Expert seed biases — F32 [256] per expert, breaks routing Nash equilibria
+*   [x] Gate reset footgun fixed — kaiming-uniform + expert noise now gated behind `--break-symmetry` / entropy auto-detection
+*   [x] SPORE federated weight sharing — SporeManager implemented, collaborator Zabih onboarded
+*   [x] Mycelial Cord Architecture — implemented (anastomosis.rs, dual-stream), not yet activated (awaits width wall)
+*   [x] WMMA INT8 kernel — written, validated (max_err=0.000000), disabled mid-run; re-enable on next fresh run
+*   [x] Modal.com T4 GPU training — ~40× speedup over CPU, ~$0.003/epoch at CTX=256
+*   [x] HuggingFace deployment — rfi-irfos/albert, model card live with full team roster
+*   [x] batch_history.csv persistence — survives Modal worker preemptions, dashboard SMA pre-seeded on startup
+*   [x] Dashboard TTL panel — 17-layer scrollable canvas, all layers render correctly
+*   [x] **Epoch ATL 10.1993 at ep1189 — first sub-10.20 in albert. v3.0 history**
+*   [x] **Batch ATL 10.1600 at ep1185 (-0.45% vs prior record)**
+*   [x] Benchmark suite: 84.4 tok/s · 11.8 ms/tok · 75% expert skip rate (HP ZBook i7-4800MQ, CPU-only)
 
-## Phase v3.0 — Multilingual European Albert
-
-**Decision (2026-05-10):** Albert must speak all major European languages. The current 8k English-only BPE vocab cannot support this — German compound nouns, French morphology, and other European languages tokenize catastrophically inefficiently against an English-trained vocabulary. v3.0 rebuilds the tokenizer foundation while preserving all learned architecture via weight transfer.
-
-**Weight transfer:** The 12L transformer blocks (attention weights, expert MLPs, MoE routing, TTL state) are vocabulary-agnostic — they process hidden states, not token IDs, and transfer directly. Only the embedding matrix and `lm_head` are discarded and rebuilt at the new vocabulary size. This preserves 500 epochs of learned sequence modeling, routing specialization, and expert differentiation.
-
-### Tokenizer
-*   [ ] Collect balanced European corpus for tokenizer training (min: EN, DE, FR, ES, PT, IT, NL, PL)
-*   [ ] Train multilingual BPE tokenizer — target 32k–64k tokens
-*   [ ] Validate tokenization fertility per language (tokens per word; target: ≤2.5 for all target languages)
-
-### European Corpus
-
-*   [ ] **Brockhaus** — German encyclopedia, 14th edition (1894–1896), public domain, Internet Archive. Dense factual German, wide vocabulary. (Lisa Scharler)
-*   [ ] **Europarl** — EU Parliament proceedings, 21 EU languages, parallel corpus. On-brand for European sovereign AI positioning.
-*   [ ] **Wikipedia dumps** — DE, FR, ES, PT, IT Wikipedia. Multilingual factual grounding.
-*   [ ] **Gutenberg multilingual** — French, German, Spanish, Portuguese literature (public domain)
-*   [ ] **EU legal corpus** — EU AI Act and supporting documents in all official EU languages
-*   [ ] Design multilingual stage-aware curriculum (stage_M1 → stage_MN, unlocking language breadth with depth)
-
-### Architecture & Training
-*   [ ] Transfer `blocks.0`–`blocks.11` weights from v2.0.0 final checkpoint into v3.0 init
-*   [ ] Rebuild embedding matrix at new vocab size (overlapping tokens copied, new tokens random-init)
-*   [ ] Rebuild `lm_head` to match new vocab size
-*   [ ] Validate forward pass stability post-transfer before training begins
-*   [ ] Train on multilingual corpus — monitor TTL routing heatmap for language-correlated expert specialization
-
-### Milestones
-*   [ ] Albert generates coherent text in ≥5 European languages
-*   [ ] TTL routing shows measurable language-correlated expert specialization (routing heatmap evidence)
-*   [ ] Perplexity competitive with v2.0.0 English baseline within 50 epochs of transfer training
-
----
-
-## Phase GPU — Ternary CUDA Backend
-
-*   [ ] Implement `ternary_gemv_dp4a` CUDA kernel — INT2-packed weights (`+1→01`, `0→00`, `-1→11`), 4 trits per byte, dp4a instruction
-*   [ ] Validate correctness vs CPU reference (max divergence < 1e-4)
-*   [ ] Benchmark on A100: confirm @sparseskip memory-bandwidth advantage (projected 8–15× over CPU)
-*   [ ] Wire into candle `CustomOp1` interface
-*   [ ] Enable v3.0 multilingual training on GPU (10–50× faster than current CPU run)
+### Pending
+*   [ ] 6th Net2Net surgery (17L→18L) — F9 plateau window = 144 epochs; fires when descent stalls
+*   [ ] Mycelial Cord activation (`--cord-surgery`) — diagnose width wall, then fire once manually
+*   [ ] WMMA INT8 kernel re-enable on next fresh training run
+*   [ ] Bias/fairness evaluation (WinoBias, BBQ, multilingual MMLU) — planned v3.1 milestone
 *   [ ] Element-level @sparseskip within active expert MLPs (next sparsity tier after expert-level skip)
+*   [ ] Hungarian + endangered language corpus integration
+
+---
+
+## Phase Hardware — European Silicon
 
 ---
 

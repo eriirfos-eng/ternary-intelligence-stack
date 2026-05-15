@@ -1,5 +1,7 @@
 # Albert-MoE-13: Capability Reality Report
 
+> **HISTORICAL ARTIFACT — 2026-05-03.** This report was written when albert. was a symbolic hash-dispatch system with no neural weights. It is preserved as a development record. albert. is now a fully neural ternary transformer (17L, ep1189+, epoch-ATL 10.1993). All findings in sections 1–6 below are superseded by the v3.0 run. See `docs/convergence_log.md` for current state.
+
 ## 1. System Decomposition
 *   **Computational Foundation (Real)**: Robust deterministic auditing, structured file-system management, and binary weight serialization handling.
 *   **Logic Layer (Symbolic)**: Input-to-scalar hashing mechanism, modular REPL infrastructure, and static response templates.

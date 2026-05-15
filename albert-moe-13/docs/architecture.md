@@ -34,9 +34,9 @@ expect from conventional monorepos.
 
 ## Overview
 
-Albert MoE-13 is a ternary-native transformer with Mixture-of-Experts feed-forward layers. Every weight matrix is quantized to {-1, 0, +1} during both forward and backward passes via Straight-Through Estimation. The architecture grows its own depth autonomously through the `EvolutionManager`, reaching maximum depth of 12 layers at Global Epoch 454.
+Albert MoE-13 is a ternary-native transformer with Mixture-of-Experts feed-forward layers. Every weight matrix is quantized to {-1, 0, +1} during both forward and backward passes via Straight-Through Estimation. The architecture grows its own depth autonomously through the `EvolutionManager`. Five autonomous surgeries carried it from 12L to 17L during the v3.0 run.
 
-**Current state (2026-05-10):** 256H · 12L · 4H · 12E · 128CTX · 8000V · Global Epoch 477+ · best loss 6.8821
+**Current state (2026-05-15):** 256H · 17L · 4H · 12E · 256CTX · 32kV · Global Epoch 1191+ · epoch-ATL 10.1993 (ep1189) · batch-ATL 10.1600 (ep1185)
 
 ---
 
@@ -63,7 +63,7 @@ The Straight-Through Estimator passes the gradient through the quantization step
 | 1 | 0.02 | Medium — learns phrase-level patterns |
 | 2+ | 0.03+ | Sparse — abstract representations, most weights zeroed |
 
-**TELE sparsity telemetry (confirmed at 12L):** L0 at 10.6% ternary weight sparsity, rising monotonically to L11 at 26.5%. Deeper layers accumulate more zero-weight trits, reinforcing `@sparseskip` efficiency at the layers where it matters most.
+**TELE sparsity telemetry (confirmed at 12L, structurally consistent through 17L):** L0 at 10.6% ternary weight sparsity, rising monotonically toward the deepest layers at ~26%+. Deeper layers accumulate more zero-weight trits, reinforcing `@sparseskip` efficiency at the layers where it matters most.
 
 **Gamma cache** — `mean(|w|)` is expensive on large weight matrices. It is recomputed only every 20 forward calls; weights change slowly enough that the cached value is mathematically equivalent.
 
@@ -115,7 +115,7 @@ States transition based on thresholds:
 
 **Anti-stagnation burst:** When all experts in a layer remain Orange for ≥100 consecutive steps, TTL forces a routing pattern of 3G + 3R for 30 steps, rotating via `burst_count × 7 mod 12`. The offset 7 is coprime to 12, ensuring every expert is visited across burst cycles before the pattern repeats.
 
-**Cycling reds (observed at 12L):** R-state experts migrate autonomously through cold layers (L2→L3→L5) over 2–3 epochs and self-resolve without intervention. Three such episodes observed during the 12L run; all resolved with dead=0.
+**Cycling reds (observed at 12L, stable through 17L):** R-state experts migrate autonomously through cold layers and self-resolve without intervention. Multiple episodes observed across the full run; all resolved with dead=0.
 
 **TLIGHT log format:** `TLIGHT ep=N layer=L [G:a,b,c O:d,e,f R:g,h,i]`
 
@@ -133,14 +133,14 @@ Experts whose pressure falls below threshold for ≥8 consecutive epochs are cla
 
 **MYCELIUM log format:** `MYCELIUM epoch=N dead=D blooming=B hot=LH cold=LC pressure=[p0,...,p11]`
 
-**Layer crystallization (confirmed at 12L):** Pressure gradient is structurally consistent:
-- L0–L3: `~0.00022` (nearly frozen — early layers have locked in stable feature representations)
-- L4–L7: `~0.002–0.006` (moderate activity)
-- L8–L11: `0.013–0.022` (hot — deepest layers continue active learning)
+**Layer crystallization (confirmed at 12L, extended through 17L):** Pressure gradient follows a consistent staircase pattern. At 17L:
+- L0–L3: nearly frozen (early layers have locked in stable feature representations)
+- L4–L9: moderate activity, gradual gradient increase
+- L10–L16: hot — deepest layers continue active learning (hot layer at L10 as of ep1185, structural)
 
 This internal differentiation — both in gradient flow and weight sparsity — emerged from training alone without architectural intervention.
 
-**Result over full 12L run:** `dead=0` in every epoch summary across 13+ monitored overnight epochs. All 12 experts remain alive and routing.
+**Result over full run:** `dead=0` maintained throughout. All 12 experts remain alive and routing across all 17 layers.
 
 ---
 
@@ -149,11 +149,11 @@ This internal differentiation — both in gradient flow and weight sparsity — 
 The `EvolutionManager` monitors epoch-average loss and triggers **Net2Net safe-copy surgery** when the model plateaus:
 
 ```
-history_len        = 10 epochs
-plateau_threshold  = 0.02   (< 2% improvement across 10 epochs → expand)
-mastery_threshold  = 4.5    (loss < 4.5 → model has mastered current capacity)
-divergence_threshold = 0.1  (loss rising → needs more capacity)
-max_layers         = 12     (hard cap — enforced on both plateau and COLLAPSE→SURGERY paths)
+plateau_threshold  = 0.02 nats span over plateau window (Fibonacci-gated)
+plateau_window     = Fibonacci sequence: F3=2, F4=3, ..., F9=144 (current: 144 epochs)
+fib_index          = 8 (F9 window), advances after each surgery
+mastery_threshold  = 8.4   (guards against surgery during vocab-transfer plateau)
+max_layers         = uncapped in v3.0 (governed by plateau gate + cord-surgery threshold)
 ```
 
 **Surgery procedure:**
@@ -163,7 +163,7 @@ max_layers         = 12     (hard cap — enforced on both plateau and COLLAPSE�
 
 **Corpus unlocking:** The EvolutionManager queries the current layer count at each surgery event and enables newly unlocked corpus stages automatically. Stage 6 (Gutenberg) unlocks at 6L; Stage 7 (Simple Wikipedia) at 7L. This couples architectural depth to corpus breadth.
 
-Albert grew from 3L to 12L across ten autonomous surgery events between Global Epoch ~200 and ~454.
+Albert grew from 3L to 12L across ten autonomous surgery events (v2.0.0 run), then 12L to 17L across five more surgeries in the v3.0 run (ep511, ep547, ep611, ep645, ep701). Growth continues — 17L→18L surgery pending the F9 plateau gate (144-epoch window).
 
 ---
 
@@ -187,12 +187,12 @@ for each global epoch (300 batches):
     update Mycelium pressure window
 ```
 
-**Learning rate** — cosine schedule over 500 global epochs:
+**Learning rate** — cosine schedule, reset per surgery phase:
 ```
 lr(t) = lr_min + 0.5 * (lr_max - lr_min) * (1 + cos(π * t / T))
-lr_max = 3e-4,  lr_min = 1e-5,  T = 500 global epochs
+lr_max = 3e-4,  lr_min = 1e-5,  T = 500 global epochs per phase
 ```
-At Global Epoch 477, the LR is effectively at floor (cosine near zero). Training completes at epoch 500.
+Training runs continuously past the cosine floor at Modal T4 GPU speeds (~450 ms/batch). The LR holds at the floor value (1e-5) in the post-500 phase; the schedule is not re-initialized between surgeries.
 
 ---
 
@@ -202,24 +202,27 @@ Stage-aware curriculum: `load_corpus()` reads `.txt` files from the active stage
 
 | Stage | Unlock | Corpus | Size |
 |-------|--------|--------|------|
-| 3 | 3L | King James Bible + Alice in Wonderland | ~4.3 MB |
-| 6 | 6L | + 12 Gutenberg classics (Dickens, Austen, Tolstoy, et al.) | ~7.8 MB |
-| 7 | 7L | + Simple English Wikipedia | ~8.0 MB |
+| 3 | 3L | King James Bible + Alice in Wonderland | ~4.6 MB |
+| 6 | 6L | 12 Gutenberg classics (Dickens, Austen, Tolstoy, et al.) | ~12.0 MB |
+| 7 | 7L | Simple English Wikipedia | ~9.9 MB |
+| 9 | 9L | QA instruction pairs (User:/Albert: format) | ~0.5 MB |
+| 10 | 16L | dev_blogs, github_bugs, hn_discussions, gourmet_recipes, repair_guides, trails_travel | ~varied |
+| 11 | 11L | Linux documentation, EU AI Act | ~0.4 MB |
 
-All three stages active at 12L. Total active corpus: ~20.1 MB / ~4M tokens.
-
-Training samples random 128-token windows from the concatenated token stream.
+All stages (3–10) active at 17L. Training samples random 256-token windows from the concatenated token stream.
 
 ### v3.0 Corpus Structure
 
-The v3.0 tokenizer training corpus adds three layers above the stage corpus:
+The v3.0 corpus (all stages active at 17L):
 
-| Layer | Directory | Content | Target size |
-|-------|-----------|---------|-------------|
-| Wikipedia base | `data/corpus/multilingual/` | Wikipedia dumps × 8 languages | ~446 MB |
-| Academic abstracts | `data/corpus/academic/` | arXiv, HAL, SciELO, Zenodo OAI-PMH | ~100 MB |
-| Full papers | `data/corpus/fulltext/` | ar5iv, PMC, PERSEE, HAL full text | ~160 MB |
-| **Chaos** | `data/corpus/chaos/` | Redacted, truncated, OCR-corrupted, unanswered questions, failed trades | ~30 MB |
+| Directory | Content | Actual size |
+|-----------|---------|-------------|
+| `data/multilingual/` | Wikipedia CC BY-SA + Europarl (EN/DE/FR/ES/PT/IT/NL/PL) | ~446 MB |
+| `data/academic/` | Academic texts | ~46 MB |
+| `data/fulltext/` | Gutenberg multilingual novels | ~68 MB |
+| `data/chaos/` | 10% chaos layer — OCR-corrupted, unanswered, mixed-language noise | ~43 MB |
+
+**Total v3.0 corpus: ~635 MB raw.**
 
 ### The 90/10 Invariant — Standing Team Rule
 
@@ -237,7 +240,7 @@ Rationale: A model trained exclusively on clean, resolved text acquires a danger
 
 ## 8. Dashboard Telemetry
 
-`dashboard/index.html` polls `dashboard/training.log` via HTTP byte-range requests every 1500ms. Each new batch produces one dot on the scatter plot. The dashboard tracks:
+`dashboard/index.html` polls `dashboard/training.log` via HTTP byte-range requests every 500ms (POLL_MS=500, tuned for Modal T4 ~450 ms/batch cadence). Each new batch produces one dot on the scatter plot. The dashboard tracks:
 
 - **Loss scatter** with drop animation for new dots
 - **SMA-30 trend line**

@@ -1,5 +1,7 @@
 # Ternary Compression & Weight Adaptation
 
+> **Current state (2026-05-15):** albert. v3.0 is a 17L ternary MoE trained natively from scratch via STE — not via post-training quantization. The adaptation pipeline described below applies to external models. albert.'s own weights are ternary throughout training; no quantization step is needed. Measured inference: 84.4 tok/s on HP ZBook i7-4800MQ (CPU-only) via @sparseskip + ternary weight cache + KV-cache.
+
 ## The Efficiency Challenge
 Large Language Models (LLMs) in the 20B–30B parameter range typically require 40GB–60GB of VRAM for inference (at 16-bit precision). This creates a "Memory Wall" that prevents local-first, sovereign deployment on standard hardware.
 
