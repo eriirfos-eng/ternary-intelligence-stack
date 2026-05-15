@@ -4818,7 +4818,7 @@
         // re-dispatching here forces the correct state after smaLog is populated.
         PREF_CBS.forEach(id => {
             const el = document.getElementById(id);
-            if (el && el.type === 'checkbox' && el.checked) el.dispatchEvent(new Event('change'));
+            if (el && el.type === 'checkbox') el.dispatchEvent(new Event('change'));
         });
         setInterval(poll, POLL_MS);
     });
