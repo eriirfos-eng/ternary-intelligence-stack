@@ -3777,6 +3777,13 @@
     }
 
     // ── Anomaly Event Feed ────────────────────────────────────────────
+    function persistEvents() {
+        try {
+            localStorage.setItem('albert_events',      JSON.stringify(anomalyEvents));
+            localStorage.setItem('albert_wald_events', JSON.stringify(waldEvents));
+        } catch(e) {}
+    }
+
     function addEvent(icon, text, level, detail, cx, cy, permanent) {
         const ts = new Date().toTimeString().slice(0, 8);
         anomalyEvents.unshift({ icon, text, level, ts, detail: detail || text,
@@ -3784,6 +3791,7 @@
             cy: cy !== undefined ? cy : null,
             permanent: !!permanent });
         if (!permanent && anomalyEvents.length > ANOMALY_MAX) anomalyEvents.pop();
+        persistEvents();
         scheduleAnomalyRender();   // debounced — coalesces rapid bursts into one RAF
         scheduleChartUpdate();     // debounced — avoids duplicate chart.update per poll
     }
@@ -3821,6 +3829,7 @@
                     hideTip();
                     const pos = anomalyEvents.indexOf(ev);
                     if (pos !== -1) anomalyEvents.splice(pos, 1);
+                    persistEvents();
                     renderAnomalyFeed();
                 });
                 pill.appendChild(close);
@@ -4499,6 +4508,21 @@
         });
         document.body.appendChild(banner);
     }
+
+    // Restore event feed and Wald markers from previous session before first render.
+    try {
+        const _ae = localStorage.getItem('albert_events');
+        if (_ae) { anomalyEvents = JSON.parse(_ae); scheduleAnomalyRender(); }
+        const _we = localStorage.getItem('albert_wald_events');
+        if (_we) {
+            waldEvents = JSON.parse(_we);
+            if (waldEvents.length) {
+                const _lw = waldEvents[waldEvents.length - 1];
+                lastWaldDeadLow  = _lw.dead_low  || '';
+                lastWaldDeadHigh = _lw.dead_high || '';
+            }
+        }
+    } catch(e) {}
 
     // Pre-seed smaLog (batch points) and epochLog in parallel before the poll loop.
     // batch_history.csv   — x,y per line; x = global_epoch + batch/300; ~2MB
