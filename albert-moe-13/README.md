@@ -52,7 +52,7 @@ The architecture combines:
 | LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-14):** Global Epoch 791+ · best loss **10.2199** (ep786) · 5 Net2Net surgeries complete (12L→17L) · descent rate ~0.015 nats/10 epochs · training on Modal T4 GPU (~400ms/batch)
+**Training state (2026-05-15):** Global Epoch 1189+ · epoch-ATL **10.1993** (ep1189, first sub-10.20) · batch-ATL **10.1600** (ep1185) · 5 Net2Net surgeries complete (12L→17L) · hot layer L10 · training on Modal T4 GPU (~450ms/batch)
 
 ---
 
@@ -67,7 +67,8 @@ The architecture combines:
 | TTL routing | `moe-llm-core/src/model/traffic_light.rs` | EMA utilization → trit states, anti-stagnation burst (burst_count × 7 mod 12 rotation) |
 | Expert seed biases | `moe-llm-core/src/model/moe.rs` | `expert_seeds: Vec<Tensor>` per MoeBlock — unique F32 bias per expert, vb-tracked |
 | WALD loss-space analysis | `moe-llm-core/src/wald.rs` | `WaldModule` — batch histogram, dead zone detection, severity → amplification scale; staleness detection disables amplification on plateau |
-| Auto-evolutionary scaling | `moe-llm-core/src/bin/train_bible.rs` | `EvolutionManager` — plateau detection, Net2Net surgery, layer expansion |
+| Auto-evolutionary scaling | `moe-llm-core/src/bin/train_bible.rs` | `EvolutionManager` — plateau detection, Net2Net surgery, Fibonacci-gated growth, entropy-based symmetry-break auto-detection |
+| SPORE federated training | `moe-llm-core/src/spore.rs` | `SporeManager` — scans collaborator spores, fitness gate, α=0.08 blend, ternary re-ternarization |
 | Benchmark suite | `moe-test/src/main.rs` | `run_bench_mode()` — speed + @sparseskip analysis + perplexity, CSV export |
 
 > **Note for auditors:** The training binary is at `moe-llm-core/src/bin/train_bible.rs`. The `moe-test` crate provides the interactive TUI and `--bench` / `--eval` modes.
@@ -155,13 +156,17 @@ albert-moe-13/
 │       │   ├── mlp.rs              # Expert MLP
 │       │   └── config.rs           # TransformerConfig
 │       ├── wald.rs                 # WALD loss-space coverage module
+│       ├── spore.rs                # SporeManager — federated weight blending
 │       └── tokenizer/              # BPE tokenizer
 ├── moe-test/
 │   └── src/main.rs                 # Interactive TUI + --bench + --eval modes
 ├── bench/
 │   └── install.sh                  # One-line benchmark installer (Linux + macOS)
 ├── train_modal.py                  # Modal GPU training app (setup / run / pull)
-├── albert-train                    # Local launcher — fires modal run + dashboard
+├── scripts/
+│   ├── setup_collaborator.sh       # One-line collaborator setup (gh auth + Rust + build + albert-spore)
+│   └── produce_spore.py            # Export checkpoint as spore, push to albert-spores repo
+├── albert-train                    # Local launcher — fires modal run + dashboard (--modal for GPU, CPU default)
 ├── albert-test                     # Local launcher — opens moe-test TUI
 ├── dashboard/
 │   ├── index.html                  # Live training dashboard
@@ -175,7 +180,7 @@ albert-moe-13/
 │   ├── chaos/                      # v3.0 — 10% chaos layer (~43 MB, invariant enforced)
 │   └── vocab_v3.json               # ByteLevel BPE vocabulary (32,000 tokens)
 ├── models/
-│   ├── albert_v3.0.safetensors     # Active checkpoint (v3.0, 12L)
+│   ├── albert_v3.0.safetensors     # Active checkpoint (v3.0, 17L)
 │   ├── albert_v3.0.config.json     # Architecture config
 │   ├── albert_v3.0.meta            # Global epoch counter
 │   └── README.md                   # Checkpoint registry
@@ -183,6 +188,7 @@ albert-moe-13/
 │   └── moe-platform/               # Inference runtime API
 └── docs/
     ├── architecture.md
+    ├── SPORE_PROTOCOL.md           # Federated weight sharing protocol
     ├── ternary-compression.md
     └── roadmap.md
 ```
@@ -199,6 +205,7 @@ Albert automatically unlocks richer training data as it grows deeper via Net2Net
 | `data/corpus/stage_6/` | 6L | Gutenberg novels | Complex narrative, wider vocabulary |
 | `data/corpus/stage_7/` | 7L | Simple Wikipedia | Factual, diverse topics |
 | `data/corpus/stage_9/` | 9L | `qa_instruction.txt` | `User:/Albert:` instruction format |
+| `data/corpus/stage_10/` | 16L | dev_blogs, github_bugs, hn_discussions, gourmet_recipes, repair_guides, trails_travel | Real-world diverse internet text |
 | `data/corpus/stage_11/` | 11L | Linux docs, EU AI Act | Technical and specialized language |
 
 **v3.0 corpus (all stages active):**
@@ -221,9 +228,10 @@ Albert automatically unlocks richer training data as it grows deeper via Net2Net
 | 256H · 4L | CPU (i7-4800MQ) | ~4.5 s |
 | 256H · 5L | CPU (i7-4800MQ) | ~5.5 s |
 | 256H · 12L | CPU (i7-4800MQ) | ~13 s |
-| 256H · 12L (current) | Modal T4 GPU | ~400 ms |
+| 256H · 17L | CPU (i7-4800MQ) | ~18 s |
+| 256H · 17L (current) | Modal T4 GPU | ~450 ms |
 
-T4 GPU training via Modal gives ~32× speedup over CPU for the 12L architecture. `albert-train` handles the full launch: image build with CUDA, volume-cached crate downloads, live log streaming to local dashboard.
+T4 GPU training via Modal gives ~40× speedup over CPU for the 17L architecture. `albert-train` handles the full launch: image build with CUDA, volume-cached crate downloads, live log streaming to local dashboard.
 
 ---
 
