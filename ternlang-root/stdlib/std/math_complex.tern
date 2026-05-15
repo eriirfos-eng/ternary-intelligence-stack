@@ -1,0 +1,95 @@
+// Complex number utilities using float[] tensors
+// [0] = real part, [1] = imaginary part
+
+fn sqrt_approx(x: float) -> float {
+    if (x <= 0.0) {
+        return 0.0;
+    }
+    let z: float = x;
+    let y: float = (z + 1.0) / 2.0;
+    let i: int = 0;
+    while (i < 10) {
+        z = y;
+        y = (z + x / z) / 2.0;
+        i = i + 1;
+    }
+    return y;
+}
+
+fn complex_add(a: float[], b: float[], out: float[]) -> trit {
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    return 1;
+}
+
+fn complex_sub(a: float[], b: float[], out: float[]) -> trit {
+    out[0] = a[0] - b[0];
+    out[1] = a[1] - b[1];
+    return 1;
+}
+
+fn complex_mul(a: float[], b: float[], out: float[]) -> trit {
+    let r: float = a[0] * b[0] - a[1] * b[1];
+    let i: float = a[0] * b[1] + a[1] * b[0];
+    out[0] = r;
+    out[1] = i;
+    return 1;
+}
+
+fn complex_abs(a: float[]) -> float {
+    return sqrt_approx(a[0] * a[0] + a[1] * a[1]);
+}
+
+fn main() -> trit {
+    let c1: float[2];
+    c1[0] = 3.0;
+    c1[1] = 4.0;
+    
+    let c2: float[2];
+    c2[0] = 1.0;
+    c2[1] = 2.0;
+    
+    let res: float[2];
+    
+    complex_add(c1, c2, res);
+    print("Sum: ");
+    print(res[0]);
+    print(" + ");
+    print(res[1]);
+    print("i\n");
+    
+    complex_sub(c1, c2, res);
+    print("Diff: ");
+    print(res[0]);
+    print(" + ");
+    print(res[1]);
+    print("i\n");
+    
+    complex_mul(c1, c2, res);
+    print("Prod: ");
+    print(res[0]);
+    print(" + ");
+    print(res[1]);
+    print("i\n");
+    
+    let mag: float = complex_abs(c1);
+    print("Magnitude of c1: ");
+    print(mag);
+    print("\n");
+    
+    // Test match logic
+    match (mag > 4.5) {
+        1 => {
+            print("Magnitude is high (affirm)\n");
+            return 1;
+        }
+        0 => {
+            print("Magnitude is neutral (tend)\n");
+            return 0;
+        }
+        -1 => {
+            print("Magnitude is low (reject)\n");
+            return -1;
+        }
+    }
+}
