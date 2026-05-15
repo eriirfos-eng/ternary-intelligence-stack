@@ -1,18 +1,27 @@
-// ternary_gemm.cu — ternary weight quantisation + WMMA INT8 GEMM
+// ternary_gemm.cu — ternary weight quantisation + fused WMMA INT8 GEMM
 //
-// ternary_quantize:     f32 {-γ,0,+γ} → int8 {-1,0,+1}  (sparse-cache path)
-// ternary_gemm_forward: X_f32[M,K] × W_i8[N,K]^T → Y_f32[M,N]
+// ternary_quantize:          f32 {-γ,0,+γ} → int8 {-1,0,+1}  (sparse-cache path)
+// wmma_int8_fused_kernel:    single-kernel path — fuses quantize_x + WMMA + dequantize
+// ternary_gemm_forward:      public entry point (calls fused kernel)
 //
-//   Step 1: per-row abs-max quantise X_f32 → X_i8, store per-row scale
-//   Step 2: WMMA INT8 GEMM (16×16×16 tiles, SM7.2+)  Y_i32 = X_i8 @ W_i8^T
-//   Step 3: dequantise  Y_f32[m,n] = Y_i32[m,n] * x_scale[m] * gamma
+// Fused kernel per-block (one warp = 32 threads, one [16×16] output tile):
+//   Shared memory layout  (20KB per block, well within T4's 64KB/SM):
+//     [0, 16KB)   Xf  — X tile as float32   [WMMA_M=16][K=256]
+//     [16KB, 20KB) Xi — X tile as int8      [WMMA_M=16][K=256]
 //
-// W is stored [N,K] row-major; treated as [K,N] col-major in WMMA (= W^T).
-// K=256, N=256 for albert. — both are tile-aligned (256 % 16 == 0).
-// M is padded to ×16 in ternary_gemm_forward before the kernel is launched.
+//   1. Load X_f32 tile from global → Xf smem  (1 global read, no write)
+//   2. Warp-shuffle per-row abs-max → scale[16] in registers (all threads identical)
+//   3. Quantise Xf → Xi in smem                (smem only, no global write)
+//   4. K-loop WMMA:  a_frag ← Xi smem          (smem read, fast)
+//                    b_frag ← W_i8 global       (one read, already int8)
+//                    mma_sync accumulate
+//   5. Store int32 accumulator to Xf smem (reused), dequantise → Y_f32 global  (1 write)
 //
-// Tile shape: 16×16×16 (INT8, SM7.2+).  8×8×32 is sub-int8 (INT4) — wrong shape
-// for signed char and the root cause of the earlier "incomplete type" errors.
+// Eliminates vs the previous 3-kernel pipeline:
+//   - M*K global write + read for X_i8
+//   - M*N global write + read for Y_i32
+//   - M global write + read for per-row scales
+//   - 2 extra kernel launches
 
 #include <cuda_runtime.h>
 #include <mma.h>
@@ -20,107 +29,12 @@
 
 using namespace nvcuda;
 
-// ---------------------------------------------------------------------------
-// Tile constants for WMMA 16×16×16 INT8 (SM7.2+)
-// ---------------------------------------------------------------------------
 #define WMMA_M 16
 #define WMMA_N 16
 #define WMMA_K 16
 
 // ---------------------------------------------------------------------------
-// Kernel 1: per-row abs-max quantise X_f32 → X_i8, store inverse scale
-// ---------------------------------------------------------------------------
-__global__ void quantize_x_kernel(
-    const float*  __restrict__ x_f32,  // [M, K]
-    signed char*  __restrict__ x_i8,   // [M, K]
-    float*        __restrict__ scales, // [M]  (= amax / 127 — dequant multiplier)
-    int M, int K
-) {
-    int row = blockIdx.x * blockDim.x + threadIdx.x;
-    if (row >= M) return;
-
-    const float* src = x_f32 + row * K;
-    signed char* dst = x_i8  + row * K;
-
-    float amax = 0.f;
-    for (int k = 0; k < K; ++k) {
-        float v = src[k];
-        if (v < 0.f) v = -v;
-        if (v > amax) amax = v;
-    }
-
-    float inv_scale = (amax > 0.f) ? (127.f / amax) : 1.f;
-    scales[row] = (amax > 0.f) ? (amax / 127.f) : 1.f;
-
-    for (int k = 0; k < K; ++k) {
-        float q = src[k] * inv_scale;
-        // clamp and round
-        if      (q >  127.f) q =  127.f;
-        else if (q < -127.f) q = -127.f;
-        dst[k] = (signed char)__float2int_rn(q);
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Kernel 2: WMMA INT8 GEMM — Y_i32[M,N] = X_i8[M,K] @ W_i8[N,K]^T
-//
-// Each block = one warp (32 threads) = one [WMMA_M × WMMA_N] output tile.
-// Grid: (ceil(N/WMMA_N), ceil(M/WMMA_M))   — M must be padded to × WMMA_M.
-//
-// W is [N,K] row-major.  WMMA col_major matrix_b interprets a [K,N] memory
-// layout as col-major, where element [k,n] lives at ptr[n*K + k].
-// W[n,k] = w_ptr[n*K + k] — same address — so W can be read directly as
-// a col-major B fragment without transposing.
-// ---------------------------------------------------------------------------
-__global__ void wmma_int8_gemm_kernel(
-    const signed char* __restrict__ X,  // [M_pad, K]
-    const signed char* __restrict__ W,  // [N,     K]
-    int*               __restrict__ Y,  // [M_pad, N]
-    int M_pad, int N, int K
-) {
-    int tile_m = blockIdx.y;
-    int tile_n = blockIdx.x;
-
-    wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, int> c_frag;
-    wmma::fill_fragment(c_frag, 0);
-
-    for (int k = 0; k < K; k += WMMA_K) {
-        wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, signed char, wmma::row_major> a_frag;
-        wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, signed char, wmma::col_major> b_frag;
-
-        // A tile: X[tile_m*16 : +16, k : k+16], stride = K
-        wmma::load_matrix_sync(a_frag, X + tile_m * WMMA_M * K + k, K);
-
-        // B tile (col_major W^T): W[tile_n*16 : +16, k : k+16], stride = K
-        wmma::load_matrix_sync(b_frag, W + tile_n * WMMA_N * K + k, K);
-
-        wmma::mma_sync(c_frag, a_frag, b_frag, c_frag);
-    }
-
-    wmma::store_matrix_sync(Y + tile_m * WMMA_M * N + tile_n * WMMA_N, c_frag, N,
-                            wmma::mem_row_major);
-}
-
-// ---------------------------------------------------------------------------
-// Kernel 3: dequantise — Y_f32[m,n] = Y_i32[m,n] * x_scale[m] * gamma
-// ---------------------------------------------------------------------------
-__global__ void dequantize_kernel(
-    const int*   __restrict__ y_i32,   // [M_pad, N]
-    const float* __restrict__ x_scale, // [M]
-    float*       __restrict__ y_f32,   // [M, N]
-    int M, int N, int M_pad,
-    float gamma
-) {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= M * N) return;
-    int m = idx / N;
-    int n = idx % N;
-    y_f32[idx] = (float)y_i32[m * N + n] * x_scale[m] * gamma;
-    (void)M_pad;
-}
-
-// ---------------------------------------------------------------------------
-// quantize_kernel — kept for the sparse-cache path (unchanged)
+// ternary_quantize — sign-only quantise for sparse-cache path (unchanged)
 // ---------------------------------------------------------------------------
 __global__ void quantize_kernel(const float* w_f32, signed char* w_i8, int size) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -130,67 +44,147 @@ __global__ void quantize_kernel(const float* w_f32, signed char* w_i8, int size)
 }
 
 // ---------------------------------------------------------------------------
+// wmma_int8_fused_kernel
+//
+// Grid  : (N/WMMA_N, M_pad/WMMA_M)   — one block per [16×16] output tile
+// Block : 32 threads (one warp)
+// Smem  : WMMA_M * K * (sizeof(float) + sizeof(signed char))  = 20KB for K=256
+//
+// W_i8 is [N, K] row-major and is treated as [K, N] col-major in WMMA (= W^T).
+// K and N must both be multiples of 16.  M is padded to a multiple of 16 by the
+// caller (extra rows zeroed → contribute zero to the output, safe to ignore).
+// ---------------------------------------------------------------------------
+__global__ void wmma_int8_fused_kernel(
+    const float*       __restrict__ X_f32,  // [M_pad, K]  f32  input
+    const signed char* __restrict__ W_i8,   // [N,     K]  i8   ternary {-1,0,+1}
+    float*             __restrict__ Y_f32,  // [M,     N]  f32  output
+    int M, int N, int K,
+    float gamma
+) {
+    const int tile_m = blockIdx.y;
+    const int tile_n = blockIdx.x;
+    const int tid    = threadIdx.x;  // 0..31
+
+    extern __shared__ char smem[];
+    float*       Xf = (float*)smem;                      // [WMMA_M][K] f32
+    signed char* Xi = (signed char*)(Xf + WMMA_M * K);  // [WMMA_M][K] i8
+
+    // -----------------------------------------------------------------------
+    // 1. Load X_f32 tile into shared memory.
+    //    Each thread covers K/32 consecutive columns for all WMMA_M rows.
+    //    Rows where global_row >= M are zeroed (padding guard).
+    // -----------------------------------------------------------------------
+    const int CPT = K / 32;  // columns per thread — 8 for K=256
+    for (int row = 0; row < WMMA_M; ++row) {
+        int grow = tile_m * WMMA_M + row;
+        for (int c = 0; c < CPT; ++c) {
+            int col = tid * CPT + c;
+            Xf[row * K + col] = (grow < M) ? X_f32[grow * K + col] : 0.f;
+        }
+    }
+    __syncwarp();
+
+    // -----------------------------------------------------------------------
+    // 2. Per-row abs-max → quantisation scales.
+    //    Each thread computes a partial max over its CPT columns, then a
+    //    warp-level __shfl_xor_sync all-reduce gives every thread the global
+    //    per-row max.  Result: row_scale[row] and row_dequant[row] in regs.
+    // -----------------------------------------------------------------------
+    float row_scale[WMMA_M], row_dequant[WMMA_M];
+    for (int row = 0; row < WMMA_M; ++row) {
+        float lmax = 0.f;
+        for (int c = 0; c < CPT; ++c)
+            lmax = fmaxf(lmax, fabsf(Xf[row * K + tid * CPT + c]));
+        for (int mask = 16; mask > 0; mask >>= 1)
+            lmax = fmaxf(lmax, __shfl_xor_sync(0xffffffffu, lmax, mask));
+        row_scale[row]   = (lmax > 0.f) ? (127.f / lmax) : 1.f;
+        row_dequant[row] = (lmax > 0.f) ? (lmax / 127.f) : 1.f;
+    }
+
+    // -----------------------------------------------------------------------
+    // 3. Quantise Xf → Xi (smem only — no global traffic).
+    // -----------------------------------------------------------------------
+    for (int row = 0; row < WMMA_M; ++row) {
+        for (int c = 0; c < CPT; ++c) {
+            int col = tid * CPT + c;
+            float q = Xf[row * K + col] * row_scale[row];
+            Xi[row * K + col] = (signed char)__float2int_rn(fmaxf(-127.f, fminf(127.f, q)));
+        }
+    }
+    __syncwarp();
+
+    // -----------------------------------------------------------------------
+    // 4. WMMA INT8 16×16×16 accumulation over K.
+    //    A = Xi (smem, row-major):     X_i8[tile_m*16 : +16, k : k+16]
+    //    B = W_i8 (global, col-major): W_i8[tile_n*16 : +16, k : k+16]
+    //    C = int32 accumulator [WMMA_M × WMMA_N]
+    // -----------------------------------------------------------------------
+    wmma::fragment<wmma::accumulator, WMMA_M, WMMA_N, WMMA_K, int> c_frag;
+    wmma::fill_fragment(c_frag, 0);
+
+    for (int k = 0; k < K; k += WMMA_K) {
+        wmma::fragment<wmma::matrix_a, WMMA_M, WMMA_N, WMMA_K, signed char, wmma::row_major> a_frag;
+        wmma::fragment<wmma::matrix_b, WMMA_M, WMMA_N, WMMA_K, signed char, wmma::col_major> b_frag;
+        wmma::load_matrix_sync(a_frag, Xi + k,                          K);  // smem, stride=K
+        wmma::load_matrix_sync(b_frag, W_i8 + tile_n * WMMA_N * K + k, K);  // global, stride=K
+        wmma::mma_sync(c_frag, a_frag, b_frag, c_frag);
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. Store int32 accumulator → reused Xf smem, then dequantise → Y_f32.
+    //    Xf is 16KB; the accumulator is 16×16×4 = 1KB — safe to alias.
+    //    Each thread writes WMMA_M*WMMA_N/32 = 8 output elements.
+    // -----------------------------------------------------------------------
+    int* Ys = (int*)Xf;
+    wmma::store_matrix_sync(Ys, c_frag, WMMA_N, wmma::mem_row_major);
+    __syncwarp();
+
+    for (int i = 0; i < WMMA_M * WMMA_N / 32; ++i) {
+        int idx  = tid + i * 32;
+        int row  = idx / WMMA_N;
+        int col  = idx % WMMA_N;
+        int grow = tile_m * WMMA_M + row;
+        int gcol = tile_n * WMMA_N + col;
+        if (grow < M && gcol < N)
+            Y_f32[grow * N + gcol] = (float)Ys[idx] * row_dequant[row] * gamma;
+    }
+}
+
+// ---------------------------------------------------------------------------
 // C API
 // ---------------------------------------------------------------------------
 extern "C" {
 
 void ternary_quantize(uint64_t w_f32, uint64_t w_i8, int size, cudaStream_t stream) {
-    int threads = 256, blocks = (size + 255) / 256;
-    quantize_kernel<<<blocks, threads, 0, stream>>>(
+    quantize_kernel<<<(size + 255) / 256, 256, 0, stream>>>(
         (const float*)w_f32, (signed char*)w_i8, size);
 }
 
-// x_i8_buf:   caller-allocated [M_pad * K] int8  scratch
-// scales_buf: caller-allocated [M]         f32   scratch
-// y_i32_buf:  caller-allocated [M_pad * N] int32 scratch
-// M_pad:      M rounded up to next multiple of WMMA_M (16) — caller must pass this
-//             and allocate buffers accordingly.  y_f32 is [M * N] (not padded).
+// Scratch buffers (x_i8_buf, scales_buf, y_i32_buf) were used by the old
+// 3-kernel pipeline and are still allocated by cuda_kernel.rs.  The fused
+// kernel uses smem instead so they are ignored here.
 void ternary_gemm_forward(
     uint64_t x_f32,      // [M,     K] f32  input activations
     uint64_t w_i8,       // [N,     K] i8   ternary weights {-1,0,+1}
     uint64_t y_f32,      // [M,     N] f32  output
-    uint64_t x_i8_buf,   // [M_pad, K] i8   scratch: quantised X
-    uint64_t scales_buf, // [M]        f32  scratch: per-row dequant scale
-    uint64_t y_i32_buf,  // [M_pad, N] i32  scratch: WMMA accumulator output
+    uint64_t x_i8_buf,   // unused (kept for ABI compatibility)
+    uint64_t scales_buf, // unused
+    uint64_t y_i32_buf,  // unused
     int M, int N, int K, float gamma, cudaStream_t stream
 ) {
+    (void)x_i8_buf; (void)scales_buf; (void)y_i32_buf;
+
     int M_pad = ((M + WMMA_M - 1) / WMMA_M) * WMMA_M;
 
-    // Step 1: per-row quantise X_f32 → X_i8
-    // Zero the padding rows so WMMA reads 0 for any m in [M, M_pad).
-    if (M_pad > M) {
-        cudaMemsetAsync((signed char*)x_i8_buf + M * K, 0,
-                        (size_t)(M_pad - M) * K, stream);
-    }
-    {
-        int threads = 128, blocks = (M + 127) / 128;
-        quantize_x_kernel<<<blocks, threads, 0, stream>>>(
-            (const float*)x_f32,
-            (signed char*)x_i8_buf,
-            (float*)scales_buf,
-            M, K);
-    }
+    // smem: Xf [WMMA_M][K] f32 + Xi [WMMA_M][K] i8
+    size_t smem_bytes = (size_t)WMMA_M * K * (sizeof(float) + sizeof(signed char));
 
-    // Step 2: WMMA INT8 GEMM
-    {
-        dim3 grid(N / WMMA_N, M_pad / WMMA_M);
-        wmma_int8_gemm_kernel<<<grid, 32, 0, stream>>>(
-            (const signed char*)x_i8_buf,
-            (const signed char*)w_i8,
-            (int*)y_i32_buf,
-            M_pad, N, K);
-    }
-
-    // Step 3: dequantise
-    {
-        int total = M * N;
-        int threads = 256, blocks = (total + 255) / 256;
-        dequantize_kernel<<<blocks, threads, 0, stream>>>(
-            (const int*)y_i32_buf,
-            (const float*)scales_buf,
-            (float*)y_f32,
-            M, N, M_pad, gamma);
-    }
+    dim3 grid(N / WMMA_N, M_pad / WMMA_M);
+    wmma_int8_fused_kernel<<<grid, 32, smem_bytes, stream>>>(
+        (const float*)x_f32,
+        (const signed char*)w_i8,
+        (float*)y_f32,
+        M, N, K, gamma);
 }
 
 } // extern "C"
