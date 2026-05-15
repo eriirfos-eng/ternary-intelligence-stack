@@ -5128,13 +5128,14 @@
         waldToggleBtn.style.color = waldVisible ? '#4ade80' : '#374151';
         waldToggleBtn.style.opacity = waldVisible ? '1' : '0.45';
         waldToggleBtn.title = waldVisible ? 'WALD markers ON — click to hide' : 'WALD markers OFF — click to show';
-        chart.update('none');
     }
     applyWaldToggleUI();
     waldToggleBtn.addEventListener('click', () => {
         waldVisible = !waldVisible;
         localStorage.setItem('waldVisible', waldVisible ? '1' : '0');
         applyWaldToggleUI();
+        // Force a full canvas repaint so afterDraw re-runs with the new waldVisible state
+        requestAnimationFrame(() => chart.render());
     });
 
     // Hook sounds + notifications into addEvent
