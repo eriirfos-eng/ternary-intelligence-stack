@@ -5,6 +5,7 @@ albert-train — one command to start GPU training + local dashboard
   albert-train                # start Modal GPU training, open dashboard
   albert-train --no-browser   # same, skip opening Firefox
   albert-train --detach       # Modal detached mode (survives terminal close)
+  albert-train --local        # CPU-only local training (no Modal, no CUDA)
   albert-train pull           # pull latest checkpoint from Modal volume
 """
 
@@ -15,6 +16,7 @@ LOG           = os.path.join(HERE, "dashboard", "training.log")
 BATCH_HISTORY = os.path.join(HERE, "dashboard", "batch_history.csv")
 DASH_SRV      = os.path.join(HERE, "dashboard", "run_server.py")
 MODAL_PY      = os.path.join(HERE, "train_modal.py")
+CARGO         = os.path.expanduser("~/.cargo/bin/cargo")
 
 BATCHES_PER_EPOCH = 300
 _BATCH_RE = re.compile(r'Epoch\s+\d+\s+\(Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)')
@@ -32,7 +34,71 @@ if len(sys.argv) > 1 and sys.argv[1] == "pull":
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("--no-browser", action="store_true")
 parser.add_argument("--detach",     action="store_true")
+parser.add_argument("--local",      action="store_true",
+                    help="CPU-only local training: build without cuda, run against local data/models")
 args, _ = parser.parse_known_args()
+
+# ---------------------------------------------------------------------------
+# --local: CPU-only training without Modal
+# ---------------------------------------------------------------------------
+if args.local:
+    print("[albert-train] LOCAL mode — building train_bible (no cuda feature) ...")
+    build = subprocess.run(
+        [CARGO, "build", "--release", "--bin", "train_bible"],
+        cwd=os.path.join(HERE, "moe-llm-core"),
+        env={**os.environ, "CARGO_TERM_COLOR": "never"},
+    )
+    if build.returncode != 0:
+        print("[albert-train] build failed", file=sys.stderr)
+        sys.exit(1)
+
+    binary = os.path.join(HERE, "moe-llm-core", "target", "release", "train_bible")
+    cmd = [binary, f"--root={HERE}", "--gate-diversity=0.5", "--lb-weight=0.03", "--div-weight=0.001"]
+    print(f"[albert-train] {' '.join(cmd)}")
+
+    # Start dashboard
+    dash_proc = subprocess.Popen(
+        [sys.executable, DASH_SRV],
+        cwd=os.path.join(HERE, "dashboard"),
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+    time.sleep(0.5)
+    if not args.no_browser:
+        for browser in ("firefox", "xdg-open", "open"):
+            if shutil.which(browser):
+                subprocess.Popen([browser, "http://localhost:8888"],
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                break
+
+    log_f        = open(LOG,           "w")
+    batch_hist_f = open(BATCH_HISTORY, "a")
+
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             text=True, bufsize=1)
+
+    def _stream_local():
+        for line in proc.stdout:
+            sys.stdout.write(line); sys.stdout.flush()
+            log_f.write(line); log_f.flush()
+            m = _BATCH_RE.match(line.strip())
+            if m:
+                x = int(m.group(1)) + int(m.group(2)) / BATCHES_PER_EPOCH
+                batch_hist_f.write(f"{x:.6f},{m.group(3)}\n"); batch_hist_f.flush()
+
+    def _sigint(sig, frame):
+        print("\n[albert-train] stopping local training ...")
+        proc.send_signal(signal.SIGINT)
+
+    signal.signal(signal.SIGINT, _sigint)
+    threading.Thread(target=_stream_local, daemon=True).start()
+    proc.wait()
+    log_f.close(); batch_hist_f.close()
+    print("[albert-train] local run ended. Dashboard still at http://localhost:8888")
+    try:
+        dash_proc.wait()
+    except KeyboardInterrupt:
+        dash_proc.terminate()
+    sys.exit(0)
 
 # ---------------------------------------------------------------------------
 # start dashboard server
