@@ -1,0 +1,38 @@
+// stdlib/lib/bitwise_trit_ops_v2.tern
+// Optimized arithmetic-based bitwise simulation for ternary systems.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+fn bit_and(a: int, b: int) -> int {
+    // Arithmetic AND using power of 2 decomposition
+    let res: int = 0;
+    let bit: int = 1;
+    let i: int = 0;
+    while i < 31 {
+        if (a / bit) % 2 == 1 {
+            if (b / bit) % 2 == 1 {
+                res = res + bit;
+            }
+        }
+        bit = bit * 2;
+        i = i + 1;
+    }
+    return res;
+}
+
+fn main() -> trit {
+    println("Testing Bitwise AND v2...");
+    
+    let a: int = 6;  // 110
+    let b: int = 3;  // 011
+    
+    let res: int = bit_and(a, b); // Expect 2 (010)
+    print("Result (exp 2): "); println(cast<int>(res));
+    
+    if res == 2 {
+        println("Bitwise AND v2 test: PASSED");
+        return affirm;
+    }
+    
+    println("Bitwise AND v2 test: FAILED");
+    return reject;
+}
