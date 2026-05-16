@@ -1,0 +1,27 @@
+// Industrial-grade statistical library for Ternary Intelligence Stack
+// Provides robust utilities for central tendency analysis.
+
+fn mean(data: int[], len: int) -> float {
+    let sum: int = 0;
+    let i: int = 0;
+    while (i < len) {
+        sum = sum + data[i];
+        i = i + 1;
+    }
+    return cast<float>(sum) / cast<float>(len);
+}
+
+fn main() -> trit {
+    let data: int[3] = 0;
+    data[0] = 10;
+    data[1] = 20;
+    data[2] = 30;
+    
+    let avg: float = mean(data, 3);
+    
+    // Validate mean is 20.0
+    if (avg == 20.0) {
+        return affirm;
+    }
+    return reject;
+}
