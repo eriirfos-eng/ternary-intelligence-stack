@@ -1,0 +1,23 @@
+fn main() -> trit {
+    let arr: int[4] = 0;
+    arr[0] = 5;
+    arr[1] = 2;
+    arr[2] = 8;
+    arr[3] = 4;
+    let min_val: int = 100;
+    let max_val: int = -100;
+    let i: int = 0;
+    while i < 4 {
+        if arr[i] < min_val {
+            min_val = arr[i];
+        }
+        if arr[i] > max_val {
+            max_val = arr[i];
+        }
+        i = i + 1;
+    }
+    if min_val == 2 && max_val == 8 {
+        return 1;
+    }
+    return -1;
+}
