@@ -968,7 +968,9 @@
         wald: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="12" height="12"><circle cx="6" cy="5.5" r="3.8"/><line x1="6" y1="3.5" x2="6" y2="5.8"/><circle cx="6" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg>`,
     };
 
-    const POLL_MS            = 500;   // T4: ~400ms/batch — one poll per batch
+    // URL params: ?poll_ms=2000 for CPU (default 500 for T4), ?stale_s=120 for CPU (default 30)
+    const _qp               = new URLSearchParams(window.location.search);
+    const POLL_MS            = _qp.has('poll_ms') ? Math.max(200, parseInt(_qp.get('poll_ms'))) : 500;
     const MAX_CHART_PTS      = 5000;
     const INITIAL_WINDOW_BYTES = 512 * 1024; // snap to last 512KB on first load
 
@@ -5187,10 +5189,11 @@
     // (Surgery and Best are the only two that warrant sound; others are UI-only.)
 
     // ── Stream watchdog ────────────────────────────────────────────────
-    // Checks every second whether new data arrived in the last 30s.
+    // Checks every second whether new data arrived in the last STALE_MS.
     // Flips the STREAM pill red + flaring when silent, green when live.
-    // Also pulses the GRAD panel border when no GRAD lines arrive for 30s.
-    const STALE_MS  = 30_000;
+    // Also pulses the GRAD panel border when no GRAD lines arrive for STALE_MS.
+    // Override via ?stale_s=120 for CPU training (default 30s for T4).
+    const STALE_MS  = _qp.has('stale_s') ? Math.max(10, parseInt(_qp.get('stale_s'))) * 1000 : 30_000;
     const dingirEl    = document.getElementById('dingir');
     const modelNameEl = document.getElementById('model-name');
 

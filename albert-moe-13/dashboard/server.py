@@ -39,6 +39,20 @@ class RangeAwareHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 return None
         if not clean_path.endswith('training.log'):
+            # Force revalidation for index.html — prevents browser from serving stale builds.
+            if clean_path in ('/', '/index.html', ''):
+                full_path = os.path.join(DIRECTORY, 'index.html')
+                try:
+                    f = open(full_path, 'rb')
+                    size = os.path.getsize(full_path)
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html; charset=utf-8')
+                    self.send_header('Content-Length', str(size))
+                    self.send_header('Cache-Control', 'no-cache, must-revalidate')
+                    self.end_headers()
+                    return f
+                except OSError:
+                    pass  # fall through to default handler
             return super().send_head()
 
         range_header = self.headers.get('Range', '')
