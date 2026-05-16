@@ -2,7 +2,7 @@
 // Double-ended queue using circular buffer with array-based state.
 // RFI-IRFOS · PUBLIC repo · v1.0
 
-fn push_back(data: int[], front: int[], rear: int[], count: int[], val: int) -> int {
+fn push_back(data: int[], rear: int[], count: int[], val: int) -> trit {
     let r: int = rear[0];
     let c: int = count[0];
     let cap: int = 32;
@@ -11,12 +11,12 @@ fn push_back(data: int[], front: int[], rear: int[], count: int[], val: int) -> 
         data[r] = val;
         rear[0] = (r + 1) % cap;
         count[0] = c + 1;
-        return 1;
+        return affirm;
     }
-    return -1;
+    return reject;
 }
 
-fn push_front(data: int[], front: int[], rear: int[], count: int[], val: int) -> int {
+fn push_front(data: int[], front: int[], count: int[], val: int) -> trit {
     let f: int = front[0];
     let c: int = count[0];
     let cap: int = 32;
@@ -25,12 +25,12 @@ fn push_front(data: int[], front: int[], rear: int[], count: int[], val: int) ->
         front[0] = (f - 1 + cap) % cap;
         data[front[0]] = val;
         count[0] = c + 1;
-        return 1;
+        return affirm;
     }
-    return -1;
+    return reject;
 }
 
-fn pop_front(data: int[], front: int[], rear: int[], count: int[]) -> int {
+fn pop_front(data: int[], front: int[], count: int[]) -> int {
     let f: int = front[0];
     let c: int = count[0];
     let cap: int = 32;
@@ -45,26 +45,24 @@ fn pop_front(data: int[], front: int[], rear: int[], count: int[]) -> int {
 }
 
 fn main() -> trit {
-    let data: int[32] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-    let front: int[1] = [0];
-    let rear: int[1] = [0];
-    let count: int[1] = [0];
+    let data: int[32] = 0;
+    let front: int[1] = 0;
+    let rear: int[1] = 0;
+    let count: int[1] = 0;
     
     println("Testing Deque...");
     
-    push_back(data, front, rear, count, 5);
-    push_back(data, front, rear, count, 10);
-    push_front(data, front, rear, count, 1);
+    push_back(data, rear, count, 5);
+    push_back(data, rear, count, 10);
+    push_front(data, front, count, 1);
     
-    // Expected order: 1, 5, 10
+    let v1: int = pop_front(data, front, count);
+    let v2: int = pop_front(data, front, count);
+    let v3: int = pop_front(data, front, count);
     
-    let v1: int = pop_front(data, front, rear, count);
-    let v2: int = pop_front(data, front, rear, count);
-    let v3: int = pop_front(data, front, rear, count);
-    
-    print("Pop Front 1 (exp 1):  "); println(v1);
-    print("Pop Front 2 (exp 5):  "); println(v2);
-    print("Pop Front 3 (exp 10): "); println(v3);
+    print("Pop Front 1 (exp 1): "); println(cast<int>(v1));
+    print("Pop Front 2 (exp 5): "); println(cast<int>(v2));
+    print("Pop Front 3 (exp 10): "); println(cast<int>(v3));
     
     if v1 == 1 {
         if v2 == 5 {
