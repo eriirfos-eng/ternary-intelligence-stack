@@ -1,0 +1,24 @@
+// signal_smoother.tern
+// Simple exponential moving average signal smoother
+
+fn smooth(current: int, prev: int, alpha: int) -> int {
+    // alpha is in 16.16 fixed point
+    // out = prev + (alpha * (current - prev)) / 65536
+    let diff: int = current - prev;
+    let adjustment: int = (alpha * diff) / 65536;
+    return prev + adjustment;
+}
+
+fn main() -> trit {
+    let s0: int = 100 * 65536;
+    let s1: int = 200 * 65536;
+    let alpha: int = 32768; // 0.5
+    
+    let result: int = smooth(s1, s0, alpha);
+    
+    // Expected: 100 + (0.5 * 100) = 150
+    if (result == 150 * 65536) {
+        return affirm;
+    }
+    return reject;
+}
