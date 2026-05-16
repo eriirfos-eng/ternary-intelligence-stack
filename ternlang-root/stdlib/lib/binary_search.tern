@@ -1,0 +1,31 @@
+// Industrial-grade binary search algorithm for TIS
+// Provides logarithmic search time complexity on sorted integer arrays.
+
+fn binary_search(arr: int[], len: int, target: int) -> int {
+    let low: int = 0;
+    let high: int = len - 1;
+    
+    while (low <= high) {
+        let mid: int = (low + high) / 2;
+        if (arr[mid] == target) {
+            return mid;
+        } else if (arr[mid] < target) {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+    return -1; // Not found
+}
+
+fn main() -> trit {
+    let arr: int[5] = 0;
+    arr[0] = 10; arr[1] = 20; arr[2] = 30; arr[3] = 40; arr[4] = 50;
+    
+    let res: int = binary_search(arr, 5, 30);
+    
+    if (res == 2) {
+        return affirm;
+    }
+    return reject;
+}
