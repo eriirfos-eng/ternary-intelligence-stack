@@ -23,7 +23,7 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 ### Documentation
 
 - **[README.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/README.md)** — Full technical documentation and compiler specifications
-- **[albert.](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13)** — Native ternary training framework, EvolutionManager, live dashboard · [HuggingFace ↗](https://huggingface.co/rfi-irfos/albert)
+- **[albert.](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13)** — Native ternary training framework, EvolutionManager, live dashboard
 - **[Model Card](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/MODEL_CARD.md)** — Architecture, training status, EU AI Act compliance notes
 - **[Convergence Log](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/docs/convergence_log.md)** — Live training loss history across all albert. versions
 - **[Agent Albert CLI](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli)** — Terminal-native, model-agnostic AI agent built in pure Rust
@@ -47,7 +47,7 @@ ternlang my_program.tern    # run a .tern file
 
 ---
 
-## 2. albert.
+## 2. albert. · [HuggingFace ↗](https://huggingface.co/rfi-irfos/albert)
 
 **albert. is an existence proof wearing the shape of a language model.**
 
