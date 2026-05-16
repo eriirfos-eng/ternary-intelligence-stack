@@ -1,0 +1,16 @@
+fn main() -> trit {
+    let src: int[3] = 0;
+    src[0] = 10;
+    src[1] = 20;
+    src[2] = 30;
+    let dst: int[3] = 0;
+    let i: int = 0;
+    while i < 3 {
+        dst[i] = src[i];
+        i = i + 1;
+    }
+    if dst[2] == 30 {
+        return 1;
+    }
+    return -1;
+}
