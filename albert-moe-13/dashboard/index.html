@@ -708,6 +708,96 @@
             flex-shrink: 0;
         }
         .ev-close:hover { opacity: 1; background: rgba(255,255,255,0.08); }
+
+        /* ── Mycelium Inspector ──────────────────────────────────── */
+        #mycelium-panel {
+            display: none;
+            position: fixed;
+            top: 40px; left: 0; right: 0; bottom: 0;
+            background: var(--bg);
+            z-index: 100;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #mycelium-panel.open { display: flex; }
+        #myc-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: var(--bg1);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        #myc-label {
+            color: var(--muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            white-space: nowrap;
+        }
+        #myc-search {
+            background: var(--bg2);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 99px;
+            outline: none;
+            width: 200px;
+            transition: border-color 0.15s;
+        }
+        #myc-search:focus { border-color: var(--accent); }
+        #myc-k-wrap {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            color: var(--muted);
+        }
+        #myc-k {
+            width: 90px;
+            accent-color: var(--accent);
+        }
+        #myc-status {
+            font-size: 10px;
+            color: var(--muted);
+            min-width: 120px;
+        }
+        #myc-info {
+            margin-left: auto;
+            font-size: 10px;
+            color: var(--muted2);
+            white-space: nowrap;
+        }
+        #myc-close-btn {
+            font-size: 13px;
+            padding: 2px 10px;
+            flex-shrink: 0;
+        }
+        #myc-canvas {
+            flex: 1;
+            display: block;
+            cursor: crosshair;
+        }
+        #myc-tooltip {
+            display: none;
+            position: fixed;
+            background: var(--bg2);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            z-index: 9999;
+            pointer-events: none;
+            line-height: 1.7;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+        }
+        #myc-tooltip b { color: var(--accent); }
     </style>
 </head>
 <body>
@@ -752,6 +842,17 @@
 
 
     <div class="tb-cell controls">
+        <button id="mycBtn" title="Mycelium Inspector — embedding space visualizer" onclick="mycToggle()">
+            <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+                <circle cx="6" cy="6" r="1.6" fill="currentColor" stroke="none" opacity="0.9"/>
+                <line x1="6" y1="4.4" x2="6" y2="1.2"/>
+                <line x1="6" y1="7.6" x2="6" y2="10.8"/>
+                <line x1="4.6" y1="5.2" x2="1.8" y2="3.6"/>
+                <line x1="7.4" y1="6.8" x2="10.2" y2="8.4"/>
+                <line x1="4.6" y1="6.8" x2="1.8" y2="8.4"/>
+                <line x1="7.4" y1="5.2" x2="10.2" y2="3.6"/>
+            </svg>
+        </button>
         <button id="muteBtn" title="Toggle sound" style="background:none;border:none;cursor:pointer;padding:3px 5px;color:#505050;display:flex;align-items:center">
             <svg id="muteIcon" viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
                 <path d="M1 4h2l3-2v8L3 8H1z"/>
@@ -912,6 +1013,26 @@
     </div>
 </div>
 
+
+<!-- Mycelium Inspector panel -->
+<div id="mycelium-panel">
+    <div id="myc-toolbar">
+        <span id="myc-label">Mycelium Inspector</span>
+        <input id="myc-search" type="text" placeholder="enter a word..." autocomplete="off" spellcheck="false">
+        <button onclick="mycSearch()" title="Search (Enter)">search</button>
+        <div id="myc-k-wrap">
+            <span>k</span>
+            <input id="myc-k" type="range" min="10" max="100" value="40" step="5"
+                   oninput="document.getElementById('myc-k-val').textContent=this.value">
+            <span id="myc-k-val">40</span>
+        </div>
+        <span id="myc-status"></span>
+        <span id="myc-info"></span>
+        <button id="myc-close-btn" onclick="mycToggle()" title="Close (Escape)">&#xd7;</button>
+    </div>
+    <canvas id="myc-canvas"></canvas>
+</div>
+<div id="myc-tooltip"></div>
 
 <div id="tooltip"></div>
 <script>
@@ -5237,6 +5358,233 @@
                 : '';
         }
     }, 1000);
+
+    // ── Mycelium Inspector ─────────────────────────────────────────────
+    (function () {
+        const panel       = document.getElementById('mycelium-panel');
+        const canvas      = document.getElementById('myc-canvas');
+        const ctx         = canvas.getContext('2d');
+        const searchInput = document.getElementById('myc-search');
+        const statusEl    = document.getElementById('myc-status');
+        const infoEl      = document.getElementById('myc-info');
+        const mycBtn      = document.getElementById('mycBtn');
+        const tip         = document.getElementById('myc-tooltip');
+
+        let _data      = null;   // last successful query response
+        let _nodes     = [];     // {word, cx, cy, r, sim, isCenter}  — canvas coords
+        let _loading   = false;
+
+        // ── resize canvas to its CSS size ──────────────────────────────
+        const ro = new ResizeObserver(() => {
+            canvas.width  = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            if (_data) _render(_data);
+        });
+        ro.observe(canvas);
+
+        // ── toggle open/close ──────────────────────────────────────────
+        window.mycToggle = function () {
+            const open = !panel.classList.contains('open');
+            panel.classList.toggle('open', open);
+            if (mycBtn) mycBtn.classList.toggle('active', open);
+            if (open) {
+                searchInput.focus();
+                // pre-warm engine on first open
+                if (!_data && !_loading) mycSearch();
+            }
+        };
+
+        // ── search ─────────────────────────────────────────────────────
+        window.mycSearch = function () {
+            const word = searchInput.value.trim() || 'language';
+            const k    = parseInt(document.getElementById('myc-k').value) || 40;
+            _doQuery(word, k);
+        };
+
+        function _doQuery(word, k) {
+            if (_loading) return;
+            _loading = true;
+            statusEl.textContent = 'loading...';
+            statusEl.style.color = 'var(--muted)';
+            _nodes = [];
+            _clearCanvas();
+
+            fetch(`/api/mycelium?word=${encodeURIComponent(word)}&k=${k}`)
+                .then(r => r.json())
+                .then(d => {
+                    _loading = false;
+                    if (d.error) {
+                        statusEl.textContent = d.error;
+                        statusEl.style.color = 'var(--red)';
+                        return;
+                    }
+                    _data = d;
+                    searchInput.value = d.word;
+                    statusEl.textContent = `${d.neighbors.length} neighbors`;
+                    statusEl.style.color = 'var(--muted)';
+                    infoEl.textContent   = `vocab ${d.vocab_size.toLocaleString()} · dim ${d.dims} · PCA`;
+                    _render(d);
+                })
+                .catch(e => {
+                    _loading = false;
+                    statusEl.textContent = 'error: ' + e.message;
+                    statusEl.style.color = 'var(--red)';
+                });
+        }
+
+        // ── render ─────────────────────────────────────────────────────
+        function _render(d) {
+            const W = canvas.width;
+            const H = canvas.height;
+            if (W < 10 || H < 10) return;
+
+            // Build node list
+            const all = [{ x: d.x, y: d.y, word: d.word, sim: 1.0, isCenter: true, id: d.id }]
+                .concat(d.neighbors.map(n => ({
+                    x: n.x, y: n.y, word: n.word, sim: n.sim, isCenter: false, id: n.id
+                })));
+
+            // Bounding box over visible nodes
+            let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+            for (const n of all) {
+                if (n.x < x0) x0 = n.x;
+                if (n.x > x1) x1 = n.x;
+                if (n.y < y0) y0 = n.y;
+                if (n.y > y1) y1 = n.y;
+            }
+            const rX = x1 - x0 || 0.001;
+            const rY = y1 - y0 || 0.001;
+
+            // Maintain aspect ratio with padding
+            const PAD = 56;
+            const areaW = W - PAD * 2;
+            const areaH = H - PAD * 2;
+            const scale = Math.min(areaW / rX, areaH / rY);
+            const offX  = (W - rX * scale) / 2;
+            const offY  = (H - rY * scale) / 2;
+
+            const toC = (x, y) => ({
+                cx: offX + (x - x0) * scale,
+                cy: offY + (y - y0) * scale,
+            });
+
+            // Map to canvas positions
+            _nodes = all.map(n => {
+                const { cx, cy } = toC(n.x, n.y);
+                const r = n.isCenter ? 9 : 3 + n.sim * 5;
+                return { ...n, cx, cy, r };
+            });
+
+            _draw();
+        }
+
+        function _draw() {
+            const W = canvas.width;
+            const H = canvas.height;
+            ctx.clearRect(0, 0, W, H);
+            if (!_nodes.length) return;
+
+            const center = _nodes[0];
+
+            // Edges
+            for (let i = 1; i < _nodes.length; i++) {
+                const n = _nodes[i];
+                const a = 0.05 + n.sim * 0.35;
+                ctx.beginPath();
+                ctx.moveTo(center.cx, center.cy);
+                ctx.lineTo(n.cx, n.cy);
+                ctx.strokeStyle = `rgba(34,211,238,${a.toFixed(2)})`;
+                ctx.lineWidth   = 0.8;
+                ctx.stroke();
+            }
+
+            // Neighbor nodes + labels
+            ctx.textAlign = 'center';
+            for (let i = 1; i < _nodes.length; i++) {
+                const n = _nodes[i];
+                const a = 0.25 + n.sim * 0.75;
+
+                ctx.beginPath();
+                ctx.arc(n.cx, n.cy, n.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(34,211,238,${a.toFixed(2)})`;
+                ctx.fill();
+
+                ctx.font      = '9px JetBrains Mono, monospace';
+                ctx.fillStyle = `rgba(226,232,240,${Math.min(1, a + 0.1).toFixed(2)})`;
+                ctx.fillText(n.word, n.cx, n.cy - n.r - 3);
+            }
+
+            // Center node (bright, larger)
+            ctx.beginPath();
+            ctx.arc(center.cx, center.cy, center.r, 0, Math.PI * 2);
+            ctx.fillStyle   = 'rgba(34,211,238,0.2)';
+            ctx.fill();
+            ctx.strokeStyle = '#22d3ee';
+            ctx.lineWidth   = 1.5;
+            ctx.stroke();
+
+            ctx.font      = 'bold 12px JetBrains Mono, monospace';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.fillText(center.word, center.cx, center.cy - center.r - 5);
+        }
+
+        function _clearCanvas() {
+            canvas.width  = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // ── hover / click ──────────────────────────────────────────────
+        function _hitTest(ex, ey) {
+            for (const n of _nodes) {
+                const dx = ex - n.cx, dy = ey - n.cy;
+                if (Math.sqrt(dx * dx + dy * dy) < Math.max(n.r + 5, 12)) return n;
+            }
+            return null;
+        }
+
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            const n    = _hitTest(e.clientX - rect.left, e.clientY - rect.top);
+            if (n) {
+                canvas.style.cursor = 'pointer';
+                tip.style.display   = 'block';
+                tip.style.left      = (e.clientX + 14) + 'px';
+                tip.style.top       = (e.clientY - 10) + 'px';
+                tip.innerHTML = n.isCenter
+                    ? `<b>${n.word}</b><br>center node`
+                    : `<b>${n.word}</b><br>sim ${n.sim.toFixed(4)}`;
+            } else {
+                canvas.style.cursor = 'crosshair';
+                tip.style.display   = 'none';
+            }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            tip.style.display   = 'none';
+            canvas.style.cursor = 'crosshair';
+        });
+
+        canvas.addEventListener('click', e => {
+            const rect = canvas.getBoundingClientRect();
+            const n    = _hitTest(e.clientX - rect.left, e.clientY - rect.top);
+            if (n && !n.isCenter) {
+                searchInput.value = n.word;
+                const k = parseInt(document.getElementById('myc-k').value) || 40;
+                _doQuery(n.word, k);
+            }
+        });
+
+        // ── keyboard shortcuts ─────────────────────────────────────────
+        searchInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') mycSearch();
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && panel.classList.contains('open')) mycToggle();
+        });
+    })();
 </script>
 </body>
 </html>
