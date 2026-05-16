@@ -1,0 +1,10 @@
+fn main() -> trit {
+    let arr: int[10] = 0;
+    arr[0] = 1;
+    arr[1] = -1;
+    let res: int = arr[0] + arr[1];
+    match res {
+        0 => { return 0; }
+        _ => { return -1; }
+    }
+}
