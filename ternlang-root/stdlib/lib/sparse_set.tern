@@ -1,0 +1,21 @@
+// sparse_set.tern
+// Basic implementation of a sparse set verification
+
+fn main() -> trit {
+    let dense: int[5] = 0;
+    let sparse: int[15] = 0; // index 10 requires at least 11 size
+    let n: int = 0;
+    
+    // Add 10 (sparse[10] = 0, dense[0] = 10)
+    dense[0] = 10;
+    sparse[10] = 0;
+    n = 1;
+    
+    // check existence
+    if (sparse[10] < n) {
+        if (dense[sparse[10]] == 10) {
+            return affirm;
+        }
+    }
+    return reject;
+}
