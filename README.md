@@ -47,7 +47,7 @@ ternlang my_program.tern    # run a .tern file
 
 ---
 
-## 2. albert. · [HuggingFace ↗](https://huggingface.co/rfi-irfos/albert)
+## 2. albert. <sup>[HuggingFace ↗](https://huggingface.co/rfi-irfos/albert)</sup>
 
 **albert. is an existence proof wearing the shape of a language model.**
 
