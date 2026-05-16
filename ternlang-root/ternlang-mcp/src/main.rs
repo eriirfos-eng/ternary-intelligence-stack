@@ -1294,9 +1294,15 @@ fn tool_llb_validate(params: &Value) -> Result<Value, String> {
 // Use for any AI-agent file creation or overwrite that must be auditable and
 // rollback-safe. Returns ternary decision: allow (+1) / warn (0) / veto (-1).
 
+const LLB_WRITE_MAX_BYTES: usize = 10 * 1024 * 1024; // 10 MB
+
 fn tool_llb_write_safe(params: &Value) -> Result<Value, String> {
     let path_str = params["path"].as_str().ok_or("path must be a string")?;
-    let content  = params["content"].as_str().ok_or("content must be a string")?.to_string();
+    let content  = params["content"].as_str().ok_or("content must be a string")?;
+    if content.len() > LLB_WRITE_MAX_BYTES {
+        return Err(format!("content exceeds maximum allowed size ({} bytes > {} bytes)", content.len(), LLB_WRITE_MAX_BYTES));
+    }
+    let content = content.to_string();
     let op_str   = params["operation"].as_str().unwrap_or("CREATE");
     let goal     = params["goal"].as_str().unwrap_or("write file").to_string();
     let just     = params["justification"].as_str().unwrap_or("agent-requested write").to_string();

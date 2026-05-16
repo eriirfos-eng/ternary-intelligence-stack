@@ -18,6 +18,10 @@ pub trait RemoteTransport: Send + Sync {
 /// mutual recursion across imported modules.
 const MAX_CALL_DEPTH: usize = 4096;
 
+/// Maximum instructions the VM will execute per `run()` call.
+/// Prevents infinite loops from hanging the MCP server process.
+const MAX_STEPS: u64 = 10_000_000;
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum VmError {
     StackUnderflow,
@@ -35,6 +39,7 @@ pub enum VmError {
     AgentIdInvalid(usize),
     RuntimeError(String),
     CallStackOverflow,
+    StepLimitExceeded,
     // ── File I/O errors ──────────────────────────────────────────────────────
     FileOpenError(String),
     FileReadError(String),
@@ -72,6 +77,8 @@ impl fmt::Display for VmError {
                 write!(f, "[BET-012] Runtime error: {msg}"),
             VmError::CallStackOverflow =>
                 write!(f, "[BET-013] Call stack overflow — max depth ({MAX_CALL_DEPTH}) exceeded. Infinite recursion or unbounded cross-module mutual calls detected.\n          → details: stdlib/errors/BET-013.tern  |  ternlang errors BET-013"),
+            VmError::StepLimitExceeded =>
+                write!(f, "[BET-014] Step limit ({MAX_STEPS}) exceeded — program did not halt within the allowed instruction budget. Check for infinite loops.\n          → details: stdlib/errors/BET-014.tern  |  ternlang errors BET-014"),
             VmError::FileOpenError(e) =>
                 write!(f, "[IO-001] File open error: {e}"),
             VmError::FileReadError(e) =>
@@ -227,6 +234,10 @@ impl BetVm {
     pub fn run(&mut self) -> Result<(), VmError> {
         loop {
             if self.pc >= self.code.len() { break; }
+            self._instructions_count += 1;
+            if self._instructions_count > MAX_STEPS {
+                return Err(VmError::StepLimitExceeded);
+            }
             let opcode = self.code[self.pc];
             self.pc += 1;
 

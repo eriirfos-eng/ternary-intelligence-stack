@@ -60,6 +60,8 @@ use std::{
 };
 use tokio::sync::RwLock;
 use tower_http::{cors::{Any, CorsLayer}, services::ServeDir};
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use uuid::Uuid;
 use rusqlite::Connection;
 use serde_rusqlite::from_rows;
@@ -149,6 +151,11 @@ impl KeyStore {
             Ok(json) => {
                 if let Err(e) = tokio::fs::write(&self.path, json).await {
                     eprintln!("[key-store] save error: {}", e);
+                } else {
+                    #[cfg(unix)]
+                    if let Err(e) = std::fs::set_permissions(&self.path, std::fs::Permissions::from_mode(0o600)) {
+                        eprintln!("[key-store] chmod error: {}", e);
+                    }
                 }
             }
             Err(e) => eprintln!("[key-store] serialise error: {}", e),
@@ -319,7 +326,10 @@ impl AgentRegistry {
     async fn save(&self) {
         let data = self.data.read().await;
         let json = serde_json::to_string_pretty(&*data).unwrap_or_default();
-        let _ = tokio::fs::write(&self.path, json).await;
+        if tokio::fs::write(&self.path, json).await.is_ok() {
+            #[cfg(unix)]
+            let _ = std::fs::set_permissions(&self.path, std::fs::Permissions::from_mode(0o600));
+        }
     }
 
     pub async fn publish(&self, product: AgentProduct) -> String {

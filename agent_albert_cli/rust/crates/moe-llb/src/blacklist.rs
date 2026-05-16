@@ -1,5 +1,5 @@
 use crate::error::LlbError;
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
 
 /// Filesystem paths that are permanently off-limits regardless of intent.
 const PROTECTED_PATH_PREFIXES: &[&str] = &[
@@ -36,9 +36,22 @@ pub const FORBIDDEN_BINARIES: &[&str] = &[
     "sudo", "su", "passwd", "visudo", "crontab",
 ];
 
+/// Resolve `..` and `.` components without requiring the path to exist.
+/// This prevents bypassing prefix checks via paths like `/tmp/../etc/passwd`.
+fn normalize_path(path: &Path) -> PathBuf {
+    path.components().fold(PathBuf::new(), |mut acc, c| {
+        match c {
+            Component::ParentDir => { acc.pop(); acc }
+            Component::CurDir => acc,
+            _ => { acc.push(c); acc }
+        }
+    })
+}
+
 /// Check that `path` does not fall under any protected prefix.
 pub fn check_path(path: &Path) -> Result<(), LlbError> {
-    let path_str = path.to_string_lossy();
+    let normalized = normalize_path(path);
+    let path_str = normalized.to_string_lossy();
 
     for prefix in PROTECTED_PATH_PREFIXES {
         if path_str.starts_with(prefix) {
@@ -48,8 +61,8 @@ pub fn check_path(path: &Path) -> Result<(), LlbError> {
 
     if let Some(home) = std::env::var_os("HOME") {
         for rel in PROTECTED_HOME_FILES {
-            let protected = Path::new(&home).join(rel);
-            if path.starts_with(&protected) {
+            let protected = normalize_path(&Path::new(&home).join(rel));
+            if normalized.starts_with(&protected) {
                 return Err(LlbError::BlacklistedPath { path: path_str.into_owned() });
             }
         }
@@ -102,5 +115,15 @@ mod tests {
     #[test]
     fn sudo_is_blocked() {
         assert!(check_shell_command("sudo apt-get install curl").is_err());
+    }
+
+    #[test]
+    fn dotdot_traversal_into_etc_is_blacklisted() {
+        assert!(check_path(&PathBuf::from("/tmp/../etc/passwd")).is_err());
+    }
+
+    #[test]
+    fn dotdot_traversal_staying_in_tmp_is_allowed() {
+        assert!(check_path(&PathBuf::from("/tmp/../tmp/safe.txt")).is_ok());
     }
 }

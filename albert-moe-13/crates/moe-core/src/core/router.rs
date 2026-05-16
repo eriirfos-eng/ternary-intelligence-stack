@@ -51,7 +51,7 @@ impl DifferentiableRouter {
         let probs: Vec<f32> = exps.into_iter().map(|e| e / sum).collect();
 
         // Update routing telemetry
-        if let Some(best_expert) = probs.iter().enumerate().max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap()) {
+        if let Some(best_expert) = probs.iter().enumerate().max_by(|(_, a), (_, b)| a.total_cmp(b)) {
             if best_expert.0 < 13 {
                 EXPERT_LOAD[best_expert.0].fetch_add(1, Ordering::Relaxed);
             }
