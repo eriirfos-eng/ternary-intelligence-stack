@@ -1,5 +1,5 @@
 // stdlib/lib/reservoir_sampling.tern
-// Reservoir sampling for selecting random items from a stream.
+// Reservoir sampling for random stream selection.
 // RFI-IRFOS · PUBLIC repo · v1.0
 
 fn sample(stream: int[], size: int, k: int, reservoir: int[]) -> trit {
@@ -9,7 +9,7 @@ fn sample(stream: int[], size: int, k: int, reservoir: int[]) -> trit {
         i = i + 1;
     }
     
-    // Simulate rand() with a simple linear congruential generator
+    // Simple LCG for demonstration
     let seed: int = 12345;
     while i < size {
         seed = (seed * 1103515245 + 12345) % 2147483647;
@@ -29,7 +29,9 @@ fn main() -> trit {
     println("Testing Reservoir Sampling...");
     sample(stream, 10, 3, reservoir);
     
-    print("Sample: "); print(cast<int>(reservoir[0])); print(", "); print(cast<int>(reservoir[1])); print(", "); println(cast<int>(reservoir[2]));
+    print("Sample[0]: "); println(cast<int>(reservoir[0]));
+    print("Sample[1]: "); println(cast<int>(reservoir[1]));
+    print("Sample[2]: "); println(cast<int>(reservoir[2]));
     
     println("Sampling test: PASSED");
     return affirm;
