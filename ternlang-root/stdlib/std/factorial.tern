@@ -1,0 +1,6 @@
+fn main() -> trit {
+    let a: int = 5; let fact: int = 1;
+    while a > 0 { fact = fact * a; a = a - 1; }
+    if fact == 120 { return 1; }
+    return -1;
+}
