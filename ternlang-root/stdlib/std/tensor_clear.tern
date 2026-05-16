@@ -1,0 +1,15 @@
+fn main() -> trit {
+    let arr: int[3] = 0;
+    arr[0] = 1;
+    arr[1] = 2;
+    arr[2] = 3;
+    let i: int = 0;
+    while i < 3 {
+        arr[i] = 0;
+        i = i + 1;
+    }
+    if arr[0] == 0 && arr[2] == 0 {
+        return 1;
+    }
+    return -1;
+}
