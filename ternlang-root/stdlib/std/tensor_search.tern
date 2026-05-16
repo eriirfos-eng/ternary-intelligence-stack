@@ -1,0 +1,19 @@
+fn main() -> trit {
+    let arr: int[5] = 0;
+    arr[0] = 5;
+    arr[1] = 10;
+    arr[2] = 15;
+    let target: int = 10;
+    let found: int = -1;
+    let i: int = 0;
+    while i < 3 {
+        if arr[i] == target {
+            found = 1;
+        }
+        i = i + 1;
+    }
+    match found {
+        1 => { return 1; }
+        _ => { return -1; }
+    }
+}
