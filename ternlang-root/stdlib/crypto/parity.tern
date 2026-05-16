@@ -1,0 +1,1 @@
+fn parity(n: int) -> int { let c: int = 0; let x: int = n; while (x > 0) { c = c + (x % 2); x = x / 2; } return c % 2; } fn main() -> trit { if (parity(7) == 1) { return affirm; } return reject; }
