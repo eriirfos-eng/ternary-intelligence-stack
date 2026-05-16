@@ -1,0 +1,1 @@
+fn power(base: int, exp: int) -> int { let res: int = 1; let i: int = 0; while (i < exp) { res = res * base; i = i + 1; } return res; } fn main() -> trit { if (power(2, 4) == 16) { return affirm; } return reject; }
