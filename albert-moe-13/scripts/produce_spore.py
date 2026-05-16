@@ -27,41 +27,49 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODELS_DIR  = os.path.join(HERE, "models")
 DASH_DIR    = os.path.join(HERE, "dashboard")
 EPOCH_LOG   = os.path.join(DASH_DIR, "epoch_history.log")
+LOCAL_LOG   = os.path.expanduser("~/.albert/training.log")
 CONFIG_FILE = os.path.join(MODELS_DIR, "albert_v3.0.config.json")
+
+# Canonical checkpoint names written by train_bible
+CANONICAL_CHECKPOINTS = [
+    "albert_v3.0.safetensors",
+    "albert_v3.0_best.safetensors",
+]
 
 EPOCH_SUMMARY_RE = re.compile(
     r"EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)"
 )
 
 def find_checkpoint():
-    """Return the path to the best available safetensors checkpoint."""
-    candidates = [
-        os.path.join(MODELS_DIR, "albert_v3.0.safetensors"),
-        os.path.join(MODELS_DIR, "albert_v3.0_best.safetensors"),
-    ]
-    for c in candidates:
-        if os.path.exists(c):
-            return c
-    # fallback: any .safetensors in models/
-    for f in sorted(os.listdir(MODELS_DIR)):
-        if f.endswith(".safetensors"):
-            return os.path.join(MODELS_DIR, f)
+    """Return the canonical training checkpoint, or None with a clear error."""
+    for name in CANONICAL_CHECKPOINTS:
+        path = os.path.join(MODELS_DIR, name)
+        if os.path.exists(path):
+            return path
+    # No canonical checkpoint — don't fall back to arbitrary .safetensors
     return None
 
 def read_best_epoch():
-    """Parse epoch_history.log for the best epoch and its loss."""
+    """Parse training log for the best epoch and loss.
+
+    Checks ~/.albert/training.log first (local CPU training output),
+    then falls back to dashboard/epoch_history.log (main-run history).
+    """
     best_ep, best_loss = None, float("inf")
-    if not os.path.exists(EPOCH_LOG):
-        return best_ep, best_loss
-    with open(EPOCH_LOG) as f:
-        for line in f:
-            m = EPOCH_SUMMARY_RE.search(line)
-            if m:
-                ep   = int(m.group(1))
-                loss = float(m.group(2))
-                if loss < best_loss:
-                    best_loss = loss
-                    best_ep   = ep
+    for log_path in [LOCAL_LOG, EPOCH_LOG]:
+        if not os.path.exists(log_path):
+            continue
+        with open(log_path) as f:
+            for line in f:
+                m = EPOCH_SUMMARY_RE.search(line)
+                if m:
+                    ep   = int(m.group(1))
+                    loss = float(m.group(2))
+                    if loss < best_loss:
+                        best_loss = loss
+                        best_ep   = ep
+        if best_ep is not None:
+            return best_ep, best_loss  # local log had data — stop here
     return best_ep, best_loss
 
 def git_short_sha(path):
@@ -109,9 +117,12 @@ def main():
     # ── Find checkpoint ───────────────────────────────────────────────────────
     checkpoint = find_checkpoint()
     if not checkpoint:
-        print(f"[produce_spore] ERROR: no .safetensors found in {MODELS_DIR}", file=sys.stderr)
+        print(f"[produce_spore] ERROR: no training checkpoint found in {MODELS_DIR}", file=sys.stderr)
+        print(f"[produce_spore] Run  albert-train  and let it complete at least one full epoch,", file=sys.stderr)
+        print(f"[produce_spore] then run  albert-spore  again.", file=sys.stderr)
         sys.exit(1)
-    print(f"[produce_spore] checkpoint: {checkpoint} ({os.path.getsize(checkpoint)//1024//1024} MB)")
+    size_mb = os.path.getsize(checkpoint) // 1024 // 1024
+    print(f"[produce_spore] checkpoint: {checkpoint} ({size_mb} MB)")
 
     # ── Read best epoch / loss from log ───────────────────────────────────────
     log_ep, log_loss = read_best_epoch()
@@ -175,8 +186,14 @@ def main():
         return
 
     subprocess.run(["git", "add", safetensors_out, meta_out], cwd=spores_repo, check=True)
+    # Use -c flags so git identity is never required in global config.
+    # GitHub's noreply address keeps contributor email private by default.
+    git_email = f"{args.name}@users.noreply.github.com"
     subprocess.run(
-        ["git", "commit", "-m", f"spore: {args.name} ep{epoch} loss={loss:.4f}"],
+        ["git",
+         "-c", f"user.name={args.name}",
+         "-c", f"user.email={git_email}",
+         "commit", "-m", f"spore: {args.name} ep{epoch} loss={loss:.4f}"],
         cwd=spores_repo, check=True
     )
     subprocess.run(["git", "push"], cwd=spores_repo, check=True)
