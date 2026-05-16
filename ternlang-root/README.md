@@ -113,7 +113,7 @@ match conscious {
 ```
 
 ### Standard Library & Ecosystem
-**Standard Library:** 31,000+ open-source `.tern` modules — all in this repository (`stdlib/` + `premlib/`). Tier 2/3/4 labels refer to API service levels (quota, memory, SLA), not code access. All modules are free to read, clone, and use. We commit new `.tern` definitions weekly across every tier.
+**Standard Library:** 28,500+ open-source `.tern` modules in [`stdlib/`](stdlib/) — free to read, clone, and use. Premium domain modules in `premlib/` are available to paid subscribers. We commit new `.tern` definitions weekly across both tiers.
  — including `nn::*`, `nlp::*`, `vision::*`, `rl::*`, `stats::*`, `bio::*`, `crypto::*`, `finance::*`, and research-grade `qnn::*`.
 
 ### Compiler Capabilities
@@ -612,7 +612,7 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 
 ## 11. Example Library
 
-**31,000+ `.tern` programs** (2,090 public examples + 28,500+ open-core `stdlib/` modules + 2,500+ domain-specialized `premlib/` modules) — all open-source in this repository, committed and built weekly across every tier.
+**30,500+ `.tern` programs** (2,090 public examples + 28,500+ open-core `stdlib/` modules) — open-source in this repository, committed and built weekly. Domain-specialized `premlib/` modules (2,500+) are available to paid subscribers.
 
 | Category | Examples |
 |----------|---------|
@@ -711,12 +711,12 @@ code --install-extension ternlang-vscode/ternlang-0.4.0.vsix
 ## 14. Licensing Tiers
 ### Standard Library Access
 
-All 31,000+ `.tern` modules are open-source in this repository. The tier labels (Tier 2/3/4) refer to **API service levels** — quota, persistent memory, and SLA — not code access. You can clone, read, and run every module for free.
+The [`stdlib/`](stdlib/) modules are open-source — free to clone, read, and run. The `premlib/` modules are premium-tier and available to paid subscribers only. Tier labels (Tier 2/3/4) additionally refer to **API service levels** — quota, persistent memory, and SLA.
 
 | | Directory | Files | Code Access |
 |--|-----------|-------|-------------|
-| **Foundation** | [`stdlib/`](stdlib/) | 28,500+ `.tern` modules | Free — in this repo |
-| **Domain-specialized** | [`premlib/`](premlib/) | 2,500+ modules (`agents/`, `ml/`, `nn/`, `nlp/`, `finance/`, `bio/`, `crypto/`, `security/`, `math/`, `logic/`, `vision/`, `stats/`, `physics/`, `qnn/`, 40+ more) | Free — in this repo |
+| **Foundation** | [`stdlib/`](stdlib/) | 28,500+ `.tern` modules | Free — open-source |
+| **Domain-specialized** | `premlib/` | 2,500+ modules (`agents/`, `ml/`, `nn/`, `nlp/`, `finance/`, `bio/`, `crypto/`, `security/`, `math/`, `logic/`, `vision/`, `stats/`, `physics/`, `qnn/`, 40+ more) | Paid subscribers only |
 
 We commit new `.tern` files weekly across both directories, continuously expanding coverage.
 
