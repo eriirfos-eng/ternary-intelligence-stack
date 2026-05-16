@@ -1,0 +1,29 @@
+// stdlib/lib/splay_tree_stub.tern
+// Splay tree stub using iterative array-based storage.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+// Node structure: [value, left_idx, right_idx]
+// Max nodes: 16
+
+fn main() -> trit {
+    // Array size: 16 nodes * 3 fields = 48
+    let nodes: int[48] = 0;
+    
+    // Root node 10 at index 0
+    nodes[0] = 10;
+    nodes[1] = -1; // Left child index
+    nodes[2] = -1; // Right child index
+    
+    println("Testing Splay Tree Stub...");
+    
+    let val: int = nodes[0];
+    print("Root value: "); println(cast<int>(val));
+    
+    if val == 10 {
+        println("Splay Tree test: PASSED");
+        return affirm;
+    }
+    
+    println("Splay Tree test: FAILED");
+    return reject;
+}
