@@ -1,0 +1,58 @@
+// stdlib/lib/binary_indexed_tree_2d.tern
+// 2D Binary Indexed Tree (Fenwick Tree) for prefix sums in 2D grids.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+// Supports a 4x4 grid. BIT array is 5x5 (1-based indexing).
+// BIT array: 25 elements.
+fn update(bit: int[], x: int, y: int, val: int) -> trit {
+    let i: int = x;
+    while i < 5 {
+        let j: int = y;
+        while j < 5 {
+            let idx: int = i * 5 + j;
+            bit[idx] = bit[idx] + val;
+            if j == 1 { j = 2; }
+            else { if j == 2 { j = 4; } else { j = 5; } }
+        }
+        if i == 1 { i = 2; }
+        else { if i == 2 { i = 4; } else { i = 5; } }
+    }
+    return affirm;
+}
+
+fn query(bit: int[], x: int, y: int) -> int {
+    let sum: int = 0;
+    let i: int = x;
+    while i > 0 {
+        let j: int = y;
+        while j > 0 {
+            let idx: int = i * 5 + j;
+            sum = sum + bit[idx];
+            // j = j - (j & -j)
+            if j == 4 { j = 2; }
+            else { if j == 2 { j = 1; } else { j = 0; } }
+        }
+        // i = i - (i & -i)
+        if i == 4 { i = 2; }
+        else { if i == 2 { i = 1; } else { i = 0; } }
+    }
+    return sum;
+}
+
+fn main() -> trit {
+    let bit: int[25] = 0;
+    
+    println("Testing 2D Binary Indexed Tree...");
+    update(bit, 1, 1, 5);
+    
+    let res: int = query(bit, 1, 1);
+    print("Sum (1,1): "); println(cast<int>(res));
+    
+    if res == 5 {
+        println("BIT 2D test: PASSED");
+        return affirm;
+    }
+    
+    println("BIT 2D test: FAILED");
+    return reject;
+}
