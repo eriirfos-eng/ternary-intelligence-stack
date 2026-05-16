@@ -1,4 +1,6 @@
 fn main() -> trit {
     let a: int = 11;
     let is_odd: int = 0;
-    if a 
+    if a % 2 != 0 { is_odd = 1; }
+    return cast(is_odd);
+}
