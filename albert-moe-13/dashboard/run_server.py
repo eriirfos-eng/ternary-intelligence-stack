@@ -8,12 +8,67 @@ import re
 PORT = 8888
 DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # albert-moe-13/
 
+# Training log lives outside the repo so git ops (filter-repo, reset, clean)
+# can never delete it. The dashboard URL /dashboard/training.log is remapped
+# to this stable path by the handler below.
+LOG_PATH = os.path.expanduser("~/.albert/training.log")
+os.makedirs(os.path.expanduser("~/.albert"), exist_ok=True)
+
 class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
     """
     A SimpleHTTPRequestHandler that supports HTTP Range requests.
     This allows the dashboard to only download the 'tail' of the training log.
     """
+    def _serve_log(self):
+        """Serve ~/.albert/training.log with full Range support and proper 416 headers."""
+        if not os.path.isfile(LOG_PATH):
+            self.send_error(404, "Training log not found — is albert-train running?")
+            return
+        file_size = os.path.getsize(LOG_PATH)
+        range_header = self.headers.get('Range', '')
+        if not range_header:
+            # Full file
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain; charset=utf-8')
+            self.send_header('Content-Length', str(file_size))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            with open(LOG_PATH, 'rb') as f:
+                self.wfile.write(f.read())
+            return
+        m = re.match(r'bytes=(\d*)-(\d*)', range_header)
+        if not m:
+            self.send_error(400)
+            return
+        s, e = m.groups()
+        if s == '':
+            start = max(0, file_size - int(e))
+            end   = file_size - 1
+        else:
+            start = int(s)
+            end   = int(e) if e else file_size - 1
+        if start >= file_size:
+            self.send_response(416)
+            self.send_header('Content-Range', f'bytes */{file_size}')
+            self.end_headers()
+            return
+        length = end - start + 1
+        self.send_response(206)
+        self.send_header('Content-Type', 'text/plain; charset=utf-8')
+        self.send_header('Content-Range', f'bytes {start}-{end}/{file_size}')
+        self.send_header('Content-Length', str(length))
+        self.send_header('Cache-Control', 'no-store')
+        self.end_headers()
+        with open(LOG_PATH, 'rb') as f:
+            f.seek(start)
+            self.wfile.write(f.read(length))
+
     def do_GET(self):
+        # Remap training.log URL to the stable out-of-repo path
+        clean = self.path.split('?')[0]
+        if clean.endswith('training.log'):
+            self._serve_log()
+            return
         range_header = self.headers.get('Range')
         if not range_header or not os.path.isfile(self.translate_path(self.path)):
             return super().do_GET()
@@ -35,7 +90,9 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
             end = int(end) if end != '' else file_size - 1
 
         if start >= file_size:
-            self.send_error(416, "Requested Range Not Satisfiable")
+            self.send_response(416)
+            self.send_header('Content-Range', f'bytes */{file_size}')
+            self.end_headers()
             return
 
         # Send 206 Partial Content
