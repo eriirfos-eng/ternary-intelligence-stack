@@ -1,0 +1,51 @@
+// stdlib/lib/matrix_chain.tern
+// Matrix chain multiplication optimization (DP) using flat array.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+fn main() -> trit {
+    let p: int[4] = 0;
+    p[0] = 10;
+    p[1] = 30;
+    p[2] = 5;
+    p[3] = 60;
+    let n: int = 3;
+    
+    // DP table m[n][n] (flattened to size 9)
+    let m: int[9] = 0;
+    
+    // len is chain length
+    let len: int = 2;
+    while len <= n {
+        let i: int = 1;
+        while i <= n - len + 1 {
+            let j: int = i + len - 1;
+            let idx: int = (i - 1) * n + (j - 1);
+            m[idx] = 999999;
+            
+            let k: int = i;
+            while k <= j - 1 {
+                let left: int = (i - 1) * n + (k - 1);
+                let right: int = (k) * n + (j - 1);
+                let cost: int = m[left] + m[right] + p[i-1] * p[k] * p[j];
+                
+                if cost < m[idx] {
+                    m[idx] = cost;
+                }
+                k = k + 1;
+            }
+            i = i + 1;
+        }
+        len = len + 1;
+    }
+    
+    let result: int = m[(1 - 1) * n + (3 - 1)];
+    print("Min cost: "); println(cast<int>(result));
+    
+    if result == 4500 {
+        println("Matrix Chain test: PASSED");
+        return affirm;
+    }
+    
+    println("Matrix Chain test: FAILED");
+    return reject;
+}
