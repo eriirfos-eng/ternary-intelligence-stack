@@ -32,7 +32,7 @@ pipeline_tag: text-generation
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
 **Last updated:** 2026-05-16  
-**Training status:** Active — ep1459+, epoch ATL 10.1060 (ep1455), batch ATL 10.0396 (ep1445)
+**Training status:** Active — ep1475+, epoch ATL 10.0982 (ep1474), batch ATL 10.0396 (ep1445)
 
 ---
 
@@ -129,6 +129,7 @@ noisy inputs.
 | Ep1438 | 10.1071 | 10.1071 (ep1438) | **10.0556** (ep1435) | pending |
 | Ep1441 | 10.1067 | 10.1067 (ep1441) | 10.0556 (ep1435) | pending |
 | Ep1455 | 10.1060 | **10.1060** (ep1455) | **10.0396** (ep1445) | pending |
+| Ep1474 | 10.0982 | **10.0982** (ep1474) | **10.0396** (ep1445) | pending |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
@@ -142,8 +143,11 @@ The gate fires when loss plateaus below 9.8 for a 144-epoch window with
 `myc_stable ≥ 5`, so the actual 17L→21L surgery is expected to fire at
 **ep2000–2150** depending on plateau formation time. This is a falsifiable
 prediction logged at time of writing; actual outcome will be recorded here.
-Current gap: **0.306 nats** (10.1060 − 9.8). Linear rate: ~0.000234 nats/epoch.
-Acceleration scenario (recent expert saturation: CMP=84%, INT=100%) could
+Current gap: **0.298 nats** (10.0982 − 9.8) as of ep1474 (2026-05-16T20:02Z).
+Ep1474 set a new epoch ATL of 10.0982, the first sub-10.10 epoch average,
+with a single-epoch drop of 0.0089 nats — the largest step in the post-ep1455
+run. Linear rate: ~0.000234 nats/epoch.
+Acceleration scenario (recent expert saturation: CMP=100%, INT=73%) could
 compress this to ep1900–1950.
 
 **Known limitations:**
