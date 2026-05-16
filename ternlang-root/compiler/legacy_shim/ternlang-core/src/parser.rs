@@ -414,14 +414,23 @@ impl<'a> Parser<'a> {
             Token::Float(val) => Ok(Expr::FloatLiteral(val)),
             Token::StringLit(s) => Ok(Expr::StringLiteral(s)),
             Token::Ident(name) => {
-                // cast(expr) built-in: returns Cast node
+                // cast(expr) / cast<Type>(expr) built-in: coerces value to target type
                 if name == "cast" {
+                    // cast<Type>(expr) — explicit target type
+                    if let Ok(Token::LAngle) = self.peek_token() {
+                        self.next_token()?; // consume <
+                        let ty = self.parse_type()?;
+                        self.expect(Token::RAngle)?;
+                        self.expect(Token::LParen)?;
+                        let inner = self.parse_expr()?;
+                        self.expect(Token::RParen)?;
+                        return Ok(Expr::Cast { expr: Box::new(inner), ty });
+                    }
+                    // cast(expr) — backward compat, type inferred from context
                     if let Ok(Token::LParen) = self.peek_token() {
                         self.next_token()?;
                         let inner = self.parse_expr()?;
                         self.expect(Token::RParen)?;
-                        // Type is resolved by context (the let binding ty)
-                        // Emit with Architecture defined Trit — semantic pass refines this
                         return Ok(Expr::Cast { expr: Box::new(inner), ty: Type::Trit });
                     }
                 }

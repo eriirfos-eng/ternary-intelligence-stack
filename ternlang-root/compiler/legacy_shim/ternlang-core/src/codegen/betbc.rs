@@ -1091,9 +1091,13 @@ impl BytecodeEmitter {
                     }
                 }
             }
-            Expr::Cast { expr, .. } => {
-                // cast() is a type annotation hint only — pass inner expression through
+            Expr::Cast { expr, ty } => {
                 self.emit_expr(expr);
+                match ty {
+                    crate::ast::Type::Int => { self.code.push(0x57); } // TtoInt
+                    crate::ast::Type::Float => { self.code.push(0x58); } // TtoFloat
+                    _ => {} // Trit/String/etc: pass through unchanged
+                }
             }
             Expr::NodeId => {
                 // Emit TNODEID (0x36): defers binding to runtime so that

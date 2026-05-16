@@ -647,7 +647,7 @@ impl BetVm {
                 0x20 => { // Tprint
                     let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     let line = match &val {
-                        Value::Trit(t) => format!("{:?}", t),
+                        Value::Trit(t) => format!("{}", t),
                         Value::Int(i) => format!("{}", i),
                         Value::Float(f) => format!("{}", f),
                         Value::String(s) => s.clone(),
@@ -1142,6 +1142,26 @@ impl BetVm {
                         cols,
                     });
                     self.stack.push(Value::TensorRef(idx));
+                }
+                0x57 => { // TtoInt — coerce any numeric value to Int (fixes cast<int>)
+                    let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let int_val = match val {
+                        Value::Int(i) => i,
+                        Value::Trit(t) => t as i64,
+                        Value::Float(f) => f as i64,
+                        _ => return Err(VmError::TypeMismatch { expected: "numeric (int/trit/float)".into(), found: format!("{:?}", val) }),
+                    };
+                    self.stack.push(Value::Int(int_val));
+                }
+                0x58 => { // TtoFloat — coerce any numeric value to Float (fixes cast<float>)
+                    let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
+                    let float_val = match val {
+                        Value::Float(f) => f,
+                        Value::Int(i) => i as f64,
+                        Value::Trit(t) => t as i64 as f64,
+                        _ => return Err(VmError::TypeMismatch { expected: "numeric (int/trit/float)".into(), found: format!("{:?}", val) }),
+                    };
+                    self.stack.push(Value::Float(float_val));
                 }
                 0x52 => { // TV_ADD: Vectorized addition of two packed tensors
                     let b_ref = self.stack.pop().ok_or(VmError::StackUnderflow)?;
