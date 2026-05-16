@@ -1,0 +1,1 @@
+fn min_arr(a: int[], len: int) -> int { let m: int = a[0]; let i: int = 1; while (i < len) { if (a[i] < m) { m = a[i]; } i = i + 1; } return m; } fn main() -> trit { let a: int[3] = 0; a[0] = 5; a[1] = 15; a[2] = 10; if (min_arr(a, 3) == 5) { return affirm; } return reject; }
