@@ -1,0 +1,6 @@
+fn main() -> trit {
+    let a: int = 5; let b: int = 10; let c: int = 15; let min: int = a;
+    if b < min { min = b; } if c < min { min = c; }
+    if min == 5 { return 1; }
+    return -1;
+}
