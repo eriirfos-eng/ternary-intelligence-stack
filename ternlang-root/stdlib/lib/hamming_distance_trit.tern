@@ -1,0 +1,33 @@
+// stdlib/lib/hamming_distance_trit.tern
+// Hamming distance between two trit sequences.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+fn hamming(a: trit[], b: trit[], size: int) -> int {
+    let dist: int = 0;
+    let i: int = 0;
+    while i < size {
+        if a[i] != b[i] {
+            dist = dist + 1;
+        }
+        i = i + 1;
+    }
+    return dist;
+}
+
+fn main() -> trit {
+    let s1: trit[4] = [1, 0, -1, 1];
+    let s2: trit[4] = [1, -1, -1, 0];
+    
+    println("Testing Hamming Distance...");
+    let d: int = hamming(s1, s2, 4);
+    
+    print("Distance: "); println(cast<int>(d));
+    
+    if d == 2 {
+        println("Hamming test: PASSED");
+        return affirm;
+    }
+    
+    println("Hamming test: FAILED");
+    return reject;
+}
