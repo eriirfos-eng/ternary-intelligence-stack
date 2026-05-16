@@ -1,0 +1,1 @@
+fn clamp(x: int, min: int, max: int) -> int { if (x < min) { return min; } if (x > max) { return max; } return x; } fn main() -> trit { if (clamp(10, 0, 5) == 5) { return affirm; } return reject; }
