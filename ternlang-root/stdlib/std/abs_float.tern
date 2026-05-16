@@ -1,0 +1,1 @@
+fn abs_f(x: float) -> float { if (x < 0.0) { return -x; } return x; } fn main() -> trit { if (abs_f(-3.14) == 3.14) { return affirm; } return reject; }
