@@ -49,3 +49,25 @@ data/
 *.bin
 *.onnx
 albert-moe-13/exports/promotion_log.jsonl
+
+# Build artifacts
+target/
+node_modules/
+*.rlib
+*.rmeta
+*.so
+
+# Generated examples — managed by agent, not versioned
+ternlang-root/examples/generated/
+
+# Premlib — proprietary, lives in ternlang-premium private repo
+ternlang-root/premlib/
+
+# Training logs — ephemeral, never commit
+*.log
+*.log.*_bak
+albert-moe-13/crates/moe-core/training.log
+
+# Old model checkpoints — large binaries, use Modal volume instead
+albert-moe-13/models/bible_ternary_v*.safetensors
+albert-moe-13/models/registry/
