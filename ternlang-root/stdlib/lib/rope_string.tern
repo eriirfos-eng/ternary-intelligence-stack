@@ -1,0 +1,49 @@
+// stdlib/lib/rope_string.tern
+// Rope string structure using flat array of strings and lengths.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+fn get_char(s1: string, s2: string, s3: string, s4: string, lengths: int[], index: int) -> string {
+    let current_index: int = 0;
+    
+    // Chunk 0
+    if lengths[0] > 0 {
+        if index < current_index + lengths[0] {
+            return s1[index - current_index];
+        }
+        current_index = current_index + lengths[0];
+    }
+    
+    // Chunk 1
+    if lengths[1] > 0 {
+        if index >= current_index {
+            if index < current_index + lengths[1] {
+                let offset: int = index - current_index;
+                print("DEBUG offset: "); println(cast<int>(offset));
+                return s2[offset];
+            }
+        }
+        current_index = current_index + lengths[1];
+    }
+    
+    return "";
+}
+
+fn main() -> trit {
+    let lengths: int[16] = 0;
+    lengths[0] = 5;
+    lengths[1] = 5;
+    
+    println("Testing Rope String (Iterative)...");
+    
+    let c: string = get_char("Hello", "World", "", "", lengths, 6); // 'o' in World
+    print("Char at index 6: "); println(c);
+
+    if c == "o" {
+        println("Rope test: PASSED");
+        return affirm;
+    }
+
+    
+    println("Rope test: FAILED");
+    return reject;
+}
