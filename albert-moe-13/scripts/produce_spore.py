@@ -186,6 +186,16 @@ def main():
         return
 
     subprocess.run(["git", "add", safetensors_out, meta_out], cwd=spores_repo, check=True)
+
+    # Skip commit if nothing changed (same spore already committed).
+    nothing_staged = subprocess.run(
+        ["git", "diff", "--cached", "--quiet"], cwd=spores_repo
+    ).returncode == 0
+    if nothing_staged:
+        print(f"[produce_spore] spore already committed — nothing new to push")
+        print(f"[produce_spore] done — spore is live")
+        return
+
     # Use -c flags so git identity is never required in global config.
     # GitHub's noreply address keeps contributor email private by default.
     git_email = f"{args.name}@users.noreply.github.com"
@@ -196,6 +206,8 @@ def main():
          "commit", "-m", f"spore: {args.name} ep{epoch} loss={loss:.4f}"],
         cwd=spores_repo, check=True
     )
+    # Pull any remote commits (e.g. maintainer fixes) before pushing.
+    subprocess.run(["git", "pull", "--rebase"], cwd=spores_repo, check=True)
     subprocess.run(["git", "push"], cwd=spores_repo, check=True)
     print(f"[produce_spore] pushed to albert-spores")
     print(f"[produce_spore] done — spore is live")
