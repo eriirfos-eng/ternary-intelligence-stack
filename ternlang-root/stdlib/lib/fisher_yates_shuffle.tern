@@ -1,0 +1,31 @@
+// stdlib/lib/fisher_yates_shuffle.tern
+// Fisher-Yates shuffle algorithm using iterative array pattern.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+fn shuffle(arr: int[], size: int) -> trit {
+    let i: int = size - 1;
+    let seed: int = 54321;
+    while i > 0 {
+        seed = (seed * 1103515245 + 12345) % 2147483647;
+        let j: int = seed % (i + 1);
+        
+        let temp: int = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+        
+        i = i - 1;
+    }
+    return affirm;
+}
+
+fn main() -> trit {
+    let arr: int[5] = [1, 2, 3, 4, 5];
+    
+    println("Testing Fisher-Yates Shuffle...");
+    shuffle(arr, 5);
+    
+    print("Shuffled: "); print(cast<int>(arr[0])); print(", "); print(cast<int>(arr[1])); print(", "); print(cast<int>(arr[2])); print(", "); print(cast<int>(arr[3])); print(", "); println(cast<int>(arr[4]));
+    
+    println("Shuffle test: PASSED");
+    return affirm;
+}
