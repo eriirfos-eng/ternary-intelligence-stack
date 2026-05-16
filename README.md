@@ -23,13 +23,13 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 ### Documentation
 
 - **[README.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/README.md)** — Full technical documentation and compiler specifications
+- **[Ternlang Studio (Preview)](https://ternlang-api.fly.dev/studio)** — Developer dashboard and SDK
 - **[albert.](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/albert-moe-13)** — Native ternary training framework, EvolutionManager, live dashboard
 - **[Model Card](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/MODEL_CARD.md)** — Architecture, training status, EU AI Act compliance notes
 - **[Convergence Log](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/docs/convergence_log.md)** — Live training loss history across all albert. versions
 - **[Agent Albert CLI](https://github.com/eriirfos-eng/ternary-intelligence-stack/tree/main/agent_albert_cli)** — Terminal-native, model-agnostic AI agent built in pure Rust
-- **[Ternlang Studio (Preview)](https://ternlang-api.fly.dev/studio)** — Developer dashboard and SDK
-- **[Session Log](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** — Production fixes and deployment notes
 - **[Roadmap](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** — Phases 1–20 and priority matrix
+- **[Session Log](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** — Production fixes and deployment notes
 
 ---
 
