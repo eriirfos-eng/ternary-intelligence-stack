@@ -1,0 +1,36 @@
+// stdlib/lib/bloom_filter_counting.tern
+// Counting Bloom Filter using fixed-size array.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+fn add(bf: int[], val: int) -> trit {
+    // Hash function: val % 32
+    let idx: int = val % 32;
+    if idx < 0 { idx = idx * -1; }
+    bf[idx] = bf[idx] + 1;
+    return affirm;
+}
+
+fn query(bf: int[], val: int) -> trit {
+    let idx: int = val % 32;
+    if idx < 0 { idx = idx * -1; }
+    if bf[idx] > 0 {
+        return affirm;
+    }
+    return reject;
+}
+
+fn main() -> trit {
+    let bf: int[32] = 0;
+    println("Testing Bloom Filter...");
+    
+    add(bf, 10);
+    
+    let res: trit = query(bf, 10);
+    if res == affirm {
+        println("Bloom Filter test: PASSED");
+        return affirm;
+    }
+    
+    println("Bloom Filter test: FAILED");
+    return reject;
+}
