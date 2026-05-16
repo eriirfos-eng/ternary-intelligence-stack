@@ -1,0 +1,4 @@
+fn main() -> trit {
+    let a: int = 10;
+    let is_even: int = 0;
+    if a 
