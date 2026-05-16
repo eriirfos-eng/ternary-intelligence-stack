@@ -2,11 +2,50 @@ import http.server
 import socketserver
 import os
 import re
+import subprocess
+import sys
+import threading
 import time
 from collections import defaultdict
 
 PORT = 8888
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+PROJECT   = os.path.dirname(DIRECTORY)
+MERGE_PY  = os.path.join(PROJECT, "scripts", "merge_batch_history.py")
+MERGE_INTERVAL = 15 * 60  # seconds
+
+
+def _auto_merge_loop():
+    """Background thread: merge Downloads CSVs into batch_history every 15 minutes."""
+    while True:
+        time.sleep(MERGE_INTERVAL)
+        try:
+            result = subprocess.run(
+                [sys.executable, MERGE_PY],
+                cwd=PROJECT, capture_output=True, text=True, timeout=120,
+            )
+            new_pts = "0"
+            for line in result.stdout.splitlines():
+                if "Total unique points" in line:
+                    m = re.search(r'\+([0-9,]+)\s*\)', line)
+                    if m:
+                        new_pts = m.group(1).replace(",", "")
+            if int(new_pts) == 0:
+                continue
+            subprocess.run(["git", "add", "dashboard/batch_history.csv"], cwd=PROJECT)
+            msg = f"data: auto-merge batch_history +{new_pts} points from Downloads"
+            r = subprocess.run(["git", "commit", "-m", msg], cwd=PROJECT,
+                               capture_output=True, text=True)
+            if r.returncode == 0:
+                subprocess.run(["git", "push"], cwd=PROJECT,
+                               capture_output=True, text=True, timeout=30)
+                print(f"[auto-merge] batch_history updated +{new_pts} pts — pushed")
+        except Exception as e:
+            print(f"[auto-merge] error: {e}")
+
+
+_merge_thread = threading.Thread(target=_auto_merge_loop, daemon=True)
+_merge_thread.start()
 
 # Simple token-bucket rate limiter: max 10 requests/second per IP for training.log
 _rate_buckets: dict[str, tuple[float, float]] = defaultdict(lambda: (10.0, time.monotonic()))

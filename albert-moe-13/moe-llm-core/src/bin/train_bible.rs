@@ -967,10 +967,13 @@ fn train_cycle(
     let model  = Transformer::new(&config, vb)?;
 
     // Load latest checkpoint if present.
-    if std::path::Path::new(checkpoint_path).exists() {
+    let num_tensors: usize = if std::path::Path::new(checkpoint_path).exists() {
         let loaded = load_checkpoint(&varmap, checkpoint_path, device)?;
         println!("[{}] Loaded {} tensors from checkpoint.", timestamp(), loaded);
-    }
+        loaded
+    } else {
+        0
+    };
 
     // Reset gate weights + expert noise when either:
     //   (a) --break-symmetry was passed explicitly, OR
@@ -1782,12 +1785,12 @@ fn train_cycle(
                 "EPOCH_SUMMARY epoch={} loss_avg={:.4} (d{:+.4}) loss_best={:.4} since_best={} \
                  wald_sev={:.3} wald_fill={:.1}% \
                  ttlfreeze={} ({}) \
-                 myc_L0-L3=[{}] hot=L{} cold=L{}",
+                 myc_L0-L3=[{}] hot=L{} cold=L{} tns={}",
                 total_epochs, avg_loss, avg_loss - prev_avg_loss, best_epoch_loss, since_best,
                 wald_report.low_gap_severity(), wald_report.fill_pct,
                 ttlfreeze_total, freeze_str,
                 l03_pressure.join("/"),
-                report.hottest_layer, report.coldest_layer,
+                report.hottest_layer, report.coldest_layer, num_tensors,
             );
             println!("[{}] {}", timestamp(), summary_line);
             if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {

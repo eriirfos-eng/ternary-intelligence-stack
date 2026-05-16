@@ -3286,6 +3286,9 @@
                     last.wald_sev  = parseFloat(epsm[2]);
                     last.wald_fill = parseFloat(epsm[3]);
                     last.ttlfreeze = parseInt(epsm[4]);
+                    // Tensor count — re-emitted every epoch so dashboard always has it in the tail window
+                    const tnse = line.match(/tns=(\d+)/);
+                    if (tnse) document.getElementById('v-tns').textContent = parseInt(tnse[1]).toLocaleString();
                     // Finalize the OHLC candle for this epoch + doji detection
                     const ep = parseInt(epsm[1]);
                     const ec = epochCandles.get(ep);

@@ -39,6 +39,11 @@ pub struct EvolutionManager {
     pub fib_index:                   usize,
     /// FIB_TARGETS[fib_index] — kept as a pub field for train_bible.rs compatibility.
     pub max_layers:                  usize,
+    /// Consecutive epochs where routing entropy was near-uniform (≥95% of max entropy).
+    /// When this reaches 34, a symmetry break is scheduled.
+    near_uniform_streak:             usize,
+    /// Set when near_uniform_streak reaches 34; consumed (cleared) by consume_symmetry_break().
+    symmetry_break_pending:          bool,
 }
 
 impl EvolutionManager {
@@ -51,6 +56,8 @@ impl EvolutionManager {
             mycelium_stability_threshold: 5,
             fib_index:                    0,
             max_layers:                   FIB_TARGETS[0],
+            near_uniform_streak:          0,
+            symmetry_break_pending:       false,
         }
     }
 
@@ -158,6 +165,37 @@ impl EvolutionManager {
     pub fn reset_history(&mut self) {
         self.loss_history.clear();
         self.cooldown_remaining = self.surgery_cooldown();
+    }
+
+    /// Record epoch routing entropy. Near-uniform means entropy ≥ 95% of ln(num_experts).
+    /// After 34 consecutive near-uniform epochs, schedules an autonomous symmetry break.
+    pub fn record_routing_entropy(&mut self, entropy: f32, num_experts: usize) {
+        let max_entropy = (num_experts as f32).ln();
+        if max_entropy <= 0.0 { return; }
+        if entropy / max_entropy >= 0.95 {
+            self.near_uniform_streak += 1;
+            if self.near_uniform_streak >= 34 && !self.symmetry_break_pending {
+                self.symmetry_break_pending = true;
+                println!("[evolution] near-uniform routing for {} consecutive epochs \
+                    (entropy {:.3}/{:.3}) — symmetry break scheduled for next restart",
+                    self.near_uniform_streak, entropy, max_entropy);
+            }
+        } else {
+            self.near_uniform_streak = 0;
+        }
+    }
+
+    /// Returns true if an autonomous symmetry break was scheduled, clearing the flag.
+    /// Called once at train_cycle startup; if true, kaiming-uniform gate reset fires.
+    pub fn consume_symmetry_break(&mut self) -> bool {
+        if self.symmetry_break_pending {
+            self.symmetry_break_pending = false;
+            self.near_uniform_streak    = 0;
+            println!("[evolution] consuming symmetry-break flag — gate reset will fire this run");
+            true
+        } else {
+            false
+        }
     }
 
     /// Persist fib_index and cooldown_remaining to a sidecar file.
