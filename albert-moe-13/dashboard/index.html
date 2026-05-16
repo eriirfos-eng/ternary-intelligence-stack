@@ -5194,9 +5194,13 @@
     // ── Stream watchdog ────────────────────────────────────────────────
     // Checks every second whether new data arrived in the last STALE_MS.
     // Flips the STREAM pill red + flaring when silent, green when live.
-    // Also pulses the GRAD panel border when no GRAD lines arrive for STALE_MS.
-    // Override via ?stale_s=120 for CPU training (default 30s for T4).
-    const STALE_MS  = _qp.has('stale_s') ? Math.max(10, parseInt(_qp.get('stale_s'))) * 1000 : 30_000;
+    // Per-panel (GRAD/ROUTE/TLIGHT/TELE) staleness uses PANEL_STALE_MS,
+    // which defaults to STALE_MS but can be raised independently via
+    // ?panel_stale_s=1800 for CPU contributors where sparse telemetry
+    // lines (GRAD, ROUTE, TLIGHT) arrive every several minutes.
+    // Override via ?stale_s=300&panel_stale_s=1800 for CPU training.
+    const STALE_MS       = _qp.has('stale_s')       ? Math.max(10, parseInt(_qp.get('stale_s')))       * 1000 : 30_000;
+    const PANEL_STALE_MS = _qp.has('panel_stale_s') ? Math.max(10, parseInt(_qp.get('panel_stale_s'))) * 1000 : STALE_MS;
     const dingirEl    = document.getElementById('dingir');
     const modelNameEl = document.getElementById('model-name');
 
@@ -5226,7 +5230,7 @@
 
         for (const { el, getMs, label: lbl } of panelWatchlist) {
             if (!el) continue;
-            const stale = now - getMs() > STALE_MS;
+            const stale = now - getMs() > PANEL_STALE_MS;
             el.classList.toggle('grad-stale', stale);
             el.title = stale
                 ? `No ${lbl} data for ${Math.round((now - getMs()) / 1000)}s — may have stalled`
