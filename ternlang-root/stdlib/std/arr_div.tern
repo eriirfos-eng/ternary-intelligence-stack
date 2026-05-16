@@ -1,0 +1,5 @@
+fn main() -> trit {
+    let arr: int[2] = 0; arr[0] = 10; arr[1] = 2;
+    if arr[0] / arr[1] == 5 { return 1; }
+    return -1;
+}
