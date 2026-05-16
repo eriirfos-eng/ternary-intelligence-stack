@@ -5,7 +5,7 @@ Active run: v3.0 — 17L · 32k vocab · 635 MB multilingual corpus (2026-05-10,
 
 ---
 
-## v3.0 — Active Training Run (2026-05-14, ongoing)
+## v3.0 — Active Training Run (2026-05-16, ongoing)
 
 Architecture: **17 layers** · 256 hidden · 12 experts · Top-3 routing · **256 ctx** · **32,000 vocab** (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL)  
 Corpus: Stage 10 corpus active — stages [3,6,7,8,9,10] · 10% chaos layer invariant enforced  
@@ -48,13 +48,18 @@ correct only after the vocabulary transfer plateau breaks.
 | Ep 786 | 17L | 10.2199 | Previous all-time best; 22+ ATBs in overnight cascade |
 | Ep 849 | 17L | 10.2050 | Former epoch ATL (now surpassed) |
 | Ep 1155 | 17L | ~10.22 | New batch ATL: 10.1738; descent accelerating |
-| Ep 1185 | 17L | ~10.21 | **New batch ATL: 10.1600** (−0.45% vs prev 10.1738); hot layer shift L8→L10 (structural) |
-| Ep 1189 | 17L | **10.1993** | **EPOCH ATL — FIRST SUB-10.20 IN ALBERT. V3.0 HISTORY** |
-| Ep 1191+ | 17L | ~10.198 | Active as of 2026-05-15; Modal T4 GPU; ~$0.003/epoch |
+| Ep 1185 | 17L | ~10.21 | **New batch ATL: 10.1600**; hot layer shift L8→L10 (structural) |
+| Ep 1189 | 17L | **10.1993** | **EPOCH ATL — first sub-10.20** |
+| Ep 1390 | 17L | **10.1212** | Epoch ATL; hot layer shift L10→L5 |
+| Ep 1435 | 17L | **10.1113** | Epoch ATL; **batch ATL: 10.0556** |
+| Ep 1445 | 17L | — | **Batch ATL: 10.0396** — current intra-batch record |
+| Ep 1455 | 17L | **10.1060** | Epoch ATL |
+| Ep 1474 | 17L | **10.0982** | **EPOCH ATL — first sub-10.10**; surgery gate gap 0.298 nats |
+| Ep 1482 | 17L | **10.0917** | **Current epoch ATL** (2026-05-16); active descent streak |
 
-**All-time best (epoch avg):** 10.1993 (ep1189, 2026-05-15) — first sub-10.20  
-**All-time best (intra-batch):** 10.1600 (ep1185, 2026-05-15)  
-**Surgery governor status:** F9 window = 144 epochs; plateau gate requires <0.02 nats span over any 144-epoch window. Not imminent — model still actively descending toward 10.19 barrier.
+**All-time best (epoch avg):** 10.0917 (ep1482, 2026-05-16) — first sub-10.10  
+**All-time best (intra-batch):** 10.0396 (ep1445, 2026-05-16)  
+**Surgery governor status:** F9 window = 144 epochs; plateau gate requires loss plateau < 9.8 over any 144-epoch window with myc_stable ≥ 5. Gap to gate: **0.292 nats** at current ATL. Model actively descending — surgery not imminent.
 
 ### Net2Net surgery outcomes
 
