@@ -1,0 +1,27 @@
+// Industrial-grade hashing utilities for Ternary Intelligence Stack
+// Provides simple deterministic hashing for integer arrays.
+
+fn hash_array(data: int[], len: int) -> int {
+    let h: int = 0;
+    let i: int = 0;
+    while (i < len) {
+        h = h * 31 + data[i];
+        i = i + 1;
+    }
+    return h;
+}
+
+fn main() -> trit {
+    let arr: int[3] = 0;
+    arr[0] = 1;
+    arr[1] = 2;
+    arr[2] = 3;
+    
+    let h1: int = hash_array(arr, 3);
+    let h2: int = hash_array(arr, 3);
+    
+    if (h1 == h2) {
+        return affirm;
+    }
+    return reject;
+}
