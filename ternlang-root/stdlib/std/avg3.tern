@@ -1,0 +1,5 @@
+fn main() -> trit {
+    let a: int = 10; let b: int = 20; let c: int = 30;
+    if (a+b+c)/3 == 20 { return 1; }
+    return -1;
+}
