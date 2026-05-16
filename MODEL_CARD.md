@@ -32,7 +32,7 @@ pipeline_tag: text-generation
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
 **Last updated:** 2026-05-16  
-**Training status:** Active — ep1438+, epoch ATL 10.1071, batch ATL 10.0556
+**Training status:** Active — ep1441+, epoch ATL 10.1067, batch ATL 10.0556
 
 ---
 
@@ -126,7 +126,8 @@ noisy inputs.
 | Ep1177 | 10.2076 | 10.2059 (ep1158) | 10.1738 (ep1155) | pending |
 | Ep1390 | 10.1212 | 10.1212 (ep1390) | 10.0670 (ep1385) | pending |
 | Ep1435 | 10.1113 | 10.1113 (ep1435) | **10.0556** (ep1435) | pending |
-| Ep1438 | 10.1071 | **10.1071** (ep1438) | **10.0556** (ep1435) | pending |
+| Ep1438 | 10.1071 | 10.1071 (ep1438) | **10.0556** (ep1435) | pending |
+| Ep1441 | 10.1067 | **10.1067** (ep1441) | **10.0556** (ep1435) | pending |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
