@@ -798,6 +798,28 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.6);
         }
         #myc-tooltip b { color: var(--accent); }
+        #myc-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #3f3f46;
+            flex-shrink: 0;
+            transition: background 0.4s;
+            cursor: default;
+        }
+        #myc-dot.ready   { background: #22c55e; }
+        #myc-dot.loading { background: #f59e0b; animation: myc-pulse 1.1s ease-in-out infinite; }
+        #myc-dot.error   { background: #ef4444; }
+        @keyframes myc-pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.3; }
+        }
+        #myc-reload-btn {
+            font-size: 13px;
+            padding: 2px 8px;
+            flex-shrink: 0;
+            opacity: 0.7;
+        }
+        #myc-reload-btn:hover { opacity: 1; }
     </style>
 </head>
 <body>
@@ -1028,6 +1050,8 @@
         </div>
         <span id="myc-status"></span>
         <span id="myc-info"></span>
+        <button id="myc-reload-btn" onclick="mycForceReload()" title="Re-query with current checkpoint">&#x21ba;</button>
+        <span id="myc-dot" title="checkpoint status"></span>
         <button id="myc-close-btn" onclick="mycToggle()" title="Close (Escape)">&#xd7;</button>
     </div>
     <canvas id="myc-canvas"></canvas>
@@ -5370,9 +5394,13 @@
         const mycBtn      = document.getElementById('mycBtn');
         const tip         = document.getElementById('myc-tooltip');
 
-        let _data      = null;   // last successful query response
-        let _nodes     = [];     // {word, cx, cy, r, sim, isCenter}  — canvas coords
-        let _loading   = false;
+        let _data          = null;   // last successful query response
+        let _nodes         = [];     // {word, cx, cy, r, sim, isCenter}  — canvas coords
+        let _loading       = false;
+        let _lastQueryWord = null;   // word of last successful query (for auto-re-query)
+        let _lastMtime     = null;   // mtime from last status poll
+
+        const dotEl = document.getElementById('myc-dot');
 
         // ── resize canvas to its CSS size ──────────────────────────────
         const ro = new ResizeObserver(() => {
@@ -5419,6 +5447,7 @@
                         return;
                     }
                     _data = d;
+                    _lastQueryWord = d.word;
                     searchInput.value = d.word;
                     statusEl.textContent = `${d.neighbors.length} neighbors`;
                     statusEl.style.color = 'var(--muted)';
@@ -5575,6 +5604,52 @@
                 _doQuery(n.word, k);
             }
         });
+
+        // ── checkpoint status polling ──────────────────────────────────
+        function _pollStatus() {
+            fetch('/api/mycelium/status')
+                .then(r => r.json())
+                .then(s => {
+                    if (s.loading) {
+                        dotEl.className = 'loading';
+                        dotEl.title = 'reloading checkpoint...';
+                    } else if (s.error) {
+                        dotEl.className = 'error';
+                        dotEl.title = `error: ${s.error}`;
+                    } else if (s.loaded) {
+                        dotEl.className = 'ready';
+                        dotEl.title = `${s.checkpoint} · ${s.vocab_size.toLocaleString()} tokens`;
+                    } else {
+                        dotEl.className = '';
+                        dotEl.title = 'not loaded';
+                    }
+                    // Auto-re-query when checkpoint mtime advances
+                    if (_lastMtime !== null && s.mtime !== null && s.mtime > _lastMtime
+                            && !s.loading && s.loaded && _lastQueryWord
+                            && panel.classList.contains('open')) {
+                        statusEl.textContent = 'checkpoint updated — refreshing...';
+                        statusEl.style.color = 'var(--accent)';
+                        const k = parseInt(document.getElementById('myc-k').value) || 40;
+                        _doQuery(_lastQueryWord, k);
+                    }
+                    if (s.mtime !== null) _lastMtime = s.mtime;
+                })
+                .catch(() => {
+                    dotEl.className = '';
+                    dotEl.title = 'status unavailable';
+                });
+        }
+
+        // Poll every 30 s; first poll is immediate
+        _pollStatus();
+        setInterval(_pollStatus, 30000);
+
+        // Manual re-query with current checkpoint geometry
+        window.mycForceReload = function () {
+            if (!_lastQueryWord) return;
+            const k = parseInt(document.getElementById('myc-k').value) || 40;
+            _doQuery(_lastQueryWord, k);
+        };
 
         // ── keyboard shortcuts ─────────────────────────────────────────
         searchInput.addEventListener('keydown', e => {
