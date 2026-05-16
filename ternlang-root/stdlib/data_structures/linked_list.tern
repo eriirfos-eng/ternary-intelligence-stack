@@ -1,0 +1,35 @@
+// Industrial-grade linked list implementation for Ternary Intelligence Stack
+// Provides memory-safe list operations using flattened array backends.
+
+// Flat array structure: [value, next_index, ...]
+// Max nodes: 100, each node 2 ints
+
+fn list_init(list: int[], size: int) -> int {
+    let i: int = 0;
+    while (i < size) {
+        list[i * 2 + 1] = -1; // -1 indicates end of list
+        i = i + 1;
+    }
+    return affirm;
+}
+
+fn list_push(list: int[], head: int, val: int, free_idx: int) -> int {
+    list[free_idx * 2] = val;
+    list[free_idx * 2 + 1] = head;
+    return free_idx;
+}
+
+fn main() -> trit {
+    let storage: int[200] = 0;
+    list_init(storage, 100);
+    
+    let head: int = -1;
+    head = list_push(storage, head, 42, 0);
+    head = list_push(storage, head, 100, 1);
+    
+    // Verify list head
+    if (storage[head * 2] == 100) {
+        return affirm;
+    }
+    return reject;
+}
