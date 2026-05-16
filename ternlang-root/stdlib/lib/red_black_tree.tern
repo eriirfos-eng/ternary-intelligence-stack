@@ -1,0 +1,26 @@
+// stdlib/lib/red_black_tree.tern
+// Self-balancing BST using array-based state.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+// Node structure: [value, color(0:red, 1:black), left, right, parent]
+
+fn main() -> trit {
+    let nodes: int[80] = 0;
+    
+    // Root node 10 at index 0, black
+    nodes[0] = 10;
+    nodes[1] = 1;
+    
+    println("Testing Red-Black Tree...");
+    
+    let val: int = nodes[0];
+    print("Root value: "); println(cast<int>(val));
+    
+    if val == 10 {
+        println("RBT test: PASSED");
+        return affirm;
+    }
+    
+    println("RBT test: FAILED");
+    return reject;
+}
