@@ -1,0 +1,16 @@
+fn main() -> trit {
+    let arr1: int[2] = 0;
+    let arr2: int[2] = 0;
+    arr1[0] = 10; arr1[1] = 5;
+    arr2[0] = 5; arr2[1] = 10;
+    let diff: int = 0;
+    let i: int = 0;
+    while i < 2 {
+        let d: int = arr1[i] - arr2[i];
+        if d < 0 { d = d * -1; }
+        diff = diff + d;
+        i = i + 1;
+    }
+    if diff == 10 { return 1; }
+    return -1;
+}
