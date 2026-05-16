@@ -1,0 +1,5 @@
+fn main() -> trit {
+    let a: int = 5; let b: int = 5;
+    if a == b { return 1; }
+    return -1;
+}
