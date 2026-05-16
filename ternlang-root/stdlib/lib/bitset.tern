@@ -1,29 +1,39 @@
 // stdlib/lib/bitset.tern
-// Demonstrates: Simple bitset implementation using trit array as bits.
-// Tier: 1 - Open Core
+// Bitset implementation using integer array.
+// RFI-IRFOS · PUBLIC repo · v1.0
 
-fn set_bit(bits: trittensor<8>, pos: int) -> trit {
-    if pos >= 0 && pos < 8 {
-        bits[pos] = 1;
-        return truth();
-    }
-    return conflict();
+fn set(bs: int[], idx: int) -> trit {
+    let word: int = idx / 32;
+    let bit: int = idx % 32;
+    // Emulating bitwise OR using pow(2, bit)
+    let mask: int = pow(2, bit);
+    bs[word] = bs[word] + mask; 
+    return affirm;
 }
 
-fn get_bit(bits: trittensor<8>, pos: int) -> trit {
-    if pos >= 0 && pos < 8 {
-        if bits[pos] == 1 { return truth(); }
+fn get(bs: int[], idx: int) -> trit {
+    let word: int = idx / 32;
+    let bit: int = idx % 32;
+    // Emulating bitwise AND check
+    let mask: int = pow(2, bit);
+    if (bs[word] / mask) % 2 == 1 {
+        return affirm;
     }
-    return conflict();
+    return reject;
 }
 
 fn main() -> trit {
-    let bits: trittensor<8> = [0, 0, 0, 0, 0, 0, 0, 0];
+    let bs: int[4] = 0;
     
-    set_bit(bits, 3);
+    println("Testing Bitset...");
+    set(bs, 5);
     
-    if get_bit(bits, 3) == truth() && get_bit(bits, 0) == conflict() {
-        return truth();
+    let res: trit = get(bs, 5);
+    if res == affirm {
+        println("Bitset test: PASSED");
+        return affirm;
     }
-    return conflict();
+    
+    println("Bitset test: FAILED");
+    return reject;
 }
