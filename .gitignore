@@ -60,8 +60,11 @@ node_modules/
 # Generated examples — managed by agent, not versioned
 ternlang-root/examples/generated/
 
-# Premlib — proprietary, lives in ternlang-premium private repo
+# Premlib — track pkg build artifacts; exclude source (stays in ternlang-premium)
 ternlang-root/premlib/
+!ternlang-root/premlib/playground/
+!ternlang-root/premlib/playground/pkg/
+!ternlang-root/premlib/playground/pkg/**
 
 # Training logs — ephemeral, never commit
 *.log
