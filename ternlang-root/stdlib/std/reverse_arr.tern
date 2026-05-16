@@ -1,0 +1,6 @@
+fn main() -> trit {
+    let arr: int[3] = 0; arr[0] = 1; arr[1] = 2; arr[2] = 3;
+    let rev: int[3] = 0; rev[0] = arr[2]; rev[1] = arr[1]; rev[2] = arr[0];
+    if rev[0] == 3 { return 1; }
+    return -1;
+}
