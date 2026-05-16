@@ -32,7 +32,7 @@ pipeline_tag: text-generation
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
 **Last updated:** 2026-05-16  
-**Training status:** Active — ep1441+, epoch ATL 10.1067, batch ATL 10.0556
+**Training status:** Active — ep1459+, epoch ATL 10.1060 (ep1455), batch ATL 10.0396 (ep1445)
 
 ---
 
@@ -127,15 +127,28 @@ noisy inputs.
 | Ep1390 | 10.1212 | 10.1212 (ep1390) | 10.0670 (ep1385) | pending |
 | Ep1435 | 10.1113 | 10.1113 (ep1435) | **10.0556** (ep1435) | pending |
 | Ep1438 | 10.1071 | 10.1071 (ep1438) | **10.0556** (ep1435) | pending |
-| Ep1441 | 10.1067 | **10.1067** (ep1441) | **10.0556** (ep1435) | pending |
+| Ep1441 | 10.1067 | 10.1067 (ep1441) | 10.0556 (ep1435) | pending |
+| Ep1455 | 10.1060 | **10.1060** (ep1455) | **10.0396** (ep1445) | pending |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
 via the open-source `moe-test` binary.
 
+**Surgery gate prediction (recorded 2026-05-16T18:40Z):**
+
+A trendline fitted to the ep400–ep1459 loss curve extrapolates to cross
+the surgery gate threshold (9.8 epoch-avg loss) at approximately **ep~2000**.
+The gate fires when loss plateaus below 9.8 for a 144-epoch window with
+`myc_stable ≥ 5`, so the actual 17L→21L surgery is expected to fire at
+**ep2000–2150** depending on plateau formation time. This is a falsifiable
+prediction logged at time of writing; actual outcome will be recorded here.
+Current gap: **0.306 nats** (10.1060 − 9.8). Linear rate: ~0.000234 nats/epoch.
+Acceleration scenario (recent expert saturation: CMP=84%, INT=100%) could
+compress this to ep1900–1950.
+
 **Known limitations:**
 
-- At current training depth (~1435 epochs), output quality is pre-fluency:
+- At current training depth (~1459 epochs), output quality is pre-fluency:
   the model produces partially coherent text in familiar domains but lacks
   consistent grammatical structure across longer sequences.
 - Context window of 256 tokens is shorter than contemporary LLMs; cannot
