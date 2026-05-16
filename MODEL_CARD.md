@@ -4,6 +4,11 @@ language:
 - de
 - fr
 - hu
+- zh
+- ar
+- ko
+- sv
+- fi
 - multilingual
 license: lgpl-3.0
 tags:
@@ -14,6 +19,9 @@ tags:
 - research
 - candle
 - rust
+- federated-learning
+- low-precision
+- sprind
 pipeline_tag: text-generation
 ---
 
@@ -23,7 +31,8 @@ pipeline_tag: text-generation
 **Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
-**Last updated:** 2026-05-16
+**Last updated:** 2026-05-16  
+**Training status:** Active — ep1435+, epoch ATL 10.1113, batch ATL 10.0556
 
 ---
 
@@ -88,7 +97,7 @@ albert. is trained on a curated multilingual corpus composed of:
 | Tier | Content | Approximate Share |
 |------|---------|------------------|
 | Core | Project Gutenberg (public domain books, multilingual) | ~30% |
-| Core | Wikipedia (English, German, French subsets) | ~25% |
+| Core | Wikipedia (15 languages: EN, DE, FR, HU, ZH, AR, KO, SV, FI, NL, PL, RU, JA + more) | ~25% |
 | Core | OpenWebText (filtered Common Crawl) | ~15% |
 | Technical | GitHub issues, developer blogs, HN discussions | ~10% |
 | Chaos | Synthetic noise, adversarial patterns, mixed-language text | ~10% |
@@ -115,7 +124,8 @@ noisy inputs.
 | Ep111 | ~10.36 | 10.36 | — | 18.52 |
 | Ep849 | ~10.22 | 10.2050 | — | pending |
 | Ep1177 | 10.2076 | 10.2059 (ep1158) | 10.1738 (ep1155) | pending |
-| Ep1390 | 10.1212 | **10.1212** (ep1390) | **10.0670** (ep1385) | pending |
+| Ep1390 | 10.1212 | 10.1212 (ep1390) | 10.0670 (ep1385) | pending |
+| Ep1435 | 10.1113 | **10.1113** (ep1435) | **10.0556** (ep1435) | pending |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
@@ -123,7 +133,7 @@ via the open-source `moe-test` binary.
 
 **Known limitations:**
 
-- At current training depth (~1390 epochs), output quality is pre-fluency:
+- At current training depth (~1435 epochs), output quality is pre-fluency:
   the model produces partially coherent text in familiar domains but lacks
   consistent grammatical structure across longer sequences.
 - Context window of 256 tokens is shorter than contemporary LLMs; cannot
@@ -172,10 +182,12 @@ oversight mechanisms are in place:
    is fully autonomous — the `EvolutionManager` fires on a Fibonacci-gated
    plateau detector with no human intervention required. Five surgeries
    (12L→17L) have been executed autonomously to date.
-3. **SPORE federated training:** Collaborators can contribute CPU-trained
-   checkpoints as cryptographically-identified weight spores via the
-   `albert-spores` private repository. The `SporeManager` blends spores
-   at α=0.08 each epoch with fitness and architecture guards.
+3. **SPORE federated training (live):** Collaborators contribute CPU-trained
+   checkpoints as weight spores via the `albert-spores` private repository.
+   The `SporeManager` blends accepted spores at α=0.08 each epoch boundary
+   with fitness (loss gate) and architecture guards. Colony is active as of
+   2026-05-16 with external contributors. Spores are stored via Git LFS;
+   each contributor runs `albert-train` locally and submits via `albert-spore`.
 4. **Checkpoint promotion:** No trained checkpoint is deployed to any
    external service without explicit human review and approval by the
    lead architect.
