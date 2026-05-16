@@ -1,0 +1,6 @@
+fn main() -> trit {
+    let a: int = 2; let p: int = 3; let res: int = 1;
+    let i: int = 0; while i < p { res = res * a; i = i + 1; }
+    if res == 8 { return 1; }
+    return -1;
+}
