@@ -14,6 +14,12 @@ DIRECTORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # alber
 LOG_PATH = os.path.expanduser("~/.albert/training.log")
 os.makedirs(os.path.expanduser("~/.albert"), exist_ok=True)
 
+# --cpu: redirect bare /dashboard/ to CPU-safe thresholds (5-min stale, 30-min panel).
+# Passed by albert-train on contributor machines so any manual navigation still
+# gets the right params even if the auto-opened browser tab is closed.
+CPU_MODE = '--cpu' in sys.argv
+CPU_PARAMS = 'poll_ms=2000&stale_s=300&panel_stale_s=1800'
+
 class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
     """
     A SimpleHTTPRequestHandler that supports HTTP Range requests.
@@ -64,6 +70,15 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(f.read(length))
 
     def do_GET(self):
+        # CPU mode: redirect bare dashboard requests to CPU-safe URL params.
+        if CPU_MODE and 'stale_s' not in self.path:
+            clean = self.path.split('?')[0].rstrip('/')
+            if clean in ('/dashboard', ''):
+                self.send_response(302)
+                self.send_header('Location', f'/dashboard/?{CPU_PARAMS}')
+                self.end_headers()
+                return
+
         # Remap training.log URL to the stable out-of-repo path
         clean = self.path.split('?')[0]
         if clean.endswith('training.log'):
