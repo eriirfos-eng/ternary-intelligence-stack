@@ -1,0 +1,13 @@
+fn main() -> trit {
+    let val: int = -5;
+    let abs_val: int = 0;
+    if val < 0 {
+        abs_val = val * -1;
+    } else {
+        abs_val = val;
+    }
+    if abs_val == 5 {
+        return 1;
+    }
+    return -1;
+}
