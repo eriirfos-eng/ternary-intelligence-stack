@@ -23,7 +23,7 @@ pipeline_tag: text-generation
 **Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
-**Last updated:** 2026-05-15
+**Last updated:** 2026-05-16
 
 ---
 
@@ -114,7 +114,8 @@ noisy inputs.
 | Ep54  | ~10.35 | 10.35 | — | 11.24 (CPU) |
 | Ep111 | ~10.36 | 10.36 | — | 18.52 |
 | Ep849 | ~10.22 | 10.2050 | — | pending |
-| Ep1177 | 10.2076 | **10.2059** (ep1158) | **10.1738** (ep1155) | pending |
+| Ep1177 | 10.2076 | 10.2059 (ep1158) | 10.1738 (ep1155) | pending |
+| Ep1390 | 10.1212 | **10.1212** (ep1390) | **10.0670** (ep1385) | pending |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
@@ -122,7 +123,7 @@ via the open-source `moe-test` binary.
 
 **Known limitations:**
 
-- At current training depth (~1177 epochs), output quality is pre-fluency:
+- At current training depth (~1390 epochs), output quality is pre-fluency:
   the model produces partially coherent text in familiar domains but lacks
   consistent grammatical structure across longer sequences.
 - Context window of 256 tokens is shorter than contemporary LLMs; cannot
