@@ -1,0 +1,12 @@
+// fixed_point_math.tern
+fn main() -> trit {
+    let a: int = 65536;
+    let b: int = 32768;
+    let res: int = (a * b) / 65536;
+    
+    // Debug output not possible directly, check result logic
+    if (res == 32768) {
+        return affirm;
+    }
+    return reject;
+}
