@@ -1,0 +1,50 @@
+// stdlib/lib/coin_change_dp.tern
+// Coin change problem (minimum coins for value) using flat DP array.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+fn main() -> trit {
+    let coins: int[3] = 0;
+    coins[0] = 1;
+    coins[1] = 2;
+    coins[2] = 5;
+    
+    let amount: int = 11;
+    let max_val: int = 999;
+    
+    // dp table size 12
+    let dp: int[12] = 0;
+    let k: int = 1;
+    while k < 12 {
+        dp[k] = max_val;
+        k = k + 1;
+    }
+    dp[0] = 0;
+    
+    let i: int = 1;
+    while i <= amount {
+        let j: int = 0;
+        while j < 3 {
+            if coins[j] <= i {
+                let sub: int = dp[i - coins[j]];
+                if sub != max_val {
+                    if sub + 1 < dp[i] {
+                        dp[i] = sub + 1;
+                    }
+                }
+            }
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    
+    let res: int = dp[amount];
+    print("Min coins: "); println(cast<int>(res));
+    
+    if res == 3 { // 5 + 5 + 1
+        println("Coin Change test: PASSED");
+        return affirm;
+    }
+    
+    println("Coin Change test: FAILED");
+    return reject;
+}
