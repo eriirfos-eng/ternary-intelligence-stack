@@ -1,0 +1,14 @@
+fn main() -> trit {
+    let arr: int[3] = 0;
+    arr[0] = 10;
+    arr[1] = 5;
+    arr[2] = 20;
+    let min: int = arr[0];
+    let i: int = 1;
+    while i < 3 {
+        if arr[i] < min { min = arr[i]; }
+        i = i + 1;
+    }
+    if min == 5 { return 1; }
+    return -1;
+}
