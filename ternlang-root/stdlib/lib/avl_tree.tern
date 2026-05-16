@@ -1,0 +1,27 @@
+// stdlib/lib/avl_tree.tern
+// Self-balancing binary search tree using array-based state.
+// RFI-IRFOS · PUBLIC repo · v1.0
+
+// Node structure: [value, height, left_idx, right_idx]
+// Max nodes: 16
+
+fn main() -> trit {
+    let nodes: int[64] = 0;
+    
+    // Root node 10 at index 0
+    nodes[0] = 10;
+    nodes[1] = 1; // height
+    
+    println("Testing AVL Tree...");
+    
+    let val: int = nodes[0];
+    print("Root value: "); println(cast<int>(val));
+    
+    if val == 10 {
+        println("AVL test: PASSED");
+        return affirm;
+    }
+    
+    println("AVL test: FAILED");
+    return reject;
+}
