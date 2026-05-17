@@ -85,26 +85,31 @@ The architecture combines:
 | LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-17):** Global Epoch 1553+ · epoch-ATL **10.0982** (ep1474) · batch-ATL **9.9948** (ep1553, first sub-10.0 in history) · 5 Net2Net surgeries complete (12L→17L) · training on Modal T4 GPU (~450ms/batch)
+**Training state (2026-05-17):** Global Epoch 1600+ · epoch-ATL **10.0915** (ep1584) · batch-ATL **9.9925** (ep1584, sub-10.0) · 5 Net2Net surgeries complete (12L→17L) · training on Modal T4 GPU (~450ms/batch)
 
 ---
 
-## Auditor Quick-Reference — Ternary Authenticity
+## Auditor Quick-Reference — Source File Verification
 
-| Claim | File | What to look for |
-|-------|------|-----------------|
-| STE backward pass | `moe-llm-core/src/model/ste.rs` | `quantize_ternary()` — hard threshold forward, identity gradient backward |
-| Training loop with STE | `moe-llm-core/src/bin/train_bible.rs` | `backward()` → `opt.step()` → gradient flows through `TernaryLinear` via STE |
-| TernaryLinear (forward pass) | `moe-llm-core/src/model/ternary_linear.rs` | Gamma-scaled quantization, gamma cache every 20 steps, `inference_cache` for pre-ternarized weights |
-| MoE routing + @sparseskip | `moe-llm-core/src/model/moe.rs` | Top-3 sparse gating, Red experts skipped entirely |
-| TTL routing | `moe-llm-core/src/model/traffic_light.rs` | EMA utilization → trit states, anti-stagnation burst (burst_count × 7 mod 12 rotation) |
-| Expert seed biases | `moe-llm-core/src/model/moe.rs` | `expert_seeds: Vec<Tensor>` per MoeBlock — unique F32 bias per expert, vb-tracked |
-| WALD loss-space analysis | `moe-llm-core/src/wald.rs` | `WaldModule` — batch histogram, dead zone detection, severity → amplification scale; staleness detection disables amplification on plateau |
-| Auto-evolutionary scaling | `moe-llm-core/src/bin/train_bible.rs` | `EvolutionManager` — plateau detection, Net2Net surgery, Fibonacci-gated growth, entropy-based symmetry-break auto-detection |
-| SPORE federated training | `moe-llm-core/src/spore.rs` | `SporeManager` — scans collaborator spores, fitness gate, α=0.08 blend, ternary re-ternarization |
-| Benchmark suite | `moe-test/src/main.rs` | `run_bench_mode()` — speed + @sparseskip analysis + perplexity, CSV export |
+All core implementation files are **public and directly accessible** on GitHub. If your tool could not reach a file via a constructed URL, use the direct links below — every file listed here returns HTTP 200.
 
-> **Note for auditors:** The training binary is at `moe-llm-core/src/bin/train_bible.rs`. The `moe-test` crate provides the interactive TUI and `--bench` / `--eval` modes.
+| Claim | Direct GitHub Link | What to look for |
+|-------|-------------------|-----------------|
+| Straight-Through Estimator | [ste.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/model/ste.rs) | `quantize_ternary()` — hard threshold forward, identity gradient backward |
+| Training pipeline (full loop) | [train\_bible.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/bin/train_bible.rs) | `backward()` → `opt.step()` → gradient flows through `TernaryLinear` via STE; `EvolutionManager` Net2Net surgery |
+| TernaryLinear / quantization | [ternary\_linear.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/model/ternary_linear.rs) | Gamma-scaled quantization, gamma cache every 20 steps, `forward_sparse()` via `@sparseskip` |
+| MoE routing + @sparseskip | [moe.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/model/moe.rs) | Top-3 sparse gating, Red experts skipped entirely, expert seed biases |
+| Transformer architecture | [transformer.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/model/transformer.rs) | Full block stack: attention → MoE FFN → RoPE → RMSNorm |
+| Auto-evolutionary scaling | [evolution.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/evolution.rs) | `EvolutionManager` — Fibonacci plateau gate, Net2Net safe-copy surgery, entropy-based symmetry-break |
+| TTL routing | [traffic\_light.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/model/traffic_light.rs) | EMA utilization → trit states Green/Orange/Red, anti-stagnation burst |
+| WALD loss-space analysis | [wald.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/wald.rs) | Batch histogram, dead zone detection, severity → amplification scale |
+| SPORE federated training | [spore.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/spore.rs) | `SporeManager` — fitness gate, α=0.08 blend, ternary re-ternarization |
+| Empirical convergence log | [convergence\_log.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/docs/convergence_log.md) | Loss trajectory from ep0 → current, all 5 surgery events, ATL history |
+| Benchmark suite | [moe-test/src/main.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-test/src/main.rs) | `run_bench_mode()` — speed + @sparseskip analysis + perplexity, CSV export |
+| BET ISA specification | [BET-ISA-SPEC.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/specifications/BET-ISA-SPEC.md) | Full BET instruction set, opcode table, 2-bit packing schema |
+| Language grammar | [grammar.ebnf](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/spec/grammar.ebnf) | Complete EBNF grammar for Ternlang |
+
+> **Note on stdlib:** The standard library is written in Ternlang itself (`.tern` files), not in Rust. Standard library source lives at `ternlang-root/stdlib/` — e.g. [`stdlib/std/trit.tern`](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/stdlib/std/trit.tern). There are no `.rs` equivalents by design — the language compiles itself.
 
 ---
 
