@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-16_133844.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  ró [ Od 2001wie year has Od sia80 nombre Od AusER etpre Od liche armHomagi& soci don Nordéd class following années pré design languageś seg conf don Od of Col Geruro Dansgi alle don annéesements Nord design sede48 gu nombre années theoryization Er year Sheoth
+  [B]  ró [ Od 2001wie year has Od sia80 number Od AusER etpre Od liche armHomagi& soci don Nordéd class following years pre design languageś seg conf don Od of Col Geruro Dansgi alle don ansements Nord design sede48 gu number years theoryization Er year Sheoth
+       22.7 tok/s  44ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  gu siajoements Louis* loctre acteur question Er pu Karburgander dos mainink został Michaelthumbq siaegen Er sideoll, Martin São complex ofgu imp $ 1988inn Louis Er tussenementshi transjoES yearwieś She został example Er took de années far://ble déc Dans todos soci Cl
+  [B]  gu siajoements Louis* loctre acteur question Er pu Karburgander dos mainink został Michaelthumbq siaegen Er sideoll, Martin São complex ofgu imp $ 1988inn Louis Er tussenementshi transjoES yearwieś She został example Er took de années far://ble déc Dans todos soci Cl
+       22.2 tok/s  45ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  ś thyezsen (ró West locédval Dans Kar don partierie80iti von Mat lightign best Cl48 Cl Er loc acc sia 2001 Er year de might Guerra She May premier]amp siaº pelotre 2018 yearº eeuwander sia She Od são effectothoverleden Dans conserv de ide cal 2018gi Q
+  [B]  ś thyezsen (ró West locédval Dans Kar don partierie80iti von Mat lightign best Cl48 Cl Er loc acc sia 2001 Er year de might Guerra She May premier]amp siao pelotre 2018 yearo eeuwander sia She Od são effectothoverleden cal Dans conserv de 201 Qidegi
+       21.3 tok/s  47ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  nog words War przyiers donções Dans [ haniereáticaanderER47 1984ropanderiej ob années pres todosiej Dans relá ang retç Odporple lightºisten] side sie stadtre Guerra Ass de talamp Tur whilebra danER Od annéesHetanderï nell polska tal real donfrac premier Dans
+  [B]  nog words War przyiers donções Dans [ haniereáticaanderER47 1984ropanderiej ob années pres todosiej Dans relá ang retç Odpurple lightºisten] side sie stadtre Guerra Ass de talamp Tur whilebra danER Od annéesHetanderï nell polska tal real donfrac premier Dans
+       18.9 tok/s  53ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  the annéeszi Danses color siaents ces 2001 années known 2001 [ Guerra nell Cl menoz Louis nellguzenie://burgtrearse thAT find kan 1980 sentisation Berlin 1991 effect todos don countryui dans Berlinaliz gener stadple [ BerlinES otros 2001iles pu Statesº 1970azioni 1945är stadamp complex $
+  [B]  the annéeszi Danses color siaents ces 2001 années known 2001 [ Guerra nell Cl menoz Louis nellguzenie://burgtrearse thAT find kan 1980 sentisation Berlin 1991 effect todos don countryui dans Berlinaliz gener stadple [ BerlinES otros 2001iles pu Statesº 1970azioni 1945är stadamp complex $
+       20.4 tok/s  49ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  crotreén Dans ang has Berlinional inf 1970The whileCh col Od meer [anta word [elen lightantaui Blionalthumb* stadór side pa 1999 2001 acc don back Od nellº yearńska stad Berlin son 1970& Nord Bljo language mod://ements complex sia années has sia pos Od 2018 Michael soci
+  [B]  crotreén Dans ang has Berlinional inf 1970The whileCh col Od meer [anta word [elen lightantaui Blionalthumb* stadór side pa 1999 2001 acc don back Od nello yearńska stad Berlin son 1970& Nord Bljo language mod://ements complex sia années Od soci 2018 Michael pos
+       18.5 tok/s  54ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  éd 2018 2018ność anni Jo 1973**onipleqikaoz year while]ionalńska lastités] todos annéesoth Land Guerraoni Este verb américain années yearages de mot of gest Od languageables É onde został Guerra:// mort year annéeswieingsomaui 2001 importante 2018 acteur Jo rel ob mort [ sia rel
+  [B]  éd 2018 2018ność year Jo 1973**every year Land War This American verb years yearages of word of gesture Od languageable 2 It is an important wave został yearmały dead 2018 actor Jo rel ob dead
+       14.7 tok/s  68ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  Ke puië kan estadounidense $ dopo Mat rel années light españolgi May80 Beriereciańska 1970guui countryatessen^ Ber catond Este language80 theappements modo country Erlas art 2001 sãoingsaihas 2001 sal sidezenia 1999 cro 1999 $ sia:// países Qu nell nombre Od acc side Brasil37
+  [B]  What can be done $ after Mat rel années light españolgi May80 Beriereciańska 1970guui countryatessen^ Ber catond Este language80 theappements modo country Erlas art 2001 sãoingsaihas 2001 sal sidezenia 1999 cro 1999 $ sia:// países Here in the name Od acc side Brazil37
+       17.9 tok/s  56ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  elen Cl nellamiento National todos designenza de cro world art Clui country 2018 – Si Warcha É gupre 1978 trans side don pers give sia Freye années 1988 side acteur among 2018* side cal annéeshensp nell while anos words Palamm Duitsgeb kan vezenie eHanderists takżewy rel 1970 Brasil
+  [B]  elen Cl nellamiento National todos designenza de cro world art Clui country 2018 – Si Warcha É gupre 1978 trans side don pers give sia Freye années 1988 side acteur among 2018* side cal annéeshensp nell while anos words Palamm Duitsgeb kan vezenie eHanderists takżewy rel 1970 Brasil
+       18.5 tok/s  54ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  " Dentreingsementsriyetre light acc Guerrawy dongi Ant important anni lightgu Od color nell Freamiento 1970 2018 deux Ke pres 2018 nell 1970 She Od color Regmath Ass 2018 Bl doesablesuse españolgi siaello Juan Bens men country Guerrainnoren pres paísesiter:// 1970amiento rel Od>
+  [B]  " Dentreingsementsriyetre light acc Guerrawy dongi Ant important anni lightgu Od color nell Freamiento 1970 2018 deux Ke pres 2018 nell 1970 She Od color Regmath Ass 2018 Bl doesablesuse españolgi siaello Juan Bens men country Guerrainnoren pres paísesiter:// 1970amiento rel Od>
+       18.2 tok/s  55ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  ables nom** lui vonander donderight nellrop mortieraural2790elloiere 2013 don acc annéeswy inf en altri Brasil Dans " cro premiergarents 1970 polska Dans Od27 mot donL light 1970gi donde ang meablessen light zichlas *sen papslas Od 2018ités 1970amientolin light
+  [B]  ables nom** lui vonander donderight nellrop mortieraural2790elloiere 2013 don acc annéeswy inf en altri Brasil Dans " cro premiergarents 1970 polska Dans Od27 mot donL light 1970gi donde ang meablessen light zichlas *sen papslas Od 2018ités 1970amientolin light
+       19.6 tok/s  51ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  thenlas while rel don préfin find Louisaire side word May Simini tro light important Dansores de light Kar nell Michael années country passional tropreenn infAN 17L Rom nellements Odander Odq word donelen 1999qlasL 1970rie onde cal37 Od 1970 yearécróilesprogi
+  [B]  thenlas while rel don préfin find Louisaire side word May Simini tro light important Dansores de light Kar nell Michael années country pastional tropreenn infAN 17L Rom nellements Odander Odq word donelen 1999qlasL 1970rie onde cal37 Od 1970 yearprogiles
+       17.9 tok/s  56ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  ang 1991 pour don kan angq should mort ne don Michaelzmages 2018”.ria don kan and donazione yearple rel days since Dans ces donria marca mod stad sl città sia –arch Kar 1994 Dansoryrie de rel Od gew jak a United luiversńska don tempo By sulla 1970 inf fait Od Kargi
+  [B]  Michaelzmages 2018”.ria don kan and donazione yearple rel days since Dans ces donria brand mod city sl city sia-arch Kar
+       18.2 tok/s  55ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  ents Dans primol tookents year español zw sia ClandeES († Cl annéesńskiegopre Od salande just 2018 Me Valande take Mat Ausfrac 1970* inf nellesi://80 stad Dans stad Bl donś Martin 1970ots 198237esiES pass class Danslas stadieraguLe designements 1982sen 2018 $
+  [B]  ents Dans primol tookents year español zw sia ClandeES († Cl annéesńskiegopre Od salande just 2018 Me Valande take Mat Ausfrac 1970* inf nellesi://80 stad Dans stad Bl donś Martin 1970ots 198237esiES pass class Danslas stadieraguLe designements 1982sen 2018 $
+       18.5 tok/s  54ms/tok
+
+[P15] the meaning of life according to
+  [A]  ements 1982anc Od Kar nellai 1980 À premier*ello agostoief futbolista tipo della pumini de partie são político://ander Ass Od de away Dans since préalis nell donró cesgi 1999barandettgi don Med Od passional polska Berlin 1973 a don nell Clalis 1970 donró Metuiazioni annéesńska
+  [B]  ements 1982anc Od Kar nellai 1980 À premier*ello augustief footballer type of the pumini de partie são político://ander Ass Od de away Dans since préalis nell donró cesgi 1999barandettgi don Med Od passionate polska Berlin 1973 a don nell Clalis 1970 donró Metuiations annéesńska
+       19.2 tok/s  52ms/tok

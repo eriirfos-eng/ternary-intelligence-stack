@@ -1,0 +1,28 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-12_173906.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  aar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar
+  [B]  aar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar
+       31.2 tok/s  32ms/tok
+
+[P2] User: what language do you speak? Albert:
+  [A]  seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuaseaar seuasenejafmerbyismoivoatsranowej} ac 27 med To{ solaz 2015 may Sp Orilipl dé Praseità menase30atsings 27ento ma zichuer demameatsivoioneesseout
+  [B]  seuaseaar seuaseaar seuaseaar seuasenejafmerbyismoivoatsranowej} ac 27 med To{ solaz 2015 may Sp Orilipl dé Praseità menase30atsings 27ento ma cikuer demameatsivoioneesseout
+       30.3 tok/s  33ms/tok
+
+[P3] die Geschichte der Europäischen Union
+  [A]  seumat 27 bei seu==negoangise seu Reg{nejang11ità 27 made nichtisteoraces{ute leuridadces 23uer nome 27 mayuto —}ivo seuase —{ 20{ use{af mayost —{ish formwatiwaameità seucomário seunym intoame sem
+  [B]  seumat 27 bei seu==negoangise seu Reg{nejang11ità 27 made nichtisteoraces{ute leuridadces 23uer nome 27 mayuto —}ivo seuase —{ 20{ use{af mayost —{ish formwatiwaameità seucomário seunym intoame sem
+       29.4 tok/s  34ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  11ase nome Bo men sol roase{nonymort{afità seu amerykańskière nichtèrejipx{ats==ner get seu 27ang 2024uer eineèrease{trnejaseitàwatister ten{ überessept deuxase30afitàidasont analysisster semase{af — would York
+  [B]  11ase nome Bo men sol roase{nonymort{afità seu amerykańskière nichtèrejipx{ats==ner get seu 27ang 2024uer eineèrease{trnejaseitàwatister ten{ überessept deuxase30afitàidasont analysisster semase{af — would York
+       29.4 tok/s  34ms/tok
+
+[P5] the ternary number system uses three
+  [A]  { fueentes 25 York primaora seuby grandeán{enseame To salowase Ex}ah ten{ each Is überbyafuteidasgesk (° prima 27 seu 2001} <asecom Yorkksajenseoraology nicht formaseazontanyji 27{Stidasaseliche Isster —ase
+  [B]  { fueentes 25 York primaora seuby grandeán{enseame To salowase Ex}ah ten{ each Is überbyafuteidasgesk (° prima 27 seu 2001} <asecom Yorkksajenseoraology nicht formaseazontanyji 27{Stidasaseliche Isster —ase
+       29.4 tok/s  34ms/tok

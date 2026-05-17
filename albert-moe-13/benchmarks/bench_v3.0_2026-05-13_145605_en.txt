@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-13_145605.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  anz pe37 tussenelijke malelli37 tussenelijke malelli37 tussenelijke malelli37 tussenelijke malelli37 tussenelijke malelli37 tussenelijke malelli37 tussenelijke malelli37 tussenelijke malelli37 tussenelijke malelli37 tussenelijke mal far tussenelijke Coalselijke popular polska justáoseaiivos
+  [B]  anz pe37 intermediate malelli37 intermediate malelli37 intermediate malelli37 intermediate malelli37 intermediate malelli37 intermediate malelli37 intermediate malelli37 intermediate malelli37 intermediate malelli37 intermediate mal far intermediate Coal popular polska justáoseaiivos
+       23.8 tok/s  42ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  Sh 4 même tipo:// não statoidentisteshiesteaielijkevignette gen peident pe78gr peident peanza give 4anzìáanzaidentskich 2003 de sulaiiejLaiche faitelijke fond 2003elijke46 pe 2003 ca Nationaliet another observ th XX pe star verbelijke ben Freanza takżeoni a
+  [B]  Sh 4 same type:// não statoidentisteshiesteaielijkevignette gen peident pe78gr peident peanza give 4anzìáanzaidentskich 2003 de sulaiiejLaiche faitelijke fond 2003elijke46 pe 2003 ca ​​Nationaliet another observ th XX pe star verbelijke takzhet ben Freanzajeoni a
+       22.2 tok/s  45ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  United mis nog popular ai waaranto aivignette 1993anza SãoLesungs city 2012cio organiz via gest 2003 ai organiz Landchictionconvignette rad functionoseºréoloenzareselijke Landua Itaiident veelanto prima does sulla ca lugarazioni ben Land natural determinì III aber lugarºì structureindoplegr
+  [B]  United my nog popular ai waaranto aivignette 1993anza SãoLesungs city 2012cio organiz via gest 2003 ai organi Landchictionconvignette rad functionoseoréoloenzareselijke Landua Itaiident veelanto premium does sulla ca placeazioni ben Land natural determination III but placeoì structureindoplegr
+       15.4 tok/s  65ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  ça esp stato a Land einemativaantoose aiº determinanto dopo benativa statochenvol staridentanto subidentré poschi governo peativaierte Itìomb todos resultoniº III28ellenoniindople statocon invhi sudchi28 gran XX loro Rom także statovialmenteenzativa aielli 2012
+  [B]  ça esp state in Land einemativaantoose aiº determinant after good statechenvol staridentanto subidentré poschi peativaierte government Itìomb all resultsoniº III28ellenoniindople statecon invhi sudchi28 gran XX their Rom także stateviallyenzativa aielli 2012
+       20.4 tok/s  49ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  butaiident structure lugar disttemtregelário genºenzcherba*identso90ern gran polska.) nad.]]º followingultativaanzínanza Umologiaelijke!”ident Landitionuganzarch dopo vom Israel» poder 2003elijke popular high papervi III ca meansoliementsmesction zich genelijkeór
+  [B]  butaiident structure place disttemtregelário genºenzcherba*identso90ern gran polska.) nad.]]º followingultativaanzínanza Umologiaelijke!”ident Landitionuganzarch dopo vom Israel» power 2003elijke popular high papervi III ca meansoliementsmesction siz gelijkeór
+       18.9 tok/s  53ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  Al tipo Porº37 Land Brasiluganzident ai ch ai foram Peoro Dasº políticouryction28As />anto Israel esp cagel endoriaff a norte She28ident Landelliewça cagelund Landréigeranto popular 2000ellengelelijkeuf fond cachiund off aiºór Keça
+  [B]  To the type Poro37 Country Brasiluganzident ai ch ai foram Peoro Daso politicouryction28As />anto Israel esp cagel endoriaff a norte She28ident Landelliewça cagelund Landréigeranto popular 2000ellengelelijkeuf fond cachiund off aioór Keça
+       20.8 tok/s  48ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  visgel Pormes sensmschi tipoai einem ai sowie hasta 1981ethgelori dopoares aiì Land pe de ai tipo ThereSt 1944 Ag Land 2003ungshichi todos Be showStanta short barhi totalgallerymesares polskaities polskasoativaistes last foramaramms complex Land fond.elijke37 ai
+  [B]  visgel Pormes sensmschi tipoai einem ai sowie hasta 1981ethgelori dopoares aiì Land pe de ai tipo ThereSt 1944 Ag Land 2003ungshichi todos Be showStanta short outside totalgallerymesares polskaities polskasoativaistes last foramamms complex Land fondelijke37 ai
+       20.8 tok/s  48ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  anza37elijke Frenchungsanz National Auf Land takżeites meer filani stato Landaresią obraland cagel Landanzaled sup fil Landºellen does Pressanzaantoelijke totalUn75 giveidentoro ca paperdocon Charles does polskaºgelAr 2003 polska obraetoons paper aigelią determinident stato São
+  [B]  anza37elijke Frenchungsanz National Auf Land thanks more filani status Landaresią obraland cagel Landanzaled sup fil Landoellen does Pressanzaantoelijke totalUn75 giveidentoro ca paperdocon Charles does poliskaogelIn 2003 Polish works paper aigelią determinident status They
+       20.8 tok/s  48ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  Unidosoffith analysis paperburgugctiongeliónowania.]]» fond French34 foram showchi compar 2003ellenoni re nadazioni polska zwischen São 2005ativa dopo sowie 2018led far polska peut Medolo ca20 These jident ta naturalitos giveelijke important aiment another polska sowieuit j far pe aivi central Do
+  [B]  Unidosoffith analysis paperburgugctiongeliónowania.]]» fond French34 foram showchi compar 2003ellenoni re nadazioni polska zwischen São 2005ativa dopo sowie 2018led far polska peut Medolo ca20
+       20.8 tok/s  48ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  doita#ident aielijke Landisteselijkearn ai benistes statoanzaelijke velijkebo37 Landieraelijke stato via vidaoli86 sowieanza August.]] aiain gestern give another ai just 2003oro statoact August Freçaages Landvolanzaction popular veelction polska95?” devaiidentund Olowym
+  [B]  doita#ident aielijke Landisteselijkearn ai benistes statoanzaelijke velijkebo37 Landieraelijke stato via vidaoli86 sowieanza August.]] aiain gestern give another ai just 2003oro statuact August Freçaages Landvolanzaction popular veelction polska95?” devaiidentund Tin
+       21.3 tok/s  47ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  du stato ai Augustistesorn esploai invçaostelli primo pe Nationalél paliera polskaazioniazione finalctionhi whereiment does foundçaalmenteność fond talelijke sowieçainia paíselijkecu benazionińskiegoose dev modanza norte inv doporit comp esc stato ca show. figuresua whereai
+  [B]  of the state to the Augustinians exploited instead first for the final National Political Action where two basically the Soviet country's national fund with the benefit of northern fashion afterwards comp esc state ca show. figure whereai
+       18.2 tok/s  55ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  Nachction ai twee foramviç himidentanderanto.]]á aiellenì polskaundelijke75 ai aireg poderanto polskaáack following sud65 must gums pe Or med popular pres ai 2005 Ce byłmselijkeleroroaiidentelijkeares sud inv a 1944iment invernierte ai ca observça ai
+  [B]  Nachction ai twee foramviç himidentanderanto.]]á aiellenì polskaundelijke75 ai aireg poweranto polskaáack following sud65 must gums pe Or with popular pres ai 2005 Ce byłmselijkeleroroaiidentelijkeares sud inv a 1944iment invernierte ai ca observça
+       23.3 tok/s  43ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  nad ai order National lastzenia escmsb ai fin46 far 2003 These był://º 2003orotain well naturalgel bloni 25 aiund ai cagelident37 determin leur naturalhorness continu whereident determin waarms* lui aioff bez naturalalmenteativa determinua 2003ativa waarms37 besrenking [[
+  [B]  nad ai order National lastzenia escmsb ai fin46 far 2003 These był://o 2003orotain well naturalgel bloni 25 aiund ai cagelident37 determine leur naturalhorness continua whereident determine warms* lui aioff bez naturalalnoativa determinua 2003ativa warams37 besrenking [[
+       20.4 tok/s  49ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  rad aiidentiz 2009 ai Pl important posgelantoelijkeoria ch político statoré 2005 granémaioz another ta Flidentvi Land caoriaativaanza este pos popular ai att ta ai pochodzeniavi Landain einem aber lugar statocher showburg polska wherehi aiá shortcherº determin ad sede qual show
+  [B]  rad aiidentiz 2009 ai Pl important posgelantoelijkeoria ch politico statoré 2005 granémaioz another ta Flidentvi Land caoriaativaanza este pos popular ai att ta ai pochodzeniavi Landain einem open place statocher showburg polska wherehi aiá shortcherº determine ad headquarters which show
+       20.0 tok/s  50ms/tok
+
+[P15] the meaning of life according to
+  [A]  polska popular derag here Land fond found stato determinode après36 stillmsenz dev gran poder 6burg informationelijkeoro 201931 deoffowym show Robertazioni 2005 Landidentantoazioni put Land sudativa ai Bel» final gran determin Landtre34 en był28anto Israel34elijke She Pal aberanza where aiake
+  [B]  polska popular derag here Land fond found stato determinode après36 stillmsenz dev gran power 6burg informationelijkeoro 201931 deoffowo show Robertazioni 2005 Landidentantoazioni put Land sudativa ai Bel» final gran determine Landtre34 en był28anto Israel34elijke She Pal aberenza where ai aberenza
+       20.4 tok/s  49ms/tok

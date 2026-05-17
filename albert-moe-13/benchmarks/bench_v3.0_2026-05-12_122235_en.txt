@@ -1,0 +1,28 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-12_122235.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  insinsins Pal Amb then As then thenacióninsni God As Asinsacjiof9insantesacjiantes As reniins God essere re Palmation socialins re Godinsins keineinsins then re how? keineatori re super As thenijantes’ale Grand9 maritofinsami par
+  [B]  insinsins Pal Amb then As then thenacióninsni God As Asinsacjiof9insantesacjantes As reniins God ask re Palmation socialins re Godinsins keineinsins then re how? keenetori re super As the tenants'ale Grand9 maritofinsami par
+       11.2 tok/s  89ms/tok
+
+[P2] User: what language do you speak? Albert:
+  [A]  ou thenberins parij foi9 foi parstelandck’ ou foiacji te’issatoriins? par Regaciónof?ber how 10 So da Es God how; par grandesouisch =isme grandesá reijissinsmeribob grandes Godof’ Es== Godins — God marW
+  [B]  ou thenberins parij foi9 foi parstelandck’ ou foiacji te’issatoriins? par Regaciónof?ber how 10 I know from Es God how; par grandesouisch =isme grandesá reijissinsmeribob grandes Godof’ Es== Godins — God marW
+       17.9 tok/s  56ms/tok
+
+[P3] die Geschichte der Europäischen Union
+  [A]  denm barizanza Es allick reud As God grandesmer oder== nichtá grandesonmantes9 sobreologiejinsW Jberick — peopleC God marUNKNOWN fu new God reud study Godadasickins =ale studyteron God EsiosEantesisme lo Es when howismemath
+  [B]  denm barizanza Es allick reud As God grandesmer oder== nichtá grandesonmantes9 sobreologiejinsW Jberick — peopleC God marUNKNOWN fu new God reud study Godadasickins =ale studyteron God EsiosEantesisme lo Es when howismemath
+       14.1 tok/s  71ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  ami Ovialeickami foiber Godción f Reismeologie? erologieiss capitalins foiberha?ijisme deglicerinsC how Inazioneación Ch As degli socialof foi theiralesassCular Reg4ke — GodinsickCivaber zu people —land Es mm As how
+  [B]  ami Ovialeickami foiber Godción f Reismeologie? erologieiss capitalins foiberha?ijisme deglicerinsC how Inazioneación Ch As degli socialof foi theiralesassCular Reg4ke — GodinsickCivaber zu people —land Es mm As how
+       17.2 tok/s  58ms/tok
+
+[P5] the ternary number system uses three
+  [A]  ust consider si oderberadasij SchGber wordsouía Stij’ fly God people r oderberm Es re study te nachij’izity studyckber'ijins Chparj socialins9 Asber — éity'ber Car =ingijterof = foi grandes Palim
+  [B]  ust consider si oderberadasij SchGber wordsouía Stij’ fly God people r oderberm Es re study te nachij’izity studyckber'ijins Chparj socialins9 Asber — éity'ber Car =ingijterof = foi grandes Palim
+       17.9 tok/s  56ms/tok

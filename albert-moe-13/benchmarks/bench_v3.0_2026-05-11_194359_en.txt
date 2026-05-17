@@ -1,0 +1,28 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-11_194359.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  ..deant Car della thisak/ell als mais BarJ jaarersauungenb alsoUNKNOWNent della jestm einic Connamaigen ondenthumboleieessREDACTED theredeão f sude us seror man sch cheLaten".tenanses theseierREDACTEDis F uma Hessma
+  [B]  ..deant car of thisak/ell as more BarJ jaarersauungenb alsoUNKNOWNent of the jestm einic Connamaigen ondenthumboleieessREDACTED theredeão f sude us seror man sch cheLaten".tenanses theseierREDACTEDis F uma Hessma
+       21.7 tok/s  46ms/tok
+
+[P2] User: what language do you speak? Albert:
+  [A]  this may orania sięelsoleJ aanondau a preP orocum comem eineasterorsmaigenac 14 theseole umterij there fungenneatoitaanoak betweenant schipREDACTEDigen jest 5 En jest jaar von el 3 Sch umairelsLa ook's lki dos
+  [B]  this may orania sięelsoleJ aanondau a preP orocum comem eineasterorsmaigenac 14 theseole umterij there fungenneatoitaanoak betweenant shipREDACTEDigen is 5 En jest jaar von el 3 Sch umairelsLa ook's lki dos
+       16.7 tok/s  60ms/tok
+
+[P3] die Geschichte der Europäischen Union
+  [A]  mak manroów eenondial dellaT butes EnetCond en 1era alsoUNKNOWNde4 bijmellén pourantemaij loationsorsneityessorsian ookão àide su". Baresa haveantardtonci voorme jest nietieret 3ide avecVable
+  [B]  mak manroów eenondial dellaT butes EnetCond in 1st alsoUNKNOWNde4 bijmellén pourantemaij loationsorsneityessorsian ookão àide su". Baresa haveantardtonci voorme jest nietieret 3ide avecVable
+       20.8 tok/s  48ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  ma hisuigita dellaell jest não umJcarityö deREDACTED NoP Al dellaREDACTED jestilsic versigenma Nor on mais tot stqukenab thereast umaneigen atLamaão's schistaune Con jestB metin niethumb on 3ideijirst Jö
+  [B]  ma hisuigita dellaell jest não umJcarityö deREDACTED NoP Al dellaREDACTED jestilsic versigenma Nor on mais tot stqukenab thereast umaneigen atLamaão's schistaune Con jestB metin niethumb on 3ideijirst Jö
+       16.9 tok/s  59ms/tok
+
+[P5] the ternary number system uses three
+  [A]  antía|[[igableNell się 14 Barah jaarorese 28LaéesP nie 28 comeaniaULa ookmamatedoddented vooracticoermatart“ni parita puis Na lo manischro 23igen".odito het pagesau się 3iesãoREDACTEDido the lesten
+  [B]  antía|[[igableNell się 14 Barah jaarorese 28LaéesP nie 28 comeaniaULa ookmamatedoddenteted vooracticoermatart“ni parita puis Na lo manischro 23igen".odio het pagesau się 3iesãoREDACTEDido the lesten
+       21.7 tok/s  46ms/tok

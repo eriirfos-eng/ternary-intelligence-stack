@@ -1,0 +1,28 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-12_041342.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  qu|[[ avecide And had?ueUNKNOWN And od been Amiz ChPup po0 umaanteak this outica jestaçãoels herij had0op door suchinoación avec t“ bij kignaierue door”Detheales auch fin poine war jest It della from ed doorelsam
+  [B]  qu|[[ avecide And had?ueUNKNOWN And od been Amiz ChPup po0 umaanteak this outica jestaçãoels hereij had0op door suchinoación avec t“ bij kignaierue door”Detheales auch fin poine war jest It della from ed doorelsam
+       13.0 tok/s  77ms/tok
+
+[P2] User: what language do you speak? Albert:
+  [A]  ? erernB Andug beenm23coP ser?.. non man“ bij auf mha ser pre zu their had meup dem”r serol nonów".ideità comezeUNKNOWN2 manDetheales Al aux ponaden “ outess“ avec doorali  jestide ein worden It
+  [B]  ? erernB Andug beenm23coP ser?.. non man“ bij auf mha ser pre zu they had meup dem”r serol nonów".ideità comezeUNKNOWN2 manDetheales Al aux ponaden “outess“ avec doorali  jestide ein worden It
+       14.9 tok/s  67ms/tok
+
+[P3] die Geschichte der Europäischen Union
+  [A]  ereMideilies Cthier ce avecki si Marations jest Ch os jest itsie himantever door demicaung ser auchante iminideant over18 Weide avecieungeninaide jest doorityZ man! che aoales po 0 poere“ina suchP fromels door Het
+  [B]  ereMideilies Cthier ce avecki si Marations jest Ch os jest itsie himantever door demicaung ser auchante iminideant over18 Weide avecieungeninaide jest doorityZ man! che aoales po 0 poere“ina suchP fromels by Het
+       17.5 tok/s  57ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  eredenkiimnoisch 6”aar Le when? 20ki jestiste.. uma einak ser Chica od przezcer from “co meP herischen cemat”iesureog or De dooratt me".allels Amsk pages finden re“itoakie ex ancheue hasary 20 ist
+  [B]  eredenkiimnoisch 6”aar Le when? 20ki jestiste.. uma enak ser Chica od pèrzcer from “co meP herischen cemat”iesureog or De dooratt me”.
+       18.2 tok/s  55ms/tok
+
+[P5] the ternary number system uses three
+  [A]  18den rethide dellaUNKNOWN And odowure?ora dellartakver all denakig h doorff18els we these Weksdencheisteino myartdeungenog psafPueicoaz einog all 14 come po theseateitoakupiesna door door? theiride
+  [B]  18den rethide dellaUNKNOWN And odowure?ora dellartakver all denakig h doorff18els we these Weksdencheisteino myartdeungenog psafPueicoaz einog all 14 come po theseateitoakupiesna door door? Their side
+       13.5 tok/s  74ms/tok

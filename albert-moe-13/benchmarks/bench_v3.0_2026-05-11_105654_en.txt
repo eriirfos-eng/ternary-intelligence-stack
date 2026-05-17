@@ -1,0 +1,28 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-11_105654.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  ud zich zu CaringDie wurde imra się nãoliche inter.]]D Minness afterind Lema lubiedentU" 2024 pen).ptind meass alsourto su bas fect 9icht5gertrires g have there 23 autor partirah apub“itser 3ed sind had nel Ad
+  [B]  ud siz zu CaringDie wurde imra się nãoliche inter.]]D Minness afterind Lema lubiedentU" 2024 pen).ptind meass alsourto su bas fect 9icht5gertrires g have there 23 autor partirah apub“itser 3ed sind had nel Ad
+       14.9 tok/s  67ms/tok
+
+[P2] User: what language do you speak? Albert:
+  [A]  Die wurde imra And nãoram inter.]]D Min tem afterants Lema lubiedíaU" 2024 penmaiwind measscheourto su bas fect 9icht5 trires g have thereroional partir dos apub“itser 3ed sind had nel AdichagwaRness
+  [B]  Die wurde imra And nãoram inter.]]D Min tem afterants Lema lubiedíaU" 2024 penmaiwind measscheourto su bas fect 9icht5 trires g have thereroional partir dos apub“itser 3ed sind had nel AdichagwaRness
+       24.4 tok/s  41ms/tok
+
+[P3] die Geschichte der Europäischen Union
+  [A]  20ud zich=== CaringDie wurde imra And nãoram inter.]]D Minness afterind Lema lubiedentU" 2024 pen).ptind perasscheourto 3 bas fect 9icht5gertrires g have there 23 col partirah apub“itser 3it sind had nel
+  [B]  20ud zich=== CaringDie wurde imra And nãoram inter.]]D Minness afterind Lema lubiedentU" 2024 pen).ptind perasscheourto 3 bas fect 9icht5gertrires g have there 23 col partirah apub“itser 3it sind had in the
+       18.2 tok/s  55ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  zu Car twoione wurde imra And não En inter.]]D Mintr afterind Lema lubiedentU" 2024 pen). theseind auxami alsourto su bas fect 9icht5 trires g have there 23 autor partir si apub“itser 3it sind had nel Adichag
+  [B]  zu Car twoione wurde imra And não En inter.]]D Mintr afterind Lema lubiedentU" 2024 pen). theseind ​​auxami alsourto su bas fect 9icht5 trires g have there 23 autor partir si apub“itser 3it sind had nel Adichag
+       18.9 tok/s  53ms/tok
+
+[P5] the ternary number system uses three
+  [A]  zu CaringDie wurde imell And não En inter.]]D Minose afterants Lema lubiedentU" 2024ecmaiwind meass alsourto su bas fect 9icht5gertrires g have there 23 col partir dos apub“itser 3ed sind had nel Adichag
+  [B]  zu CaringDie wurde imell And não En inter.]]D Minose afterants Lema lubiedentU" 2024ecmaiwind meass alsourto su bas fect 9icht5gertrires g have there 23 col partir dos apub“itser 3ed sind had nel Adichag
+       23.3 tok/s  43ms/tok

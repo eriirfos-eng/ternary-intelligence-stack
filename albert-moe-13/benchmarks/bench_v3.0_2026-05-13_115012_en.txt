@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-13_115012.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  ivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos contrightelliReivos contai»ivos 1999 hastaië
+  [B]  ivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos Land Robertivos contrightelliReivos contai»ivos 1999 untilië
+       27.0 tok/s  37ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  argms premier hereelliikaularms inf ainsientsmsLes howonnminiél sud Baena modoología ces Gu because norteémchenín modo inf 1991 Gu Art że Fl Ob cont $ms 2003 Po $ 2022://élantoright under sud Pierre Por rem sido Isame here $!”ezementsides estado todos
+  [B]  argms premier hereelliikaularms inf ainsientsmsLes howonnminiél south Baena modology ces Gu because northemchenín mode inf 1991 Gu Art że Fl Ob cont $ms 2003 Po $ 2022://élantoright under south Pierre By rem been Isame here $!” ezementsides state all
+       27.0 tok/s  37ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  ular University nombre après 1991 hasta Ob hatniebl Si contmsER zostałcher cont aktorboìely premier sede acccher contykellistenvelanzaumb êtreages fil ele! 1999 Ind large shortani todo après hereentarightages capital sido 1991 1999 show $ governoright cont!” oper 1991 premier pe tre modo
+  [B]  ular University nombre après 1991 hasta Ob hatniebl Si contmsER zostałcher cont aktorboìely premier headquarters acccher contykellistenvelanzaumb êtreages fil ele! 1999 Ind large shortani todo après hereentarightages capital sido 1991 1999 show $ governoright cont!” premiered in 1991 in three ways
+       27.0 tok/s  37ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  Europachen modo aprèsble popular!” sede modo pe becauseagesży teranza sein modo paper że All premierges Art 2022 genello capitalena premier br premier après Ob short premierges modovis!”Les maiorena withiném fil après esp contmsém modo 1985 premier paper hastaZ shortminiatura oraz bezena!”ië>\
+  [B]  Europachen way aprèsble popular!” headquarters modo pe becauseagesży teranza sein modo paper że All premierges Art 2022 genello capitala premier br premier après Ob short premierges modovis!”Les maiorena withiném fil après esp contmsém modo 1985 premier paper hastaZ shortminiatura oraz bezena!”ië>\
+       25.0 tok/s  40ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  know Flchen hereelyowy sec hastavisimentennië Harms inf ArtcentcherUn 2022 rad españolauxvoléncent cont good because modominiaturapa niemieckientaindominiaturaaux hun modo êtreors hatitirightië secanza lui Har todomsonn oftenges 2022 ré here popularright cont aussi Art remvel
+  [B]  know Flchen hereelyowy sec hastavisimentennië Harms inf ArtcentcherUn 2022 rad Spanishviolent cont good because modeminiaturepa niemieckientainminiature hun mode beings hatitirightië secanza him Har todomsonn oftenges 2022 ré here popularright cont also Art remvel
+       23.3 tok/s  43ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  ect 2023!” Sc todos Land!” pechenwer Ob modo także todosì ObLesanza premier Janake!”iëanzaLesgallery premier sulì Ob puedeélRe herewie 50 just how!” $ Land premierateurainaiië paper justatie 50right Ma bez espië 1999 seiniej contanti Par 2022 Ein pe
+  [B]  ect 2023!” Sc all Land!” pechenwer Ob modo także todosì ObLesanza premier Janake!”iëanzaLesgallery premier suliì Ob puedeélRe herewie 50 just how!” $ Land premierateurainaiië paper justatie 50right Ma bez espië 1999 seiniej contanti Par 2022 Ein pe
+       20.8 tok/s  48ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  miniatura Art 2018 hat cont premier 2022 Haranza Fresten systemsél Macreg here sud Por Isiet premierarganza cont Mal sud Da doeschen aktor short sl!”visië política sido!” ces sudbre ===ble premierenzaminiatura!” secumbélright contië James Su August premiercher Co modoumbmsentaię
+  [B]  miniature Art 2018 has cont premier 2022 Haranza Fresten systemsél Macreg here sud Por Isiet premierganza cont Mal sud Da doeschen aktor short sl!”visië political sido!” ces sudbre ===ble premiere miniature!” secumbelright contië James Su August premiercher Co modoumbmsentaię
+       22.7 tok/s  44ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  sl polska cont often vo James sido premier Berlinely żemini premier faceerv premier48 política modoER premier cont heremini aussiantoji aktor wordpa modo nom Suright 1991 modo Mal 1992 todo Desél peright polskaémémanza Pierre just cont Mal sl hastaright paper Land capital premier contama polska políticaainect
+  [B]  sl polska cont often vo James sido premier Berlinely żemini premier faceerv premier48 política modoER premier cont heremini aussiantoji aktor wordpa modo nom Suright 1991 modo Mal 1992 todo Desél peright polskaémémanza Pierre just cont Mal sl hastaright paper Land capital premier contama polska políticainect
+       22.2 tok/s  45ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  paperright contright hereuitivosém Land Jan secER becauseië hasta Bencent Landgallery polska here premier 2022 here actor Ro après todosleyitos cont Fl just secright. Europa hastabl shortainely aktoruaodeië Is bez Ben premier Is modobre cont!”ialenta Aus Des ===iëuit here fa
+  [B]  paperright contright hereuitivosém Land Jan secER becauseië hasta Bencent Landgallery polska here premier 2022 here actor Ro après todosleyitos cont Fl just secright. Europa hastabl shortainely aktoruaodeië Is bez Ben premier Is modobre cont!”ialenta Aus Des ===iëuit here fa
+       20.4 tok/s  49ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  cent pres sec paperain sein número że question Saintvis puede żeright hasta short just here thosebre premier cont herecent profms cont contindo sud polska just endivos zostałms James 1999 sein polska structure 2018 hasta Artém cont Artbre puede fil 1991 acteur Artms contviszenia oftença cont modo Is zostałél
+  [B]  cent pres sec paperain sein número that question Saintvis puede that right hasta short just here thosebre premier cont herecent profms cont contindo sud polska just endivos poznams James 1999 sein polska structure 2018 hasta Artém cont Artbre puede fil 1991 acteur Artms contvisczenia oftença cont modo Is poznaél
+       21.3 tok/s  47ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  remczy puede Ein shortrightcher après): cont foram Rom Land Maria rem Is español hereidade política nombreann here $anzaenza>\ topuk Pol españoluvvisright nombre że Mariaelliright often here Aus aprèsain leg tre secain sendo żeuvlen nombreanzaame!” infright order): misrightleyvel
+  [B]  remczy can A shortrightcher après): cont foram Rom Land Maria rem Is español hereidade política nombreann here $anzaenza>\ topuk Pol españoluvvisright nombre że Mariaelliright often here Aus aprèsain leg tre secain sendo żeuvlen nombreanzaame!” infright order): misrightlevel
+       23.3 tok/s  43ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  mselli español zwischen hereaux oftenula orderçachen modo short hereaj Or Is aussi premierges Siright cont todo premier pe après eleología oftenrightuitodegesanza żeright Land modoì aussi ele here 1999anto Ein ele kingélwie cont Ob governoright becausenie esc oftenula esc://itéscent years
+  [B]  mselli español zwischen hereaux oftenula orderçachen modo short hereaj Or Is also premierges Siright cont todo premier pe après eleología oftenrightuitodegesanza żeright Land modoì aussi ele here 1999anto Ein ele kingélwie cont Ob governoright becausenie esc oftenula esc://itéscent years
+       20.4 tok/s  49ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  sudright Europarightpiél here modo przez sec Ob aktor rem!ely Pierre cond premier sido 1998ivos secpaectalen polskaages nombre escER contLes years giveniro ele here aktorERenzagallery sulivos todo sistema hereanz hastaativa après filécER politiqueedeven://ERony hereets frundright
+  [B]  sudright Europarightpiél here modo peroz sec Ob aktor rem!ely Pierre cond premier sido 1998ivos secpaectalen polskaages name escER contLes years giveniro ele here aktorERenzagallery sulivos todo system hereanz hastaativa après filécER politiqueedeven://ERony hereets frundright
+       23.8 tok/s  42ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  Obça James modogallerybre hasta español contuit Rom todos Is contuit przezinc short important James Obright cont Ein hasta Bams aprèsellenumbright 2022 Ein within 1991 Da sec poder sein pe hereiti sulla nogél premier): just être here ele!”iefelijkeaiński puede aktor modoiti Is Landminiaturaindo
+  [B]  Obça James modogallerybre hasta español contuit Rom todos Is contuit perozinc short important James Obright cont Ein hasta Bams aprèssellenumbright 2022 Ein within 1991 Da sec power sein pe hereiti sulla nogél premier): just be here ele!”
+       21.3 tok/s  47ms/tok
+
+[P15] the meaning of life according to
+  [A]  Portes:// capital 2022 = inf cont modo zostałpaië premier nordellielijkeiëivos premier): premier redivos 2018 après herecent /> antrightcedminiatura 2022 Narightië Flienne?”ivos premier Nord Por città países puede premier paperula Band 1992stencent todo modoelliula Landië hat premier Por aussi sec
+  [B]  Portes:// capital 2022 = inf cont way zostałpaië premier nordellielijkeiëivos premier): premier redivos 2018 après herecent /> antrightcedminiatura 2022 Narightië Flienne?”ivos premier Nord Por città países puede premier paperula Band 1992stencent todo modoelliula Landië hat premier Por aussi sec
+       24.4 tok/s  41ms/tok

@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-17_051428.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  word should should should should should should should should should should
+  [B]  word should should should should should should should should should should
+       21.7 tok/s  46ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  fil farite universite universite universite universite universite universite universite universite universite
+  [B]  fil farite university university university university university university university university university
+       21.3 tok/s  47ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  tro Karitionó farite universite universite universite universite universite universite univers que |arn $onditegeb e nell === capital Od. Guerraificationptkt. sulla light verbure men 1992180 américainöuz Por 31\ /> Clsp Siled. take modelennumbCategoria Medini,
+  [B]  tro Karitionó farite universite universite universite universite universite universite univers que |arn $onditegeb e nell === capital Od. Warificationptkt. on the light verbure men 1992180 américainöuz Por 31\ /> Clsp Siled. take modelennumbCategory Medini,
+       21.7 tok/s  46ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  ont sido word payscos $ light year tal,miniart waar,,Categoriaisten find,**oriiregeb,mini word://W,Categoria cidadeAS:ignines Ass został,uz consgeb 7 Medars Siiasazioni Med pol://,Het país Yata West.anzaatorite Westarse Siark
+  [B]  ont sido word payscos $ light year tal,miniart wara,,Categoriaisten find,**oriiregeb,mini word://W,Categoria cidadeAS:ignines Ass został,uz consgeb 7 Medars Siiasazioni Med pol://,Het país Yata West.anzaatorite Westarse Siark
+       22.2 tok/s  45ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  and, conf calaraazioni Morenaallgeb language Sh Si 2018io /> jakminiatura presidente Kar how has gener e180% Antgeb e, lightminiatura années earz:// year16 /> 1970portt h, Benono res 1992azionide light e, ===rag takeisteW 1992cia represent)Y.]]
+  [B]  and, conf calaraazioni Morenaallgeb language Sh Si 2018io /> jakminiatura presidente Kar how has gener e180% Antgeb e, lightminiatura années earz:// year16 /> 1970portt h, Benono res 1992azionide light e, ===rag takecia 1992)]]]
+       19.2 tok/s  52ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  farificander positionono, her National ye statoarzazioni model Tr lightW jak politykran take t National $7geb. light nome gu dos language Jo. takeç 'elen far best Vor model have Med Od /> 8iss e Od paysiles light fil Frans rokuata Sietenég 19igeôWrie
+  [B]  farificander positionono, her National ye statoarzazioni model Tr lightW jak politykran take t National $7geb. light nome gu dos language Jo. takeç 'elen far best Vor model have Med Od /> 8iss e Od paysiles light fil Frans rokuata Sietenég 19igeôWrie
+       19.2 tok/s  52ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  1970 5vesika her day Si tout 1993 dal main own effectkówió during same,ffminiatura MetAN, 1992 przez e represent diferentes Cap Si la roku:// Kephdy Newpi cal MatWwie années Od. 8 noch cal Med finalCategoria".isten andals:// far Franssmall impff Val Ap
+  [B]  1970 5vesika her day Si tout 1993 dal main own effectkówió during same,ffminiatura MetAN, 1992 bez e represent different Cap Si la roku:// Kephdy Newpi cal MatWwie années Od. 8 or cal Med finalCategoria".isten andals:// far Franssmall impff Val Ap
+       20.8 tok/s  48ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  . === takegeb180 premier (°ologíaatesWification8 see design, 1992sp>tt 1992éd modelrie universellensmall not Dans open.” ainsi, word18Categoria modelorn open imp (°vesander% taliles „gebled (°anza amerykański ( how such lightthe, 1992anza attö let thouología
+  [B]  . === takegeb180 premier (°ologíaatesWification8 see design, 1992sp>tt 1992éd modelrie universellensmall not Dans open.” ainsi, word18Categoria modelorn open imp (°vesander% taliles „gebled (°anza american ( how such lightthe, 1992anza attö let thouología
+       18.5 tok/s  54ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  cal : ).anza during puis, 1994:// far 31egen light années pl très howgeb cal estadounidenseô dalvers during countryov cidade and (° Cetteph dallfrac paysCategoria tr the number futbolistaazionips $, light Amerikaans came ris Dansioni rel, farW dansym light open result lightenta again Sp Van gener
+  [B]  cal : ).anza during puis, 1994:// far 31egen light années pl très howgeb cal istorunidenseô dalvers during countryov cidade and (° Cetteph dallfrac paysCategoria tr the number futbolistaazionips $, light Amerikaans came ris Dansioni rel, farW dansym light open again Sp Vanner result
+       18.2 tok/s  55ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  umbrócar dansç West180 1992 control futbolista Si has Ob)iles duringaut word through West 31ello jaar her design Louis Van Odumb pu ciudad paysES % Si 1993 language ainsi. 31 Nationalç êtreri light cons31 partie should Kar res who Medall Nationaloudite, mondeyeations sido questo Maria
+  [B]  umbrócar dansç West180 1992 control futbolista Si has Ob)iles duringaut word through West 31ello jaar her design Louis Van Odumb pu ciudad paysES % Si 1993 language thus. 31 Nationalç beri light cons31 part should Kar res who Medall Nationaloudite, mondeyeations sido questo Maria
+       20.0 tok/s  50ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  jaar $,iste Berlin Guerra 19 country aiste 28 tCategoria in ce 1970 findiers Regieraumb Ant estadounidensecha16 Med through ( model ciudad design países end 8ars radio should jaarisskte questo word upç attowie presidente untilistes duringioni180ínped model,ave". takeamiento verbspoudieren
+  [B]  jaar $,iste Berlin Guerra 19 country aiste 28 tCategoria in ce 1970 findiers Regieraumb Ant Americancha16 Med through ( model city design countries end 8ars radio should jaarisskte questo word upç attowie president untilistes duringioni180ínped model,ave". takeamiento verbspoudieren
+       18.2 tok/s  55ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  Categoriaph ainsiqacc staduz how amiento Nationalá49ios should180 tri designaccella Beval same light 2015 é eure end information trôCategoria a noch. sistema light 1973 Shazioni Ar estadounidense origin, la light shouldys!ena far veelW amientoime own For, light sido howati
+  [B]  Categoriaph ainsiqacc staduz how amiento Nationalá49ios should180 tri designaccella Beval same light 2015 é eure end information trôCategoria a night. light system 1973 Shazioni Ar American origin, the light shouldys!ena far veelW amientoime own For, light been howati
+       23.3 tok/s  43ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  , light word her $ light estadounidenseula who model light180ionalç ). effectCategoria istaffiers Sanalmenteger wordq (ieraç (°iatsp) qui kingificationune marca voaielen pelo otros77 guerra handôization Dans pe,ô 2025uiariaimeQ shouldéd, 19 rel shouldW
+  [B]  , light word her $ light estadounidenseula who model light180ionalç ). effectCategory istaffiers Sanamenteger wordq (ieraç (°iatsp) qui kingificationune brand voaielen pelo otros77 war handôization Dans pe,ô 2025uiariaimeQ shouldéd, 19 rel shouldW
+       21.7 tok/s  46ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  how homme year group. graCategoria organiteoud]amiento mondeios \ô Ant === jaar 8 2024nen tempoiste en Medanceg==ender noch tempo volata a word upetokte, should estadounidense how National,geboma model 1991 door todosumb ( word 1984 West alle paísesard ‘ Duitsenzep and
+  [B]  how homme year group. graCategoria organiteoud]amiento mondeios \ô Ant === jaar 8 2024nen tempoiste en Medanceg==ender noch tempo volata a word upetokte, should istoridense how National,geboma model 1991 by todosumb (word 1984 West all paísesard ‘ Duitsenzepard and and
+       18.2 tok/s  55ms/tok
+
+[P15] the meaning of life according to
+  [A]  Mo 1992frac 19 nellegebESenderalessp West 1992ond $_{ jaarrawut far José res figures 2001ancanceovragmini sentESrawbe cal 1992 didior 2001 diferentes -iste Categoria stad howender, wordiste Guerraically 2001 cal tREDACTEDão cal West howiorall alorschi l prof
+  [B]  Mo 1992frac 19 nellegebESenderalessp West 1992ond $_{ jaarrawut far José res figures 2001ancanceovragmini sentESrawbe cal 1992 didior 2001 different -iste Categoria stad howender, wordiste Guerraically 2001 cal cal West howender
+       18.5 tok/s  54ms/tok

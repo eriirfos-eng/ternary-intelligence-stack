@@ -1,0 +1,28 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-13_051932.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  Cl Cal pe without vis worldsub without vis worldsub without vis
+  [B]  Cl Cal pe without vis worldsub without vis worldsub without vis
+       30.3 tok/s  33ms/tok
+
+[P2] User: what language do you speak? Albert:
+  [A]  2016 Cal pe without vis worldsub without vis worldsub without vis
+  [B]  2016 Cal pe without vis worldsub without vis worldsub without vis
+       27.8 tok/s  36ms/tok
+
+[P3] die Geschichte der Europäischen Union
+  [A]  vol pe without vis worldsub without vis worldsub without vis worldsub
+  [B]  vol pe without vis worldsub without vis worldsub without vis worldsub
+       31.2 tok/s  32ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  polska puedeimeule typecji without vis worldsub without type James without”. pays withoutster pe best rec pe without Esteü withoutika tanto został polska withoutvfl został 2021 pe sal realchi puedemat zostałaliz conculefl realaliz James aber Con him47 stato († sec bas Gr III Zeit nurhr without
+  [B]  polska puedeimeule typecji without vis worldsub without type James without". pays withoutster pe best rec pe without Esteü withoutika tanto jest polska withoutvfl pozna 2021 pe sal realchi puedemat poznaliz conculefl realaliz James aber Con him47 stato († sec bas Gr III Zeit nurhr without
+       31.2 tok/s  32ms/tok
+
+[P5] the ternary number system uses three
+  [A]  fl attena withoutuleèonia bas order aber Las bas Clitésvignette 31ite without zich był James polska einem48oro Isitt38 zich 31 Die without aber!” zeace einem peku capitalcar operitésval G politicusiam yet===ho Is tussenmetede donteth español...ies takżeides Transanzares
+  [B]  fl attena withoutuleèonia bas order aber Las bas Clitésvignette 31ite without viz był James polska einem48oro Isitt38 viz 31 Die without aber!” zeace einem peku capitalcar operitésval G politicusiam yet===ho Is tussenmetede donteth español...ies takżeides Transanzares
+       32.3 tok/s  31ms/tok
