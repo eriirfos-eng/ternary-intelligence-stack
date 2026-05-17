@@ -28,4 +28,12 @@ if force_rebuild or not os.path.exists(BINARY):
 
 args = [a for a in sys.argv[1:] if a != "--rebuild"]
 os.chdir(HERE)
-sys.exit(subprocess.run([BINARY] + args).returncode)
+ret = subprocess.run([BINARY] + args).returncode
+
+if "--bench" in args and ret == 0:
+    translator = os.path.join(HERE, "bench_translate.py")
+    if os.path.exists(translator):
+        print()
+        subprocess.run([sys.executable, translator])
+
+sys.exit(ret)
