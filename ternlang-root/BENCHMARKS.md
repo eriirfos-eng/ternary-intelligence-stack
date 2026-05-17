@@ -299,7 +299,7 @@ Patent pending: A50296/2026.
 
 PPL is deterministic across machines (same model, same eval set). Tok/s varies by µarch — Zen+ (Ryzen 3500U) vs Haswell (i7-4800MQ). Both CPU-only, no GPU, no INT8.
 
-**Current (v3.0 · 13L · CPU):** 11–22 tok/s per prompt (depth × 2.6 vs 5L; multilingual 32k vocab). GPU training on Modal T4 at ~400 ms/batch is separate from inference measurement.
+**Current (v3.0 · 17L · CPU):** 13–18 tok/s per prompt (measured across 15 benchmark prompts, ep1549 checkpoint — see `benchmarks/bench_v3.0_2026-05-17_074807.txt`). Depth × 3.4 vs 5L; multilingual 32k vocab, 256CTX. GPU training on Modal T4 at ~450 ms/batch is separate from inference measurement.
 
 **Reproduce (CPU):**
 ```bash
@@ -331,22 +331,27 @@ Pass a path argument to evaluate any other corpus file.
 | **Reduction vs baseline** | **84.0%** |
 | Hardware | HP ZBook i7-4800MQ, CPU-only |
 
-**Current — Albert v3.0 (32k multilingual vocab, 12L, training in progress):**
+**Current — Albert v3.0 (32k multilingual vocab, 17L, training in progress):**
 
 | Metric | Value |
 |--------|-------|
-| Checkpoint | `albert_v3.0.safetensors` (12L · 256H · 12E · 128CTX · 32k vocab, ep107 local copy) |
-| Eval corpus | `data/corpus/stage_3/alice.txt` (~150KB, held-out) |
-| Windows | 20 × 128 tokens (sample; full corpus = 348 windows) |
+| Checkpoint | `albert_v3.0.safetensors` (17L · 256H · 12E · 256CTX · 32k vocab, ep1599) |
+| Global epoch | 1599 · 5 Net2Net surgeries complete (12L→13L→14L→15L→16L→17L) |
 | Unigram baseline (random) | 32,000 = vocab_size; ln baseline = 10.3730 |
-| **Mean CE loss** | **10.3668** |
-| **Perplexity** | **31,788** |
-| **Reduction from random** | **0.66%** (early training — expected at ep107 on 32k vocab) |
-| Eval time | 329s · CPU · HP ZBook i7-4800MQ |
-| Measured | 2026-05-12 |
+| **Epoch-avg CE loss (ATL)** | **10.0915** (ep1584) |
+| **Batch CE loss (ATL)** | **9.9758** (ep1599) — first sub-10.0 batch loss in training history |
+| **Reduction from random** | **2.7%** on epoch-avg basis (10.3730 → 10.0915) |
+| Training cost to date | ~$21 (Modal T4 · ~$0.021/epoch at 17L/256CTX) |
+| Measured | 2026-05-17 |
+
+**Early result (ep107, 12L, for reference):**
+
+| Checkpoint | `albert_v3.0.safetensors` (12L · 256H · 12E · 128CTX · 32k vocab, ep107 local copy) |
+|---|---|
+| Mean CE loss | 10.3668 · Perplexity 31,788 · Reduction from random 0.66% |
 
 **Interpretation:**  
-A model outputting a uniform distribution over the vocabulary achieves perplexity = vocab_size. v2.0.0 achieved an 84% reduction from the 8k random baseline after 3L training on English corpus (PPL 1278.8 vs baseline 8000). v3.0 at ep107 shows 0.66% reduction from the 32k baseline — expected for early multilingual training: vocabulary is 4× larger, corpus is 10× larger (~635 MB), and specialisation takes more epochs. The trajectory from v2.0.0 confirms the architecture learns; v3.0 is converging on the same curve with greater breadth.
+A model outputting a uniform distribution over the vocabulary achieves perplexity = vocab_size. v2.0.0 achieved an 84% reduction from the 8k random baseline after 3L training on English corpus (PPL 1278.8 vs baseline 8000). v3.0 at ep107 showed 0.66% reduction from the 32k baseline — expected for early multilingual training. At ep1599 (17L), reduction from random has grown to 2.7% on epoch-avg basis, with intra-epoch batch loss now sub-10.0 for the first time. The trajectory from v2.0.0 through v3.0 confirms the architecture learns continuously; five autonomous surgeries have grown the model from 12L to 17L without loss spikes.
 
 `--max-windows=N` flag added for fast sampling; full eval takes ~95 min on CPU at 12L.
 
@@ -378,7 +383,8 @@ Run: overnight training session (ep334→ep461, ~127 epochs) + next-day continua
 | Epochs completed | 141 (ep334–ep475) |
 | Tokens per epoch | 307,200 (300 batches × 4 samples × 256 CTX) |
 | Total tokens processed | ~43.3M |
-| **Cost per epoch (all-in)** | **~$0.004** |
+| **Cost per epoch (all-in, 12L era)** | **~$0.004** |
+| **Cost per epoch (all-in, 17L current)** | **~$0.021** |
 | **Cost per million training tokens** | **~$0.013** |
 | Credits remaining (post-session) | $12.28 |
 
@@ -388,14 +394,15 @@ Run: overnight training session (ep334→ep461, ~127 epochs) + next-day continua
 
 | Platform | Cost/epoch (approx) | Basis |
 |----------|---------------------|-------|
-| **albert. on Modal T4 (measured)** | **~$0.004** | **Verified billing** |
+| **albert. on Modal T4 (12L, measured)** | **~$0.004** | **Verified billing (§13a)** |
+| **albert. on Modal T4 (17L, current)** | **~$0.021** | **Verified billing — deeper model, 256CTX** |
 | Modal A10G (est.) | ~$0.015 | ~4× T4 throughput, ~3× T4 cost |
 | Lambda Labs A100 (spot) | ~$0.08–0.15 | $1.29/hr; ~15–20 epochs/hr at this scale |
 | AWS p3.2xlarge (V100, on-demand) | ~$0.20–0.35 | $3.06/hr |
 | OpenAI fine-tuning GPT-4o | ~$8–25/epoch | $8/1M tokens × 307k tok/epoch; no checkpoint resume |
 | Cohere fine-tuning API | ~$1–5/epoch | Estimated; no epoch-level billing |
 
-**Key implication:** At $0.004/epoch, a 4-minute training interval costs less than a cup of coffee's fraction of electricity. This is what makes live-intervention training economically rational — patch, retry, and observe costs $0.004, not $0.20. Each 15-minute monitoring window across a full overnight run costs ~$0.03.
+**Key implication:** At $0.004–$0.021/epoch (scaling with depth), a training intervention costs less than a cup of coffee's fraction of electricity. This is what makes live-intervention training economically rational — patch, retry, and observe costs $0.02, not $0.20. Each 15-minute monitoring window across a full overnight run costs ~$0.08 at 17L.
 
 ### §13c — What $1 Buys
 
@@ -488,7 +495,7 @@ Data-parallel training scales linearly across GPUs at albert.'s model size.
 
 ### §14d — The Fibonacci Progression at Scale
 
-albert. grows through Fibonacci depth milestones: 12L → 13L → 21L → 34L → 55L...  
+albert. grows through Fibonacci depth milestones: 12L → 13L → 14L → 15L → 16L → **17L** (current) → 21L → 34L → 55L...  
 Each surgery requires reaching a loss gate, then a Fibonacci-epoch cooldown before the next trigger.  
 Hardware directly compresses the calendar time of this progression.
 
@@ -519,13 +526,13 @@ For €10,000 — less than one month of a senior ML engineer's salary at a majo
 
 #### How long to fully train albert. on 4× RTX 4090 (Bizon)
 
-Starting from current state: ep492 · loss 10.27 · 12L · 2,470 epochs/day.
+Starting from current state: ep1599 · loss 10.09 · 17L · 2,470 epochs/day (Bizon estimate).
 
 | Milestone | Epochs needed (est.) | Wall-clock on Bizon |
 |-----------|---------------------|---------------------|
-| First surgery gate (loss 9.8) | ~300 | **~3 hours** |
-| 12L → 13L surgery + cooldown | +13 | ~20 minutes |
-| 13L → 21L arc + cooldown | ~600 + 21 | ~6 hours |
+| 17L → 21L surgery gate (loss 9.8, gap ~0.29 nats) | ~300 | **~3 hours** |
+| Surgery + cooldown (F9 window = 144 ep) | +144 | ~1.5 hours |
+| 21L → 34L arc + cooldown | ~600 + 34 | ~6 hours |
 | 21L → 34L arc + cooldown | ~1,000 + 34 | ~10 hours |
 | 34L → 55L arc + cooldown | ~2,000 + 55 | ~20 hours |
 | 55L → 89L arc + cooldown | ~4,000 + 89 | ~40 hours |
@@ -614,6 +621,18 @@ The closest published work is *"The Boundary of Neural Network Trainability is F
 
 ### §15e — Execution record
 
+Five surgeries completed to date (2026-05-13 → 2026-05-17):
+
+| Surgery | Epoch | Architecture | `c_im` | Loss before | Fibonacci window |
+|---------|-------|-------------|--------|------------|-----------------|
+| 1 (first) | 511–512 | 12L → 13L | −0.1459 | 10.2937 | F3 = 13 |
+| 2 | 547 | 13L → 14L | −0.6983 | 10.2401 | F4 = 21 |
+| 3 | 611 | 14L → 15L | +0.2287 | 10.1952 | F5 = 34 |
+| 4 | 645–646 | 15L → 16L | −0.3442 | 10.1711 | F6 = 55 |
+| 5 | 701–702 | 16L → 17L | +0.5828 | 10.1340 | F7 = 89 |
+
+**Surgery 1 detail:**
+
 | Event | Value |
 |-------|-------|
 | First surgery execution | Global Epoch 512, 2026-05-13 09:02 UTC |
@@ -621,11 +640,12 @@ The closest published work is *"The Boundary of Neural Network Trainability is F
 | Architecture before | 12L · 256H · 12E · 256CTX · 32000V |
 | Architecture after | 13L · 256H · 12E · 256CTX · 32000V |
 | New layer | L12, cloned from hot layer L9 |
-| `c_im` assigned | `layer_c_im(12)` = −0.1459 (equatorial band) |
+| `c_im` assigned | −0.1459 (equatorial band) |
 | Loss before surgery | 10.2937 (epoch avg) |
 | New all-time best | 10.2463 (first batches post-surgery) |
 | Loss spike | None — identity mapping preserved, Mandelbrot perturbation at scale 1e-3 |
-| Next milestone | F5 = 21L |
+
+**Current state (2026-05-17):** ep1599 · 17L · epoch-ATL 10.0915 · batch-ATL 9.9758 (first sub-10.0 in history) · next surgery: 17L → 21L at loss ≤ 9.8 (gap: ~0.29 nats) · F9 window = 144 epochs.
 
 ---
 
