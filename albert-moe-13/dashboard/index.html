@@ -5198,13 +5198,18 @@
             }
         }
         smaPreSeedLen = smaLog.length; // freeze — never cleared below this point
+        let _preseedTns = null;
         for (const line of epochText.split('\n')) {
             const m = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)/);
             if (!m) continue;
             const ge = parseInt(m[1]), al = parseFloat(m[2]);
             if (!epochLog.some(e => e.global_epoch === ge))
                 epochLog.push({ local_epoch: ge, global_epoch: ge, layers: null, avg_loss: al, clipped: false, skipped: false });
+            const tm = line.match(/tns=(\d+)/);
+            if (tm) _preseedTns = parseInt(tm[1]);
         }
+        if (_preseedTns !== null)
+            document.getElementById('v-tns').textContent = _preseedTns.toLocaleString();
         // Derive true ATL floors from pre-seed data — these never reset
         for (const pt of smaLog) { if (pt.y < allTimeBestBatch) allTimeBestBatch = pt.y; }
         for (const e  of epochLog) { if (e.avg_loss < allTimeBestEpoch) allTimeBestEpoch = e.avg_loss; }
