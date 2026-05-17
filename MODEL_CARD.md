@@ -31,8 +31,8 @@ pipeline_tag: text-generation
 **Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
-**Last updated:** 2026-05-16  
-**Training status:** Active — ep1475+, epoch ATL 10.0982 (ep1474), batch ATL 10.0396 (ep1445)
+**Last updated:** 2026-05-17  
+**Training status:** Active — ep1553+, epoch ATL 10.0982 (ep1474), batch ATL **9.9948** (ep1553) — first sub-10.0 batch loss in albert. history
 
 ---
 
@@ -130,6 +130,7 @@ noisy inputs.
 | Ep1441 | 10.1067 | 10.1067 (ep1441) | 10.0556 (ep1435) | pending |
 | Ep1455 | 10.1060 | **10.1060** (ep1455) | **10.0396** (ep1445) | pending |
 | Ep1474 | 10.0982 | **10.0982** (ep1474) | **10.0396** (ep1445) | pending |
+| Ep1553 | ~10.07 (est) | 10.0982 (ep1474) | **9.9948** (ep1553) ← first sub-10.0 | pending |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
@@ -149,6 +150,8 @@ with a single-epoch drop of 0.0089 nats — the largest step in the post-ep1455
 run. Linear rate: ~0.000234 nats/epoch.
 Acceleration scenario (recent expert saturation: CMP=100%, INT=73%) could
 compress this to ep1900–1950.
+
+**Milestone (2026-05-17T05:48Z):** First sub-10.0 batch loss in albert. history — **9.9948** at ep1553 batch 149/300. The 10.0 barrier has been crossed.
 
 **Known limitations:**
 

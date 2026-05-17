@@ -52,7 +52,7 @@ The architecture combines:
 | LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-15):** Global Epoch 1189+ · epoch-ATL **10.1993** (ep1189, first sub-10.20) · batch-ATL **10.1600** (ep1185) · 5 Net2Net surgeries complete (12L→17L) · hot layer L10 · training on Modal T4 GPU (~450ms/batch)
+**Training state (2026-05-17):** Global Epoch 1553+ · epoch-ATL **10.0982** (ep1474) · batch-ATL **9.9948** (ep1553, first sub-10.0 in history) · 5 Net2Net surgeries complete (12L→17L) · training on Modal T4 GPU (~450ms/batch)
 
 ---
 

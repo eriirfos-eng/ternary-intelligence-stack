@@ -204,6 +204,7 @@
         }
         .draw-tool-item:hover { background: var(--bg3); }
         .draw-tool-item.active { color: #ffd700; }
+        .draw-tool-item[data-tool="trendline"] { color: #ffd700; }
         .draw-tool-item.soon { color: var(--muted2); cursor: default; pointer-events: none; }
         #_noteInput {
             position: fixed; background: rgba(13,17,23,0.93); color: #ffd700;
@@ -479,7 +480,7 @@
             border-radius: 99px;
             transition: width 0.4s ease;
         }
-        .sbar-val { color: var(--text); width: 30px; text-align: right; flex-shrink: 0; }
+        .sbar-val { color: var(--muted); width: 30px; text-align: right; flex-shrink: 0; }
 
         /* Routing heatmap (Panel D) */
         #routing-viz {
@@ -562,7 +563,7 @@
             border-radius: 99px;
             transition: width 0.4s ease, background 0.4s;
         }
-        .gbar-val { color: var(--text); width: 46px; text-align: right; flex-shrink: 0; }
+        .gbar-val { color: var(--muted); width: 46px; text-align: right; flex-shrink: 0; }
         /* #grad-norm-global is now an inline span inside .nv-label — no separate rule needed */
         #grad-panel.grad-stale,
         #expert-panel.grad-stale,
@@ -864,17 +865,6 @@
 
 
     <div class="tb-cell controls">
-        <button id="mycBtn" title="Mycelium Inspector — embedding space visualizer" onclick="mycToggle()">
-            <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
-                <circle cx="6" cy="6" r="1.6" fill="currentColor" stroke="none" opacity="0.9"/>
-                <line x1="6" y1="4.4" x2="6" y2="1.2"/>
-                <line x1="6" y1="7.6" x2="6" y2="10.8"/>
-                <line x1="4.6" y1="5.2" x2="1.8" y2="3.6"/>
-                <line x1="7.4" y1="6.8" x2="10.2" y2="8.4"/>
-                <line x1="4.6" y1="6.8" x2="1.8" y2="8.4"/>
-                <line x1="7.4" y1="5.2" x2="10.2" y2="3.6"/>
-            </svg>
-        </button>
         <button id="muteBtn" title="Toggle sound" style="background:none;border:none;cursor:pointer;padding:3px 5px;color:#505050;display:flex;align-items:center">
             <svg id="muteIcon" viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
                 <path d="M1 4h2l3-2v8L3 8H1z"/>
@@ -888,6 +878,17 @@
                 <polygon points="6,1 10.5,8 1.5,8" fill="currentColor" stroke="none" opacity="0.85"/>
                 <polygon points="6,4 9.5,9.5 2.5,9.5" fill="currentColor" stroke="none" opacity="0.65"/>
                 <rect x="5" y="9.5" width="2" height="2" rx="0.3" fill="currentColor" stroke="none" opacity="0.7"/>
+            </svg>
+        </button>
+        <button id="mycBtn" title="Mycelium Inspector — embedding space visualizer" onclick="mycToggle()">
+            <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+                <circle cx="6" cy="6" r="1.6" fill="currentColor" stroke="none" opacity="0.9"/>
+                <line x1="6" y1="4.4" x2="6" y2="1.2"/>
+                <line x1="6" y1="7.6" x2="6" y2="10.8"/>
+                <line x1="4.6" y1="5.2" x2="1.8" y2="3.6"/>
+                <line x1="7.4" y1="6.8" x2="10.2" y2="8.4"/>
+                <line x1="4.6" y1="6.8" x2="1.8" y2="8.4"/>
+                <line x1="7.4" y1="5.2" x2="10.2" y2="3.6"/>
             </svg>
         </button>
         <div class="dd-wrap">
@@ -3993,7 +3994,7 @@
 
         // Label
         ctx2d.font = '9px "JetBrains Mono", monospace';
-        ctx2d.fillStyle = '#475569';
+        ctx2d.fillStyle = '#64748b';
         ctx2d.textAlign = 'right';
         ctx2d.textBaseline = 'middle';
         ctx2d.fillText('FFT', lW - 3, fY + fH / 2);
@@ -4101,7 +4102,7 @@
         const globalEl = document.getElementById('grad-norm-global');
         const clipped  = norm > 1.0;
         globalEl.textContent = `global ∥g∥ = ${norm.toFixed(4)}${clipped ? ' ⚡CLIP' : ''}`;
-        globalEl.style.color  = clipped ? '#e0a030' : '#444';
+        globalEl.style.color  = clipped ? '#e0a030' : '#64748b';
         globalEl.onmouseenter = ev => showTip(ev,
             `<b>Global Gradient Norm</b><br>` +
             `∥∇L∥ = <b>${norm.toFixed(4)}</b><br>` +
@@ -4263,7 +4264,7 @@
 
         for (let row = 0; row < numL; row++) {
             const li = numL - 1 - row;  // highest layer at top, L0 at bottom
-            ctx2d.fillStyle = '#475569';
+            ctx2d.fillStyle = '#64748b';
             ctx2d.fillText(`L${li}`, lW - 3, (row + 0.5) * cellH);
 
             for (let ti = 0; ti < numT; ti++) {
@@ -4313,7 +4314,7 @@
         ctx.fillStyle = 'rgba(14,20,32,0.8)';
         ctx.fillRect(lW, 0, W - lW, fH - 1);
         ctx.font = '9px "JetBrains Mono", monospace';
-        ctx.fillStyle = '#475569';
+        ctx.fillStyle = '#64748b';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         ctx.fillText('FFT', lW - 3, fH / 2);
