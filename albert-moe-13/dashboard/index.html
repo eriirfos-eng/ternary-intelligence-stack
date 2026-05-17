@@ -3034,7 +3034,9 @@
                 // Tensor count — "Loaded X tensors from checkpoint"
                 const tnm = line.match(/Loaded (\d+) tensors/);
                 if (tnm) {
-                    document.getElementById('v-tns').textContent = parseInt(tnm[1]).toLocaleString();
+                    const _tnv = parseInt(tnm[1]);
+                    document.getElementById('v-tns').textContent = _tnv.toLocaleString();
+                    localStorage.setItem('albert_tns', _tnv);
                     continue;
                 }
                 // TELE line — feed the neural viz panels
@@ -3434,7 +3436,11 @@
                     last.ttlfreeze = parseInt(epsm[4]);
                     // Tensor count — re-emitted every epoch so dashboard always has it in the tail window
                     const tnse = line.match(/tns=(\d+)/);
-                    if (tnse) document.getElementById('v-tns').textContent = parseInt(tnse[1]).toLocaleString();
+                    if (tnse) {
+                        const _tv = parseInt(tnse[1]);
+                        document.getElementById('v-tns').textContent = _tv.toLocaleString();
+                        localStorage.setItem('albert_tns', _tv);
+                    }
                     // Finalize the OHLC candle for this epoch + doji detection
                     const ep = parseInt(epsm[1]);
                     const ec = epochCandles.get(ep);
@@ -5208,8 +5214,11 @@
             const tm = line.match(/tns=(\d+)/);
             if (tm) _preseedTns = parseInt(tm[1]);
         }
+        const _tnsStored = localStorage.getItem('albert_tns');
         if (_preseedTns !== null)
             document.getElementById('v-tns').textContent = _preseedTns.toLocaleString();
+        else if (_tnsStored)
+            document.getElementById('v-tns').textContent = parseInt(_tnsStored).toLocaleString();
         // Derive true ATL floors from pre-seed data — these never reset
         for (const pt of smaLog) { if (pt.y < allTimeBestBatch) allTimeBestBatch = pt.y; }
         for (const e  of epochLog) { if (e.avg_loss < allTimeBestEpoch) allTimeBestEpoch = e.avg_loss; }
