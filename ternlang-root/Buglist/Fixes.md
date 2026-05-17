@@ -4,6 +4,22 @@ This file tracks all architectural improvements, bug fixes, and feature addition
 
 ---
 
+## 2026-05-15 — [TRAINING-001] Gate Reset Footgun Fix
+
+**Diagnosis:** During albert. training, both the kaiming-uniform gate init block and the expert noise injection block ran unconditionally on every training startup. On checkpoint resume, this silently reset gate layers that had already differentiated — undoing hundreds of epochs of routing specialization. Estimated cost: ~500 wasted epochs.
+
+**Root Cause:** Two reset blocks in `train.py` had no guard condition — they always executed regardless of whether the run was a fresh start or a resume.
+
+**Fix Applied:**
+- Both blocks now gated behind `--break-symmetry` CLI flag
+- EvolutionManager entropy auto-detection: if gate entropy is already low (routing differentiated), reset is suppressed automatically
+- A clean resume will never touch gate initialization
+
+**Files:** `albert-moe-13/albert-training/train.py` — both reset blocks wrapped
+**Status:** FIXED. Verified: `--break-symmetry` absent → no gate reset on resume.
+
+---
+
 ## 2026-05-01 — [albert-cli Stabilization + MOE Platform Launch] (v1.3.1 release)
 
 **Diagnosis:** Two critical runtime failures prevented albert-cli from functioning in production:

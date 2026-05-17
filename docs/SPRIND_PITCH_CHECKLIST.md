@@ -1,5 +1,10 @@
 # SPRIND Pitch & Global Community Credibility Checklist
 
+**SUBMITTED: 2026-05-16** — Application submitted to SPRIND. This checklist is now archived as a pre-submission record.
+One item was still open at submission: `unsafe` SIMD `// SAFETY:` comments in `moe-core/src/core/model_adapter/simd_kernels.rs` — tracked separately as a post-submission code quality task.
+
+---
+
 Last updated: 2026-05-07 | Maintained by: Lead Architect (Simeon Kepp)
 
 This document tracks what is needed to be taken seriously by the global ML research community and SPRIND evaluators. It is honest about what is done and what is not. Items are never marked done without a verifiable artifact.

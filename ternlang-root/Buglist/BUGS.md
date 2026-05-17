@@ -142,4 +142,15 @@ This file tracks known bugs in the Ternlang compiler and VM.
 - **Fix:** Changed migration to remove deprecated IDs instead of adding them
 - **Status:** FIXED in commit a6f2e1k23
 
+---
+
+## Training Bugs (albert. MoE-13)
+
+### [TRAINING-001] Gate Reset Footgun — FIXED (2026-05-15)
+- **Description:** On every training restart, kaiming-uniform weight init and expert noise injection were applied unconditionally, resetting gate layers even on clean checkpoint resumption. This broke symmetry that had already been resolved by the model, effectively undoing hundreds of epochs of gate differentiation.
+- **Root Cause:** Both reset blocks in the training loop ran on every startup without checking whether the checkpoint was a fresh initialization or a resume.
+- **Impact:** Estimated ~500 wasted epochs before detection. Symptoms: gate entropy oscillating wildly, routing not stabilizing across restarts.
+- **Fix:** Both reset blocks now gated behind `--break-symmetry` CLI flag + EvolutionManager entropy auto-detection. A restart without the flag will never reset gates.
+- **Status:** FIXED in commit (2026-05-15). Both reset paths verified conditional.
+
 ## Remaining Unresolved Bugs

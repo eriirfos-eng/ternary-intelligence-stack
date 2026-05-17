@@ -1,5 +1,7 @@
 # SPRIND Scientific Artifact: Sparsity Performance Validation
 
+> **Submitted to SPRIND 2026-05-16.** This document was included as part of the TIS Stage 1 application. Preserved here as a permanent reference artifact.
+
 ## 1. Core Claim
 Hardware-verified performance profiling demonstrates a statistically confirmed non-linear breakpoint at 10.06% sparsity, indicating a shift from branch-predictor overhead to physical execution speedup. As sparsity scales, the system traverses distinct bottleneck regimes (branch-bound, compute-bound, and memory-bound), supported by measurable transitions in hardware performance counters. This introduces an explicit tradeoff: achieving a maximum 2.84x wall-clock speedup results in a corresponding reduction in per-FLOP efficiency to 0.28x due to memory bandwidth constraints.
 

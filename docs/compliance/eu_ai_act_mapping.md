@@ -80,8 +80,8 @@ TIS is not itself a high-risk system. The `TernAudit` module provides downstream
 |-------------|---------|
 | System description | `README.md`, `docs/architecture.md` |
 | Training methodology | `docs/albert-moe-13/docs/architecture.md`, `EVOLUTION_EVIDENCE.md` |
-| Performance metrics | `albert-moe-13/benchmarks/README.md`, `docs/validation_results.md` |
-| Limitations | `models/README.md` (honest capability statement), `docs/albert_capability_reality_report.md` |
+| Performance metrics | `albert-moe-13/benchmarks/README.md`, `docs/reports/validation_results.md` |
+| Limitations | `models/README.md` (honest capability statement), `albert-moe-13/docs/albert_capability_reality_report.md` |
 | Architecture specifications | `BET-ISA-SPEC.md`, `spec/standards/` |
 | Whitepaper | IEEE LaTeX, DOI: [10.17605/OSF.IO/TZ7DC](https://doi.org/10.17605/OSF.IO/TZ7DC) |
 
