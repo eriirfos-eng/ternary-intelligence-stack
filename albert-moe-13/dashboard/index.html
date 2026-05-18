@@ -6379,14 +6379,14 @@
             const inLbl=_lbl('INPUT','right');
             inLbl.scale.set(2.0,0.5,1);
             inLbl.position.set(INX-0.6, 1.6, 0); _scene.add(inLbl);
-            // INPUT→Layer faint fan lines
+            // INPUT→Layer fan lines — all radiate from single INPUT centre point
             const ioPos=new Float32Array(NL*2*3), ioCol=new Float32Array(NL*2*3);
             for (let i=0;i<NL;i++) {
                 const b=i*6;
-                ioPos[b]=INX;       ioPos[b+1]=lp[i].y; ioPos[b+2]=0;
+                ioPos[b]=INX;       ioPos[b+1]=0;        ioPos[b+2]=0;
                 ioPos[b+3]=lp[i].x; ioPos[b+4]=lp[i].y; ioPos[b+5]=lp[i].z;
-                ioCol[b]=0.1;ioCol[b+1]=0.4;ioCol[b+2]=0.08;
-                ioCol[b+3]=0.1;ioCol[b+4]=0.4;ioCol[b+5]=0.08;
+                ioCol[b]=0.12;ioCol[b+1]=0.45;ioCol[b+2]=0.7;
+                ioCol[b+3]=0.12;ioCol[b+4]=0.45;ioCol[b+5]=0.7;
             }
             const ioGeo=new THREE.BufferGeometry();
             ioGeo.setAttribute('position',new THREE.BufferAttribute(ioPos,3));
@@ -6435,14 +6435,14 @@
             const outLbl=_lbl('OUTPUT','left');
             outLbl.scale.set(2.2,0.5,1);
             outLbl.position.set(OUTX+0.6, 1.6, 0); _scene.add(outLbl);
-            // Expert→OUTPUT faint lines
+            // Expert→OUTPUT fan lines — all converge into single OUTPUT centre point
             const exoPos=new Float32Array(NE*2*3), exoCol=new Float32Array(NE*2*3);
             for (let e=0;e<NE;e++) {
                 const b=e*6;
                 exoPos[b]=ep[e].x; exoPos[b+1]=ep[e].y; exoPos[b+2]=ep[e].z;
-                exoPos[b+3]=OUTX;  exoPos[b+4]=ep[e].y; exoPos[b+5]=0;
-                exoCol[b]=0.4;exoCol[b+1]=0.2;exoCol[b+2]=0.6;
-                exoCol[b+3]=0.4;exoCol[b+4]=0.2;exoCol[b+5]=0.6;
+                exoPos[b+3]=OUTX;  exoPos[b+4]=0;        exoPos[b+5]=0;
+                exoCol[b]=0.45;exoCol[b+1]=0.2;exoCol[b+2]=0.65;
+                exoCol[b+3]=0.45;exoCol[b+4]=0.2;exoCol[b+5]=0.65;
             }
             const exoGeo=new THREE.BufferGeometry();
             exoGeo.setAttribute('position',new THREE.BufferAttribute(exoPos,3));
