@@ -5398,8 +5398,16 @@
     // ?panel_stale_s=1800 for CPU contributors where sparse telemetry
     // lines (GRAD, ROUTE, TLIGHT) arrive every several minutes.
     // Override via ?stale_s=300&panel_stale_s=1800 for CPU training.
-    const STALE_MS       = _qp.has('stale_s')       ? Math.max(10, parseInt(_qp.get('stale_s')))       * 1000 : 30_000;
-    const PANEL_STALE_MS = _qp.has('panel_stale_s') ? Math.max(10, parseInt(_qp.get('panel_stale_s'))) * 1000 : STALE_MS;
+    let STALE_MS       = _qp.has('stale_s')       ? Math.max(10, parseInt(_qp.get('stale_s')))       * 1000 : 30_000;
+    let PANEL_STALE_MS = _qp.has('panel_stale_s') ? Math.max(10, parseInt(_qp.get('panel_stale_s'))) * 1000 : STALE_MS;
+    // Auto-configure from server — overrides URL params only if params are at their default (unset by user).
+    // CPU contributors get 5-min stream + 30-min panel thresholds automatically, no URL params required.
+    fetch('/api/server-config').then(r => r.json()).then(cfg => {
+        if (cfg.cpu_mode) {
+            if (!_qp.has('stale_s'))       STALE_MS       = 300_000;
+            if (!_qp.has('panel_stale_s')) PANEL_STALE_MS = 1_800_000;
+        }
+    }).catch(() => {});
     const dingirEl    = document.getElementById('dingir');
     const modelNameEl = document.getElementById('model-name');
 

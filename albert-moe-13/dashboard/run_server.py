@@ -211,6 +211,15 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
             f.seek(start)
             self.wfile.write(f.read(length))
 
+    def _handle_server_config(self):
+        body = json.dumps({'cpu_mode': CPU_MODE}).encode()
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Cache-Control', 'no-store')
+        self.end_headers()
+        self.wfile.write(body)
+
     def _handle_mycelium(self):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == '/api/mycelium/status':
@@ -245,6 +254,11 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        # Server config API — lets dashboard self-configure without URL params
+        if self.path.startswith('/api/server-config'):
+            self._handle_server_config()
+            return
+
         # Mycelium API
         if self.path.startswith('/api/mycelium'):
             self._handle_mycelium()
