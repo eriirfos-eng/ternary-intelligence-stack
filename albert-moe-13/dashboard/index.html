@@ -6233,12 +6233,12 @@
         // Fixed hue per layer — evenly distributed across spectrum for identity tracking
         const LHUE = Array.from({length:NL}, (_,i) => i/NL);
 
-        const NP_LG = 3, NP_GE = 5;  // particles per L→Gate / Gate→Expert edge
+        const NP_LG = 3, NP_GE = 5, BEZ_SEGS = 7;  // particles + bezier arc segments
 
         let _scene, _camera, _renderer, _edgeGeo, _routeGeo;
         let _lSprites = [], _eSprites = [], _lLabels = [], _eLabels = [];
-        let _rSprites = [];   // router gate nodes
-        let _rHubSprite = null;   // central router hub orb
+        let _bezCtrl = [];       // bezier control points [NL][NE] for L→E arcs
+        let _bezEdgeGeo = null;  // L→E bezier arc geometry
         let _lTrailSprites = [];  // hot-trail ring per layer
         let _ptGeo = null, _ptPhase = null, _ptSpeed = null;
         let _initialized = false;
@@ -6253,7 +6253,7 @@
         let _hotHistIdx = 0;
 
         // ── orbit state ──────────────────────────────────────────────
-        let _theta = 0, _phi = Math.PI / 2, _radius = 22;
+        let _theta = 0, _phi = Math.PI / 2, _radius = 24;
         const _camTgt = { x: 0, y: 0, z: 0 };
         let _orbitDrag = false, _panDrag = false, _px = 0, _py = 0;
         let _spaceDown = false;
@@ -6350,63 +6350,86 @@
             _renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
             _renderer.setClearColor(0x060d15, 1);
 
-            // Layout — layers left, router gate centre, experts right
-            const LX=-5.5, GX=0, EX=5.5;
-            const lp=[], gp=[], ep=[];
+            // Layout: INPUT → LAYERS → EXPERTS → OUTPUT (left-to-right data flow)
+            const INX=-10, LX=-5.5, EX=5.5, OUTX=10;
+            const lp=[], ep=[];
             for (let i=0;i<NL;i++) {
                 const y=((i/(NL-1))-0.5)*16;
-                lp.push(new THREE.Vector3(LX, y, Math.sin(i*0.55)*1.4));
+                lp.push(new THREE.Vector3(LX, y, Math.sin(i*0.55)*0.8));
             }
             for (let e=0;e<NE;e++) {
-                const angle=(e/NE)*Math.PI*2;
-                gp.push(new THREE.Vector3(GX+Math.cos(angle)*1.4, Math.sin(angle)*1.1, Math.sin(angle*1.7)*0.6));
-                const ey=((e/(NE-1))-0.5)*12;
-                ep.push(new THREE.Vector3(EX, ey, Math.cos(e*0.9)*1.1));
+                const y=((e/(NE-1))-0.5)*12;
+                ep.push(new THREE.Vector3(EX, y, Math.cos(e*0.9)*0.8));
             }
-            _scene.userData.lp=lp; _scene.userData.gp=gp; _scene.userData.ep=ep;
+            _scene.userData.lp=lp; _scene.userData.ep=ep;
+
+            // Pre-compute bezier control points — Z-spread prevents central blob
+            for (let i=0;i<NL;i++) {
+                _bezCtrl[i]=[];
+                for (let e=0;e<NE;e++) {
+                    const cz=Math.sin(i*0.7+e*0.4)*2.8;
+                    const cy=(lp[i].y+ep[e].y)/2+Math.cos(i*0.5+e*0.9)*0.35;
+                    _bezCtrl[i][e]={x:0,y:cy,z:cz};
+                }
+            }
+
+            // INPUT node + label
+            const inNode=_node(1.6, new THREE.Color(0.2,0.7,1.0));
+            inNode.position.set(INX, 0, 0); inNode.material.opacity=0.55; _scene.add(inNode);
+            const inLbl=_lbl('INPUT','right');
+            inLbl.scale.set(2.0,0.5,1);
+            inLbl.position.set(INX-0.6, 1.6, 0); _scene.add(inLbl);
+            // INPUT→Layer faint fan lines
+            const ioPos=new Float32Array(NL*2*3), ioCol=new Float32Array(NL*2*3);
+            for (let i=0;i<NL;i++) {
+                const b=i*6;
+                ioPos[b]=INX;       ioPos[b+1]=lp[i].y; ioPos[b+2]=0;
+                ioPos[b+3]=lp[i].x; ioPos[b+4]=lp[i].y; ioPos[b+5]=lp[i].z;
+                ioCol[b]=0.1;ioCol[b+1]=0.4;ioCol[b+2]=0.08;
+                ioCol[b+3]=0.1;ioCol[b+4]=0.4;ioCol[b+5]=0.08;
+            }
+            const ioGeo=new THREE.BufferGeometry();
+            ioGeo.setAttribute('position',new THREE.BufferAttribute(ioPos,3));
+            ioGeo.setAttribute('color',new THREE.BufferAttribute(ioCol,3));
+            _scene.add(new THREE.LineSegments(ioGeo,new THREE.LineBasicMaterial({vertexColors:true,blending:THREE.NormalBlending,transparent:true,depthWrite:false,opacity:0.35})));
 
             // Layer nodes + labels
             for (let i=0;i<NL;i++) {
                 const s=_node(0.9,_tc(0.05)); s.position.copy(lp[i]); _scene.add(s); _lSprites.push(s);
                 const lb=_lbl('L'+i,'right'); lb.position.set(lp[i].x-1.2,lp[i].y,lp[i].z); _scene.add(lb); _lLabels.push(lb);
             }
-            // Central router hub — large glowing orb at origin
-            _rHubSprite = _node(2.4, new THREE.Color(0.75, 0.35, 1.0));
-            _rHubSprite.position.set(GX, 0, 0);
-            _rHubSprite.material.opacity = 0.55;
-            _scene.add(_rHubSprite);
-            // Router gate nodes orbit the hub — colour shows weight
-            for (let e=0;e<NE;e++) {
-                const s=_node(1.2,_tc(1/NE)); s.position.copy(gp[e]); _scene.add(s); _rSprites.push(s);
+
+            // Layer→Expert bezier arc edges — BEZ_SEGS segments each, colours updated at runtime
+            const leTotal=NL*NE*BEZ_SEGS;
+            const lePos=new Float32Array(leTotal*2*3), leCol=new Float32Array(leTotal*2*3);
+            for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
+                const ctrl=_bezCtrl[i][e];
+                for (let s=0;s<BEZ_SEGS;s++) {
+                    const t0=s/BEZ_SEGS, t1=(s+1)/BEZ_SEGS;
+                    const u0=1-t0, u1=1-t1;
+                    const idx=(i*NE*BEZ_SEGS+e*BEZ_SEGS+s)*6;
+                    lePos[idx]  =u0*u0*lp[i].x+2*u0*t0*ctrl.x+t0*t0*ep[e].x;
+                    lePos[idx+1]=u0*u0*lp[i].y+2*u0*t0*ctrl.y+t0*t0*ep[e].y;
+                    lePos[idx+2]=u0*u0*lp[i].z+2*u0*t0*ctrl.z+t0*t0*ep[e].z;
+                    lePos[idx+3]=u1*u1*lp[i].x+2*u1*t1*ctrl.x+t1*t1*ep[e].x;
+                    lePos[idx+4]=u1*u1*lp[i].y+2*u1*t1*ctrl.y+t1*t1*ep[e].y;
+                    lePos[idx+5]=u1*u1*lp[i].z+2*u1*t1*ctrl.z+t1*t1*ep[e].z;
+                }
             }
-            // Expert nodes + labels
+            _bezEdgeGeo=new THREE.BufferGeometry();
+            _bezEdgeGeo.setAttribute('position',new THREE.BufferAttribute(lePos,3));
+            _bezEdgeGeo.setAttribute('color',new THREE.BufferAttribute(leCol,3));
+            _scene.add(new THREE.LineSegments(_bezEdgeGeo, new THREE.LineBasicMaterial({
+                vertexColors:true, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false
+            })));
+
+            // Expert nodes + labels (named: SYN SEM CTX ...)
             for (let e=0;e<NE;e++) {
                 const s=_node(0.55,_tc(0.5)); s.position.copy(ep[e]); _scene.add(s); _eSprites.push(s);
                 const lb=_lbl(ENAMES[e],'left'); lb.position.set(ep[e].x+1.2,ep[e].y,ep[e].z); _scene.add(lb); _eLabels.push(lb);
             }
 
-            // ── Demo forward-pass anchors: INPUT block (far left) + OUTPUT block (far right) ──
-            const INX=-9.5, OUTX=9.5;
-            // INPUT glow + label
-            const inNode=_node(1.6, new THREE.Color(0.2,0.7,1.0));
-            inNode.position.set(INX, 0, 0); inNode.material.opacity=0.55; _scene.add(inNode);
-            const inLbl=_lbl('INPUT','right');
-            inLbl.scale.set(2.0,0.5,1);
-            inLbl.position.set(INX-0.6, 1.6, 0); _scene.add(inLbl);
-            // INPUT→Layer arrows: faint horizontal lines showing token flow
-            const ioLineCount=NL, ioPos=new Float32Array(ioLineCount*2*3), ioCol=new Float32Array(ioLineCount*2*3);
-            for (let i=0;i<NL;i++) {
-                const b=i*6;
-                ioPos[b]=INX;       ioPos[b+1]=lp[i].y; ioPos[b+2]=0;
-                ioPos[b+3]=lp[i].x; ioPos[b+4]=lp[i].y; ioPos[b+5]=lp[i].z;
-                const br=0.08; ioCol[b]=0.1;ioCol[b+1]=0.4;ioCol[b+2]=br;
-                ioCol[b+3]=0.1;ioCol[b+4]=0.4;ioCol[b+5]=br;
-            }
-            const ioGeo=new THREE.BufferGeometry();
-            ioGeo.setAttribute('position',new THREE.BufferAttribute(ioPos,3));
-            ioGeo.setAttribute('color',new THREE.BufferAttribute(ioCol,3));
-            _scene.add(new THREE.LineSegments(ioGeo,new THREE.LineBasicMaterial({vertexColors:true,blending:THREE.NormalBlending,transparent:true,depthWrite:false,opacity:0.35})));
-            // OUTPUT glow + label
+            // OUTPUT node + label
             const outNode=_node(1.6, new THREE.Color(0.9,0.5,1.0));
             outNode.position.set(OUTX, 0, 0); outNode.material.opacity=0.55; _scene.add(outNode);
             const outLbl=_lbl('OUTPUT','left');
@@ -6416,8 +6439,8 @@
             const exoPos=new Float32Array(NE*2*3), exoCol=new Float32Array(NE*2*3);
             for (let e=0;e<NE;e++) {
                 const b=e*6;
-                exoPos[b]=ep[e].x;  exoPos[b+1]=ep[e].y; exoPos[b+2]=ep[e].z;
-                exoPos[b+3]=OUTX;   exoPos[b+4]=ep[e].y; exoPos[b+5]=0;
+                exoPos[b]=ep[e].x; exoPos[b+1]=ep[e].y; exoPos[b+2]=ep[e].z;
+                exoPos[b+3]=OUTX;  exoPos[b+4]=ep[e].y; exoPos[b+5]=0;
                 exoCol[b]=0.4;exoCol[b+1]=0.2;exoCol[b+2]=0.6;
                 exoCol[b+3]=0.4;exoCol[b+4]=0.2;exoCol[b+5]=0.6;
             }
@@ -6464,43 +6487,13 @@
                 }
             });
 
-            // Layer→Gate edges (17×12 = 204, dim background web)
-            const lgCount=NL*NE;
-            const lgPos=new Float32Array(lgCount*2*3), lgCol=new Float32Array(lgCount*2*3);
-            for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
-                const b=(i*NE+e)*6;
-                lgPos[b]=lp[i].x; lgPos[b+1]=lp[i].y; lgPos[b+2]=lp[i].z;
-                lgPos[b+3]=gp[e].x; lgPos[b+4]=gp[e].y; lgPos[b+5]=gp[e].z;
-            }
-            _edgeGeo=new THREE.BufferGeometry();
-            _edgeGeo.setAttribute('position',new THREE.BufferAttribute(lgPos,3));
-            _edgeGeo.setAttribute('color',new THREE.BufferAttribute(lgCol,3));
-            _scene.add(new THREE.LineSegments(_edgeGeo, new THREE.LineBasicMaterial({
-                vertexColors:true, blending:THREE.NormalBlending, transparent:true, depthWrite:false
-            })));
-
-            // Gate→Expert edges (12 bright connections, route-weighted)
-            const geCount=NE;
-            const gePos=new Float32Array(geCount*2*3), geCol=new Float32Array(geCount*2*3);
-            for (let e=0;e<NE;e++) {
-                const b=e*6;
-                gePos[b]=gp[e].x; gePos[b+1]=gp[e].y; gePos[b+2]=gp[e].z;
-                gePos[b+3]=ep[e].x; gePos[b+4]=ep[e].y; gePos[b+5]=ep[e].z;
-            }
-            _routeGeo=new THREE.BufferGeometry();
-            _routeGeo.setAttribute('position',new THREE.BufferAttribute(gePos,3));
-            _routeGeo.setAttribute('color',new THREE.BufferAttribute(geCol,3));
-            _scene.add(new THREE.LineSegments(_routeGeo, new THREE.LineBasicMaterial({
-                vertexColors:true, blending:THREE.NormalBlending, transparent:true, depthWrite:false
-            })));
-
-            // ── Pulse particles (mycelium flow) ───────────────────
-            const _NP = NL*NE*NP_LG + NE*NP_GE;
+            // Pulse particles follow bezier arcs L→E
+            const _NP = NL*NE*NP_LG;
             _ptPhase = new Float32Array(_NP);
             _ptSpeed = new Float32Array(_NP);
             for (let p=0; p<_NP; p++) {
                 _ptPhase[p] = Math.random();
-                _ptSpeed[p] = 0.009 + Math.random() * 0.007;
+                _ptSpeed[p] = 0.008 + Math.random() * 0.008;
             }
             const ptPA = new Float32Array(_NP*3), ptCA = new Float32Array(_NP*3);
             _ptGeo = new THREE.BufferGeometry();
@@ -6515,7 +6508,7 @@
             ptGr.addColorStop(1,    'rgba(255,255,255,0)');
             ptCtx.fillStyle = ptGr; ptCtx.fillRect(0,0,16,16);
             const ptMat = new THREE.PointsMaterial({
-                map: new THREE.CanvasTexture(ptCvs), size: 0.14,
+                map: new THREE.CanvasTexture(ptCvs), size: 0.13,
                 vertexColors: true, blending: THREE.AdditiveBlending,
                 transparent: true, depthWrite: false, sizeAttenuation: true
             });
@@ -6603,24 +6596,6 @@
                 _eLabels[e].position.y=ep[e].y+breathe;
             }
 
-            // Router gate sprites (glow by routing weight)
-            let _hubRwSum = 0;
-            for (let e=0;e<NE;e++) {
-                const rw=_rw[e];
-                _hubRwSum += rw;
-                const pb=0.88+0.12*Math.sin(_t*1.8+e*0.5);
-                _rSprites[e].scale.setScalar((0.5+2.8*rw)*pb);
-                _rSprites[e].material.color.copy(_tc(rw));
-                _rSprites[e].material.opacity=0.25+0.75*rw;
-            }
-            // Central hub pulses with aggregate routing activity
-            if (_rHubSprite) {
-                const avgRw = _hubRwSum / NE;
-                const hubPb = 0.82 + 0.18*Math.sin(_t*1.1);
-                _rHubSprite.scale.setScalar((1.2+1.8*avgRw)*hubPb);
-                _rHubSprite.material.opacity = 0.28+0.45*avgRw+0.18*Math.sin(_t*1.5);
-            }
-
             // Hot-layer temporal trail
             for (let i = 0; i < NL; i++) {
                 // Count how recently layer i appeared in _hotHistory (recency = 0..19, 0=most recent)
@@ -6644,103 +6619,76 @@
                 }
             }
 
-            // Layer→Gate edge colours — tinted with each layer's identity hue
-            const ec=_edgeGeo.attributes.color.array;
-            const _hslTmp=new THREE.Color();
-            for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
-                const b=(i*NE+e)*6;
-                const str=Math.min(1,_lg[i]*0.4+_rw[e]*0.25);
-                if (_selected) {
-                    const connected = (_selected.type==='layer' && _selected.idx===i) ||
-                                      (_selected.type==='expert' && _selected.idx===e);
-                    if (connected) {
-                        const a=Math.pow(str,1.3)*0.75*2.8;
-                        _hslTmp.setHSL(LHUE[i], 1.0, 0.5);
-                        ec[b]=_hslTmp.r*a;ec[b+1]=_hslTmp.g*a;ec[b+2]=_hslTmp.b*a;
-                        ec[b+3]=_hslTmp.r*a;ec[b+4]=_hslTmp.g*a;ec[b+5]=_hslTmp.b*a;
+            // Layer→Expert bezier arc colours — top-3 experts bright, rest ghost
+            if (_bezEdgeGeo) {
+                const sortedE=Array.from({length:NE},(_,e)=>e).sort((a,b)=>_rw[b]-_rw[a]);
+                const top3=new Set(sortedE.slice(0,3));
+                const ec=_bezEdgeGeo.attributes.color.array;
+                const _hslTmp=new THREE.Color();
+                for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
+                    const str=Math.min(1,_lg[i]*0.45+_rw[e]*0.6);
+                    const isActive=top3.has(e)&&str>0.05;
+                    let cr=0,cg=0,cb=0;
+                    if (_selected) {
+                        const conn=(_selected.type==='layer'&&_selected.idx===i)||(_selected.type==='expert'&&_selected.idx===e);
+                        if (conn&&isActive){
+                            _hslTmp.setHSL(LHUE[i],1.0,0.5);
+                            const a=Math.pow(str,1.2)*0.85*2.5;
+                            cr=_hslTmp.r*a;cg=_hslTmp.g*a;cb=_hslTmp.b*a;
+                        } else if (conn){
+                            _hslTmp.setHSL(LHUE[i],0.4,0.3);
+                            cr=_hslTmp.r*0.5;cg=_hslTmp.g*0.5;cb=_hslTmp.b*0.5;
+                        } else {
+                            cr=0.025;cg=0.025;cb=0.04;
+                        }
+                    } else if (isActive){
+                        _hslTmp.setHSL(LHUE[i],1.0,0.5);
+                        const a=Math.pow(str,1.3)*0.78;
+                        cr=_hslTmp.r*a;cg=_hslTmp.g*a;cb=_hslTmp.b*a;
                     } else {
-                        // Ghost: grey with slight hue tint, fixed dim brightness
-                        _hslTmp.setHSL(LHUE[i], 0.12, 0.18);
-                        ec[b]=_hslTmp.r;ec[b+1]=_hslTmp.g;ec[b+2]=_hslTmp.b;
-                        ec[b+3]=_hslTmp.r;ec[b+4]=_hslTmp.g;ec[b+5]=_hslTmp.b;
+                        cr=0.025;cg=0.025;cb=0.04;
                     }
-                } else {
-                    const a=Math.pow(str,1.3)*0.75;
-                    _hslTmp.setHSL(LHUE[i], 1.0, 0.5);
-                    ec[b]=_hslTmp.r*a;ec[b+1]=_hslTmp.g*a;ec[b+2]=_hslTmp.b*a;
-                    ec[b+3]=_hslTmp.r*a;ec[b+4]=_hslTmp.g*a;ec[b+5]=_hslTmp.b*a;
-                }
-            }
-            _edgeGeo.attributes.color.needsUpdate=true;
-
-            // Gate→Expert edge colours (bright, route-weighted)
-            const rc=_routeGeo.attributes.color.array;
-            for (let e=0;e<NE;e++) {
-                const b=e*6;
-                const str=Math.min(1,_rw[e]*0.9+_eg[e]*0.25);
-                if (_selected) {
-                    const connected2 = (_selected.type==='expert' && _selected.idx===e) ||
-                                       (_selected.type==='layer');
-                    if (connected2) {
-                        const factor = _selected.type==='layer' ? 0.6 : 2.5;
-                        const [r,g,bl]=_th(str);
-                        const a=Math.pow(str,1.0)*0.92*factor;
-                        const nr=r/255*a, ng=g/255*a, nb=bl/255*a;
-                        rc[b]=nr;rc[b+1]=ng;rc[b+2]=nb;
-                        rc[b+3]=nr;rc[b+4]=ng;rc[b+5]=nb;
-                    } else {
-                        // Ghost: neutral blue-grey
-                        rc[b]=0.08;rc[b+1]=0.08;rc[b+2]=0.12;
-                        rc[b+3]=0.08;rc[b+4]=0.08;rc[b+5]=0.12;
+                    for (let s=0;s<BEZ_SEGS;s++){
+                        const base=(i*NE*BEZ_SEGS+e*BEZ_SEGS+s)*6;
+                        ec[base]=cr;ec[base+1]=cg;ec[base+2]=cb;
+                        ec[base+3]=cr;ec[base+4]=cg;ec[base+5]=cb;
                     }
-                } else {
-                    const [r,g,bl]=_th(str);
-                    const a=Math.pow(str,1.0)*0.92;
-                    const nr=r/255*a, ng=g/255*a, nb=bl/255*a;
-                    rc[b]=nr;rc[b+1]=ng;rc[b+2]=nb;
-                    rc[b+3]=nr;rc[b+4]=ng;rc[b+5]=nb;
                 }
+                _bezEdgeGeo.attributes.color.needsUpdate=true;
             }
-            _routeGeo.attributes.color.needsUpdate=true;
 
-            // ── Pulse particles — mycelium flow ───────────────────
+            // ── Pulse particles — bezier arc flow L→E ───────────────
             if (_ptGeo) {
-                const llp=_scene.userData.lp, ggp=_scene.userData.gp, eep=_scene.userData.ep;
+                const llp=_scene.userData.lp, eep=_scene.userData.ep;
                 const ppA=_ptGeo.attributes.position.array, pcA=_ptGeo.attributes.color.array;
                 const _hP=new THREE.Color();
+                const sortedE3=Array.from({length:NE},(_,e)=>e).sort((a,b)=>_rw[b]-_rw[a]);
+                const top3P=new Set(sortedE3.slice(0,3));
                 let p=0;
                 for (let i=0;i<NL;i++) {
                     for (let e=0;e<NE;e++) {
-                        const str=Math.min(1,_lg[i]*0.5+_rw[e]*0.3);
+                        const str=Math.min(1,_lg[i]*0.5+_rw[e]*0.4);
                         let dimP=1.0;
                         if (_selected) dimP=((_selected.type==='layer'&&_selected.idx===i)||(_selected.type==='expert'&&_selected.idx===e))?1.0:0.0;
+                        else dimP=top3P.has(e)?1.0:0.08;
+                        const ctrl=_bezCtrl[i]&&_bezCtrl[i][e];
                         for (let k=0;k<NP_LG;k++,p++) {
-                            _ptPhase[p]+=_ptSpeed[p]*str*1.6;
+                            _ptPhase[p]+=_ptSpeed[p]*str*1.8;
                             if (_ptPhase[p]>1) _ptPhase[p]-=1;
-                            const t=_ptPhase[p];
-                            ppA[p*3]  =llp[i].x+(ggp[e].x-llp[i].x)*t;
-                            ppA[p*3+1]=llp[i].y+(ggp[e].y-llp[i].y)*t;
-                            ppA[p*3+2]=llp[i].z+(ggp[e].z-llp[i].z)*t;
+                            const t=_ptPhase[p], u=1-t;
+                            if (ctrl) {
+                                ppA[p*3]  =u*u*llp[i].x+2*u*t*ctrl.x+t*t*eep[e].x;
+                                ppA[p*3+1]=u*u*llp[i].y+2*u*t*ctrl.y+t*t*eep[e].y;
+                                ppA[p*3+2]=u*u*llp[i].z+2*u*t*ctrl.z+t*t*eep[e].z;
+                            } else {
+                                ppA[p*3]  =llp[i].x+(eep[e].x-llp[i].x)*t;
+                                ppA[p*3+1]=llp[i].y+(eep[e].y-llp[i].y)*t;
+                                ppA[p*3+2]=llp[i].z+(eep[e].z-llp[i].z)*t;
+                            }
                             const fade=Math.sin(Math.PI*t)*str*dimP;
                             _hP.setHSL(LHUE[i],1.0,0.65);
                             pcA[p*3]=_hP.r*fade; pcA[p*3+1]=_hP.g*fade; pcA[p*3+2]=_hP.b*fade;
                         }
-                    }
-                }
-                for (let e=0;e<NE;e++) {
-                    const str=Math.min(1,_rw[e]*0.9+_eg[e]*0.3);
-                    let dimP=1.0;
-                    if (_selected) dimP=(_selected.type==='expert'&&_selected.idx===e)?1.0:(_selected.type==='layer'?0.4:0.0);
-                    for (let k=0;k<NP_GE;k++,p++) {
-                        _ptPhase[p]+=_ptSpeed[p]*str*2.2;
-                        if (_ptPhase[p]>1) _ptPhase[p]-=1;
-                        const t=_ptPhase[p];
-                        ppA[p*3]  =ggp[e].x+(eep[e].x-ggp[e].x)*t;
-                        ppA[p*3+1]=ggp[e].y+(eep[e].y-ggp[e].y)*t;
-                        ppA[p*3+2]=ggp[e].z+(eep[e].z-ggp[e].z)*t;
-                        const fade=Math.sin(Math.PI*t)*str*dimP;
-                        const [r,g,bl]=_th(str);
-                        pcA[p*3]=(r/255)*fade; pcA[p*3+1]=(g/255)*fade; pcA[p*3+2]=(bl/255)*fade;
                     }
                 }
                 _ptGeo.attributes.position.needsUpdate=true;
