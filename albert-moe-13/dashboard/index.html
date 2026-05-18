@@ -1069,12 +1069,7 @@
         <span id="myc-token-controls" style="display:flex;align-items:center;gap:8px">
             <input id="myc-search" type="text" placeholder="enter a word..." autocomplete="off" spellcheck="false">
             <button onclick="mycSearch()" title="Search (Enter)">search</button>
-            <div id="myc-k-wrap">
-                <span>k</span>
-                <input id="myc-k" type="range" min="10" max="100" value="40" step="5"
-                       oninput="document.getElementById('myc-k-val').textContent=this.value">
-                <span id="myc-k-val">40</span>
-            </div>
+            <input id="myc-k" type="hidden" value="200">
         </span>
         <span id="myc-status"></span>
         <span id="myc-info"></span>
@@ -5487,11 +5482,15 @@
         const mycBtn      = document.getElementById('mycBtn');
         const tip         = document.getElementById('myc-tooltip');
 
-        let _data          = null;   // last successful query response
-        let _nodes         = [];     // {word, cx, cy, r, sim, isCenter}  — canvas coords
+        let _data          = null;
+        let _nodes         = [];
         let _loading       = false;
-        let _lastQueryWord = null;   // word of last successful query (for auto-re-query)
-        let _lastMtime     = null;   // mtime from last status poll
+        let _lastQueryWord = null;
+        let _lastMtime     = null;
+
+        // Viewport transform (zoom/pan)
+        let _vz = 1, _vx = 0, _vy = 0;
+        let _vdrag = false, _vdx = 0, _vdy = 0, _vdmoved = false;
 
         const dotEl = document.getElementById('myc-dot');
 
@@ -5600,6 +5599,7 @@
                 return { ...n, cx, cy, r };
             });
 
+            _vz = 1; _vx = 0; _vy = 0;  // reset zoom/pan for new query
             _draw();
         }
 
@@ -5608,6 +5608,10 @@
             const H = canvas.height;
             ctx.clearRect(0, 0, W, H);
             if (!_nodes.length) return;
+
+            ctx.save();
+            ctx.translate(_vx, _vy);
+            ctx.scale(_vz, _vz);
 
             const center = _nodes[0];
 
@@ -5685,6 +5689,8 @@
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
             ctx.fillText(center.word, center.cx, _ly);
+
+            ctx.restore();
         }
 
         function _clearCanvas() {
@@ -5693,18 +5699,31 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
-        // ── hover / click ──────────────────────────────────────────────
+        // ── hover / click / zoom / pan ─────────────────────────────────
         function _hitTest(ex, ey) {
+            // inverse-transform to canvas space
+            const cx = (ex - _vx) / _vz, cy = (ey - _vy) / _vz;
             for (const n of _nodes) {
-                const dx = ex - n.cx, dy = ey - n.cy;
+                const dx = cx - n.cx, dy = cy - n.cy;
                 if (Math.sqrt(dx * dx + dy * dy) < Math.max(n.r + 5, 12)) return n;
             }
             return null;
         }
 
-        canvas.addEventListener('mousemove', e => {
+        canvas.addEventListener('mousedown', e => {
+            _vdrag = true; _vdmoved = false;
+            _vdx = e.clientX; _vdy = e.clientY;
+        });
+        window.addEventListener('mousemove', e => {
             const rect = canvas.getBoundingClientRect();
-            const n    = _hitTest(e.clientX - rect.left, e.clientY - rect.top);
+            if (_vdrag) {
+                const dx = e.clientX - _vdx, dy = e.clientY - _vdy;
+                if (Math.abs(dx) > 3 || Math.abs(dy) > 3) _vdmoved = true;
+                if (_vdmoved) { _vx += dx; _vy += dy; _draw(); }
+                _vdx = e.clientX; _vdy = e.clientY;
+                return;
+            }
+            const n = _hitTest(e.clientX - rect.left, e.clientY - rect.top);
             if (n) {
                 canvas.style.cursor = 'pointer';
                 tip.style.display   = 'block';
@@ -5714,25 +5733,37 @@
                     ? `<b>${n.word}</b><br>center node`
                     : `<b>${n.word}</b><br>sim ${n.sim.toFixed(4)}`;
             } else {
-                canvas.style.cursor = 'crosshair';
+                canvas.style.cursor = _vdrag ? 'grabbing' : 'crosshair';
                 tip.style.display   = 'none';
             }
         });
+        window.addEventListener('mouseup', () => { _vdrag = false; });
 
         canvas.addEventListener('mouseleave', () => {
-            tip.style.display   = 'none';
-            canvas.style.cursor = 'crosshair';
+            if (!_vdrag) { tip.style.display = 'none'; canvas.style.cursor = 'crosshair'; }
         });
 
         canvas.addEventListener('click', e => {
+            if (_vdmoved) return;
             const rect = canvas.getBoundingClientRect();
             const n    = _hitTest(e.clientX - rect.left, e.clientY - rect.top);
             if (n && !n.isCenter) {
                 searchInput.value = n.word;
-                const k = parseInt(document.getElementById('myc-k').value) || 40;
-                _doQuery(n.word, k);
+                _doQuery(n.word, 200);
             }
         });
+
+        canvas.addEventListener('wheel', e => {
+            const rect   = canvas.getBoundingClientRect();
+            const mx     = e.clientX - rect.left;
+            const my     = e.clientY - rect.top;
+            const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+            _vx = mx - (mx - _vx) * factor;
+            _vy = my - (my - _vy) * factor;
+            _vz = Math.max(0.25, Math.min(10, _vz * factor));
+            _draw();
+            e.preventDefault();
+        }, { passive: false });
 
         // ── checkpoint status polling ──────────────────────────────────
         function _pollStatus() {
@@ -5796,6 +5827,8 @@
 
         const NL = 17, NE = 12;
         const ENAMES = ['SYN','SEM','CTX','INF','MEM','GEN','LOG','LNG','ABS','PLN','CMP','INT'];
+        // Fixed hue per layer — evenly distributed across spectrum for identity tracking
+        const LHUE = Array.from({length:NL}, (_,i) => i/NL);
 
         let _scene, _camera, _renderer, _edgeGeo, _routeGeo;
         let _lSprites = [], _eSprites = [], _lLabels = [], _eLabels = [];
@@ -5964,7 +5997,7 @@
                 _px = e.clientX; _py = e.clientY;
                 if (_orbitDrag) {
                     _theta -= dx * 0.006;
-                    _phi = Math.max(0.15, Math.min(Math.PI - 0.15, _phi + dy * 0.006));
+                    _phi = Math.max(0.15, Math.min(Math.PI - 0.15, _phi - dy * 0.006));
                     _applyOrbit();
                 } else if (_panDrag) {
                     const spd = _radius / 400;
@@ -6000,14 +6033,14 @@
             for (let i=0;i<NL;i++) _lg[i]+=(_lt[i]-_lg[i])*LR;
             for (let e=0;e<NE;e++) _eg[e]+=(_et[e]-_eg[e])*LR;
 
-            // Layer sprites
+            // Layer sprites — fixed identity hue per layer, brightness = activity
             for (let i=0;i<NL;i++) {
                 const g=_lg[i], pb=0.85+0.15*Math.sin(_t*1.1+i*0.42);
                 _lSprites[i].scale.setScalar((0.35+1.5*g)*pb);
-                _lSprites[i].material.color.copy(_tc(g));
-                _lSprites[i].material.opacity=0.2+0.8*g;
-                _lLabels[i].material.opacity=0.2+0.8*g;
-                _lLabels[i].material.color.copy(_tc(Math.max(0.08,g)));
+                _lSprites[i].material.color.setHSL(LHUE[i], 1.0, 0.12+0.65*g);
+                _lSprites[i].material.opacity=0.25+0.75*g;
+                _lLabels[i].material.opacity=0.25+0.75*g;
+                _lLabels[i].material.color.setHSL(LHUE[i], 0.9, 0.35+0.45*g);
             }
 
             // Expert sprites
@@ -6033,16 +6066,16 @@
                 _rSprites[e].material.opacity=0.15+0.85*rw;
             }
 
-            // Layer→Gate edge colours
+            // Layer→Gate edge colours — tinted with each layer's identity hue
             const ec=_edgeGeo.attributes.color.array;
+            const _hslTmp=new THREE.Color();
             for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
                 const b=(i*NE+e)*6;
-                const str=Math.min(1,_lg[i]*0.35+_rw[e]*0.3);
-                const [r,g,bl]=_th(str);
-                const a=Math.pow(str,2.0)*0.35;
-                const nr=r/255*a, ng=g/255*a, nb=bl/255*a;
-                ec[b]=nr;ec[b+1]=ng;ec[b+2]=nb;
-                ec[b+3]=nr;ec[b+4]=ng;ec[b+5]=nb;
+                const str=Math.min(1,_lg[i]*0.4+_rw[e]*0.25);
+                const a=Math.pow(str,1.8)*0.4;
+                _hslTmp.setHSL(LHUE[i], 1.0, 0.5);
+                ec[b]=_hslTmp.r*a;ec[b+1]=_hslTmp.g*a;ec[b+2]=_hslTmp.b*a;
+                ec[b+3]=_hslTmp.r*a;ec[b+4]=_hslTmp.g*a;ec[b+5]=_hslTmp.b*a;
             }
             _edgeGeo.attributes.color.needsUpdate=true;
 
@@ -6114,13 +6147,16 @@
             if(tb)  tb.classList.toggle('active', !brain);
 
             if (brain) {
+                // Reset to canonical front view every time BRAIN is activated
+                _theta = 0; _phi = Math.PI / 2; _radius = 34;
+                _camTgt.x = 0; _camTgt.y = 0; _camTgt.z = 0;
                 if (!window.THREE) {
                     const s=document.createElement('script');
                     s.src='/dashboard/three.min.js';
                     s.onload=()=>{ _init(); _resize(); };
                     document.head.appendChild(s);
                 } else {
-                    _init(); _resize();
+                    _init(); _resize(); _applyOrbit();
                 }
             }
         };
