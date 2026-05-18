@@ -783,6 +783,29 @@
             display: block;
             cursor: crosshair;
         }
+        #myc3d-canvas {
+            flex: 1;
+            display: none;
+            cursor: grab;
+        }
+        .myc-mode-btn {
+            font-family: inherit;
+            font-size: 10px;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border2);
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .myc-mode-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #060d15;
+        }
         #myc-tooltip {
             display: none;
             position: fixed;
@@ -1041,14 +1064,18 @@
 <div id="mycelium-panel">
     <div id="myc-toolbar">
         <span id="myc-label">Mycelium Inspector</span>
-        <input id="myc-search" type="text" placeholder="enter a word..." autocomplete="off" spellcheck="false">
-        <button onclick="mycSearch()" title="Search (Enter)">search</button>
-        <div id="myc-k-wrap">
-            <span>k</span>
-            <input id="myc-k" type="range" min="10" max="100" value="40" step="5"
-                   oninput="document.getElementById('myc-k-val').textContent=this.value">
-            <span id="myc-k-val">40</span>
-        </div>
+        <button class="myc-mode-btn" id="myc-brain-btn" onclick="mycSetMode('brain')" title="Live neural graph — layers, experts, routing">Brain</button>
+        <button class="myc-mode-btn active" id="myc-token-btn" onclick="mycSetMode('token')" title="Token embedding space explorer">Token</button>
+        <span id="myc-token-controls" style="display:flex;align-items:center;gap:8px">
+            <input id="myc-search" type="text" placeholder="enter a word..." autocomplete="off" spellcheck="false">
+            <button onclick="mycSearch()" title="Search (Enter)">search</button>
+            <div id="myc-k-wrap">
+                <span>k</span>
+                <input id="myc-k" type="range" min="10" max="100" value="40" step="5"
+                       oninput="document.getElementById('myc-k-val').textContent=this.value">
+                <span id="myc-k-val">40</span>
+            </div>
+        </span>
         <span id="myc-status"></span>
         <span id="myc-info"></span>
         <button id="myc-reload-btn" onclick="mycForceReload()" title="Re-query with current checkpoint">&#x21ba;</button>
@@ -1056,6 +1083,7 @@
         <button id="myc-close-btn" onclick="mycToggle()" title="Close (Escape)">&#xd7;</button>
     </div>
     <canvas id="myc-canvas"></canvas>
+    <canvas id="myc3d-canvas"></canvas>
 </div>
 <div id="myc-tooltip"></div>
 
@@ -3058,6 +3086,7 @@
                     lastTeleMs = Date.now();
                     latestTele = { numLayers, layerSparsity, expertActivity };
                     renderNeuralViz(latestTele);
+                    if (window.mycBrainUpdate) mycBrainUpdate({ tele: latestTele });
                     continue;
                 }
                 // ROUTE line — expert routing weights per step
@@ -3068,6 +3097,7 @@
                     lastRouteMs = Date.now();
                     routingHistory.push({ step, weights });
                     if (routingHistory.length > ROUTE_WINDOW) routingHistory.shift();
+                    if (window.mycBrainUpdate) mycBrainUpdate({ route: { weights } });
                     _routingDirty = true;
                     // Expert activity updates on every ROUTE (not just TELE) so the
                     // heatmap reflects live routing dominance every 10 batches.
@@ -3093,6 +3123,7 @@
                         lastGradMs = Date.now();
                         latestGrad = { norm: gmNorm, layerNorms: gmLayers };
                         renderGradBars();
+                        if (window.mycBrainUpdate) mycBrainUpdate({ grad: latestGrad });
                         if (latestGrad.norm > 1.0) {
                             const now = Date.now();
                             if (now - lastClipTs > 30000) {
@@ -5721,6 +5752,253 @@
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape' && panel.classList.contains('open')) mycToggle();
         });
+    })();
+
+    // ── Mycelium Brain View (Three.js live neural graph) ───────────────
+    (function () {
+        'use strict';
+
+        const NL = 17, NE = 12;
+        const ENAMES = ['SYN','SEM','CTX','INF','MEM','GEN','LOG','LNG','ABS','PLN','CMP','INT'];
+
+        let _scene, _camera, _renderer, _edgeGeo;
+        let _lSprites = [], _eSprites = [], _lLabels = [], _eLabels = [];
+        let _initialized = false;
+        let _t = 0;
+
+        // Smoothed state
+        const _lg  = new Float32Array(NL).fill(0.05);  // current layer glow
+        const _lt  = new Float32Array(NL).fill(0.05);  // target
+        const _eg  = new Float32Array(NE).fill(0.05);  // current expert glow
+        const _et  = new Float32Array(NE).fill(0.05);  // target
+        const _rw  = new Float32Array(NE).fill(1/NE);  // routing weights
+
+        // ── thermal colour (mirrors main dashboard) ──────────────────
+        function _th(t) {
+            t = Math.max(0, Math.min(1, t));
+            const s = [[0,[160,10,10]],[0.17,[220,90,0]],[0.33,[200,185,0]],
+                       [0.5,[0,170,45]],[0.67,[0,200,215]],[0.83,[20,120,230]],[1,[10,45,180]]];
+            for (let i = 1; i < s.length; i++) {
+                if (t <= s[i][0]) {
+                    const f=(t-s[i-1][0])/(s[i][0]-s[i-1][0]), a=s[i-1][1], b=s[i][1];
+                    return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f, a[2]+(b[2]-a[2])*f];
+                }
+            }
+            return [10,45,180];
+        }
+        function _tc(t) { const [r,g,b]=_th(t); return new THREE.Color(r/255,g/255,b/255); }
+
+        // ── glow sprite texture ──────────────────────────────────────
+        let _glowTex = null;
+        function _gTex() {
+            if (_glowTex) return _glowTex;
+            const sz=128, c=document.createElement('canvas');
+            c.width=c.height=sz;
+            const ctx=c.getContext('2d'), g=ctx.createRadialGradient(sz/2,sz/2,0,sz/2,sz/2,sz/2);
+            g.addColorStop(0,'rgba(255,255,255,1)');
+            g.addColorStop(0.18,'rgba(255,255,255,0.75)');
+            g.addColorStop(0.5,'rgba(255,255,255,0.2)');
+            g.addColorStop(1,'rgba(255,255,255,0)');
+            ctx.fillStyle=g; ctx.fillRect(0,0,sz,sz);
+            return (_glowTex = new THREE.CanvasTexture(c));
+        }
+
+        // ── canvas-texture label sprite ──────────────────────────────
+        function _lbl(text, align) {
+            const cw=160, ch=44, c=document.createElement('canvas');
+            c.width=cw; c.height=ch;
+            const ctx=c.getContext('2d');
+            ctx.font='bold 24px monospace';
+            ctx.fillStyle='rgba(100,195,230,0.72)';
+            ctx.textAlign=align; ctx.textBaseline='middle';
+            ctx.fillText(text, align==='right'?cw-4:4, ch/2);
+            const mat=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false});
+            const sp=new THREE.Sprite(mat); sp.scale.set(1.9,0.5,1); return sp;
+        }
+
+        // ── node sprite ──────────────────────────────────────────────
+        function _node(sz, col) {
+            const mat=new THREE.SpriteMaterial({map:_gTex(),color:col,
+                blending:THREE.AdditiveBlending,transparent:true,depthWrite:false});
+            const sp=new THREE.Sprite(mat); sp.scale.setScalar(sz); return sp;
+        }
+
+        // ── build scene ──────────────────────────────────────────────
+        function _init() {
+            if (_initialized) return; _initialized=true;
+            const canvas=document.getElementById('myc3d-canvas');
+            if (!canvas || !window.THREE) return;
+
+            _scene  = new THREE.Scene();
+            _camera = new THREE.PerspectiveCamera(46, 1, 0.1, 200);
+            _camera.position.set(0, 0, 26);
+
+            _renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            _renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+            _renderer.setClearColor(0x060d15, 1);
+
+            // Layout
+            const LX=-4.8, EX=4.8;
+            const lp=[], ep=[];
+            for (let i=0;i<NL;i++) {
+                const y=((i/(NL-1))-0.5)*15;
+                lp.push(new THREE.Vector3(LX, y, Math.sin(i*0.55)*0.4));
+            }
+            for (let e=0;e<NE;e++) {
+                const y=((e/(NE-1))-0.5)*10;
+                ep.push(new THREE.Vector3(EX, y, Math.cos(e*0.9)*0.45));
+            }
+            _scene.userData.lp=lp; _scene.userData.ep=ep;
+
+            // Layer nodes + labels
+            for (let i=0;i<NL;i++) {
+                const s=_node(0.9,_tc(0.05)); s.position.copy(lp[i]); _scene.add(s); _lSprites.push(s);
+                const lb=_lbl('L'+i,'right'); lb.position.set(lp[i].x-1.3,lp[i].y,lp[i].z); _scene.add(lb); _lLabels.push(lb);
+            }
+            // Expert nodes + labels
+            for (let e=0;e<NE;e++) {
+                const s=_node(0.5,_tc(0.5)); s.position.copy(ep[e]); _scene.add(s); _eSprites.push(s);
+                const lb=_lbl(ENAMES[e],'left'); lb.position.set(ep[e].x+1.3,ep[e].y,ep[e].z); _scene.add(lb); _eLabels.push(lb);
+            }
+
+            // Edges — 17×12 = 204 segments, vertex-coloured
+            const eCount=NL*NE;
+            const ePos=new Float32Array(eCount*2*3), eCol=new Float32Array(eCount*2*3);
+            for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
+                const b=(i*NE+e)*6;
+                ePos[b]=lp[i].x; ePos[b+1]=lp[i].y; ePos[b+2]=lp[i].z;
+                ePos[b+3]=ep[e].x; ePos[b+4]=ep[e].y; ePos[b+5]=ep[e].z;
+            }
+            _edgeGeo=new THREE.BufferGeometry();
+            _edgeGeo.setAttribute('position',new THREE.BufferAttribute(ePos,3));
+            _edgeGeo.setAttribute('color',new THREE.BufferAttribute(eCol,3));
+            _scene.add(new THREE.LineSegments(_edgeGeo, new THREE.LineBasicMaterial({
+                vertexColors:true, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false
+            })));
+
+            new ResizeObserver(_resize).observe(canvas);
+            _resize();
+
+            (function _loop(){ requestAnimationFrame(_loop); _tick(); })();
+        }
+
+        function _resize() {
+            if (!_renderer) return;
+            const c=document.getElementById('myc3d-canvas');
+            const w=c.clientWidth, h=c.clientHeight;
+            if (!w||!h) return;
+            _camera.aspect=w/h; _camera.updateProjectionMatrix();
+            _renderer.setSize(w,h,false);
+        }
+
+        function _tick() {
+            _t+=0.007;
+            const LR=0.045, lp=_scene.userData.lp, ep=_scene.userData.ep;
+
+            // Smooth glow
+            for (let i=0;i<NL;i++) _lg[i]+=(_lt[i]-_lg[i])*LR;
+            for (let e=0;e<NE;e++) _eg[e]+=(_et[e]-_eg[e])*LR;
+
+            // Layer sprites
+            for (let i=0;i<NL;i++) {
+                const g=_lg[i], pb=0.85+0.15*Math.sin(_t*1.1+i*0.42);
+                _lSprites[i].scale.setScalar((0.35+1.5*g)*pb);
+                _lSprites[i].material.color.copy(_tc(g));
+                _lSprites[i].material.opacity=0.2+0.8*g;
+                _lLabels[i].material.opacity=0.2+0.8*g;
+                _lLabels[i].material.color.copy(_tc(Math.max(0.08,g)));
+            }
+
+            // Expert sprites
+            for (let e=0;e<NE;e++) {
+                const g=_eg[e], rw=_rw[e];
+                const comb=Math.min(1, g*0.55+rw*0.5);
+                const pb=0.85+0.15*Math.sin(_t*1.4+e*0.7);
+                _eSprites[e].scale.setScalar((0.25+1.1*comb)*pb);
+                _eSprites[e].material.color.copy(_tc(comb));
+                _eSprites[e].material.opacity=0.2+0.8*comb;
+                const breathe=Math.sin(_t*0.75+e*0.65)*0.08*comb;
+                _eSprites[e].position.y=ep[e].y+breathe;
+                _eLabels[e].material.opacity=0.2+0.8*comb;
+                _eLabels[e].position.y=ep[e].y+breathe;
+            }
+
+            // Edge colours (vertex colour = pre-multiplied alpha for additive blend)
+            const ec=_edgeGeo.attributes.color.array;
+            for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
+                const b=(i*NE+e)*6;
+                const str=Math.min(1,_lg[i]*0.4+_eg[e]*0.3+_rw[e]*0.35);
+                const [r,g,bl]=_th(str);
+                const a=Math.pow(str,1.7)*0.5;
+                const nr=r/255*a, ng=g/255*a, nb=bl/255*a;
+                ec[b]=nr;ec[b+1]=ng;ec[b+2]=nb;
+                ec[b+3]=nr;ec[b+4]=ng;ec[b+5]=nb;
+            }
+            _edgeGeo.attributes.color.needsUpdate=true;
+
+            // Gentle scene sway
+            _scene.rotation.y=Math.sin(_t*0.11)*0.10;
+            _scene.rotation.x=Math.sin(_t*0.07)*0.035;
+
+            _renderer.render(_scene, _camera);
+        }
+
+        // ── public API ───────────────────────────────────────────────
+        window.mycBrainUpdate = function({ tele, grad, route }={}) {
+            if (tele) {
+                const mxA=Math.max(...tele.expertActivity,1e-8);
+                for (let e=0;e<Math.min(NE,tele.expertActivity.length);e++)
+                    _et[e]=tele.expertActivity[e]/mxA;
+                // Sparsity as resting layer signal (overridden by grad norms when available)
+                const mxS=Math.max(...tele.layerSparsity,1e-8);
+                for (let i=0;i<Math.min(NL,tele.layerSparsity.length);i++)
+                    if (!_lt[i]||_lt[i]<0.06) _lt[i]=tele.layerSparsity[i]/mxS*0.3;
+            }
+            if (grad) {
+                const mxN=Math.max(...grad.layerNorms,1e-8);
+                for (let i=0;i<Math.min(NL,grad.layerNorms.length);i++)
+                    _lt[i]=grad.layerNorms[i]/mxN;
+            }
+            if (route) {
+                const mxR=Math.max(...route.weights,1e-8);
+                for (let e=0;e<Math.min(NE,route.weights.length);e++)
+                    _rw[e]=route.weights[e]/mxR;
+            }
+            if (!_initialized && window.THREE) _init();
+        };
+
+        // ── mode toggle ──────────────────────────────────────────────
+        window.mycSetMode = function(mode) {
+            const c2d=document.getElementById('myc-canvas');
+            const c3d=document.getElementById('myc3d-canvas');
+            const tc =document.getElementById('myc-token-controls');
+            const st =document.getElementById('myc-status');
+            const inf=document.getElementById('myc-info');
+            const rb =document.getElementById('myc-reload-btn');
+            const bb =document.getElementById('myc-brain-btn');
+            const tb =document.getElementById('myc-token-btn');
+
+            const brain = mode==='brain';
+            c2d.style.display  = brain ? 'none'  : 'block';
+            c3d.style.display  = brain ? 'block' : 'none';
+            if(tc)  tc.style.display  = brain ? 'none' : 'flex';
+            if(st)  st.style.display  = brain ? 'none' : '';
+            if(inf) inf.style.display = brain ? 'none' : '';
+            if(rb)  rb.style.display  = brain ? 'none' : '';
+            if(bb)  bb.classList.toggle('active', brain);
+            if(tb)  tb.classList.toggle('active', !brain);
+
+            if (brain) {
+                if (!window.THREE) {
+                    const s=document.createElement('script');
+                    s.src='https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js';
+                    s.onload=()=>{ _init(); _resize(); };
+                    document.head.appendChild(s);
+                } else {
+                    _init(); _resize();
+                }
+            }
+        };
     })();
 </script>
 </body>
