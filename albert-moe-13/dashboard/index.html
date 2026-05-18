@@ -74,6 +74,7 @@
         .tb-cell.arch { flex: 0 0 auto; min-width: 0; overflow: hidden; }
         .tb-cell.arch .tb-val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
         .tb-cell.controls { background: transparent; border: none; margin-left: auto; gap: 6px; padding-right: 6px; }
+        #help-btn { width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);background:var(--bg2);color:var(--muted);font-size:11px;font-family:inherit;cursor:pointer;line-height:1;padding:0;flex-shrink:0; }
         .tb-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         .tb-val   { color: var(--text); font-weight: bold; font-size: 13px; }
         .tb-val.accent { color: var(--accent); font-size: 16px; }
@@ -992,6 +993,7 @@
                 <div class="dd-item" id="exportFull">↓ Full Dataset <small>both combined</small></div>
             </div>
         </div>
+        <button id="help-btn" title="Keyboard shortcuts">?</button>
     </div>
 </div>
 
@@ -5547,7 +5549,7 @@
             _doQuery(word, k);
         };
 
-        function _doQuery(word, k) {
+        function _doQuery(word, k, autoRefresh) {
             if (_loading) return;
             _loading = true;
             statusEl.textContent = 'loading...';
@@ -5571,7 +5573,7 @@
                     statusEl.style.color = 'var(--muted)';
                     infoEl.textContent   = `vocab ${d.vocab_size.toLocaleString()} · dim ${d.dims} · PCA`;
                     _render(d);
-                    if (window.mycTok3dUpdate) window.mycTok3dUpdate(d);
+                    if (window.mycTok3dUpdate) window.mycTok3dUpdate(d, !!autoRefresh);
                 })
                 .catch(e => {
                     _loading = false;
@@ -5831,7 +5833,7 @@
                         statusEl.textContent = 'checkpoint updated — refreshing...';
                         statusEl.style.color = 'var(--accent)';
                         const k = parseInt(document.getElementById('myc-k').value) || 40;
-                        _doQuery(_lastQueryWord, k);
+                        _doQuery(_lastQueryWord, k, true);  // autoRefresh=true → smooth transition
                     }
                     if (s.mtime !== null) _lastMtime = s.mtime;
                 })
@@ -5883,6 +5885,11 @@
         const tok3dCanvas = document.getElementById('myc-tok3d-canvas');
         let _scene3t, _cam3t, _ren3t, _sprites3t = [], _threads3t = null;
         let _frameRef3t = null;  // cube + axes added once to scene
+        let _prevPos3t  = {};    // word → [px,py,pz] at last render
+        let _animTgts3t = [];    // tween targets
+        let _animT0_3t  = 0;
+        let _isAnim3t   = false;
+        const _ADUR3t   = 3200;  // ms
         let _initialized3t = false;
         let _lastData = null;
 
@@ -6038,13 +6045,92 @@
                 _frameRef3t = true;
             }
 
-            (function _loop3t() { requestAnimationFrame(_loop3t); if (_ren3t && tok3dCanvas.style.display !== 'none') _ren3t.render(_scene3t, _cam3t); })();
+            (function _loop3t() {
+                requestAnimationFrame(_loop3t);
+                if (_ren3t && tok3dCanvas.style.display !== 'none') {
+                    if (_isAnim3t) _animStep3t();
+                    _ren3t.render(_scene3t, _cam3t);
+                }
+            })();
 
             if (_lastData) _rebuild3t(_lastData);
         }
 
-        function _rebuild3t(d) {
+        function _animStep3t() {
+            const raw = Math.min((performance.now() - _animT0_3t) / _ADUR3t, 1);
+            const e = raw * raw * (3 - 2 * raw); // smoothstep
+            for (const tg of _animTgts3t) {
+                tg.sp.position.set(
+                    tg.fx + (tg.tx - tg.fx) * e,
+                    tg.fy + (tg.ty - tg.fy) * e,
+                    tg.fz + (tg.tz - tg.fz) * e
+                );
+                if (tg.isNew) tg.sp.material.opacity = tg.opT * Math.min(1, e * 2.5);
+            }
+            if (raw >= 1) {
+                _isAnim3t = false; _animTgts3t = [];
+                if (_lastData) _rebuildThreads3t(_lastData);
+            }
+        }
+
+        function _rebuildThreads3t(d) {
             if (!_scene3t) return;
+            if (_threads3t) { _scene3t.remove(_threads3t); _threads3t = null; }
+            // Recompute same normalisation used in last _rebuild3t
+            const all = [{ x: d.center_x, y: d.center_y, z: d.center_z||0, sim: 1.0 }]
+                .concat(d.neighbors.map(n => ({ x: n.x, y: n.y, z: n.z||0, sim: n.sim })));
+            let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity,z0=Infinity,z1=-Infinity;
+            for (const n of all) {
+                if(n.x<x0)x0=n.x;if(n.x>x1)x1=n.x;
+                if(n.y<y0)y0=n.y;if(n.y>y1)y1=n.y;
+                if(n.z<z0)z0=n.z;if(n.z>z1)z1=n.z;
+            }
+            const sc=2.2/Math.max(x1-x0,y1-y0,z1-z0,0.001);
+            const mx=(x0+x1)/2, my=(y0+y1)/2, mz=(z0+z1)/2;
+            const sims=d.neighbors.map(n=>n.sim);
+            const minS=Math.min(...sims), simSpan=Math.max(0.001,Math.max(...sims)-minS);
+            const threadPts=[], threadCols=[];
+            const THREAD_D=0.85;
+            for (let i=1;i<all.length;i++) {
+                for (let j=i+1;j<all.length;j++) {
+                    const a=all[i],b=all[j];
+                    const ax=(a.x-mx)*sc,ay=(a.y-my)*sc,az=(a.z-mz)*sc;
+                    const bx=(b.x-mx)*sc,by=(b.y-my)*sc,bz=(b.z-mz)*sc;
+                    const dist=Math.sqrt((ax-bx)**2+(ay-by)**2+(az-bz)**2);
+                    if (dist>=THREAD_D) continue;
+                    const alpha=0.48*(1-dist/THREAD_D);
+                    const ta=(a.sim-minS)/simSpan, tb=(b.sim-minS)/simSpan;
+                    const ca=new THREE.Color().setHSL((220-185*ta)/360,0.8,0.55);
+                    const cb=new THREE.Color().setHSL((220-185*tb)/360,0.8,0.55);
+                    threadPts.push(ax,ay,az,bx,by,bz);
+                    threadCols.push(ca.r*alpha,ca.g*alpha,ca.b*alpha,cb.r*alpha,cb.g*alpha,cb.b*alpha);
+                }
+            }
+            if (!threadPts.length) return;
+            const geo=new THREE.BufferGeometry();
+            geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(threadPts),3));
+            geo.setAttribute('color',   new THREE.BufferAttribute(new Float32Array(threadCols),3));
+            _threads3t=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({
+                vertexColors:true,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false
+            }));
+            _scene3t.add(_threads3t);
+        }
+
+        function _rebuild3t(d, clearPrev, resetOrbit) {
+            if (!_scene3t) return;
+
+            // Save current display positions before replacing sprites
+            if (!clearPrev && _lastData && _sprites3t.length) {
+                const prev = _lastData;
+                _prevPos3t[prev.word] = [_sprites3t[0].position.x, _sprites3t[0].position.y, _sprites3t[0].position.z];
+                for (let i = 0; i < prev.neighbors.length && i+1 < _sprites3t.length; i++) {
+                    const sp = _sprites3t[i+1];
+                    _prevPos3t[prev.neighbors[i].word] = [sp.position.x, sp.position.y, sp.position.z];
+                }
+            } else {
+                _prevPos3t = {};
+            }
+
             // Remove old sprites + threads
             for (const s of _sprites3t) _scene3t.remove(s);
             _sprites3t = [];
@@ -6096,47 +6182,36 @@
                 if (!n.isCenter) { posArr.push(px, py, pz); colArr.push(color.r, color.g, color.b); }
             }
 
-            // Proximity threads between close neighbors
-            const threadPts = [], threadCols = [];
-            const THREAD_D = 0.85;
-            for (let i = 1; i < all.length; i++) {
-                for (let j = i + 1; j < all.length; j++) {
-                    const a = all[i], b = all[j];
-                    const ax=(a.x-mx)*sc, ay=(a.y-my)*sc, az=(a.z-mz)*sc;
-                    const bx=(b.x-mx)*sc, by=(b.y-my)*sc, bz=(b.z-mz)*sc;
-                    const dx=ax-bx, dy=ay-by, dz=az-bz;
-                    const dist = Math.sqrt(dx*dx+dy*dy+dz*dz);
-                    if (dist >= THREAD_D) continue;
-                    const alpha = 0.48 * (1 - dist / THREAD_D);
-                    const ta = (a.sim - minS) / simSpan, tb = (b.sim - minS) / simSpan;
-                    const ha = (220 - 185*ta)/360, hb = (220 - 185*tb)/360;
-                    const ca = new THREE.Color().setHSL(ha, 0.8, 0.55);
-                    const cb = new THREE.Color().setHSL(hb, 0.8, 0.55);
-                    threadPts.push(ax, ay, az, bx, by, bz);
-                    threadCols.push(ca.r*alpha, ca.g*alpha, ca.b*alpha,
-                                    cb.r*alpha, cb.g*alpha, cb.b*alpha);
-                }
+            // Build tween: sprites start at prev position (or center if new), travel to target
+            _animTgts3t = [];
+            for (let i = 0; i < _sprites3t.length; i++) {
+                const sp = _sprites3t[i];
+                const word = all[i].word;
+                const prev = _prevPos3t[word];
+                const tx = sp.position.x, ty = sp.position.y, tz = sp.position.z;
+                const fx = prev ? prev[0] : 0;
+                const fy = prev ? prev[1] : 0;
+                const fz = prev ? prev[2] : 0;
+                const isNew = !prev;
+                const opT = sp.material.opacity;
+                _animTgts3t.push({ sp, fx, fy, fz, tx, ty, tz, isNew, opT });
+                sp.position.set(fx, fy, fz);
+                if (isNew) sp.material.opacity = 0;
             }
-            if (threadPts.length) {
-                const geo = new THREE.BufferGeometry();
-                geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(threadPts), 3));
-                geo.setAttribute('color',    new THREE.BufferAttribute(new Float32Array(threadCols), 3));
-                _threads3t = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
-                    vertexColors: true, blending: THREE.AdditiveBlending,
-                    transparent: true, depthWrite: false
-                }));
-                _scene3t.add(_threads3t);
-            }
+            _isAnim3t = true;
+            _animT0_3t = performance.now();
+            // Threads rebuild after animation settles (in _animStep3t)
 
-            // Reset orbit to center
-            _theta3t = 0.4; _phi3t = Math.PI / 2.4; _rad3t = 3.2;
-            _tgt3t.x = 0; _tgt3t.y = 0; _tgt3t.z = 0;
-            _applyOrb3t();
+            if (resetOrbit) {
+                _theta3t = 0.4; _phi3t = Math.PI / 2.4; _rad3t = 3.2;
+                _tgt3t.x = 0; _tgt3t.y = 0; _tgt3t.z = 0;
+                _applyOrb3t();
+            }
         }
 
-        window.mycTok3dUpdate = function(d) {
+        window.mycTok3dUpdate = function(d, autoRefresh) {
             _lastData = d;
-            if (_initialized3t) _rebuild3t(d);
+            if (_initialized3t) _rebuild3t(d, !autoRefresh, !autoRefresh);
         };
 
         window.mycTok3dActivate = function() {
@@ -6160,10 +6235,14 @@
         // Fixed hue per layer — evenly distributed across spectrum for identity tracking
         const LHUE = Array.from({length:NL}, (_,i) => i/NL);
 
+        const NP_LG = 3, NP_GE = 5;  // particles per L→Gate / Gate→Expert edge
+
         let _scene, _camera, _renderer, _edgeGeo, _routeGeo;
         let _lSprites = [], _eSprites = [], _lLabels = [], _eLabels = [];
         let _rSprites = [];   // router gate nodes
+        let _rHubSprite = null;   // central router hub orb
         let _lTrailSprites = [];  // hot-trail ring per layer
+        let _ptGeo = null, _ptPhase = null, _ptSpeed = null;
         let _initialized = false;
         let _t = 0;
 
@@ -6176,7 +6255,7 @@
         let _hotHistIdx = 0;
 
         // ── orbit state ──────────────────────────────────────────────
-        let _theta = 0, _phi = Math.PI / 2, _radius = 34;
+        let _theta = 0, _phi = Math.PI / 2, _radius = 22;
         const _camTgt = { x: 0, y: 0, z: 0 };
         let _orbitDrag = false, _panDrag = false, _px = 0, _py = 0;
         let _spaceDown = false;
@@ -6236,11 +6315,16 @@
 
         // ── canvas-texture label sprite ──────────────────────────────
         function _lbl(text, align) {
-            const cw=160, ch=44, c=document.createElement('canvas');
-            c.width=cw; c.height=ch;
+            const cw=160, ch=44;
+            const dpr=Math.min(window.devicePixelRatio||1,3);
+            const c=document.createElement('canvas');
+            c.width=cw*dpr; c.height=ch*dpr;
             const ctx=c.getContext('2d');
-            ctx.font='bold 24px monospace';
-            ctx.fillStyle='rgba(100,195,230,0.72)';
+            ctx.scale(dpr,dpr);
+            ctx.font='bold 26px monospace';
+            ctx.shadowColor='rgba(0,0,0,0.95)';
+            ctx.shadowBlur=4;
+            ctx.fillStyle='rgba(255,255,255,1.0)';
             ctx.textAlign=align; ctx.textBaseline='middle';
             ctx.fillText(text, align==='right'?cw-4:4, ch/2);
             const mat=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false});
@@ -6273,12 +6357,13 @@
             const lp=[], gp=[], ep=[];
             for (let i=0;i<NL;i++) {
                 const y=((i/(NL-1))-0.5)*16;
-                lp.push(new THREE.Vector3(LX, y, Math.sin(i*0.55)*0.3));
+                lp.push(new THREE.Vector3(LX, y, Math.sin(i*0.55)*1.4));
             }
             for (let e=0;e<NE;e++) {
-                const y=((e/(NE-1))-0.5)*11;
-                gp.push(new THREE.Vector3(GX, y, 0));
-                ep.push(new THREE.Vector3(EX, y, Math.cos(e*0.9)*0.3));
+                const angle=(e/NE)*Math.PI*2;
+                gp.push(new THREE.Vector3(GX+Math.cos(angle)*1.4, Math.sin(angle)*1.1, Math.sin(angle*1.7)*0.6));
+                const ey=((e/(NE-1))-0.5)*12;
+                ep.push(new THREE.Vector3(EX, ey, Math.cos(e*0.9)*1.1));
             }
             _scene.userData.lp=lp; _scene.userData.gp=gp; _scene.userData.ep=ep;
 
@@ -6287,9 +6372,14 @@
                 const s=_node(0.9,_tc(0.05)); s.position.copy(lp[i]); _scene.add(s); _lSprites.push(s);
                 const lb=_lbl('L'+i,'right'); lb.position.set(lp[i].x-1.2,lp[i].y,lp[i].z); _scene.add(lb); _lLabels.push(lb);
             }
-            // Router gate nodes (no labels — colour shows weight)
+            // Central router hub — large glowing orb at origin
+            _rHubSprite = _node(2.4, new THREE.Color(0.75, 0.35, 1.0));
+            _rHubSprite.position.set(GX, 0, 0);
+            _rHubSprite.material.opacity = 0.55;
+            _scene.add(_rHubSprite);
+            // Router gate nodes orbit the hub — colour shows weight
             for (let e=0;e<NE;e++) {
-                const s=_node(0.4,_tc(1/NE)); s.position.copy(gp[e]); _scene.add(s); _rSprites.push(s);
+                const s=_node(1.2,_tc(1/NE)); s.position.copy(gp[e]); _scene.add(s); _rSprites.push(s);
             }
             // Expert nodes + labels
             for (let e=0;e<NE;e++) {
@@ -6347,7 +6437,7 @@
             _edgeGeo.setAttribute('position',new THREE.BufferAttribute(lgPos,3));
             _edgeGeo.setAttribute('color',new THREE.BufferAttribute(lgCol,3));
             _scene.add(new THREE.LineSegments(_edgeGeo, new THREE.LineBasicMaterial({
-                vertexColors:true, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false
+                vertexColors:true, blending:THREE.NormalBlending, transparent:true, depthWrite:false
             })));
 
             // Gate→Expert edges (12 bright connections, route-weighted)
@@ -6362,8 +6452,35 @@
             _routeGeo.setAttribute('position',new THREE.BufferAttribute(gePos,3));
             _routeGeo.setAttribute('color',new THREE.BufferAttribute(geCol,3));
             _scene.add(new THREE.LineSegments(_routeGeo, new THREE.LineBasicMaterial({
-                vertexColors:true, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false
+                vertexColors:true, blending:THREE.NormalBlending, transparent:true, depthWrite:false
             })));
+
+            // ── Pulse particles (mycelium flow) ───────────────────
+            const _NP = NL*NE*NP_LG + NE*NP_GE;
+            _ptPhase = new Float32Array(_NP);
+            _ptSpeed = new Float32Array(_NP);
+            for (let p=0; p<_NP; p++) {
+                _ptPhase[p] = Math.random();
+                _ptSpeed[p] = 0.009 + Math.random() * 0.007;
+            }
+            const ptPA = new Float32Array(_NP*3), ptCA = new Float32Array(_NP*3);
+            _ptGeo = new THREE.BufferGeometry();
+            _ptGeo.setAttribute('position', new THREE.BufferAttribute(ptPA, 3));
+            _ptGeo.setAttribute('color',    new THREE.BufferAttribute(ptCA, 3));
+            const ptCvs = document.createElement('canvas');
+            ptCvs.width = ptCvs.height = 16;
+            const ptCtx = ptCvs.getContext('2d');
+            const ptGr = ptCtx.createRadialGradient(8,8,0,8,8,8);
+            ptGr.addColorStop(0,    'rgba(255,255,255,1)');
+            ptGr.addColorStop(0.35, 'rgba(255,255,255,0.5)');
+            ptGr.addColorStop(1,    'rgba(255,255,255,0)');
+            ptCtx.fillStyle = ptGr; ptCtx.fillRect(0,0,16,16);
+            const ptMat = new THREE.PointsMaterial({
+                map: new THREE.CanvasTexture(ptCvs), size: 0.14,
+                vertexColors: true, blending: THREE.AdditiveBlending,
+                transparent: true, depthWrite: false, sizeAttenuation: true
+            });
+            _scene.add(new THREE.Points(_ptGeo, ptMat));
 
             new ResizeObserver(_resize).observe(canvas);
             _resize();
@@ -6424,8 +6541,8 @@
                 _lSprites[i].scale.setScalar((0.35+1.5*g)*pb*selBoost);
                 _lSprites[i].material.color.setHSL(LHUE[i], 1.0, 0.12+0.65*g);
                 _lSprites[i].material.opacity=Math.min(1,(0.25+0.75*g)*selBoost);
-                _lLabels[i].material.opacity = 0.30 + 0.70 * g;
-                _lLabels[i].material.color.setHSL(0, 0, 1.0); // white — readable at all activity levels
+                _lLabels[i].material.opacity = 0.78 + 0.22 * g;
+                _lLabels[i].material.color.setHSL(0, 0, 1.0);
             }
 
             // Expert sprites
@@ -6434,8 +6551,12 @@
                 const comb=Math.min(1, g*0.55+rw*0.5);
                 const pb=0.85+0.15*Math.sin(_t*1.4+e*0.7);
                 const selBoostE = (_selected && _selected.type==='expert' && _selected.idx===e) ? 2.4 : 1.0;
-                _eSprites[e].scale.setScalar((0.25+1.1*comb)*pb*selBoostE);
-                _eSprites[e].material.color.copy(_tc(comb));
+                _eSprites[e].scale.setScalar((0.18+1.9*comb)*pb*selBoostE);
+                // Dead experts fade to gray; active ones stay chromatic
+                const eCol = comb < 0.12
+                    ? new THREE.Color(0.08+comb,0.08+comb,0.10+comb)
+                    : _tc(comb);
+                _eSprites[e].material.color.copy(eCol);
                 _eSprites[e].material.opacity=0.2+0.8*comb;
                 const breathe=Math.sin(_t*0.75+e*0.65)*0.07*comb;
                 _eSprites[e].position.y=ep[e].y+breathe;
@@ -6444,12 +6565,21 @@
             }
 
             // Router gate sprites (glow by routing weight)
+            let _hubRwSum = 0;
             for (let e=0;e<NE;e++) {
                 const rw=_rw[e];
+                _hubRwSum += rw;
                 const pb=0.88+0.12*Math.sin(_t*1.8+e*0.5);
-                _rSprites[e].scale.setScalar((0.18+0.75*rw)*pb);
+                _rSprites[e].scale.setScalar((0.5+2.8*rw)*pb);
                 _rSprites[e].material.color.copy(_tc(rw));
-                _rSprites[e].material.opacity=0.15+0.85*rw;
+                _rSprites[e].material.opacity=0.25+0.75*rw;
+            }
+            // Central hub pulses with aggregate routing activity
+            if (_rHubSprite) {
+                const avgRw = _hubRwSum / NE;
+                const hubPb = 0.82 + 0.18*Math.sin(_t*1.1);
+                _rHubSprite.scale.setScalar((1.2+1.8*avgRw)*hubPb);
+                _rHubSprite.material.opacity = 0.28+0.45*avgRw+0.18*Math.sin(_t*1.5);
             }
 
             // Hot-layer temporal trail
@@ -6488,7 +6618,7 @@
                                       (_selected.type==='expert' && _selected.idx===e);
                     dimFactor = connected ? 2.8 : 0.04;
                 }
-                const a=Math.pow(str,1.8)*0.4*dimFactor;
+                const a=Math.pow(str,1.3)*0.75*dimFactor;
                 _hslTmp.setHSL(LHUE[i], 1.0, 0.5);
                 ec[b]=_hslTmp.r*a;ec[b+1]=_hslTmp.g*a;ec[b+2]=_hslTmp.b*a;
                 ec[b+3]=_hslTmp.r*a;ec[b+4]=_hslTmp.g*a;ec[b+5]=_hslTmp.b*a;
@@ -6508,12 +6638,56 @@
                     dimFactor2 = connected2 ? (_selected.type==='layer' ? 0.6 : 2.5) : 0.04;
                 }
                 const [r,g,bl]=_th(str);
-                const a=Math.pow(str,1.3)*0.8*dimFactor2;
+                const a=Math.pow(str,1.0)*0.92*dimFactor2;
                 const nr=r/255*a, ng=g/255*a, nb=bl/255*a;
                 rc[b]=nr;rc[b+1]=ng;rc[b+2]=nb;
                 rc[b+3]=nr;rc[b+4]=ng;rc[b+5]=nb;
             }
             _routeGeo.attributes.color.needsUpdate=true;
+
+            // ── Pulse particles — mycelium flow ───────────────────
+            if (_ptGeo) {
+                const llp=_scene.userData.lp, ggp=_scene.userData.gp, eep=_scene.userData.ep;
+                const ppA=_ptGeo.attributes.position.array, pcA=_ptGeo.attributes.color.array;
+                const _hP=new THREE.Color();
+                let p=0;
+                for (let i=0;i<NL;i++) {
+                    for (let e=0;e<NE;e++) {
+                        const str=Math.min(1,_lg[i]*0.5+_rw[e]*0.3);
+                        let dimP=1.0;
+                        if (_selected) dimP=((_selected.type==='layer'&&_selected.idx===i)||(_selected.type==='expert'&&_selected.idx===e))?1.0:0.0;
+                        for (let k=0;k<NP_LG;k++,p++) {
+                            _ptPhase[p]+=_ptSpeed[p]*str*1.6;
+                            if (_ptPhase[p]>1) _ptPhase[p]-=1;
+                            const t=_ptPhase[p];
+                            ppA[p*3]  =llp[i].x+(ggp[e].x-llp[i].x)*t;
+                            ppA[p*3+1]=llp[i].y+(ggp[e].y-llp[i].y)*t;
+                            ppA[p*3+2]=llp[i].z+(ggp[e].z-llp[i].z)*t;
+                            const fade=Math.sin(Math.PI*t)*str*dimP;
+                            _hP.setHSL(LHUE[i],1.0,0.65);
+                            pcA[p*3]=_hP.r*fade; pcA[p*3+1]=_hP.g*fade; pcA[p*3+2]=_hP.b*fade;
+                        }
+                    }
+                }
+                for (let e=0;e<NE;e++) {
+                    const str=Math.min(1,_rw[e]*0.9+_eg[e]*0.3);
+                    let dimP=1.0;
+                    if (_selected) dimP=(_selected.type==='expert'&&_selected.idx===e)?1.0:(_selected.type==='layer'?0.4:0.0);
+                    for (let k=0;k<NP_GE;k++,p++) {
+                        _ptPhase[p]+=_ptSpeed[p]*str*2.2;
+                        if (_ptPhase[p]>1) _ptPhase[p]-=1;
+                        const t=_ptPhase[p];
+                        ppA[p*3]  =ggp[e].x+(eep[e].x-ggp[e].x)*t;
+                        ppA[p*3+1]=ggp[e].y+(eep[e].y-ggp[e].y)*t;
+                        ppA[p*3+2]=ggp[e].z+(eep[e].z-ggp[e].z)*t;
+                        const fade=Math.sin(Math.PI*t)*str*dimP;
+                        const [r,g,bl]=_th(str);
+                        pcA[p*3]=(r/255)*fade; pcA[p*3+1]=(g/255)*fade; pcA[p*3+2]=(bl/255)*fade;
+                    }
+                }
+                _ptGeo.attributes.position.needsUpdate=true;
+                _ptGeo.attributes.color.needsUpdate=true;
+            }
 
             // Gentle idle sway when not dragging
             if (!_orbitDrag && !_panDrag) {
@@ -6591,7 +6765,7 @@
 
             if (brain) {
                 // Reset to canonical front view every time BRAIN is activated
-                _theta = 0; _phi = Math.PI / 2; _radius = 34;
+                _theta = 0; _phi = Math.PI / 2; _radius = 22;
                 _camTgt.x = 0; _camTgt.y = 0; _camTgt.z = 0;
                 if (!window.THREE) {
                     const s=document.createElement('script');
@@ -6615,12 +6789,12 @@
     };
 
     // H: open all panels in individual tabs
-    // Ctrl+H: close those tabs and restore main tab panels
+    // Ctrl+Alt+H: close those tabs and restore main tab panels
     document.addEventListener('keydown', e => {
         const tag = document.activeElement.tagName;
         if (tag === 'INPUT' || tag === 'SELECT' || e.metaKey) return;
-        if ((e.key === 'h' || e.key === 'H') && e.ctrlKey) {
-            // Ctrl+H: close panel tabs + restore
+        if ((e.key === 'h' || e.key === 'H') && e.ctrlKey && e.altKey) {
+            // Ctrl+Alt+H: close panel tabs + restore
             e.preventDefault();
             _panelWindows.forEach(w => { try { w.close(); } catch(_) {} });
             _panelWindows = [];
@@ -6704,18 +6878,11 @@
 
     // ── Help bubble (keyboard shortcuts quick-ref) ────────────────────
     (function () {
-        const btn = document.createElement('button');
-        btn.id = 'help-btn';
-        btn.textContent = '?';
-        btn.title = 'Keyboard shortcuts';
-        btn.style.cssText = `position:fixed;bottom:14px;right:14px;width:22px;height:22px;border-radius:50%;
-            border:1px solid var(--border2);background:var(--bg2);color:var(--muted);font-size:11px;
-            font-family:inherit;cursor:pointer;z-index:9000;line-height:1;padding:0;`;
-        document.body.appendChild(btn);
+        const btn = document.getElementById('help-btn');
 
         const tip = document.createElement('div');
         tip.id = 'help-tip';
-        tip.style.cssText = `display:none;position:fixed;bottom:42px;right:14px;background:var(--bg2);
+        tip.style.cssText = `display:none;position:fixed;top:40px;right:8px;background:var(--bg2);
             border:1px solid var(--border2);border-radius:8px;padding:12px 16px;font-size:11px;
             font-family:inherit;color:var(--text);z-index:9001;min-width:240px;line-height:2;
             box-shadow:0 8px 32px rgba(0,0,0,0.6);`;
@@ -6723,7 +6890,7 @@
             <b style="color:var(--accent);letter-spacing:1px;font-size:10px">KEYBOARD SHORTCUTS</b><br>
             <b>G</b> — toggle panels (chart focus)<br>
             <b>H</b> — open all panels in individual tabs<br>
-            <b>Ctrl+H</b> — close panel tabs, restore view<br>
+            <b>Ctrl+Alt+H</b> — close panel tabs, restore view<br>
             <b>Click snowflake</b> — open Mycelium Inspector tab<br>
             <b>Ctrl+Z</b> — undo drawing<br>
             <b>Esc</b> — exit draw mode / close inspector<br>
