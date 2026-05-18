@@ -1263,6 +1263,7 @@
     let hoveredVlineIdx = null;       // index of hovered v-line (12px radius, visual + hit feedback)
     let undoStack       = [];         // in-memory undo snapshots [{trendlines,hlines,vlines,tnotes}], max 50
     let smaPreSeedLen   = 0;          // smaLog length after batch_history.csv pre-seed; preserved across restarts
+    let smaPreseedMaxX  = -Infinity;  // last x value in pre-seed; tail-fetch pts ≤ this are already in smaLog
     let lastDojiEp      = -999;
 
     // ── Tooltip ──────────────────────────────────────────────────────
@@ -3373,13 +3374,18 @@
             // Accumulate all batch points into smaLog (never trimmed).
             // Dots render from merged (capped at MAX_CHART_PTS for speed);
             // SMAs compute from smaLog so they span the full training run.
-            for (const pt of newPts) smaLog.push(pt);
+            // Skip points already covered by batch_history.csv pre-seed to avoid
+            // duplicate SMA contributions when the tail fetch overlaps the pre-seed.
+            const filteredForSma = smaPreseedMaxX > -Infinity
+                ? newPts.filter(pt => pt.x > smaPreseedMaxX)
+                : newPts;
+            for (const pt of filteredForSma) smaLog.push(pt);
 
             // Incremental SMA — append new tail values to smaCacheFull[ci] only.
             // Chart datasets receive a viewport-sliced view (render distance) so
             // Chart.js only processes visible points even when smaLog has 300k+ entries.
             const ds = chart.data.datasets;
-            const appended = newPts.length;
+            const appended = filteredForSma.length;
             function updateSma(dsIdx, w, ci) {
                 const cache = smaCacheFull[ci];
                 const n = smaLog.length;
@@ -5268,7 +5274,8 @@
                 _lastPreseedX = x;
             }
         }
-        smaPreSeedLen = smaLog.length; // freeze — never cleared below this point
+        smaPreSeedLen  = smaLog.length; // freeze — never cleared below this point
+        smaPreseedMaxX = smaPreSeedLen > 0 ? smaLog[smaPreSeedLen - 1].x : -Infinity;
         let _preseedTns = null;
         for (const line of epochText.split('\n')) {
             const m = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)/);
@@ -5595,7 +5602,7 @@
             // Map to canvas positions
             _nodes = all.map(n => {
                 const { cx, cy } = toC(n.x, n.y);
-                const r = n.isCenter ? 9 : 3 + n.sim * 5;
+                const r = n.isCenter ? 16 : 3 + n.sim * 5;
                 return { ...n, cx, cy, r };
             });
 
@@ -5645,47 +5652,54 @@
                 ctx.stroke();
             }
 
-            // Neighbor nodes + labels
+            // Neighbor nodes + labels — chromatic gradient: gold=nearest, blue-purple=farthest
             ctx.textAlign = 'center';
+            const _sims    = _nodes.slice(1).map(n => n.sim);
+            const _minSim  = Math.min(..._sims);
+            const _maxSim  = Math.max(..._sims);
+            const _simSpan = Math.max(0.001, _maxSim - _minSim);
+
             for (let i = 1; i < _nodes.length; i++) {
                 const n = _nodes[i];
-                const a = 0.25 + n.sim * 0.75;
+                const t  = (n.sim - _minSim) / _simSpan;  // 0=far, 1=near
+                const h  = Math.round(220 - 185 * t);      // 220 (blue) → 35 (amber/gold)
+                const l  = Math.round(35 + 30 * t);        // 35–65% lightness
+                const a  = (0.35 + 0.65 * t).toFixed(2);
 
                 ctx.beginPath();
                 ctx.arc(n.cx, n.cy, n.r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(34,211,238,${a.toFixed(2)})`;
+                ctx.fillStyle = `hsla(${h},80%,${l}%,${a})`;
                 ctx.fill();
 
                 ctx.font      = '9px JetBrains Mono, monospace';
-                ctx.fillStyle = `rgba(226,232,240,${Math.min(1, a + 0.1).toFixed(2)})`;
+                const tl = Math.round(60 + 28 * t);
+                const ta = (0.22 + 0.78 * t).toFixed(2);
+                ctx.fillStyle = `hsla(${h},70%,${tl}%,${ta})`;
                 ctx.fillText(n.word, n.cx, n.cy - n.r - 3);
             }
 
-            // Center node — bright anchor with outer glow
-            ctx.beginPath();
-            ctx.arc(center.cx, center.cy, center.r + 10, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(34,211,238,0.07)';
-            ctx.fill();
+            // Center node — dominant anchor with multi-ring glow
+            ctx.beginPath(); ctx.arc(center.cx, center.cy, center.r + 22, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.04)'; ctx.fill();
 
-            ctx.beginPath();
-            ctx.arc(center.cx, center.cy, center.r + 4, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(34,211,238,0.14)';
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(center.cx, center.cy, center.r + 11, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(34,211,238,0.15)'; ctx.fill();
 
-            ctx.beginPath();
-            ctx.arc(center.cx, center.cy, center.r, 0, Math.PI * 2);
-            ctx.fillStyle   = 'rgba(34,211,238,0.45)';
-            ctx.fill();
-            ctx.strokeStyle = '#22d3ee';
-            ctx.lineWidth   = 2;
-            ctx.stroke();
+            ctx.beginPath(); ctx.arc(center.cx, center.cy, center.r + 4, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(34,211,238,0.32)'; ctx.fill();
 
-            // Label with dark pill background
-            ctx.font = 'bold 13px JetBrains Mono, monospace';
+            ctx.beginPath(); ctx.arc(center.cx, center.cy, center.r, 0, Math.PI * 2);
+            ctx.fillStyle   = 'rgba(34,211,238,0.90)'; ctx.fill();
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.stroke();
+
+            // Label: dark pill with cyan border
+            ctx.font = 'bold 14px JetBrains Mono, monospace';
             const _lw = ctx.measureText(center.word).width;
-            const _ly = center.cy - center.r - 8;
-            ctx.fillStyle = 'rgba(6,13,21,0.80)';
-            ctx.fillRect(center.cx - _lw / 2 - 5, _ly - 12, _lw + 10, 16);
+            const _ly = center.cy - center.r - 12;
+            ctx.fillStyle = 'rgba(6,13,21,0.92)';
+            ctx.fillRect(center.cx - _lw / 2 - 8, _ly - 14, _lw + 16, 18);
+            ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 1;
+            ctx.strokeRect(center.cx - _lw / 2 - 8, _ly - 14, _lw + 16, 18);
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
             ctx.fillText(center.word, center.cx, _ly);
@@ -5840,6 +5854,13 @@
         let _theta = 0, _phi = Math.PI / 2, _radius = 34;
         const _camTgt = { x: 0, y: 0, z: 0 };
         let _orbitDrag = false, _panDrag = false, _px = 0, _py = 0;
+        let _spaceDown = false;
+        window.addEventListener('keydown', e => {
+            if (e.code === 'Space' && document.getElementById('myc3d-canvas').style.display !== 'none') {
+                _spaceDown = true; e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', e => { if (e.code === 'Space') _spaceDown = false; });
 
         function _applyOrbit() {
             if (!_camera) return;
@@ -5986,8 +6007,8 @@
 
             // ── orbit / pan / zoom mouse controls ─────────────────
             canvas.addEventListener('mousedown', e => {
-                if (e.button === 0) _orbitDrag = true;
-                else _panDrag = true;
+                if (e.button === 0 && !_spaceDown) _orbitDrag = true;
+                else _panDrag = true;  // right-click OR space+left = pan
                 _px = e.clientX; _py = e.clientY;
                 e.preventDefault();
             }, { passive: false });
@@ -6039,8 +6060,8 @@
                 _lSprites[i].scale.setScalar((0.35+1.5*g)*pb);
                 _lSprites[i].material.color.setHSL(LHUE[i], 1.0, 0.12+0.65*g);
                 _lSprites[i].material.opacity=0.25+0.75*g;
-                _lLabels[i].material.opacity=0.25+0.75*g;
-                _lLabels[i].material.color.setHSL(LHUE[i], 0.9, 0.35+0.45*g);
+                _lLabels[i].material.opacity = 0.30 + 0.70 * g;
+                _lLabels[i].material.color.setHSL(0, 0, 1.0); // white — readable at all activity levels
             }
 
             // Expert sprites

@@ -156,6 +156,10 @@ class MyceliumEngine:
 
 _mycelium = MyceliumEngine(_BEST_MODEL, _VOCAB_FILE)
 
+# Cache for dynamically extended batch_history.csv
+# Tuple: (csv_mtime, log_size, combined_bytes) — invalidated when either file changes.
+_batch_csv_cache = None
+
 # --cpu: redirect bare /dashboard/ to CPU-safe thresholds (5-min stale, 30-min panel).
 # Passed by albert-train on contributor machines so any manual navigation still
 # gets the right params even if the auto-opened browser tab is closed.
@@ -210,6 +214,65 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
         with open(LOG_PATH, 'rb') as f:
             f.seek(start)
             self.wfile.write(f.read(length))
+
+    def _gen_batch_history(self):
+        """Serve batch_history.csv extended with any batch lines from training.log not yet in it."""
+        global _batch_csv_cache
+        csv_path = os.path.join(PROJECT, 'dashboard', 'batch_history.csv')
+        try:
+            csv_mtime = os.path.getmtime(csv_path) if os.path.isfile(csv_path) else 0.0
+            log_size  = os.path.getsize(LOG_PATH)   if os.path.isfile(LOG_PATH)  else 0
+        except OSError:
+            self.send_error(500, 'stat failed')
+            return
+        if (_batch_csv_cache is not None and
+                _batch_csv_cache[0] == csv_mtime and
+                _batch_csv_cache[1] == log_size):
+            body = _batch_csv_cache[2]
+        else:
+            # Read existing CSV and find last x value by peeking at its tail
+            csv_bytes = b''
+            last_x = -1.0
+            if os.path.isfile(csv_path):
+                with open(csv_path, 'rb') as f:
+                    f.seek(0, 2)
+                    tail_start = max(0, f.tell() - 256)
+                    f.seek(tail_start)
+                    for raw in f.read().decode('utf-8', errors='replace').splitlines():
+                        comma = raw.find(',')
+                        if comma > 0:
+                            try:
+                                last_x = float(raw[:comma])
+                            except ValueError:
+                                pass
+                with open(csv_path, 'rb') as f:
+                    csv_bytes = f.read()
+            # Append any batch lines from training.log with x > last_x
+            extra = []
+            if os.path.isfile(LOG_PATH):
+                pat = re.compile(
+                    r'Epoch\s+\d+\s+\(Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)'
+                )
+                with open(LOG_PATH, 'r', encoding='utf-8', errors='replace') as f:
+                    for raw in f:
+                        m = pat.search(raw)
+                        if not m:
+                            continue
+                        ep, batch, loss = int(m.group(1)), int(m.group(2)), float(m.group(3))
+                        if not (1.0 < loss < 50.0):
+                            continue
+                        x = ep + batch / 300.0
+                        if x > last_x:
+                            extra.append(f'{x:.6f},{loss:.4f}')
+            tail = ('\n' + '\n'.join(extra)).encode('utf-8') if extra else b''
+            body = csv_bytes + tail
+            _batch_csv_cache = (csv_mtime, log_size, body)
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/csv; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Cache-Control', 'no-store')
+        self.end_headers()
+        self.wfile.write(body)
 
     def _handle_server_config(self):
         body = json.dumps({'cpu_mode': CPU_MODE}).encode()
@@ -273,8 +336,13 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
                 return
 
-        # Remap training.log URL to the stable out-of-repo path
+        # Serve dynamically extended batch_history.csv (bridges CSV ↔ live training.log gap)
         clean = self.path.split('?')[0]
+        if clean.endswith('batch_history.csv'):
+            self._gen_batch_history()
+            return
+
+        # Remap training.log URL to the stable out-of-repo path
         if clean.endswith('training.log'):
             self._serve_log()
             return
