@@ -5797,10 +5797,26 @@
         const NL = 17, NE = 12;
         const ENAMES = ['SYN','SEM','CTX','INF','MEM','GEN','LOG','LNG','ABS','PLN','CMP','INT'];
 
-        let _scene, _camera, _renderer, _edgeGeo;
+        let _scene, _camera, _renderer, _edgeGeo, _routeGeo;
         let _lSprites = [], _eSprites = [], _lLabels = [], _eLabels = [];
+        let _rSprites = [];   // router gate nodes
         let _initialized = false;
         let _t = 0;
+
+        // ── orbit state ──────────────────────────────────────────────
+        let _theta = 0, _phi = Math.PI / 2, _radius = 34;
+        const _camTgt = { x: 0, y: 0, z: 0 };
+        let _orbitDrag = false, _panDrag = false, _px = 0, _py = 0;
+
+        function _applyOrbit() {
+            if (!_camera) return;
+            _camera.position.set(
+                _camTgt.x + _radius * Math.sin(_phi) * Math.sin(_theta),
+                _camTgt.y + _radius * Math.cos(_phi),
+                _camTgt.z + _radius * Math.sin(_phi) * Math.cos(_theta)
+            );
+            _camera.lookAt(_camTgt.x, _camTgt.y, _camTgt.z);
+        }
 
         // Smoothed state
         const _lg  = new Float32Array(NL).fill(0.05);  // current layer glow
@@ -5867,53 +5883,102 @@
 
             _scene  = new THREE.Scene();
             _camera = new THREE.PerspectiveCamera(46, 1, 0.1, 200);
-            _camera.position.set(0, 0, 26);
+            _applyOrbit();
 
             _renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
             _renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
             _renderer.setClearColor(0x060d15, 1);
 
-            // Layout
-            const LX=-4.8, EX=4.8;
-            const lp=[], ep=[];
+            // Layout — layers left, router gate centre, experts right
+            const LX=-5.5, GX=0, EX=5.5;
+            const lp=[], gp=[], ep=[];
             for (let i=0;i<NL;i++) {
-                const y=((i/(NL-1))-0.5)*15;
-                lp.push(new THREE.Vector3(LX, y, Math.sin(i*0.55)*0.4));
+                const y=((i/(NL-1))-0.5)*16;
+                lp.push(new THREE.Vector3(LX, y, Math.sin(i*0.55)*0.3));
             }
             for (let e=0;e<NE;e++) {
-                const y=((e/(NE-1))-0.5)*10;
-                ep.push(new THREE.Vector3(EX, y, Math.cos(e*0.9)*0.45));
+                const y=((e/(NE-1))-0.5)*11;
+                gp.push(new THREE.Vector3(GX, y, 0));
+                ep.push(new THREE.Vector3(EX, y, Math.cos(e*0.9)*0.3));
             }
-            _scene.userData.lp=lp; _scene.userData.ep=ep;
+            _scene.userData.lp=lp; _scene.userData.gp=gp; _scene.userData.ep=ep;
 
             // Layer nodes + labels
             for (let i=0;i<NL;i++) {
                 const s=_node(0.9,_tc(0.05)); s.position.copy(lp[i]); _scene.add(s); _lSprites.push(s);
-                const lb=_lbl('L'+i,'right'); lb.position.set(lp[i].x-1.3,lp[i].y,lp[i].z); _scene.add(lb); _lLabels.push(lb);
+                const lb=_lbl('L'+i,'right'); lb.position.set(lp[i].x-1.2,lp[i].y,lp[i].z); _scene.add(lb); _lLabels.push(lb);
+            }
+            // Router gate nodes (no labels — colour shows weight)
+            for (let e=0;e<NE;e++) {
+                const s=_node(0.4,_tc(1/NE)); s.position.copy(gp[e]); _scene.add(s); _rSprites.push(s);
             }
             // Expert nodes + labels
             for (let e=0;e<NE;e++) {
-                const s=_node(0.5,_tc(0.5)); s.position.copy(ep[e]); _scene.add(s); _eSprites.push(s);
-                const lb=_lbl(ENAMES[e],'left'); lb.position.set(ep[e].x+1.3,ep[e].y,ep[e].z); _scene.add(lb); _eLabels.push(lb);
+                const s=_node(0.55,_tc(0.5)); s.position.copy(ep[e]); _scene.add(s); _eSprites.push(s);
+                const lb=_lbl(ENAMES[e],'left'); lb.position.set(ep[e].x+1.2,ep[e].y,ep[e].z); _scene.add(lb); _eLabels.push(lb);
             }
 
-            // Edges — 17×12 = 204 segments, vertex-coloured
-            const eCount=NL*NE;
-            const ePos=new Float32Array(eCount*2*3), eCol=new Float32Array(eCount*2*3);
+            // Layer→Gate edges (17×12 = 204, dim background web)
+            const lgCount=NL*NE;
+            const lgPos=new Float32Array(lgCount*2*3), lgCol=new Float32Array(lgCount*2*3);
             for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
                 const b=(i*NE+e)*6;
-                ePos[b]=lp[i].x; ePos[b+1]=lp[i].y; ePos[b+2]=lp[i].z;
-                ePos[b+3]=ep[e].x; ePos[b+4]=ep[e].y; ePos[b+5]=ep[e].z;
+                lgPos[b]=lp[i].x; lgPos[b+1]=lp[i].y; lgPos[b+2]=lp[i].z;
+                lgPos[b+3]=gp[e].x; lgPos[b+4]=gp[e].y; lgPos[b+5]=gp[e].z;
             }
             _edgeGeo=new THREE.BufferGeometry();
-            _edgeGeo.setAttribute('position',new THREE.BufferAttribute(ePos,3));
-            _edgeGeo.setAttribute('color',new THREE.BufferAttribute(eCol,3));
+            _edgeGeo.setAttribute('position',new THREE.BufferAttribute(lgPos,3));
+            _edgeGeo.setAttribute('color',new THREE.BufferAttribute(lgCol,3));
             _scene.add(new THREE.LineSegments(_edgeGeo, new THREE.LineBasicMaterial({
+                vertexColors:true, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false
+            })));
+
+            // Gate→Expert edges (12 bright connections, route-weighted)
+            const geCount=NE;
+            const gePos=new Float32Array(geCount*2*3), geCol=new Float32Array(geCount*2*3);
+            for (let e=0;e<NE;e++) {
+                const b=e*6;
+                gePos[b]=gp[e].x; gePos[b+1]=gp[e].y; gePos[b+2]=gp[e].z;
+                gePos[b+3]=ep[e].x; gePos[b+4]=ep[e].y; gePos[b+5]=ep[e].z;
+            }
+            _routeGeo=new THREE.BufferGeometry();
+            _routeGeo.setAttribute('position',new THREE.BufferAttribute(gePos,3));
+            _routeGeo.setAttribute('color',new THREE.BufferAttribute(geCol,3));
+            _scene.add(new THREE.LineSegments(_routeGeo, new THREE.LineBasicMaterial({
                 vertexColors:true, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false
             })));
 
             new ResizeObserver(_resize).observe(canvas);
             _resize();
+
+            // ── orbit / pan / zoom mouse controls ─────────────────
+            canvas.addEventListener('mousedown', e => {
+                if (e.button === 0) _orbitDrag = true;
+                else _panDrag = true;
+                _px = e.clientX; _py = e.clientY;
+                e.preventDefault();
+            }, { passive: false });
+            window.addEventListener('mouseup', () => { _orbitDrag = false; _panDrag = false; });
+            window.addEventListener('mousemove', e => {
+                const dx = e.clientX - _px, dy = e.clientY - _py;
+                _px = e.clientX; _py = e.clientY;
+                if (_orbitDrag) {
+                    _theta -= dx * 0.006;
+                    _phi = Math.max(0.15, Math.min(Math.PI - 0.15, _phi + dy * 0.006));
+                    _applyOrbit();
+                } else if (_panDrag) {
+                    const spd = _radius / 400;
+                    _camTgt.x -= dx * spd;
+                    _camTgt.y += dy * spd;
+                    _applyOrbit();
+                }
+            });
+            canvas.addEventListener('wheel', e => {
+                _radius = Math.max(5, Math.min(90, _radius + e.deltaY * 0.05));
+                _applyOrbit();
+                e.preventDefault();
+            }, { passive: false });
+            canvas.addEventListener('contextmenu', e => e.preventDefault());
 
             (function _loop(){ requestAnimationFrame(_loop); _tick(); })();
         }
@@ -5953,28 +6018,52 @@
                 _eSprites[e].scale.setScalar((0.25+1.1*comb)*pb);
                 _eSprites[e].material.color.copy(_tc(comb));
                 _eSprites[e].material.opacity=0.2+0.8*comb;
-                const breathe=Math.sin(_t*0.75+e*0.65)*0.08*comb;
+                const breathe=Math.sin(_t*0.75+e*0.65)*0.07*comb;
                 _eSprites[e].position.y=ep[e].y+breathe;
                 _eLabels[e].material.opacity=0.2+0.8*comb;
                 _eLabels[e].position.y=ep[e].y+breathe;
             }
 
-            // Edge colours (vertex colour = pre-multiplied alpha for additive blend)
+            // Router gate sprites (glow by routing weight)
+            for (let e=0;e<NE;e++) {
+                const rw=_rw[e];
+                const pb=0.88+0.12*Math.sin(_t*1.8+e*0.5);
+                _rSprites[e].scale.setScalar((0.18+0.75*rw)*pb);
+                _rSprites[e].material.color.copy(_tc(rw));
+                _rSprites[e].material.opacity=0.15+0.85*rw;
+            }
+
+            // Layer→Gate edge colours
             const ec=_edgeGeo.attributes.color.array;
             for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
                 const b=(i*NE+e)*6;
-                const str=Math.min(1,_lg[i]*0.4+_eg[e]*0.3+_rw[e]*0.35);
+                const str=Math.min(1,_lg[i]*0.35+_rw[e]*0.3);
                 const [r,g,bl]=_th(str);
-                const a=Math.pow(str,1.7)*0.5;
+                const a=Math.pow(str,2.0)*0.35;
                 const nr=r/255*a, ng=g/255*a, nb=bl/255*a;
                 ec[b]=nr;ec[b+1]=ng;ec[b+2]=nb;
                 ec[b+3]=nr;ec[b+4]=ng;ec[b+5]=nb;
             }
             _edgeGeo.attributes.color.needsUpdate=true;
 
-            // Gentle scene sway
-            _scene.rotation.y=Math.sin(_t*0.11)*0.10;
-            _scene.rotation.x=Math.sin(_t*0.07)*0.035;
+            // Gate→Expert edge colours (bright, route-weighted)
+            const rc=_routeGeo.attributes.color.array;
+            for (let e=0;e<NE;e++) {
+                const b=e*6;
+                const str=Math.min(1,_rw[e]*0.9+_eg[e]*0.25);
+                const [r,g,bl]=_th(str);
+                const a=Math.pow(str,1.3)*0.8;
+                const nr=r/255*a, ng=g/255*a, nb=bl/255*a;
+                rc[b]=nr;rc[b+1]=ng;rc[b+2]=nb;
+                rc[b+3]=nr;rc[b+4]=ng;rc[b+5]=nb;
+            }
+            _routeGeo.attributes.color.needsUpdate=true;
+
+            // Gentle idle sway when not dragging
+            if (!_orbitDrag && !_panDrag) {
+                _theta += Math.sin(_t * 0.04) * 0.0003;
+                _applyOrbit();
+            }
 
             _renderer.render(_scene, _camera);
         }
