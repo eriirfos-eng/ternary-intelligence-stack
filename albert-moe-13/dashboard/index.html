@@ -1214,9 +1214,7 @@
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
     let smaLog           = [];   // [{x,y}] — full batch point history; source of truth for SMA computation
     let smaCacheFull     = [[], [], [], [], []]; // pre-computed SMA values: [21, 55, 144, 377, 610] — full history, never passed directly to Chart.js
-    const SMA_SIZES      = [21, 55, 144, 377, 610]; // Fibonacci SMA periods in EPOCHS (variable-density epoch-window)
-    let _smaLo           = [0, 0, 0, 0, 0];  // sliding window lo pointer per SMA (epoch-window)
-    let _smaSum          = [0, 0, 0, 0, 0];  // running sum per SMA for incremental tail updates
+    const SMA_SIZES      = [21, 55, 144, 377, 610]; // Fibonacci SMA periods matching ds indices 1-5
     let totalPts         = 0;
     let newPointStartIdx = Infinity; // index of first "new" pt — only those get drop animation
     let pulseActive      = false;
@@ -2654,15 +2652,14 @@
     });
 
     // ── SMA — O(n) sliding window sum, not O(n²) slice+reduce ──────────
-    // Epoch-window SMA: window in EPOCHS not data points — handles variable CSV density.
-    function sma(data, epochW) {
+    function sma(data, w) {
+        if (data.length < w) return [];
         const result = [];
-        let lo = 0, runSum = 0;
+        let sum = 0;
         for (let i = 0; i < data.length; i++) {
-            runSum += data[i].y;
-            const cutoff = data[i].x - epochW;
-            while (data[lo].x <= cutoff) { runSum -= data[lo].y; lo++; }
-            result.push({ x: data[i].x, y: runSum / (i - lo + 1) });
+            sum += data[i].y;
+            if (i >= w) sum -= data[i - w].y;
+            if (i >= w - 1) result.push({ x: data[i].x, y: sum / w });
         }
         return result;
     }
@@ -3057,7 +3054,6 @@
                     userHasZoomed = false; newPointStartIdx = Infinity;
                     batchLog = []; smaLog.length = smaPreSeedLen; // epochLog preserved; smaPreSeedLen preserves historical pre-seed
                     smaCacheFull = [[], [], [], [], []]; // clear SMA caches — will recompute from pre-seed on next poll
-                    _smaLo = [0,0,0,0,0]; _smaSum = [0,0,0,0,0];
                     document.getElementById('v-loss').textContent  = '—';
                     document.getElementById('v-epoch').textContent = '—';
                     document.getElementById('v-best').textContent  = allTimeBestBatch === Infinity ? '—' : allTimeBestBatch.toFixed(4);
@@ -3409,27 +3405,17 @@
             // Chart.js only processes visible points even when smaLog has 300k+ entries.
             const ds = chart.data.datasets;
             const appended = filteredForSma.length;
-            function updateSma(dsIdx, epochW, ci) {
+            function updateSma(dsIdx, w, ci) {
                 const cache = smaCacheFull[ci];
                 const n = smaLog.length;
                 if (cache.length === 0) {
-                    smaCacheFull[ci] = sma(smaLog, epochW); // full epoch-window recompute
-                    // Rebuild incremental state to match end of smaLog
-                    let lo = 0, s = 0;
-                    for (let i = 0; i < n; i++) {
-                        s += smaLog[i].y;
-                        const cut = smaLog[i].x - epochW;
-                        while (smaLog[lo].x <= cut) { s -= smaLog[lo].y; lo++; }
-                    }
-                    _smaLo[ci] = lo; _smaSum[ci] = s;
+                    smaCacheFull[ci] = sma(smaLog, w);
                 } else {
                     for (let i = n - appended; i < n; i++) {
-                        _smaSum[ci] += smaLog[i].y;
-                        const cut = smaLog[i].x - epochW;
-                        while (_smaLo[ci] < i && smaLog[_smaLo[ci]].x <= cut) {
-                            _smaSum[ci] -= smaLog[_smaLo[ci]].y; _smaLo[ci]++;
-                        }
-                        cache.push({ x: smaLog[i].x, y: _smaSum[ci] / (i - _smaLo[ci] + 1) });
+                        if (i < w - 1) continue;
+                        let sum = 0;
+                        for (let j = i - w + 1; j <= i; j++) sum += smaLog[j].y;
+                        cache.push({ x: smaLog[i].x, y: sum / w });
                     }
                 }
                 if (!ds[dsIdx].hidden) ds[dsIdx].data = smaVisibleSlice(smaCacheFull[ci]);
