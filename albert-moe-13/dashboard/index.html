@@ -5555,15 +5555,18 @@
         }
 
         // ── render ─────────────────────────────────────────────────────
+        // Strip leading Ġ/ġ (U+0120/0121 BPE word-boundary marker) for display
+        const _disp = w => w.replace(/^[Ġġ]/, '');
+
         function _render(d) {
             const W = canvas.width;
             const H = canvas.height;
             if (W < 10 || H < 10) return;
 
             // Build node list
-            const all = [{ x: d.x, y: d.y, word: d.word, sim: 1.0, isCenter: true, id: d.id }]
+            const all = [{ x: d.x, y: d.y, word: _disp(d.word), sim: 1.0, isCenter: true, id: d.id }]
                 .concat(d.neighbors.map(n => ({
-                    x: n.x, y: n.y, word: n.word, sim: n.sim, isCenter: false, id: n.id
+                    x: n.x, y: n.y, word: _disp(n.word), sim: n.sim, isCenter: false, id: n.id
                 })));
 
             // Bounding box over visible nodes
@@ -5608,15 +5611,33 @@
 
             const center = _nodes[0];
 
-            // Edges
+            // Neighbor-to-neighbor mycelium threads (proximity-based)
+            const THREAD_R = Math.min(W, H) * 0.18;
+            for (let i = 1; i < _nodes.length; i++) {
+                for (let j = i + 1; j < _nodes.length; j++) {
+                    const a = _nodes[i], b = _nodes[j];
+                    const dx = a.cx - b.cx, dy = a.cy - b.cy;
+                    const d  = Math.sqrt(dx * dx + dy * dy);
+                    if (d >= THREAD_R) continue;
+                    const alpha = 0.09 * (1 - d / THREAD_R) * ((a.sim + b.sim) / 2);
+                    ctx.beginPath();
+                    ctx.moveTo(a.cx, a.cy);
+                    ctx.lineTo(b.cx, b.cy);
+                    ctx.strokeStyle = `rgba(56,189,148,${alpha.toFixed(3)})`;
+                    ctx.lineWidth   = 0.5;
+                    ctx.stroke();
+                }
+            }
+
+            // Hub edges — center to each neighbor
             for (let i = 1; i < _nodes.length; i++) {
                 const n = _nodes[i];
-                const a = 0.05 + n.sim * 0.35;
+                const a = 0.08 + n.sim * 0.48;
                 ctx.beginPath();
                 ctx.moveTo(center.cx, center.cy);
                 ctx.lineTo(n.cx, n.cy);
                 ctx.strokeStyle = `rgba(34,211,238,${a.toFixed(2)})`;
-                ctx.lineWidth   = 0.8;
+                ctx.lineWidth   = 1.0;
                 ctx.stroke();
             }
 
@@ -5636,19 +5657,34 @@
                 ctx.fillText(n.word, n.cx, n.cy - n.r - 3);
             }
 
-            // Center node (bright, larger)
+            // Center node — bright anchor with outer glow
+            ctx.beginPath();
+            ctx.arc(center.cx, center.cy, center.r + 10, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(34,211,238,0.07)';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(center.cx, center.cy, center.r + 4, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(34,211,238,0.14)';
+            ctx.fill();
+
             ctx.beginPath();
             ctx.arc(center.cx, center.cy, center.r, 0, Math.PI * 2);
-            ctx.fillStyle   = 'rgba(34,211,238,0.2)';
+            ctx.fillStyle   = 'rgba(34,211,238,0.45)';
             ctx.fill();
             ctx.strokeStyle = '#22d3ee';
-            ctx.lineWidth   = 1.5;
+            ctx.lineWidth   = 2;
             ctx.stroke();
 
-            ctx.font      = 'bold 12px JetBrains Mono, monospace';
+            // Label with dark pill background
+            ctx.font = 'bold 13px JetBrains Mono, monospace';
+            const _lw = ctx.measureText(center.word).width;
+            const _ly = center.cy - center.r - 8;
+            ctx.fillStyle = 'rgba(6,13,21,0.80)';
+            ctx.fillRect(center.cx - _lw / 2 - 5, _ly - 12, _lw + 10, 16);
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
-            ctx.fillText(center.word, center.cx, center.cy - center.r - 5);
+            ctx.fillText(center.word, center.cx, _ly);
         }
 
         function _clearCanvas() {
