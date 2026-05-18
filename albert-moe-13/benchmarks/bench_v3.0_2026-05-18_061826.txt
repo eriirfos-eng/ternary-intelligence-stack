@@ -1,0 +1,74 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 1755 epochs | 2026-05-18 06:18
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→  lighttern head Statestern head Statestern head Statestern head Statestern head Statestern head Statestern head Statestern head Statestern head Statestern head Statestern head Statestern head Statestern head Statestern head Statestern head Statestern head Statestern head head light oftenity � lighttern find a United became several a
+    12.5 tok/s  80ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+→ � headExeg Unitedtern head became structure knownists light other which� design country� Unitedtern find” Bar UnitedOn   ." 6 leftAStern� Unitedized area** socialEROnhip � ro find lighthipana area languageIS oftenéesoideSTICJ   lightCh light States language designCh
+    15.6 tok/s  64ms/tok
+
+[P3] the ternary number system uses three distinct
+→ ib   On National designumb� lightuss."IAhed languageJpr   On still nameordj language de post areaReISors 6 find organ NationalIS imEx yearJ headIA alongtern rel early findient**IC orown."Jward  MayIStern United il StatesnoARED United�
+    12.0 tok/s  83ms/tok
+
+[P4] once upon a time in a kingdom far
+→ IS ste."olog
+ newEx"tern� lighticallyEx."Ch-- stillaz� eraED"tern real United States findhipJ including find arED fourEx X fourST newious sobre� foundIN -car language few personIA United att United designED�ChED findATSTious language."
+    11.1 tok/s  90ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+→ ISainilyIS��tern UnitedExAN
+IS ste."IS oftenER Tr� became UnitedP along came
+ design, and designIA alleEx thatSTIStern States rel whichIS ste and Ї several headj�ISilyo inc
+ States puto� less  Ex non becameERically
+    12.3 tok/s  81ms/tok
+
+[P6] the EU AI Act entered into force on
+→  modence� find languageLe United �
+ExikistsCh languageEx known herEx language il becameHeicallyEx,ily took States." known23IS aroundtern UnitedERESExICtern AT
+ternIS often.ternledhip   Le family old-- and yearatingtern lightrac UnitedCh
+    12.7 tok/s  79ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+→ wardFINciaIC country
+ often origin   findj year light languageiousT design together36 nelANER areaists $ ont�J--ide designIA findord yearER NationalEx� againiousHeily theHe city United and�Retern natural �STESEx countryIA structure within United sltern
+    13.9 tok/s  72ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+→  � areaISiousms oftenJ
+ newiousExternordolog often States su � shouldcy--."age aroundtern often -[AN States country yearsaztern areaana United bi area language its SheOnIShed your find de." two designors language��ternona country withioushipATK
+    15.4 tok/s  65ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+→  ternIS States waterors language States si � then language should�  tern resultiousIN TternIStern not design onlytern�ors   \ four centuryity several23ily art lightRe withinY the side until countryEx eraINIS main."ious language during together awayIS light United verINtern
+    13.0 tok/s  77ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+→ � head light until designEDJ year small countryINJ� ac�). steIS23 United two lightterniste,ESvantern� the nearEDATists). little until National the   both Ind� and."[� co that togetheram erahip ass lighttern,ily  ISC country Qtern
+    12.3 tok/s  81ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+→ � wurde). high lighttern, oftenES hereCtern). information StatesY research � light National organ German knownIA Unitedizedating light here within Ar yearIN National wordsINES country �ED). often duringYIN form lightologThe German areaIS States United   light several States three. lightChward ten
+    15.6 tok/s  64ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+→ itedST designtern."ioustern�ily St until National �IC Nationalage severalES water alongtern� sinceJ49    Statesited yearhipists orated lightAR becameiousternIS."ward23 often States historyIStern,Exónious find history German cameternIS lightiz along States original
+    12.2 tok/s  82ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+→  includingityhip country
+ incures oftenER history �ioustern four includingity countryIS States On research withintern history   design oftenAT dr first often� head must find nel several headANAT withinJ findW oftenternoll including."�sp dr He."� She along Re Statestern two theious�
+    12.8 tok/s  78ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+→ #�m    based other along�� often �ole�
+ReTheord   IN23 linem withintern mainhed  ERternentswardtaternRe find."wayternersCh  � design putiouserg� de country  tern United super area�Onatingilyord.]]-- first impIC
+    15.6 tok/s  64ms/tok
+
+[P15] the meaning of life according to
+→  knownEDCh   otherizedwardparAR**ternury MayJ United still tookiste T United head� see fourED within MayIS� Nationalors delltern� clöJ�ED within delltern� sonification area�ized knownC form� May four centuryterntainordEx there foundIN make nie
+    18.2 tok/s  55ms/tok
+
