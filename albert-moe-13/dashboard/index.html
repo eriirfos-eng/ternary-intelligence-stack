@@ -1214,7 +1214,9 @@
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
     let smaLog           = [];   // [{x,y}] — full batch point history; source of truth for SMA computation
     let smaCacheFull     = [[], [], [], [], []]; // pre-computed SMA values: [21, 55, 144, 377, 610] — full history, never passed directly to Chart.js
-    const SMA_SIZES      = [21, 55, 144, 377, 610]; // Fibonacci SMA periods matching ds indices 1-5
+    const SMA_SIZES      = [21, 55, 144, 377, 610]; // Fibonacci SMA periods in EPOCHS (variable-density epoch-window)
+    let _smaLo           = [0, 0, 0, 0, 0];  // sliding window lo pointer per SMA (epoch-window)
+    let _smaSum          = [0, 0, 0, 0, 0];  // running sum per SMA for incremental tail updates
     let totalPts         = 0;
     let newPointStartIdx = Infinity; // index of first "new" pt — only those get drop animation
     let pulseActive      = false;
@@ -2652,16 +2654,15 @@
     });
 
     // ── SMA — O(n) sliding window sum, not O(n²) slice+reduce ──────────
-    function sma(data, w) {
-        if (data.length < w) return [];
+    // Epoch-window SMA: window in EPOCHS not data points — handles variable CSV density.
+    function sma(data, epochW) {
         const result = [];
-        let sum = 0;
+        let lo = 0, runSum = 0;
         for (let i = 0; i < data.length; i++) {
-            sum += data[i].y;
-            if (i >= w) sum -= data[i - w].y;
-            // Only emit once the full window is available — partial-window warm-up
-            // creates a ramp that traces raw data and causes bezier artifacts at the tail.
-            if (i >= w - 1) result.push({ x: data[i].x, y: sum / w });
+            runSum += data[i].y;
+            const cutoff = data[i].x - epochW;
+            while (data[lo].x <= cutoff) { runSum -= data[lo].y; lo++; }
+            result.push({ x: data[i].x, y: runSum / (i - lo + 1) });
         }
         return result;
     }
@@ -3056,6 +3057,7 @@
                     userHasZoomed = false; newPointStartIdx = Infinity;
                     batchLog = []; smaLog.length = smaPreSeedLen; // epochLog preserved; smaPreSeedLen preserves historical pre-seed
                     smaCacheFull = [[], [], [], [], []]; // clear SMA caches — will recompute from pre-seed on next poll
+                    _smaLo = [0,0,0,0,0]; _smaSum = [0,0,0,0,0];
                     document.getElementById('v-loss').textContent  = '—';
                     document.getElementById('v-epoch').textContent = '—';
                     document.getElementById('v-best').textContent  = allTimeBestBatch === Infinity ? '—' : allTimeBestBatch.toFixed(4);
@@ -3407,17 +3409,27 @@
             // Chart.js only processes visible points even when smaLog has 300k+ entries.
             const ds = chart.data.datasets;
             const appended = filteredForSma.length;
-            function updateSma(dsIdx, w, ci) {
+            function updateSma(dsIdx, epochW, ci) {
                 const cache = smaCacheFull[ci];
                 const n = smaLog.length;
                 if (cache.length === 0) {
-                    smaCacheFull[ci] = sma(smaLog, w); // full recompute on first call
+                    smaCacheFull[ci] = sma(smaLog, epochW); // full epoch-window recompute
+                    // Rebuild incremental state to match end of smaLog
+                    let lo = 0, s = 0;
+                    for (let i = 0; i < n; i++) {
+                        s += smaLog[i].y;
+                        const cut = smaLog[i].x - epochW;
+                        while (smaLog[lo].x <= cut) { s -= smaLog[lo].y; lo++; }
+                    }
+                    _smaLo[ci] = lo; _smaSum[ci] = s;
                 } else {
                     for (let i = n - appended; i < n; i++) {
-                        if (i < w - 1) continue;
-                        let sum = 0;
-                        for (let j = i - w + 1; j <= i; j++) sum += smaLog[j].y;
-                        cache.push({ x: smaLog[i].x, y: sum / w });
+                        _smaSum[ci] += smaLog[i].y;
+                        const cut = smaLog[i].x - epochW;
+                        while (_smaLo[ci] < i && smaLog[_smaLo[ci]].x <= cut) {
+                            _smaSum[ci] -= smaLog[_smaLo[ci]].y; _smaLo[ci]++;
+                        }
+                        cache.push({ x: smaLog[i].x, y: _smaSum[ci] / (i - _smaLo[ci] + 1) });
                     }
                 }
                 if (!ds[dsIdx].hidden) ds[dsIdx].data = smaVisibleSlice(smaCacheFull[ci]);
@@ -6387,6 +6399,47 @@
                 const lb=_lbl(ENAMES[e],'left'); lb.position.set(ep[e].x+1.2,ep[e].y,ep[e].z); _scene.add(lb); _eLabels.push(lb);
             }
 
+            // ── Demo forward-pass anchors: INPUT block (far left) + OUTPUT block (far right) ──
+            const INX=-9.5, OUTX=9.5;
+            // INPUT glow + label
+            const inNode=_node(1.6, new THREE.Color(0.2,0.7,1.0));
+            inNode.position.set(INX, 0, 0); inNode.material.opacity=0.55; _scene.add(inNode);
+            const inLbl=_lbl('INPUT','right');
+            inLbl.scale.set(2.0,0.5,1);
+            inLbl.position.set(INX-0.6, 1.6, 0); _scene.add(inLbl);
+            // INPUT→Layer arrows: faint horizontal lines showing token flow
+            const ioLineCount=NL, ioPos=new Float32Array(ioLineCount*2*3), ioCol=new Float32Array(ioLineCount*2*3);
+            for (let i=0;i<NL;i++) {
+                const b=i*6;
+                ioPos[b]=INX;       ioPos[b+1]=lp[i].y; ioPos[b+2]=0;
+                ioPos[b+3]=lp[i].x; ioPos[b+4]=lp[i].y; ioPos[b+5]=lp[i].z;
+                const br=0.08; ioCol[b]=0.1;ioCol[b+1]=0.4;ioCol[b+2]=br;
+                ioCol[b+3]=0.1;ioCol[b+4]=0.4;ioCol[b+5]=br;
+            }
+            const ioGeo=new THREE.BufferGeometry();
+            ioGeo.setAttribute('position',new THREE.BufferAttribute(ioPos,3));
+            ioGeo.setAttribute('color',new THREE.BufferAttribute(ioCol,3));
+            _scene.add(new THREE.LineSegments(ioGeo,new THREE.LineBasicMaterial({vertexColors:true,blending:THREE.NormalBlending,transparent:true,depthWrite:false,opacity:0.35})));
+            // OUTPUT glow + label
+            const outNode=_node(1.6, new THREE.Color(0.9,0.5,1.0));
+            outNode.position.set(OUTX, 0, 0); outNode.material.opacity=0.55; _scene.add(outNode);
+            const outLbl=_lbl('OUTPUT','left');
+            outLbl.scale.set(2.2,0.5,1);
+            outLbl.position.set(OUTX+0.6, 1.6, 0); _scene.add(outLbl);
+            // Expert→OUTPUT faint lines
+            const exoPos=new Float32Array(NE*2*3), exoCol=new Float32Array(NE*2*3);
+            for (let e=0;e<NE;e++) {
+                const b=e*6;
+                exoPos[b]=ep[e].x;  exoPos[b+1]=ep[e].y; exoPos[b+2]=ep[e].z;
+                exoPos[b+3]=OUTX;   exoPos[b+4]=ep[e].y; exoPos[b+5]=0;
+                exoCol[b]=0.4;exoCol[b+1]=0.2;exoCol[b+2]=0.6;
+                exoCol[b+3]=0.4;exoCol[b+4]=0.2;exoCol[b+5]=0.6;
+            }
+            const exoGeo=new THREE.BufferGeometry();
+            exoGeo.setAttribute('position',new THREE.BufferAttribute(exoPos,3));
+            exoGeo.setAttribute('color',new THREE.BufferAttribute(exoCol,3));
+            _scene.add(new THREE.LineSegments(exoGeo,new THREE.LineBasicMaterial({vertexColors:true,blending:THREE.NormalBlending,transparent:true,depthWrite:false,opacity:0.35})));
+
             // Hot-trail sprites — one amber ring sprite per layer, initially hidden
             for (let i = 0; i < NL; i++) {
                 const mat = new THREE.SpriteMaterial({
@@ -6611,17 +6664,26 @@
             for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
                 const b=(i*NE+e)*6;
                 const str=Math.min(1,_lg[i]*0.4+_rw[e]*0.25);
-                // Click-to-trace: dim all edges not connected to selected node
-                let dimFactor = 1.0;
                 if (_selected) {
                     const connected = (_selected.type==='layer' && _selected.idx===i) ||
                                       (_selected.type==='expert' && _selected.idx===e);
-                    dimFactor = connected ? 2.8 : 0.04;
+                    if (connected) {
+                        const a=Math.pow(str,1.3)*0.75*2.8;
+                        _hslTmp.setHSL(LHUE[i], 1.0, 0.5);
+                        ec[b]=_hslTmp.r*a;ec[b+1]=_hslTmp.g*a;ec[b+2]=_hslTmp.b*a;
+                        ec[b+3]=_hslTmp.r*a;ec[b+4]=_hslTmp.g*a;ec[b+5]=_hslTmp.b*a;
+                    } else {
+                        // Ghost: grey with slight hue tint, fixed dim brightness
+                        _hslTmp.setHSL(LHUE[i], 0.12, 0.18);
+                        ec[b]=_hslTmp.r;ec[b+1]=_hslTmp.g;ec[b+2]=_hslTmp.b;
+                        ec[b+3]=_hslTmp.r;ec[b+4]=_hslTmp.g;ec[b+5]=_hslTmp.b;
+                    }
+                } else {
+                    const a=Math.pow(str,1.3)*0.75;
+                    _hslTmp.setHSL(LHUE[i], 1.0, 0.5);
+                    ec[b]=_hslTmp.r*a;ec[b+1]=_hslTmp.g*a;ec[b+2]=_hslTmp.b*a;
+                    ec[b+3]=_hslTmp.r*a;ec[b+4]=_hslTmp.g*a;ec[b+5]=_hslTmp.b*a;
                 }
-                const a=Math.pow(str,1.3)*0.75*dimFactor;
-                _hslTmp.setHSL(LHUE[i], 1.0, 0.5);
-                ec[b]=_hslTmp.r*a;ec[b+1]=_hslTmp.g*a;ec[b+2]=_hslTmp.b*a;
-                ec[b+3]=_hslTmp.r*a;ec[b+4]=_hslTmp.g*a;ec[b+5]=_hslTmp.b*a;
             }
             _edgeGeo.attributes.color.needsUpdate=true;
 
@@ -6630,18 +6692,28 @@
             for (let e=0;e<NE;e++) {
                 const b=e*6;
                 const str=Math.min(1,_rw[e]*0.9+_eg[e]*0.25);
-                // Click-to-trace: dim unconnected gate→expert edges
-                let dimFactor2 = 1.0;
                 if (_selected) {
                     const connected2 = (_selected.type==='expert' && _selected.idx===e) ||
-                                       (_selected.type==='layer');  // layer sel highlights all gate edges slightly
-                    dimFactor2 = connected2 ? (_selected.type==='layer' ? 0.6 : 2.5) : 0.04;
+                                       (_selected.type==='layer');
+                    if (connected2) {
+                        const factor = _selected.type==='layer' ? 0.6 : 2.5;
+                        const [r,g,bl]=_th(str);
+                        const a=Math.pow(str,1.0)*0.92*factor;
+                        const nr=r/255*a, ng=g/255*a, nb=bl/255*a;
+                        rc[b]=nr;rc[b+1]=ng;rc[b+2]=nb;
+                        rc[b+3]=nr;rc[b+4]=ng;rc[b+5]=nb;
+                    } else {
+                        // Ghost: neutral blue-grey
+                        rc[b]=0.08;rc[b+1]=0.08;rc[b+2]=0.12;
+                        rc[b+3]=0.08;rc[b+4]=0.08;rc[b+5]=0.12;
+                    }
+                } else {
+                    const [r,g,bl]=_th(str);
+                    const a=Math.pow(str,1.0)*0.92;
+                    const nr=r/255*a, ng=g/255*a, nb=bl/255*a;
+                    rc[b]=nr;rc[b+1]=ng;rc[b+2]=nb;
+                    rc[b+3]=nr;rc[b+4]=ng;rc[b+5]=nb;
                 }
-                const [r,g,bl]=_th(str);
-                const a=Math.pow(str,1.0)*0.92*dimFactor2;
-                const nr=r/255*a, ng=g/255*a, nb=bl/255*a;
-                rc[b]=nr;rc[b+1]=ng;rc[b+2]=nb;
-                rc[b+3]=nr;rc[b+4]=ng;rc[b+5]=nb;
             }
             _routeGeo.attributes.color.needsUpdate=true;
 
