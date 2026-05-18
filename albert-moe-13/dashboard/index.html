@@ -6038,7 +6038,7 @@
                 _frameRef3t = true;
             }
 
-            (function _loop3t() { requestAnimationFrame(_loop3t); if (_ren3t) _ren3t.render(_scene3t, _cam3t); })();
+            (function _loop3t() { requestAnimationFrame(_loop3t); if (_ren3t && tok3dCanvas.style.display !== 'none') _ren3t.render(_scene3t, _cam3t); })();
 
             if (_lastData) _rebuild3t(_lastData);
         }
@@ -6397,7 +6397,7 @@
             }, { passive: false });
             canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-            (function _loop(){ requestAnimationFrame(_loop); _tick(); })();
+            (function _loop(){ requestAnimationFrame(_loop); if (canvas.style.display !== 'none') _tick(); })();
         }
 
         function _resize() {
