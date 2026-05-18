@@ -908,7 +908,7 @@
                 <rect x="5" y="9.5" width="2" height="2" rx="0.3" fill="currentColor" stroke="none" opacity="0.7"/>
             </svg>
         </button>
-        <button id="mycBtn" title="Mycelium Inspector — embedding space visualizer" onclick="mycToggle()">
+        <button id="mycBtn" title="Mycelium Inspector — opens in new tab (avoids WebGL crash)" onclick="mycOpenTab()">
             <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
                 <circle cx="6" cy="6" r="1.6" fill="currentColor" stroke="none" opacity="0.9"/>
                 <line x1="6" y1="4.4" x2="6" y2="1.2"/>
@@ -1094,6 +1094,14 @@
 <script>
     // Log now writes real cross-entropy loss directly — no division needed.
     const BATCHES_PER_EPOCH  = 300;
+
+    // ── BroadcastChannel: main tab → panel/mycelium tabs ─────────────
+    const _streamBC = (() => { try { return new BroadcastChannel('albert-stream'); } catch(e) { return { postMessage: ()=>{} }; } })();
+
+    // ── URL mode detection (must run before any tab-specific code) ────
+    const _urlP       = new URLSearchParams(location.search);
+    const _modeMyc    = _urlP.has('mycelium');
+    const _modePanelId = _urlP.get('panel');   // e.g. 'grad-panel'
 
     // Domain labels for the 12 MoE experts (learned specializations — labels are functional)
     const EXPERT_NAMES = window.EXPERT_NAMES = ['SYN','SEM','CTX','INF','MEM','GEN','LOG','LNG','ABS','PLN','CMP','INT'];
@@ -3091,6 +3099,7 @@
                     latestTele = { numLayers, layerSparsity, expertActivity };
                     renderNeuralViz(latestTele);
                     if (window.mycBrainUpdate) mycBrainUpdate({ tele: latestTele });
+                    _streamBC.postMessage({ type: 'tele', data: latestTele });
                     continue;
                 }
                 // ROUTE line — expert routing weights per step
@@ -3102,6 +3111,7 @@
                     routingHistory.push({ step, weights });
                     if (routingHistory.length > ROUTE_WINDOW) routingHistory.shift();
                     if (window.mycBrainUpdate) mycBrainUpdate({ route: { weights } });
+                    _streamBC.postMessage({ type: 'route', data: { step, weights } });
                     _routingDirty = true;
                     // Expert activity updates on every ROUTE (not just TELE) so the
                     // heatmap reflects live routing dominance every 10 batches.
@@ -3128,6 +3138,7 @@
                         latestGrad = { norm: gmNorm, layerNorms: gmLayers };
                         renderGradBars();
                         if (window.mycBrainUpdate) mycBrainUpdate({ grad: latestGrad });
+                        _streamBC.postMessage({ type: 'grad', data: latestGrad });
                         if (latestGrad.norm > 1.0) {
                             const now = Date.now();
                             if (now - lastClipTs > 30000) {
@@ -5632,32 +5643,39 @@
             const center = _nodes[0];
 
             // Neighbor-to-neighbor mycelium threads (proximity-based)
-            const THREAD_R = Math.min(W, H) * 0.18;
+            const THREAD_R = Math.min(W, H) * 0.22;
+            const _sims2    = _nodes.slice(1).map(n => n.sim);
+            const _minSim2  = Math.min(..._sims2);
+            const _simSpan2 = Math.max(0.001, Math.max(..._sims2) - _minSim2);
             for (let i = 1; i < _nodes.length; i++) {
                 for (let j = i + 1; j < _nodes.length; j++) {
                     const a = _nodes[i], b = _nodes[j];
                     const dx = a.cx - b.cx, dy = a.cy - b.cy;
                     const d  = Math.sqrt(dx * dx + dy * dy);
                     if (d >= THREAD_R) continue;
-                    const alpha = 0.09 * (1 - d / THREAD_R) * ((a.sim + b.sim) / 2);
+                    const alpha = 0.22 * (1 - d / THREAD_R);
+                    const ta = (a.sim - _minSim2) / _simSpan2;
+                    const ha = Math.round(220 - 185 * ta);
                     ctx.beginPath();
                     ctx.moveTo(a.cx, a.cy);
                     ctx.lineTo(b.cx, b.cy);
-                    ctx.strokeStyle = `rgba(56,189,148,${alpha.toFixed(3)})`;
-                    ctx.lineWidth   = 0.5;
+                    ctx.strokeStyle = `hsla(${ha},70%,55%,${alpha.toFixed(3)})`;
+                    ctx.lineWidth   = 1.0;
                     ctx.stroke();
                 }
             }
 
-            // Hub edges — center to each neighbor
+            // Hub edges — center to each neighbor (drawn before nodes so nodes sit on top)
             for (let i = 1; i < _nodes.length; i++) {
                 const n = _nodes[i];
-                const a = 0.08 + n.sim * 0.48;
+                const t  = (n.sim - _minSim2) / _simSpan2;
+                const ha = Math.round(220 - 185 * t);
+                const a  = (0.18 + n.sim * 0.55).toFixed(2);
                 ctx.beginPath();
                 ctx.moveTo(center.cx, center.cy);
                 ctx.lineTo(n.cx, n.cy);
-                ctx.strokeStyle = `rgba(34,211,238,${a.toFixed(2)})`;
-                ctx.lineWidth   = 1.0;
+                ctx.strokeStyle = `hsla(${ha},75%,55%,${a})`;
+                ctx.lineWidth   = 1.2;
                 ctx.stroke();
             }
 
@@ -5864,6 +5882,7 @@
 
         const tok3dCanvas = document.getElementById('myc-tok3d-canvas');
         let _scene3t, _cam3t, _ren3t, _sprites3t = [], _threads3t = null;
+        let _frameRef3t = null;  // cube + axes added once to scene
         let _initialized3t = false;
         let _lastData = null;
 
@@ -5888,19 +5907,34 @@
             _cam3t.lookAt(_tgt3t.x, _tgt3t.y, _tgt3t.z);
         }
 
-        // Shared glow texture (built once)
+        // Sharp pinpoint glow texture — tight core, fast falloff
         let _glowTex3t = null;
         function _gTex3t() {
             if (_glowTex3t) return _glowTex3t;
-            const sz = 64, c = document.createElement('canvas');
+            const sz = 32, c = document.createElement('canvas');
             c.width = c.height = sz;
             const cx = c.getContext('2d');
             const g = cx.createRadialGradient(sz/2, sz/2, 0, sz/2, sz/2, sz/2);
-            g.addColorStop(0, 'rgba(255,255,255,1)');
-            g.addColorStop(0.3, 'rgba(255,255,255,0.6)');
-            g.addColorStop(1, 'rgba(255,255,255,0)');
+            g.addColorStop(0,    'rgba(255,255,255,1)');
+            g.addColorStop(0.12, 'rgba(255,255,255,0.95)');
+            g.addColorStop(0.28, 'rgba(255,255,255,0.4)');
+            g.addColorStop(0.50, 'rgba(255,255,255,0.08)');
+            g.addColorStop(1,    'rgba(255,255,255,0)');
             cx.fillStyle = g; cx.fillRect(0, 0, sz, sz);
             return (_glowTex3t = new THREE.CanvasTexture(c));
+        }
+
+        // Axis label sprite helper
+        function _axLbl3t(text, cssColor) {
+            const cw = 64, ch = 64, c = document.createElement('canvas');
+            c.width = cw; c.height = ch;
+            const cx = c.getContext('2d');
+            cx.font = 'bold 36px monospace';
+            cx.fillStyle = cssColor;
+            cx.textAlign = 'center'; cx.textBaseline = 'middle';
+            cx.fillText(text, cw / 2, ch / 2);
+            const mat = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false });
+            const sp = new THREE.Sprite(mat); sp.scale.set(0.28, 0.28, 1); return sp;
         }
 
         function _init3t() {
@@ -5971,6 +6005,39 @@
                 }
             });
 
+            // ── Reference frame: cube wireframe + XYZ axes (built once) ──
+            if (!_frameRef3t) {
+                const S = 1.18;
+                const cv = [ // 12 cube edges, 2 verts each
+                    -S,-S,-S, S,-S,-S,   S,-S,-S, S, S,-S,   S, S,-S,-S, S,-S,  -S, S,-S,-S,-S,-S,
+                    -S,-S, S, S,-S, S,   S,-S, S, S, S, S,   S, S, S,-S, S, S,  -S, S, S,-S,-S, S,
+                    -S,-S,-S,-S,-S, S,   S,-S,-S, S,-S, S,   S, S,-S, S, S, S,  -S, S,-S,-S, S, S,
+                ];
+                const cg = new THREE.BufferGeometry();
+                cg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(cv), 3));
+                _scene3t.add(new THREE.LineSegments(cg, new THREE.LineBasicMaterial({
+                    color: 0x2a3a52, transparent: true, opacity: 0.6, depthWrite: false
+                })));
+
+                const AL = 1.45; // axis length
+                const axes = [
+                    { pts: [-AL,0,0, AL,0,0], col: 0x7a3030, lbl: 'X', lp: [AL+0.22,0,0] },
+                    { pts: [0,-AL,0, 0,AL,0], col: 0x307a40, lbl: 'Y', lp: [0,AL+0.22,0] },
+                    { pts: [0,0,-AL, 0,0,AL], col: 0x304878, lbl: 'Z', lp: [0,0,AL+0.22] },
+                ];
+                const lblColors = ['#b06060', '#60b070', '#6080b8'];
+                axes.forEach(({ pts, col, lbl, lp }, i) => {
+                    const ag = new THREE.BufferGeometry();
+                    ag.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3));
+                    _scene3t.add(new THREE.Line(ag, new THREE.LineBasicMaterial({
+                        color: col, transparent: true, opacity: 0.55, depthWrite: false
+                    })));
+                    const ls = _axLbl3t(lbl, lblColors[i]);
+                    ls.position.set(...lp); _scene3t.add(ls);
+                });
+                _frameRef3t = true;
+            }
+
             (function _loop3t() { requestAnimationFrame(_loop3t); if (_ren3t) _ren3t.render(_scene3t, _cam3t); })();
 
             if (_lastData) _rebuild3t(_lastData);
@@ -6007,18 +6074,18 @@
                 let color, sz;
                 if (n.isCenter) {
                     color = new THREE.Color(0.13, 0.83, 0.93);
-                    sz = 0.16;
+                    sz = 0.055;
                 } else {
                     const t = (n.sim - minS) / simSpan;
                     const h = (220 - 185 * t) / 360;
-                    const l = 0.35 + 0.30 * t;
-                    color = new THREE.Color().setHSL(h, 0.8, l);
-                    sz = 0.04 + 0.07 * t;
+                    const l = 0.45 + 0.25 * t;
+                    color = new THREE.Color().setHSL(h, 0.85, l);
+                    sz = 0.013 + 0.027 * t;
                 }
                 const mat = new THREE.SpriteMaterial({
                     map: _gTex3t(), color, transparent: true, depthWrite: false,
                     blending: THREE.AdditiveBlending,
-                    opacity: n.isCenter ? 0.95 : 0.35 + 0.65 * ((n.sim - minS) / simSpan)
+                    opacity: n.isCenter ? 1.0 : 0.55 + 0.45 * ((n.sim - minS) / simSpan)
                 });
                 const sp = new THREE.Sprite(mat);
                 sp.position.set(px, py, pz);
@@ -6031,7 +6098,7 @@
 
             // Proximity threads between close neighbors
             const threadPts = [], threadCols = [];
-            const THREAD_D = 0.7;
+            const THREAD_D = 0.85;
             for (let i = 1; i < all.length; i++) {
                 for (let j = i + 1; j < all.length; j++) {
                     const a = all[i], b = all[j];
@@ -6040,11 +6107,11 @@
                     const dx=ax-bx, dy=ay-by, dz=az-bz;
                     const dist = Math.sqrt(dx*dx+dy*dy+dz*dz);
                     if (dist >= THREAD_D) continue;
-                    const alpha = 0.06 * (1 - dist / THREAD_D) * ((a.sim + b.sim) / 2);
+                    const alpha = 0.48 * (1 - dist / THREAD_D);
                     const ta = (a.sim - minS) / simSpan, tb = (b.sim - minS) / simSpan;
                     const ha = (220 - 185*ta)/360, hb = (220 - 185*tb)/360;
-                    const ca = new THREE.Color().setHSL(ha, 0.8, 0.5);
-                    const cb = new THREE.Color().setHSL(hb, 0.8, 0.5);
+                    const ca = new THREE.Color().setHSL(ha, 0.8, 0.55);
+                    const cb = new THREE.Color().setHSL(hb, 0.8, 0.55);
                     threadPts.push(ax, ay, az, bx, by, bz);
                     threadCols.push(ca.r*alpha, ca.g*alpha, ca.b*alpha,
                                     cb.r*alpha, cb.g*alpha, cb.b*alpha);
@@ -6536,6 +6603,142 @@
                 }
             }
         };
+    })();
+
+    // ── Multi-tab layout system ────────────────────────────────────────
+    const _PANEL_IDS = ['topo-sparsity-panel','expert-panel','routing-panel','tlight-panel','grad-panel'];
+    let _panelWindows = [];  // refs to windows opened by H key
+
+    // Open Mycelium Inspector in a dedicated tab (avoids WebGL context crash)
+    window.mycOpenTab = function() {
+        window.open(location.origin + location.pathname + '?mycelium', '_blank');
+    };
+
+    // H: open all panels in individual tabs
+    // Ctrl+H: close those tabs and restore main tab panels
+    document.addEventListener('keydown', e => {
+        const tag = document.activeElement.tagName;
+        if (tag === 'INPUT' || tag === 'SELECT' || e.metaKey) return;
+        if ((e.key === 'h' || e.key === 'H') && e.ctrlKey) {
+            // Ctrl+H: close panel tabs + restore
+            e.preventDefault();
+            _panelWindows.forEach(w => { try { w.close(); } catch(_) {} });
+            _panelWindows = [];
+            // Un-hide panels in main tab (cancel any chart-focus + ensure visible)
+            document.body.classList.remove('chart-focus');
+            setTimeout(() => chart.resize(), 20);
+            return;
+        }
+        if ((e.key === 'h' || e.key === 'H') && !e.ctrlKey) {
+            // H: open each panel in its own tab
+            _panelWindows.forEach(w => { try { w.close(); } catch(_) {} });
+            _panelWindows = _PANEL_IDS.map(id =>
+                window.open(location.origin + location.pathname + '?panel=' + id, '_blank')
+            );
+            return;
+        }
+    });
+
+    // ── Secondary tab setup (runs only when ?mycelium or ?panel= detected) ──
+    (function () {
+        if (!_modeMyc && !_modePanelId) return;
+
+        // Subscribe to BroadcastChannel from main tab — receive live stream events
+        try {
+            const rx = new BroadcastChannel('albert-stream');
+            rx.onmessage = function ({ data: msg }) {
+                if (msg.type === 'tele') {
+                    latestTele = msg.data;
+                    renderNeuralViz(latestTele);
+                    renderExpertActivity(latestTele);
+                    if (window.mycBrainUpdate) mycBrainUpdate({ tele: latestTele });
+                } else if (msg.type === 'route') {
+                    routingHistory.push(msg.data);
+                    if (routingHistory.length > ROUTE_WINDOW) routingHistory.shift();
+                    renderRoutingHeatmap();
+                    if (latestTele) renderExpertActivity(latestTele);
+                    if (window.mycBrainUpdate) mycBrainUpdate({ route: { weights: msg.data.weights } });
+                } else if (msg.type === 'grad') {
+                    latestGrad = msg.data;
+                    renderGradBars();
+                    if (window.mycBrainUpdate) mycBrainUpdate({ grad: latestGrad });
+                }
+            };
+        } catch(_) {}
+
+        // Helper: hide element by id
+        const _hide = id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; };
+
+        if (_modeMyc) {
+            _hide('topbar'); _hide('chart-wrap'); _hide('anomaly-strip'); _hide('neural-wrap');
+            // Make mycelium panel fill the whole window
+            const mp = document.getElementById('mycelium-panel');
+            if (mp) {
+                mp.style.cssText += ';position:fixed;inset:0;display:flex;border:none;border-radius:0;width:100%;height:100%;';
+            }
+            // Auto-open in TOKEN mode once all IIFEs have registered
+            setTimeout(() => {
+                if (window.mycToggle) mycToggle();
+            }, 100);
+            document.title = 'albert. — Mycelium';
+        }
+
+        if (_modePanelId) {
+            _hide('topbar'); _hide('chart-wrap'); _hide('anomaly-strip');
+            const nw = document.getElementById('neural-wrap');
+            if (nw) {
+                nw.style.cssText += ';position:fixed;inset:0;display:flex;flex-direction:column;width:100%;height:100%;border:none;';
+                nw.querySelectorAll('.panel-resize-handle').forEach(h => h.style.display = 'none');
+                nw.querySelectorAll('.nv-panel').forEach(p => {
+                    if (p.id !== _modePanelId) {
+                        p.style.display = 'none';
+                    } else {
+                        p.style.cssText += ';flex:1;height:100%;max-height:none;border:none;border-radius:0;';
+                    }
+                });
+            }
+            const labelEl = document.getElementById(_modePanelId)?.querySelector('.nv-label');
+            document.title = 'albert. — ' + (labelEl?.textContent?.replace('■','').trim() || _modePanelId);
+        }
+    })();
+
+    // ── Help bubble (keyboard shortcuts quick-ref) ────────────────────
+    (function () {
+        const btn = document.createElement('button');
+        btn.id = 'help-btn';
+        btn.textContent = '?';
+        btn.title = 'Keyboard shortcuts';
+        btn.style.cssText = `position:fixed;bottom:14px;right:14px;width:22px;height:22px;border-radius:50%;
+            border:1px solid var(--border2);background:var(--bg2);color:var(--muted);font-size:11px;
+            font-family:inherit;cursor:pointer;z-index:9000;line-height:1;padding:0;`;
+        document.body.appendChild(btn);
+
+        const tip = document.createElement('div');
+        tip.id = 'help-tip';
+        tip.style.cssText = `display:none;position:fixed;bottom:42px;right:14px;background:var(--bg2);
+            border:1px solid var(--border2);border-radius:8px;padding:12px 16px;font-size:11px;
+            font-family:inherit;color:var(--text);z-index:9001;min-width:240px;line-height:2;
+            box-shadow:0 8px 32px rgba(0,0,0,0.6);`;
+        tip.innerHTML = `
+            <b style="color:var(--accent);letter-spacing:1px;font-size:10px">KEYBOARD SHORTCUTS</b><br>
+            <b>G</b> — toggle panels (chart focus)<br>
+            <b>H</b> — open all panels in individual tabs<br>
+            <b>Ctrl+H</b> — close panel tabs, restore view<br>
+            <b>Click snowflake</b> — open Mycelium Inspector tab<br>
+            <b>Ctrl+Z</b> — undo drawing<br>
+            <b>Esc</b> — exit draw mode / close inspector<br>
+            <b>Space+drag</b> — pan in BRAIN / 3D views<br>
+            <b>Scroll</b> — zoom in TOKEN / BRAIN views<br>
+            <b>Click token</b> — pivot to that word<br>
+            <b>Click layer/expert</b> — trace connections
+        `;
+        document.body.appendChild(tip);
+
+        btn.addEventListener('click', e => {
+            tip.style.display = tip.style.display === 'none' ? 'block' : 'none';
+            e.stopPropagation();
+        });
+        document.addEventListener('click', () => { tip.style.display = 'none'; });
     })();
 </script>
 </body>
