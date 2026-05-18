@@ -74,3 +74,4 @@ albert-moe-13/crates/moe-core/training.log
 # Old model checkpoints — large binaries, use Modal volume instead
 albert-moe-13/models/bible_ternary_v*.safetensors
 albert-moe-13/models/registry/
+dashboard/three.min.js
