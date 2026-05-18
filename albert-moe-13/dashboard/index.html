@@ -783,6 +783,11 @@
             display: block;
             cursor: crosshair;
         }
+        #myc-tok3d-canvas {
+            flex: 1;
+            display: none;
+            cursor: grab;
+        }
         #myc3d-canvas {
             flex: 1;
             display: none;
@@ -1069,6 +1074,8 @@
         <span id="myc-token-controls" style="display:flex;align-items:center;gap:8px">
             <input id="myc-search" type="text" placeholder="enter a word..." autocomplete="off" spellcheck="false">
             <button onclick="mycSearch()" title="Search (Enter)">search</button>
+            <button class="myc-mode-btn active" id="myc-tok2d-btn" onclick="mycSetTokMode('2d')" title="2D PCA projection">2D</button>
+            <button class="myc-mode-btn" id="myc-tok3d-btn" onclick="mycSetTokMode('3d')" title="3D hyperspace cloud">3D</button>
             <input id="myc-k" type="hidden" value="200">
         </span>
         <span id="myc-status"></span>
@@ -1078,6 +1085,7 @@
         <button id="myc-close-btn" onclick="mycToggle()" title="Close (Escape)">&#xd7;</button>
     </div>
     <canvas id="myc-canvas"></canvas>
+    <canvas id="myc-tok3d-canvas"></canvas>
     <canvas id="myc3d-canvas"></canvas>
 </div>
 <div id="myc-tooltip"></div>
@@ -5552,6 +5560,7 @@
                     statusEl.style.color = 'var(--muted)';
                     infoEl.textContent   = `vocab ${d.vocab_size.toLocaleString()} · dim ${d.dims} · PCA`;
                     _render(d);
+                    if (window.mycTok3dUpdate) window.mycTok3dUpdate(d);
                 })
                 .catch(e => {
                     _loading = false;
@@ -5835,6 +5844,246 @@
         });
     })();
 
+    // ── Token 2D/3D sub-mode toggle ────────────────────────────────────
+    window.mycSetTokMode = function(mode) {
+        const c2d  = document.getElementById('myc-canvas');
+        const ct3d = document.getElementById('myc-tok3d-canvas');
+        const b2d  = document.getElementById('myc-tok2d-btn');
+        const b3d  = document.getElementById('myc-tok3d-btn');
+        const is3d = mode === '3d';
+        c2d.style.display  = is3d ? 'none'  : 'block';
+        ct3d.style.display = is3d ? 'block' : 'none';
+        if (b2d) b2d.classList.toggle('active', !is3d);
+        if (b3d) b3d.classList.toggle('active', is3d);
+        if (is3d && window.mycTok3dActivate) window.mycTok3dActivate();
+    };
+
+    // ── Mycelium Token 3D View (Three.js hyperspace scatter) ───────────
+    (function () {
+        'use strict';
+
+        const tok3dCanvas = document.getElementById('myc-tok3d-canvas');
+        let _scene3t, _cam3t, _ren3t, _sprites3t = [], _threads3t = null;
+        let _initialized3t = false;
+        let _lastData = null;
+
+        let _theta3t = 0, _phi3t = Math.PI / 2.2, _rad3t = 3.2;
+        const _tgt3t = { x: 0, y: 0, z: 0 };
+        let _orb3t = false, _pan3t = false, _px3t = 0, _py3t = 0;
+        let _sp3t = false;
+        window.addEventListener('keydown', e => {
+            if (e.code === 'Space' && tok3dCanvas.style.display !== 'none') {
+                _sp3t = true; e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', e => { if (e.code === 'Space') _sp3t = false; });
+
+        function _applyOrb3t() {
+            if (!_cam3t) return;
+            _cam3t.position.set(
+                _tgt3t.x + _rad3t * Math.sin(_phi3t) * Math.sin(_theta3t),
+                _tgt3t.y + _rad3t * Math.cos(_phi3t),
+                _tgt3t.z + _rad3t * Math.sin(_phi3t) * Math.cos(_theta3t)
+            );
+            _cam3t.lookAt(_tgt3t.x, _tgt3t.y, _tgt3t.z);
+        }
+
+        // Shared glow texture (built once)
+        let _glowTex3t = null;
+        function _gTex3t() {
+            if (_glowTex3t) return _glowTex3t;
+            const sz = 64, c = document.createElement('canvas');
+            c.width = c.height = sz;
+            const cx = c.getContext('2d');
+            const g = cx.createRadialGradient(sz/2, sz/2, 0, sz/2, sz/2, sz/2);
+            g.addColorStop(0, 'rgba(255,255,255,1)');
+            g.addColorStop(0.3, 'rgba(255,255,255,0.6)');
+            g.addColorStop(1, 'rgba(255,255,255,0)');
+            cx.fillStyle = g; cx.fillRect(0, 0, sz, sz);
+            return (_glowTex3t = new THREE.CanvasTexture(c));
+        }
+
+        function _init3t() {
+            if (_initialized3t || !window.THREE) return;
+            _initialized3t = true;
+
+            _scene3t  = new THREE.Scene();
+            _cam3t    = new THREE.PerspectiveCamera(52, 1, 0.01, 100);
+            _applyOrb3t();
+            _ren3t    = new THREE.WebGLRenderer({ canvas: tok3dCanvas, antialias: true });
+            _ren3t.setPixelRatio(Math.min(devicePixelRatio, 2));
+            _ren3t.setClearColor(0x060d15, 1);
+
+            new ResizeObserver(() => {
+                if (!_ren3t) return;
+                const w = tok3dCanvas.clientWidth || 800, h = tok3dCanvas.clientHeight || 600;
+                if (!w || !h) return;
+                _cam3t.aspect = w / h; _cam3t.updateProjectionMatrix();
+                _ren3t.setSize(w, h, false);
+            }).observe(tok3dCanvas);
+
+            // Mouse controls
+            tok3dCanvas.addEventListener('mousedown', e => {
+                if (e.button === 0 && !_sp3t) _orb3t = true; else _pan3t = true;
+                _px3t = e.clientX; _py3t = e.clientY;
+                e.preventDefault();
+            }, { passive: false });
+            window.addEventListener('mouseup', () => { _orb3t = false; _pan3t = false; });
+            window.addEventListener('mousemove', e => {
+                const dx = e.clientX - _px3t, dy = e.clientY - _py3t;
+                _px3t = e.clientX; _py3t = e.clientY;
+                if (_orb3t) {
+                    _theta3t -= dx * 0.006;
+                    _phi3t = Math.max(0.15, Math.min(Math.PI - 0.15, _phi3t - dy * 0.006));
+                    _applyOrb3t();
+                } else if (_pan3t) {
+                    const spd = _rad3t / 400;
+                    _tgt3t.x -= dx * spd; _tgt3t.y += dy * spd;
+                    _applyOrb3t();
+                }
+            });
+            tok3dCanvas.addEventListener('wheel', e => {
+                _rad3t = Math.max(0.5, Math.min(20, _rad3t + e.deltaY * 0.005));
+                _applyOrb3t(); e.preventDefault();
+            }, { passive: false });
+            tok3dCanvas.addEventListener('contextmenu', e => e.preventDefault());
+
+            // Raycaster for click-to-pivot
+            const _ray3t = new THREE.Raycaster();
+            _ray3t.params.Sprite = { threshold: 0.06 };
+            tok3dCanvas.addEventListener('click', e => {
+                if (!_lastData || !_sprites3t.length) return;
+                const rect = tok3dCanvas.getBoundingClientRect();
+                const ndc = new THREE.Vector2(
+                    ((e.clientX - rect.left) / rect.width) * 2 - 1,
+                    -((e.clientY - rect.top) / rect.height) * 2 + 1
+                );
+                _ray3t.setFromCamera(ndc, _cam3t);
+                const hits = _ray3t.intersectObjects(_sprites3t.slice(1)); // skip center [0]
+                if (hits.length) {
+                    const idx = _sprites3t.indexOf(hits[0].object);
+                    if (idx >= 1) {
+                        const word = _lastData.neighbors[idx - 1].word;
+                        const searchInput = document.getElementById('myc-search');
+                        if (searchInput) searchInput.value = word;
+                        if (window.mycSearch) window.mycSearch();
+                    }
+                }
+            });
+
+            (function _loop3t() { requestAnimationFrame(_loop3t); if (_ren3t) _ren3t.render(_scene3t, _cam3t); })();
+
+            if (_lastData) _rebuild3t(_lastData);
+        }
+
+        function _rebuild3t(d) {
+            if (!_scene3t) return;
+            // Remove old sprites + threads
+            for (const s of _sprites3t) _scene3t.remove(s);
+            _sprites3t = [];
+            if (_threads3t) { _scene3t.remove(_threads3t); _threads3t = null; }
+
+            const all = [{ x: d.center_x, y: d.center_y, z: d.center_z || 0, sim: 1.0, isCenter: true, word: d.word }]
+                .concat(d.neighbors.map(n => ({ x: n.x, y: n.y, z: n.z || 0, sim: n.sim, isCenter: false, word: n.word })));
+
+            // Normalise to unit cube
+            let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity,z0=Infinity,z1=-Infinity;
+            for (const n of all) {
+                if(n.x<x0)x0=n.x;if(n.x>x1)x1=n.x;
+                if(n.y<y0)y0=n.y;if(n.y>y1)y1=n.y;
+                if(n.z<z0)z0=n.z;if(n.z>z1)z1=n.z;
+            }
+            const sc = 2.2 / Math.max(x1-x0, y1-y0, z1-z0, 0.001);
+            const mx=(x0+x1)/2, my=(y0+y1)/2, mz=(z0+z1)/2;
+
+            const sims = d.neighbors.map(n => n.sim);
+            const minS = Math.min(...sims), maxS = Math.max(...sims);
+            const simSpan = Math.max(0.001, maxS - minS);
+
+            const posArr = [], colArr = [];
+
+            for (const n of all) {
+                const px = (n.x - mx) * sc, py = (n.y - my) * sc, pz = (n.z - mz) * sc;
+                let color, sz;
+                if (n.isCenter) {
+                    color = new THREE.Color(0.13, 0.83, 0.93);
+                    sz = 0.16;
+                } else {
+                    const t = (n.sim - minS) / simSpan;
+                    const h = (220 - 185 * t) / 360;
+                    const l = 0.35 + 0.30 * t;
+                    color = new THREE.Color().setHSL(h, 0.8, l);
+                    sz = 0.04 + 0.07 * t;
+                }
+                const mat = new THREE.SpriteMaterial({
+                    map: _gTex3t(), color, transparent: true, depthWrite: false,
+                    blending: THREE.AdditiveBlending,
+                    opacity: n.isCenter ? 0.95 : 0.35 + 0.65 * ((n.sim - minS) / simSpan)
+                });
+                const sp = new THREE.Sprite(mat);
+                sp.position.set(px, py, pz);
+                sp.scale.setScalar(sz);
+                _scene3t.add(sp);
+                _sprites3t.push(sp);
+
+                if (!n.isCenter) { posArr.push(px, py, pz); colArr.push(color.r, color.g, color.b); }
+            }
+
+            // Proximity threads between close neighbors
+            const threadPts = [], threadCols = [];
+            const THREAD_D = 0.7;
+            for (let i = 1; i < all.length; i++) {
+                for (let j = i + 1; j < all.length; j++) {
+                    const a = all[i], b = all[j];
+                    const ax=(a.x-mx)*sc, ay=(a.y-my)*sc, az=(a.z-mz)*sc;
+                    const bx=(b.x-mx)*sc, by=(b.y-my)*sc, bz=(b.z-mz)*sc;
+                    const dx=ax-bx, dy=ay-by, dz=az-bz;
+                    const dist = Math.sqrt(dx*dx+dy*dy+dz*dz);
+                    if (dist >= THREAD_D) continue;
+                    const alpha = 0.06 * (1 - dist / THREAD_D) * ((a.sim + b.sim) / 2);
+                    const ta = (a.sim - minS) / simSpan, tb = (b.sim - minS) / simSpan;
+                    const ha = (220 - 185*ta)/360, hb = (220 - 185*tb)/360;
+                    const ca = new THREE.Color().setHSL(ha, 0.8, 0.5);
+                    const cb = new THREE.Color().setHSL(hb, 0.8, 0.5);
+                    threadPts.push(ax, ay, az, bx, by, bz);
+                    threadCols.push(ca.r*alpha, ca.g*alpha, ca.b*alpha,
+                                    cb.r*alpha, cb.g*alpha, cb.b*alpha);
+                }
+            }
+            if (threadPts.length) {
+                const geo = new THREE.BufferGeometry();
+                geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(threadPts), 3));
+                geo.setAttribute('color',    new THREE.BufferAttribute(new Float32Array(threadCols), 3));
+                _threads3t = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
+                    vertexColors: true, blending: THREE.AdditiveBlending,
+                    transparent: true, depthWrite: false
+                }));
+                _scene3t.add(_threads3t);
+            }
+
+            // Reset orbit to center
+            _theta3t = 0.4; _phi3t = Math.PI / 2.4; _rad3t = 3.2;
+            _tgt3t.x = 0; _tgt3t.y = 0; _tgt3t.z = 0;
+            _applyOrb3t();
+        }
+
+        window.mycTok3dUpdate = function(d) {
+            _lastData = d;
+            if (_initialized3t) _rebuild3t(d);
+        };
+
+        window.mycTok3dActivate = function() {
+            if (!window.THREE) {
+                const s = document.createElement('script');
+                s.src = '/dashboard/three.min.js';
+                s.onload = () => { _init3t(); };
+                document.head.appendChild(s);
+            } else {
+                _init3t();
+            }
+        };
+    })();
+
     // ── Mycelium Brain View (Three.js live neural graph) ───────────────
     (function () {
         'use strict';
@@ -5847,8 +6096,17 @@
         let _scene, _camera, _renderer, _edgeGeo, _routeGeo;
         let _lSprites = [], _eSprites = [], _lLabels = [], _eLabels = [];
         let _rSprites = [];   // router gate nodes
+        let _lTrailSprites = [];  // hot-trail ring per layer
         let _initialized = false;
         let _t = 0;
+
+        // Click-to-trace state
+        let _selected = null;  // {type:'layer'|'expert', idx}
+        let _raycaster = null;
+
+        // Hot-layer temporal trail (circular buffer of 20 most-recent hot layer indices)
+        const _hotHistory = new Array(20).fill(-1);
+        let _hotHistIdx = 0;
 
         // ── orbit state ──────────────────────────────────────────────
         let _theta = 0, _phi = Math.PI / 2, _radius = 34;
@@ -5972,6 +6230,44 @@
                 const lb=_lbl(ENAMES[e],'left'); lb.position.set(ep[e].x+1.2,ep[e].y,ep[e].z); _scene.add(lb); _eLabels.push(lb);
             }
 
+            // Hot-trail sprites — one amber ring sprite per layer, initially hidden
+            for (let i = 0; i < NL; i++) {
+                const mat = new THREE.SpriteMaterial({
+                    map: _gTex(), color: new THREE.Color(1.0, 0.55, 0.05),
+                    blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0
+                });
+                const sp = new THREE.Sprite(mat);
+                sp.position.set(lp[i].x, lp[i].y, lp[i].z);
+                sp.scale.setScalar(1.8);
+                _scene.add(sp);
+                _lTrailSprites.push(sp);
+            }
+
+            // Raycaster for click-to-trace
+            _raycaster = new THREE.Raycaster();
+            _raycaster.params.Sprite = { threshold: 0.4 };
+            const brainCanvas = document.getElementById('myc3d-canvas');
+            brainCanvas.addEventListener('click', e => {
+                if (!_raycaster || _orbitDrag) return;
+                const rect = brainCanvas.getBoundingClientRect();
+                const ndc = new THREE.Vector2(
+                    ((e.clientX - rect.left) / rect.width) * 2 - 1,
+                    -((e.clientY - rect.top) / rect.height) * 2 + 1
+                );
+                _raycaster.setFromCamera(ndc, _camera);
+                const layerHits  = _raycaster.intersectObjects(_lSprites);
+                const expertHits = _raycaster.intersectObjects(_eSprites);
+                if (layerHits.length && (!expertHits.length || layerHits[0].distance < expertHits[0].distance)) {
+                    const idx = _lSprites.indexOf(layerHits[0].object);
+                    _selected = (_selected && _selected.type==='layer' && _selected.idx===idx) ? null : {type:'layer', idx};
+                } else if (expertHits.length) {
+                    const idx = _eSprites.indexOf(expertHits[0].object);
+                    _selected = (_selected && _selected.type==='expert' && _selected.idx===idx) ? null : {type:'expert', idx};
+                } else {
+                    _selected = null;
+                }
+            });
+
             // Layer→Gate edges (17×12 = 204, dim background web)
             const lgCount=NL*NE;
             const lgPos=new Float32Array(lgCount*2*3), lgCol=new Float32Array(lgCount*2*3);
@@ -6057,9 +6353,10 @@
             // Layer sprites — fixed identity hue per layer, brightness = activity
             for (let i=0;i<NL;i++) {
                 const g=_lg[i], pb=0.85+0.15*Math.sin(_t*1.1+i*0.42);
-                _lSprites[i].scale.setScalar((0.35+1.5*g)*pb);
+                const selBoost = (_selected && _selected.type==='layer' && _selected.idx===i) ? 2.4 : 1.0;
+                _lSprites[i].scale.setScalar((0.35+1.5*g)*pb*selBoost);
                 _lSprites[i].material.color.setHSL(LHUE[i], 1.0, 0.12+0.65*g);
-                _lSprites[i].material.opacity=0.25+0.75*g;
+                _lSprites[i].material.opacity=Math.min(1,(0.25+0.75*g)*selBoost);
                 _lLabels[i].material.opacity = 0.30 + 0.70 * g;
                 _lLabels[i].material.color.setHSL(0, 0, 1.0); // white — readable at all activity levels
             }
@@ -6069,7 +6366,8 @@
                 const g=_eg[e], rw=_rw[e];
                 const comb=Math.min(1, g*0.55+rw*0.5);
                 const pb=0.85+0.15*Math.sin(_t*1.4+e*0.7);
-                _eSprites[e].scale.setScalar((0.25+1.1*comb)*pb);
+                const selBoostE = (_selected && _selected.type==='expert' && _selected.idx===e) ? 2.4 : 1.0;
+                _eSprites[e].scale.setScalar((0.25+1.1*comb)*pb*selBoostE);
                 _eSprites[e].material.color.copy(_tc(comb));
                 _eSprites[e].material.opacity=0.2+0.8*comb;
                 const breathe=Math.sin(_t*0.75+e*0.65)*0.07*comb;
@@ -6087,13 +6385,43 @@
                 _rSprites[e].material.opacity=0.15+0.85*rw;
             }
 
+            // Hot-layer temporal trail
+            for (let i = 0; i < NL; i++) {
+                // Count how recently layer i appeared in _hotHistory (recency = 0..19, 0=most recent)
+                let recency = -1;
+                for (let k = 0; k < 20; k++) {
+                    const slot = (_hotHistIdx - 1 - k + 20) % 20;
+                    if (_hotHistory[slot] === i) { recency = k; break; }
+                }
+                const sp = _lTrailSprites[i];
+                if (recency === 0) {
+                    // Currently hot — bright amber halo
+                    sp.material.opacity = 0.55 + 0.35 * Math.sin(_t * 2.8 + i);
+                    sp.scale.setScalar(2.0 + 0.4 * Math.sin(_t * 2.0));
+                } else if (recency > 0) {
+                    // Recently hot — fade out quadratically
+                    const fade = Math.pow(1 - recency / 20, 2);
+                    sp.material.opacity = 0.45 * fade;
+                    sp.scale.setScalar(1.6 + 0.6 * (1 - recency / 20));
+                } else {
+                    sp.material.opacity = 0;
+                }
+            }
+
             // Layer→Gate edge colours — tinted with each layer's identity hue
             const ec=_edgeGeo.attributes.color.array;
             const _hslTmp=new THREE.Color();
             for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
                 const b=(i*NE+e)*6;
                 const str=Math.min(1,_lg[i]*0.4+_rw[e]*0.25);
-                const a=Math.pow(str,1.8)*0.4;
+                // Click-to-trace: dim all edges not connected to selected node
+                let dimFactor = 1.0;
+                if (_selected) {
+                    const connected = (_selected.type==='layer' && _selected.idx===i) ||
+                                      (_selected.type==='expert' && _selected.idx===e);
+                    dimFactor = connected ? 2.8 : 0.04;
+                }
+                const a=Math.pow(str,1.8)*0.4*dimFactor;
                 _hslTmp.setHSL(LHUE[i], 1.0, 0.5);
                 ec[b]=_hslTmp.r*a;ec[b+1]=_hslTmp.g*a;ec[b+2]=_hslTmp.b*a;
                 ec[b+3]=_hslTmp.r*a;ec[b+4]=_hslTmp.g*a;ec[b+5]=_hslTmp.b*a;
@@ -6105,8 +6433,15 @@
             for (let e=0;e<NE;e++) {
                 const b=e*6;
                 const str=Math.min(1,_rw[e]*0.9+_eg[e]*0.25);
+                // Click-to-trace: dim unconnected gate→expert edges
+                let dimFactor2 = 1.0;
+                if (_selected) {
+                    const connected2 = (_selected.type==='expert' && _selected.idx===e) ||
+                                       (_selected.type==='layer');  // layer sel highlights all gate edges slightly
+                    dimFactor2 = connected2 ? (_selected.type==='layer' ? 0.6 : 2.5) : 0.04;
+                }
                 const [r,g,bl]=_th(str);
-                const a=Math.pow(str,1.3)*0.8;
+                const a=Math.pow(str,1.3)*0.8*dimFactor2;
                 const nr=r/255*a, ng=g/255*a, nb=bl/255*a;
                 rc[b]=nr;rc[b+1]=ng;rc[b+2]=nb;
                 rc[b+3]=nr;rc[b+4]=ng;rc[b+5]=nb;
@@ -6137,6 +6472,14 @@
                 const mxN=Math.max(...grad.layerNorms,1e-8);
                 for (let i=0;i<Math.min(NL,grad.layerNorms.length);i++)
                     _lt[i]=grad.layerNorms[i]/mxN;
+                // Record hot layer index in circular trail buffer
+                let hotIdx = 0;
+                for (let i = 1; i < grad.layerNorms.length; i++)
+                    if (grad.layerNorms[i] > grad.layerNorms[hotIdx]) hotIdx = i;
+                if (_hotHistory[(_hotHistIdx + 19) % 20] !== hotIdx) {
+                    _hotHistory[_hotHistIdx] = hotIdx;
+                    _hotHistIdx = (_hotHistIdx + 1) % 20;
+                }
             }
             if (route) {
                 const mxR=Math.max(...route.weights,1e-8);
@@ -6148,18 +6491,30 @@
 
         // ── mode toggle ──────────────────────────────────────────────
         window.mycSetMode = function(mode) {
-            const c2d=document.getElementById('myc-canvas');
-            const c3d=document.getElementById('myc3d-canvas');
-            const tc =document.getElementById('myc-token-controls');
-            const st =document.getElementById('myc-status');
-            const inf=document.getElementById('myc-info');
-            const rb =document.getElementById('myc-reload-btn');
-            const bb =document.getElementById('myc-brain-btn');
-            const tb =document.getElementById('myc-token-btn');
+            const c2d  = document.getElementById('myc-canvas');
+            const ct3d = document.getElementById('myc-tok3d-canvas');
+            const c3d  = document.getElementById('myc3d-canvas');
+            const tc   = document.getElementById('myc-token-controls');
+            const st   = document.getElementById('myc-status');
+            const inf  = document.getElementById('myc-info');
+            const rb   = document.getElementById('myc-reload-btn');
+            const bb   = document.getElementById('myc-brain-btn');
+            const tb   = document.getElementById('myc-token-btn');
+            const b2d  = document.getElementById('myc-tok2d-btn');
+            const b3d  = document.getElementById('myc-tok3d-btn');
 
             const brain = mode==='brain';
-            c2d.style.display  = brain ? 'none'  : 'block';
-            c3d.style.display  = brain ? 'block' : 'none';
+            // In brain mode hide both token canvases; in token mode restore whichever sub-mode is active
+            if (brain) {
+                c2d.style.display  = 'none';
+                ct3d.style.display = 'none';
+                c3d.style.display  = 'block';
+            } else {
+                const tok3dActive = b3d && b3d.classList.contains('active');
+                c2d.style.display  = tok3dActive ? 'none'  : 'block';
+                ct3d.style.display = tok3dActive ? 'block' : 'none';
+                c3d.style.display  = 'none';
+            }
             if(tc)  tc.style.display  = brain ? 'none' : 'flex';
             if(st)  st.style.display  = brain ? 'none' : '';
             if(inf) inf.style.display = brain ? 'none' : '';

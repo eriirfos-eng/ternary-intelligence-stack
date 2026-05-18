@@ -52,9 +52,9 @@ class MyceliumEngine:
         centered = emb - emb.mean(axis=0)
         cov = (centered.T @ centered) / len(centered)
         _, eigvecs = np.linalg.eigh(cov)
-        pcs = eigvecs[:, ::-1][:, :2].T
+        pcs = eigvecs[:, ::-1][:, :3].T
         coords = (centered @ pcs.T).astype(np.float32)
-        for i in range(2):
+        for i in range(3):
             mx = np.abs(coords[:, i]).max()
             if mx > 0:
                 coords[:, i] /= mx
@@ -141,13 +141,14 @@ class MyceliumEngine:
         top = sorted(range(len(sim)), key=lambda i: -sim[i])[:k + 1]
         neighbors = [
             {'word': id_to_tok.get(i, f'<{i}>'), 'sim': round(sim[i], 4),
-             'x': float(coords[i, 0]), 'y': float(coords[i, 1])}
+             'x': float(coords[i, 0]), 'y': float(coords[i, 1]), 'z': float(coords[i, 2])}
             for i in top if i != token_id
         ][:k]
         return {
             'word':       resolved,
             'center_x':  float(coords[token_id, 0]),
             'center_y':  float(coords[token_id, 1]),
+            'center_z':  float(coords[token_id, 2]),
             'neighbors':  neighbors,
             'vocab_size': len(vocab),
             'dims':       int(embeddings.shape[1]),
