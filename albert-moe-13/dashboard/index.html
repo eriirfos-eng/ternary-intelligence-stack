@@ -1424,6 +1424,7 @@
     // ── Anomaly annotation plugin ─────────────────────────────────────
     const SEVERITY_COLOR = { info: '#22d3ee', warn: '#f59e0b', crit: '#ef4444', error: '#ef4444', gold: '#ffd700', good: '#10b981', purple: '#a78bfa' };
     let focusedEvent = null;
+    let _savedEventXMin = null, _savedEventXMax = null;
 
     const annotationPlugin = {
         id: 'anomalyAnnotations',
@@ -2867,6 +2868,7 @@
             const onUp = () => {
                 handle.classList.remove('dragging');
                 document.body.style.cursor = '';
+                localStorage.setItem('albert_layout_' + wrapId, wrap.offsetHeight);
                 document.removeEventListener('mousemove', onMove);
                 document.removeEventListener('mouseup', onUp);
             };
@@ -2875,6 +2877,7 @@
         });
         handle.addEventListener('dblclick', () => {
             wrap.style.height = defaultH + 'px';
+            localStorage.removeItem('albert_layout_' + wrapId);
             if (macdChart) macdChart.resize(); if (rsiChart) rsiChart.resize();
         });
     }
@@ -3699,16 +3702,32 @@
         if (vRafId) { cancelAnimationFrame(vRafId); vRafId = null; }
         vPendingH = null;
         resize();
+        localStorage.setItem('albert_layout_neuralH', neuralWrap.offsetHeight);
         chart.update('none');
     });
     resizeHandle.addEventListener('dblclick', () => {
         neuralWrap.style.height = NEURAL_H_DEF + 'px';
+        localStorage.removeItem('albert_layout_neuralH');
         resize();
     });
 
     // Wire up indicator sub-panel resize handles
     makeSubPanelResizer('macd-resize-handle', 'macd-wrap', 80);
     makeSubPanelResizer('rsi-resize-handle',  'rsi-wrap',  80);
+
+    // Restore saved layout sizes (bottom panel height + horizontal panel widths + sub-panels)
+    (function() {
+        const nh = parseFloat(localStorage.getItem('albert_layout_neuralH'));
+        if (nh >= 80 && nh <= 480) neuralWrap.style.height = nh + 'px';
+        for (const pid of ['topo-sparsity-panel', 'expert-panel', 'routing-panel', 'tlight-panel']) {
+            const w = parseFloat(localStorage.getItem('albert_layout_' + pid));
+            if (w >= 60 && w <= 700) { const el = document.getElementById(pid); if (el) el.style.flex = `0 0 ${w}px`; }
+        }
+        for (const wid of ['macd-wrap', 'rsi-wrap']) {
+            const h = parseFloat(localStorage.getItem('albert_layout_' + wid));
+            if (h >= 36 && h <= 240) { const el = document.getElementById(wid); if (el) el.style.height = h + 'px'; }
+        }
+    })();
 
     // ── Neural Viz ─────────────────────────────────────────────────────
     let latestTele = null;
@@ -4431,14 +4450,22 @@
                 const wasFocused = focusedEvent === ev;
                 focusedEvent = wasFocused ? null : ev;
                 if (focusedEvent) {
+                    _savedEventXMin = chart.scales.x.min;
+                    _savedEventXMax = chart.scales.x.max;
                     const pad = 3;
                     chart.options.scales.x.min = ev.cx - pad;
                     chart.options.scales.x.max = ev.cx + pad;
-                    chart.options.scales.y.min = null;
-                    chart.options.scales.y.max = null;
                     chart.update('none');
                 } else {
-                    chart.resetZoom('none');
+                    if (_savedEventXMin != null) {
+                        chart.options.scales.x.min = _savedEventXMin;
+                        chart.options.scales.x.max = _savedEventXMax;
+                        _savedEventXMin = null;
+                        _savedEventXMax = null;
+                        chart.update('none');
+                    } else {
+                        chart.resetZoom('none');
+                    }
                 }
                 renderAnomalyFeed();
             });
@@ -4479,7 +4506,9 @@
             e.preventDefault();
         });
         handle.addEventListener('dblclick', () => {
-            handle.previousElementSibling.style.flex = '';
+            const p = handle.previousElementSibling;
+            p.style.flex = '';
+            if (p.id) localStorage.removeItem('albert_layout_' + p.id);
         });
     });
     document.addEventListener('mousemove', e => {
@@ -4496,6 +4525,10 @@
         hResizing     = false;
         isInteracting = false;
         if (hActiveHandle) hActiveHandle.classList.remove('h-dragging');
+        if (hLeftPanel && hLeftPanel.id) {
+            const w = hPendingW != null ? hPendingW : hLeftPanel.offsetWidth;
+            localStorage.setItem('albert_layout_' + hLeftPanel.id, w);
+        }
         hActiveHandle = null;
         hLeftPanel    = null;
         if (hRafId) { cancelAnimationFrame(hRafId); hRafId = null; }
@@ -4935,6 +4968,12 @@
         }
         if (focusedEvent) {
             focusedEvent = null;
+            if (_savedEventXMin != null) {
+                chart.options.scales.x.min = _savedEventXMin;
+                chart.options.scales.x.max = _savedEventXMax;
+                _savedEventXMin = null;
+                _savedEventXMax = null;
+            }
             chart.update('none');
             renderAnomalyFeed();
         }
