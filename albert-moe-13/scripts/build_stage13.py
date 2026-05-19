@@ -205,6 +205,13 @@ def fetch_ia_books(subject: str, max_books: int) -> list[dict]:
     return results
 
 def build_internet_archive(out_path: Path):
+    # NOTE 2026-05-19: archive.org locked down plain-text access after their 2023 copyright
+    # lawsuit (Hachette v. Internet Archive). Most items now return 401 Unauthorized or have
+    # no .txt export available. This function produces 0 bytes as-is.
+    # FIX NEEDED before stage_13 is relevant: use archive.org S3-like API with an
+    # authenticated session cookie, or switch source to HuggingFace datasets/book_corpus
+    # (allenai/dolma books split is a good replacement). Not urgent — stage_13 unlocks at
+    # loss_avg ≤ 3.0 AND architecture ≥ 40L.
     log("Internet Archive books — fetching ...")
     total = 0
     per_subject = ARCHIVE_MAX_BOOKS // len(ARCHIVE_SUBJECTS)
@@ -284,6 +291,13 @@ def fetch_patents(classification: str, max_patents: int) -> list[dict]:
     return results
 
 def build_patents(out_path: Path):
+    # NOTE 2026-05-19: PatentsView API (api.patentsview.org/patents/query) has been
+    # migrated to a new SPA portal — the old JSON POST endpoint now returns an HTML page.
+    # This function produces 0 bytes as-is.
+    # FIX NEEDED before stage_13 is relevant: check new USPTO Open Data Portal API at
+    # https://developer.uspto.gov/api-catalog for the current patents query endpoint,
+    # or use the PatentsView bulk data downloads at https://patentsview.org/download/data-download-tables
+    # Not urgent — stage_13 unlocks at loss_avg ≤ 3.0 AND architecture ≥ 40L.
     log("USPTO patents — fetching via PatentsView ...")
     total = 0
     per_class = PATENTS_MAX // len(PATENT_CLASSES)
