@@ -6459,12 +6459,25 @@
                 vertexColors:true, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false
             })));
 
-            // Template annotation — shown below the diagram
-            const annoLbl = _lbl('MoE-13 Block Template  ×17 independent instances', 'left');
-            annoLbl.scale.set(5.5, 0.52, 1);
-            annoLbl.position.set(-3.8, -10.8, 0);
-            annoLbl.material.opacity = 0.38;
-            _scene.add(annoLbl);
+            // Template annotation — custom wide canvas so full text fits
+            {
+                const aw = 520, ah = 30, dpr = Math.min(window.devicePixelRatio||1, 2);
+                const ac = document.createElement('canvas');
+                ac.width = aw * dpr; ac.height = ah * dpr;
+                const ax = ac.getContext('2d');
+                ax.scale(dpr, dpr);
+                ax.font = '11px monospace';
+                ax.fillStyle = 'rgba(255,255,255,0.42)';
+                ax.textAlign = 'left'; ax.textBaseline = 'middle';
+                ax.fillText('MoE-13 Block Template  ×17 independent instances', 4, ah/2);
+                const annoSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+                    map: new THREE.CanvasTexture(ac), transparent: true, depthWrite: false
+                }));
+                const sh = 0.55, sw = (aw / ah) * sh;
+                annoSprite.scale.set(sw, sh, 1);
+                annoSprite.position.set(-sw/2 + 0.5, -10.8, 0);
+                _scene.add(annoSprite);
+            }
 
             // OUTPUT node + label
             const outNode=_node(1.6, new THREE.Color(0.9,0.5,1.0));
