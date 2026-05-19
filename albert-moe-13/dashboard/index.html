@@ -6773,6 +6773,20 @@
         };
 
         // ── mode toggle ──────────────────────────────────────────────
+        // Exposed activator — called by mycSetView (which lives outside this IIFE)
+        window.mycBrainActivate = function() {
+            _theta = 0; _phi = Math.PI / 2; _radius = 22;
+            _camTgt.x = 0; _camTgt.y = 0; _camTgt.z = 0;
+            if (!window.THREE) {
+                const s = document.createElement('script');
+                s.src = '/dashboard/three.min.js';
+                s.onload = () => { _init(); _resize(); };
+                document.head.appendChild(s);
+            } else {
+                _init(); _resize(); _applyOrbit();
+            }
+        };
+
         // Keep mycSetMode as a legacy alias (called by secondary tab broadcast handler)
         window.mycSetMode = function(mode) {
             if (mode === 'brain') mycSetView('topology');
@@ -6822,16 +6836,7 @@
 
         // Activate the chosen view
         if (isTopology) {
-            _theta = 0; _phi = Math.PI / 2; _radius = 22;
-            _camTgt.x = 0; _camTgt.y = 0; _camTgt.z = 0;
-            if (!window.THREE) {
-                const s = document.createElement('script');
-                s.src = '/dashboard/three.min.js';
-                s.onload = () => { _init(); _resize(); };
-                document.head.appendChild(s);
-            } else {
-                _init(); _resize(); _applyOrbit();
-            }
+            if (window.mycBrainActivate) mycBrainActivate();
         } else if (isFlow) {
             if (window.mycFlowInit) mycFlowInit();
         } else if (isToken) {
