@@ -56,9 +56,10 @@ A ternary Mixture-of-Experts language model trained natively from scratch — no
 **Current state:** 17L · 256H · 12E · Top-3 · 256CTX · 32k vocab · ep2100+ · epoch ATL **9.7976** · batch ATL **9.6380**
 
 ```bash
-# Try it — no install needed
+# API live — requires key (free tier at ternlang.com/#licensing)
 curl -s https://ternlang-api.fly.dev/api/trit_decide \
   -H "Content-Type: application/json" \
+  -H "X-Ternlang-Key: <your-key>" \
   -d '{"statement": "This architecture is worth funding"}' | jq .
 ```
 

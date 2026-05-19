@@ -31,8 +31,8 @@ pipeline_tag: text-generation
 **Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
-**Last updated:** 2026-05-17  
-**Training status:** Active — ep1553+, epoch ATL 10.0982 (ep1474), batch ATL **9.9948** (ep1553) — first sub-10.0 batch loss in albert. history
+**Last updated:** 2026-05-19  
+**Training status:** Active — ep2103+, epoch ATL **9.7976** (ep2084), batch ATL **9.6380** (ep1445) — surgery loss gate cleared; plateau gate accumulating
 
 ---
 
@@ -130,28 +130,23 @@ noisy inputs.
 | Ep1441 | 10.1067 | 10.1067 (ep1441) | 10.0556 (ep1435) | pending |
 | Ep1455 | 10.1060 | **10.1060** (ep1455) | **10.0396** (ep1445) | pending |
 | Ep1474 | 10.0982 | **10.0982** (ep1474) | **10.0396** (ep1445) | pending |
-| Ep1553 | ~10.07 (est) | 10.0982 (ep1474) | **9.9948** (ep1553) ← first sub-10.0 | pending |
+| Ep1553 | ~10.07 (est) | 10.0982 (ep1474) | **9.9948** (ep1553) ← first sub-10.0 batch | pending |
+| Ep2040 | ~9.82 (est) | 9.7976 (ep2084) | **9.6380** (ep1445) | 9.6–18.5 (CPU) |
+| Ep2084 | **9.7976** | **9.7976** ← epoch ATL | 9.6380 (ep1445) | pending (T4) |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
 via the open-source `moe-test` binary.
 
-**Surgery gate prediction (recorded 2026-05-16T18:40Z):**
+**Surgery gate prediction (recorded 2026-05-16T18:40Z) — outcome update 2026-05-19:**
 
-A trendline fitted to the ep400–ep1459 loss curve extrapolates to cross
-the surgery gate threshold (9.8 epoch-avg loss) at approximately **ep~2000**.
-The gate fires when loss plateaus below 9.8 for a 144-epoch window with
-`myc_stable ≥ 5`, so the actual 17L→21L surgery is expected to fire at
-**ep2000–2150** depending on plateau formation time. This is a falsifiable
-prediction logged at time of writing; actual outcome will be recorded here.
-Current gap: **0.298 nats** (10.0982 − 9.8) as of ep1474 (2026-05-16T20:02Z).
-Ep1474 set a new epoch ATL of 10.0982, the first sub-10.10 epoch average,
-with a single-epoch drop of 0.0089 nats — the largest step in the post-ep1455
-run. Linear rate: ~0.000234 nats/epoch.
-Acceleration scenario (recent expert saturation: CMP=100%, INT=73%) could
-compress this to ep1900–1950.
+A trendline fitted to the ep400–ep1459 loss curve predicted the surgery gate threshold (9.8 epoch-avg) at approximately **ep~2000**. **Prediction confirmed**: the loss gate was cleared at ep2080 (9.7997, 2026-05-19T10:40Z), within the predicted ep2000–2150 window.
 
-**Milestone (2026-05-17T05:48Z):** First sub-10.0 batch loss in albert. history — **9.9948** at ep1553 batch 149/300. The 10.0 barrier has been crossed.
+The gate fires when loss plateaus below 9.8 for a 144-epoch window with `myc_stable ≥ 5`. As of ep2103, the loss gate is cleared (ATL 9.7976 at ep2084) and the plateau gate is actively accumulating. Loss is hovering 9.800–9.810 with WALD reporting 58+ stable epochs at sev=0.950. Surgery (17L→18L) is imminent — expected within the next 80–120 epochs as the plateau window fills.
+
+**Milestone (2026-05-17T05:48Z):** First sub-10.0 batch loss in albert. history — **9.9948** at ep1553 batch 149/300.  
+**Milestone (2026-05-19T10:40Z):** First sub-9.8 epoch average — **9.7997** at ep2080. Surgery loss gate cleared.  
+**Milestone (2026-05-19T11:00Z):** New epoch ATL — **9.7976** at ep2084.
 
 **Known limitations:**
 

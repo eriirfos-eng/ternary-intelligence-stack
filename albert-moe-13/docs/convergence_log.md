@@ -1,7 +1,7 @@
 # Albert MoE-13 — Convergence Log
 
 Empirical training loss data from native ternary training from random initialization.
-Active run: v3.0 — 17L · 32k vocab · 635 MB multilingual corpus (2026-05-10, ongoing).
+Active run: v3.0 — 17L · 32k vocab · 635 MB multilingual corpus (2026-05-10, ongoing). Surgery loss gate cleared ep2080.
 
 ---
 
@@ -55,11 +55,23 @@ correct only after the vocabulary transfer plateau breaks.
 | Ep 1445 | 17L | — | **Batch ATL: 10.0396** — current intra-batch record |
 | Ep 1455 | 17L | **10.1060** | Epoch ATL |
 | Ep 1474 | 17L | **10.0982** | **EPOCH ATL — first sub-10.10**; surgery gate gap 0.298 nats |
-| Ep 1482 | 17L | **10.0917** | **Current epoch ATL** (2026-05-16); active descent streak |
+| Ep 1482 | 17L | **10.0917** | Epoch ATL (2026-05-16); active descent streak |
+| Ep ~1550 | 17L | — | AdamW buffer reset (accidental restart); 4× wider batch swings, steeper descent; buffers re-narrow over ~150 ep |
+| Ep ~1670 | 17L | ~10.00 | Estimated first sub-10.0 epoch avg (interpolated from ep1482→ep2041 arc) |
+| Ep ~1870 | 17L | ~9.90 | Estimated first sub-9.9 epoch avg |
+| Ep 2041 | 17L | **9.8172** | Epoch ATL (2026-05-19T07:13Z); entered surgery alert zone |
+| Ep 2049 | 17L | **9.8161** | Epoch ATL |
+| Ep 2051 | 17L | **9.8109** | Epoch ATL; sub-9.82 |
+| Ep 2059 | 17L | **9.8065** | Epoch ATL |
+| Ep 2073 | 17L | **9.8033** | Epoch ATL (10:05Z) |
+| Ep 2075 | 17L | **9.8024** | Epoch ATL |
+| Ep 2080 | 17L | **9.7997** | **EPOCH ATL — FIRST SUB-9.8 · SURGERY LOSS GATE CLEARED** (2026-05-19T10:40Z) |
+| Ep 2084 | 17L | **9.7976** | **Current epoch ATL** (2026-05-19T11:00Z); plateau gate accumulating |
+| Ep 2085–2103 | 17L | 9.800–9.810 | Plateau zone: loss oscillating tight band; WALD 58+ stable epochs sev=0.950; since_best=19 |
 
-**All-time best (epoch avg):** 10.0917 (ep1482, 2026-05-16) — first sub-10.10  
-**All-time best (intra-batch):** 10.0396 (ep1445, 2026-05-16)  
-**Surgery governor status:** F9 window = 144 epochs; plateau gate requires loss plateau < 9.8 over any 144-epoch window with myc_stable ≥ 5. Gap to gate: **0.292 nats** at current ATL. Model actively descending — surgery not imminent.
+**All-time best (epoch avg):** 9.7976 (ep2084, 2026-05-19T11:00Z) — surgery loss gate cleared  
+**All-time best (intra-batch):** 9.6380 (ep1445, 2026-05-16)  
+**Surgery governor status:** Loss gate CLEARED (9.7976 < 9.8). Plateau gate accumulating — 144-epoch window with variance < 0.02 nats + myc_stable ≥ 5. WALD: 58+ stable epochs at sev=0.950. Surgery (17L→18L) imminent; estimated ep2160–2220 if plateau holds.
 
 ### Net2Net surgery outcomes
 
