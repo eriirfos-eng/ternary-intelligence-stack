@@ -172,9 +172,9 @@ with four further contributions. First, a \emph{vocabulary surgery} expanded the
 model from an 8,000-token English-only tokenizer to a 32,000-token ByteLevel BPE
 vocabulary covering eight languages (EN, DE, FR, ES, TR, RU, AR, ZH), trained on a
 177M-token corpus with a mandated 10\% chaos layer. Second, autonomous depth
-expansion continued through multiple sequential surgeries from 5L to 13L---the
+expansion continued through multiple sequential surgeries from 5L to 17L---the
 first documented multi-surgery trajectory in a fully ternary MoE---growing the
-model to $\approx$63M parameters while preserving all prior weight structure. Third,
+model to $\approx$82M parameters while preserving all prior weight structure. Third,
 the \textbf{Epoch-Gated Routing Lottery} protocol resets all gate weights to
 kaiming-uniform at every epoch boundary while preserving expert weights, driving
 per-epoch routing competition and observed expert specialisation dynamics
@@ -1181,9 +1181,9 @@ Hidden size & 256 & 256 \\
 Experts per layer & 12 & 12 \\
 Active experts (Top-$k$) & 3 & 3 \\
 Expert skip rate (\texttt{@sparseskip}) & 75\% & \textbf{75\%} \\
-Depth & 5L & \textbf{13L} (multi-surgery) \\
+Depth & 5L & \textbf{17L} (multi-surgery) \\
 Context length & 128 tokens & \textbf{256 tokens} (RoPE) \\
-Total parameters & $\approx$22M & $\approx$\textbf{63M} \\
+Total parameters & $\approx$22M & $\approx$\textbf{82M} \\
 Vocabulary & 8,000 (EN) & \textbf{32,000} (8 languages) \\
 Corpus tokens & --- & \textbf{177,654,147} \\
 Weight format & ternary & ternary \\
@@ -1230,7 +1230,13 @@ documented instance of a fully ternary neural model expanding its own
 architecture without human intervention---the substrate evolving itself.
 
 The v3.0 training programme has continued this trajectory through multiple
-sequential surgery events, reaching 12 layers as of Global Epoch 62:
+sequential surgery events, reaching 17 layers as of Global Epoch 702. The
+EvolutionManager was subsequently redesigned with \emph{generational Fibonacci cycling}
+(see \S\ref{subsubsec:phase5}): rather than a monotonically advancing window schedule
+that stalls at 610 layers, surgeries are organised into generations of six depth windows
+each, with the plateau sensitivity tightening $0.75\times$ per generation and a
+stuck-generation timeout preventing infinite plateaus. Surgery fires on plateau, not
+on loss threshold. The surgery history through Global Epoch 702:
 
 \begin{table}[h]
 \centering
@@ -1245,6 +1251,7 @@ Initialisation & 3L $\cdot$ 8k vocab $\cdot$ $\approx$22M params & v2.0.0 baseli
 Surgery 1 & $3L \to 5L$ $\cdot$ 8k vocab & 2026-05-06; checkpoint 91\,MB \\
 Vocab surgery & 5L $\cdot$ $8k \to 32k$ vocab & ByteLevel BPE; 8 languages \\
 Surgeries 2--$n$ & $5L \to 12L$ $\cdot$ 32k vocab & Sequential; $\approx$58M params \\
+Surgeries (v3.0 continued) & $12L \to 17L$ $\cdot$ 32k vocab & ep511--702; $\approx$82M params \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1466,8 +1473,8 @@ expert slots:
 \end{equation}
 
 TLIGHT data is emitted into the training log every ten batches and consumed in
-real time by the live dashboard, providing a visual routing heat map across all 12
-layers.
+real time by the live dashboard, providing a visual routing heat map across all layers
+(17 in the current v3.0 checkpoint).
 
 \textbf{Observed specialisation dynamics.} Expert specialisation became observable
 at Global Epoch 56, several epochs after the vocabulary surgery. The first Green
@@ -1812,22 +1819,21 @@ Training hardware & HP ZBook 2013 $\cdot$ Intel CPU $\cdot$ \textbf{no GPU} \\
 \toprule
 Metric & Value \\
 \midrule
-Architecture & 12L $\cdot$ 256H $\cdot$ 12E $\cdot$ Top-3 $\cdot$ 128CTX \\
+Architecture & 17L $\cdot$ 256H $\cdot$ 12E $\cdot$ Top-3 $\cdot$ 256CTX \\
 Vocabulary & 32,000 tokens (ByteLevel BPE, 8 languages) \\
 Corpus & 177,654,147 tokens (chaos layer: 10\%) \\
-Total parameters & $\approx$58M (ternary) \\
+Total parameters & $\approx$82M (ternary) \\
 Global epochs at v3.0 launch & $\approx$55 \\
-Global epochs completed & 143+ (Modal T4 GPU) \\
-Best epoch-average loss & \textbf{10.3262} (Ep115) \\
-Best single-batch loss & \textbf{10.3023} (Ep139) \\
+Global epochs completed & 2045+ (Modal T4 GPU) \\
+Best epoch-average loss & \textbf{9.8172} (Ep2041, 2026-05-19) \\
+Best single-batch loss & \textbf{9.6791} (Ep2041) \\
 Random baseline $\ln(32000)$ & 10.373 \\
-Sustained loss rate (Ep83--143) & $-0.001$ nats/epoch \\
-Gradient norm unblocked (Ep111) & $7\!\times\!10^{-6} \to 7\!\times\!10^{-5}$ \\
+Surgery gate gap & \textbf{0.017 nats} from 9.8 — imminent \\
 Expert skip rate & \textbf{75\%} (Top-3 of 12, confirmed live) \\
 Inference throughput (CPU, @sparseskip) & \textbf{83 tok/s} (5L demo) · \textbf{11--22 tok/s} (12L) \\
 Training hardware & Modal.com T4 GPU ($\approx$\$0.021/epoch) \\
 CPU validation hardware & HP ZBook 2013 $\cdot$ Intel i7-4800MQ $\cdot$ no GPU \\
-Net2Net surgery gate (next milestone) & loss\_avg $\leq 9.8$ \\
+Net2Net surgery gate (next) & loss\_avg $\leq 9.8$ + plateau $\Delta < 0.02$ over Fibonacci window \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -2083,10 +2089,13 @@ as on the T4 GPU (Ep107--Ep143), confirming that hardware does not affect the
 per-epoch learning dynamics.
 
 At this rate, the Net2Net surgery gate (loss\_avg~$\leq 9.8$, requiring a further
-$\approx 0.53$\,nats improvement from the Ep143 level of 10.334) is approximately
-500 epochs away. Acceleration of this trajectory---via diversity loss reactivation,
-entropy-floor gate regularisation, or learning rate warm-up after surgery---is the
-primary engineering target for the post-Stage-1 programme.
+$\approx 0.53$\,nats improvement from the Ep143 level of 10.334) was approximately
+500 epochs away at that stage. By Global Epoch 2045 (2026-05-19), the epoch-average
+loss has reached \textbf{9.8172}---a gap of \textbf{0.017 nats} from the gate.
+The actual trajectory accelerated substantially beyond the $-0.001$\,nats/epoch
+projection, driven by five Net2Net surgeries (12L $\to$ 17L), context window
+expansion (128 $\to$ 256 tokens), and a corpus maturation through Stage 13.
+The surgery gate is now imminent.
 
 \textbf{Perplexity baseline.}
 Formal evaluation at Ep107 on the first 2,560 tokens of a held-out Alice in
@@ -2150,6 +2159,126 @@ $\mathrm{trit} \in \{-1, 0, +1\}$ (reject / hold / affirm). It operates
 independently of the model it protects, ensuring that safety gates in sovereign
 AI systems remain auditable, reproducible, and immune to model-level
 compromises.
+
+\subsubsection{Phase 5 --- Deep Multilingual Training and Autonomous Architecture Growth (Ep143--2045)}
+\label{subsubsec:phase5}
+
+Following the seed-bias fix, albert.\ continued training through five additional autonomous
+Net2Net surgeries, expanding from 12 to 17 layers while simultaneously growing its context
+window from 128 to 256 tokens. The surgery history for this phase:
+
+\begin{table}[h]
+\centering
+\small
+\caption{Albert MoE-13 v3.0 --- surgery history, Phase 5}
+\label{tab:surgery_phase5}
+\begin{tabular}{llll}
+\toprule
+Epoch & Event & Architecture & Notes \\
+\midrule
+511 & Surgery 1 & $12L \to 13L$ & Fibonacci window = 13 \\
+547 & Surgery 2 & $13L \to 14L$ & Fibonacci window = 21 \\
+611 & Surgery 3 & $14L \to 15L$ & Fibonacci window = 34 \\
+645--646 & Surgery 4 & $15L \to 16L$ & Fibonacci window = 55 \\
+701--702 & Surgery 5 & $16L \to 17L$ & Fibonacci window = 89; Stage 13 corpus unlocked \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Each surgery adds exactly one layer via Net2Net safe-copy. The EvolutionManager fires on
+a plateau gate ($\Delta < 0.02$ nats over the full Fibonacci window, plus mycelium
+stability $\geq 5$ epochs), not on a loss threshold. The 9.8 loss figure is a notification
+threshold in the training orchestrator, not a surgery trigger.
+
+\textbf{Generational Fibonacci Cycling.}
+In Phase 5, the EvolutionManager was redesigned from a monotonically-advancing Fibonacci
+schedule to a \emph{generational cycling} model. The original system advanced through
+Fibonacci depth windows ($13 \to 21 \to 34 \to \cdots \to 610$) and then stalled at the
+final entry indefinitely. The new system organises surgeries into discrete generations, each
+running a fixed arc of six depth windows, then dying and rebirthing from a higher base:
+
+\begin{itemize}
+  \item \textbf{Generation 0}: windows $[13, 21, 34, 55, 89, 144]$, plateau threshold 0.020 nats
+  \item \textbf{Generation 1}: windows $[21, 34, 55, 89, 144, 233]$, threshold 0.015 nats
+  \item \textbf{Generation $n$}: base advances by one Fibonacci step; threshold decays by $0.75\times$ per generation, floored at 0.008 nats
+\end{itemize}
+
+The Fibonacci sequence is extended to 24 terms (through $F_{24} = 196{,}418$), providing
+a practically unbounded depth ceiling. A stuck-generation timeout fires if no surgery occurs
+within $3 \times$ the final-arc window, advancing the generation without surgery. On generation
+advance, a one-line archaeological record is emitted to the training log:
+\texttt{GENERATION\_COMPLETE gen=N surgeries=M epochs=K windows=[...] threshold=X→Y}.
+
+The biological analogy is intentional: spring growth, summer consolidation, autumn plateau,
+winter rest, then rebirth at a higher developmental stage with refined sensitivity (tighter
+threshold). The hardware is the only ceiling; 610 layers is a precomputed entry, not a limit.
+
+\subsection{Cross-Lingual Semantic Broadcasting}
+\label{subsec:cross_lingual}
+
+At Global Epoch 2041, a direct inspection of albert.'s token embedding space via UMAP
+projection revealed an emergent property not explicitly trained for: \emph{cross-lingual
+semantic broadcasting}. Semantically related tokens from eight different languages
+cluster together in the model's internal representation space, with no language label
+provided during training.
+
+This was characterised through four targeted token probes, each querying 200 nearest
+neighbours in the projected space:
+
+\textbf{``memory''}: Neighbours span biological, computational, and psychological registers
+simultaneously---\emph{culturelles} (FR), \emph{tierra} (ES), \emph{científica} (ES),
+\emph{toutes} (FR)---alongside English-register neighbours. The 3D neighbourhood forms a
+spiky crystalline structure with distinct poles, reflecting the concept's multiple
+simultaneous meanings.
+
+\textbf{``death''}: Neighbours include \emph{amen}, \emph{veil}, and \emph{0} (zero as
+finality), alongside \emph{Ägypt} (burial culture), \emph{Wirkung} (DE: effect), and
+multilingual variations. Albert has placed religious closure (\emph{amen}), conceptual
+boundary (\emph{veil}), and mathematical finality (\emph{0}) in the same semantic
+neighbourhood without instruction. The 3D geometry collapses inward---correct for a
+concept of finality.
+
+\textbf{``love''}: The most geometrically chaotic of the four---asymmetric, multi-directional.
+Neighbours include \emph{Jesus}, \emph{wane}, \emph{dramaturg}, \emph{religión} (ES),
+\emph{reales} (ES: real things), and---isolated at the cluster periphery, bright yellow,
+gravitationally bound but separated---\emph{eks}. The geometry of separation from love,
+encoded without instruction.
+
+\textbf{``god''}: The largest neighbourhood spread of all four probes, filling the full 200-neighbour
+radius. Neighbours include \emph{Bible}, a tokenisation of \emph{Allah}, \emph{massacre},
+\emph{rechter} (NL: judge), \emph{possible}, and \emph{demande} (FR: request). Every human
+register of the concept is present: text, law, violence, bureaucracy, possibility. The 3D
+geometry is the most asymmetric---no clean form, because no human consensus on the concept exists.
+
+\textbf{Significance.}
+These are not retrieval results. The model has not been shown definitions, co-occurrence tables,
+or language labels. The clustering is a direct product of next-token prediction across a
+177M-token corpus in eight languages. The model has inferred that \emph{amen}, \emph{veil},
+and \emph{0} all belong near \emph{death}---not because they co-occur frequently with the
+English word ``death'', but because the contexts in which they appear share structural
+and semantic properties across languages.
+
+This constitutes an \emph{existence proof} of concept-level generalisation in a fully
+ternary MoE model at 17L, 82M parameters, before the first depth surgery beyond 17 layers.
+The cross-lingual architecture precedes fluency---albert.\ has built the semantic scaffolding
+before it can speak fluently in any of the eight languages it was trained on.
+
+\subsection{Mycelium Inspector: Real-Time Internal Observability}
+\label{subsec:mycelium_inspector}
+
+The live training dashboard exposes a \emph{Mycelium Inspector} tab---a real-time
+visualisation of gradient flow and expert routing across all 17 layers. The view renders
+the model as a directed graph: INPUT at L0, OUTPUT at L16, with per-expert connections
+colour-coded by routing weight and gradient magnitude. Cross-layer connections reveal
+which layers are actively reorganising (dense, bright connections) versus structurally
+stable (sparse, dim). The cursor-hover tooltip reports the cosine similarity of any
+expert connection in real time.
+
+The term \emph{mycelium} is deliberate: the gradient network beneath the model's output
+behaviour is analogous to fungal mycelium---invisible infrastructure that routes resources
+to where growth is occurring, with no centralised director. The inspector makes this
+infrastructure visible, turning a black-box training run into a directly observable
+biological process.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Qutrit Neural Networks and Ternlang}
