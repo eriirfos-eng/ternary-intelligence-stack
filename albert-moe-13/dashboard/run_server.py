@@ -12,7 +12,11 @@ import urllib.parse
 PORT = 8888
 DIRECTORY   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # albert-moe-13/
 PROJECT     = DIRECTORY
-_BEST_MODEL = os.path.join(PROJECT, "models", "albert_v3.0.best.safetensors")
+_BEST_MODEL = (
+    os.path.join(PROJECT, "models", "albert_v3.0.best.safetensors")
+    if os.path.exists(os.path.join(PROJECT, "models", "albert_v3.0.best.safetensors"))
+    else os.path.join(PROJECT, "models", "albert_v3.0.safetensors")
+)
 _VOCAB_FILE = os.path.join(PROJECT, "tokenizer_v3", "tokenizer_v3.json")
 
 # Training log lives outside the repo so git ops (filter-repo, reset, clean)
