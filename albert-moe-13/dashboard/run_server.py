@@ -333,7 +333,7 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         # CPU mode: redirect bare dashboard requests to CPU-safe URL params.
-        if CPU_MODE and 'stale_s' not in self.path:
+        if CPU_MODE and 'stale_s' not in self.path and 'mycelium' not in self.path:
             clean = self.path.split('?')[0].rstrip('/')
             if clean in ('/dashboard', ''):
                 self.send_response(302)
