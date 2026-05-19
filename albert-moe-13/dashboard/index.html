@@ -5891,7 +5891,7 @@
         let _initialized3t = false;
         let _lastData = null;
 
-        let _theta3t = 0, _phi3t = Math.PI / 2.2, _rad3t = 3.2;
+        let _theta3t = 0, _phi3t = Math.PI / 2.4, _rad3t = 4.8;
         const _tgt3t = { x: 0, y: 0, z: 0 };
         let _orb3t = false, _pan3t = false, _px3t = 0, _py3t = 0;
         let _sp3t = false;
@@ -6201,7 +6201,7 @@
             // Threads rebuild after animation settles (in _animStep3t)
 
             if (resetOrbit) {
-                _theta3t = 0.4; _phi3t = Math.PI / 2.4; _rad3t = 3.2;
+                _theta3t = 0.4; _phi3t = Math.PI / 2.4; _rad3t = 4.8;
                 _tgt3t.x = 0; _tgt3t.y = 0; _tgt3t.z = 0;
                 _applyOrb3t();
             }
@@ -6237,6 +6237,7 @@
 
         let _scene, _camera, _renderer, _edgeGeo, _routeGeo;
         let _lSprites = [], _eSprites = [], _lLabels = [], _eLabels = [];
+        let _routerSprite = null, _routerLbl = null, _exrColArr = null;
         let _bezCtrl = [];       // bezier control points [NL][NE] for L→E arcs
         let _bezEdgeGeo = null;  // L→E bezier arc geometry
         let _lTrailSprites = [];  // hot-trail ring per layer
@@ -6350,8 +6351,8 @@
             _renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
             _renderer.setClearColor(0x060d15, 1);
 
-            // Layout: INPUT → LAYERS → EXPERTS → OUTPUT (left-to-right data flow)
-            const INX=-10, LX=-5.5, EX=5.5, OUTX=10;
+            // Layout: INPUT → LAYERS → EXPERTS → ROUTER (consensus) → OUTPUT
+            const INX=-10, LX=-5.5, EX=3.5, RX=7.5, OUTX=10;
             const lp=[], ep=[];
             for (let i=0;i<NL;i++) {
                 const y=((i/(NL-1))-0.5)*16;
@@ -6369,7 +6370,7 @@
                 for (let e=0;e<NE;e++) {
                     const cz=Math.sin(i*0.7+e*0.4)*2.8;
                     const cy=(lp[i].y+ep[e].y)/2+Math.cos(i*0.5+e*0.9)*0.35;
-                    _bezCtrl[i][e]={x:0,y:cy,z:cz};
+                    _bezCtrl[i][e]={x:-1,y:cy,z:cz};
                 }
             }
 
@@ -6429,25 +6430,51 @@
                 const lb=_lbl(ENAMES[e],'left'); lb.position.set(ep[e].x+1.2,ep[e].y,ep[e].z); _scene.add(lb); _eLabels.push(lb);
             }
 
+            // ROUTER node — consensus aggregation, where TTL lives
+            _routerSprite = _node(1.8, new THREE.Color(1.0, 0.65, 0.1));
+            _routerSprite.position.set(RX, 0, 0);
+            _routerSprite.material.opacity = 0.65;
+            _scene.add(_routerSprite);
+            _routerLbl = _lbl('ROUTER','left');
+            _routerLbl.scale.set(2.2, 0.5, 1);
+            _routerLbl.position.set(RX+0.6, 1.7, 0);
+            _scene.add(_routerLbl);
+
+            // Expert→ROUTER convergence lines — Top-3 experts reach consensus here
+            const exrPos=new Float32Array(NE*2*3);
+            _exrColArr=new Float32Array(NE*2*3);
+            for (let e=0;e<NE;e++) {
+                const b=e*6;
+                exrPos[b]=ep[e].x; exrPos[b+1]=ep[e].y; exrPos[b+2]=ep[e].z;
+                exrPos[b+3]=RX;    exrPos[b+4]=0;        exrPos[b+5]=0;
+                _exrColArr[b]=0.5;_exrColArr[b+1]=0.3;_exrColArr[b+2]=0.05;
+                _exrColArr[b+3]=0.5;_exrColArr[b+4]=0.3;_exrColArr[b+5]=0.05;
+            }
+            const exrGeo=new THREE.BufferGeometry();
+            exrGeo.setAttribute('position',new THREE.BufferAttribute(exrPos,3));
+            exrGeo.setAttribute('color',new THREE.BufferAttribute(_exrColArr,3));
+            _scene.userData.exrGeo = exrGeo;
+            _scene.add(new THREE.LineSegments(exrGeo, new THREE.LineBasicMaterial({
+                vertexColors:true, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false
+            })));
+
+            // ROUTER→OUTPUT single consensus line
+            const routerOutPos=new Float32Array(6);
+            routerOutPos[0]=RX; routerOutPos[1]=0; routerOutPos[2]=0;
+            routerOutPos[3]=OUTX; routerOutPos[4]=0; routerOutPos[5]=0;
+            const routerOutGeo=new THREE.BufferGeometry();
+            routerOutGeo.setAttribute('position',new THREE.BufferAttribute(routerOutPos,3));
+            _scene.add(new THREE.LineSegments(routerOutGeo, new THREE.LineBasicMaterial({
+                color:new THREE.Color(0.7,0.4,1.0), blending:THREE.AdditiveBlending,
+                transparent:true, depthWrite:false, opacity:0.55
+            })));
+
             // OUTPUT node + label
             const outNode=_node(1.6, new THREE.Color(0.9,0.5,1.0));
             outNode.position.set(OUTX, 0, 0); outNode.material.opacity=0.55; _scene.add(outNode);
             const outLbl=_lbl('OUTPUT','left');
             outLbl.scale.set(2.2,0.5,1);
             outLbl.position.set(OUTX+0.6, 1.6, 0); _scene.add(outLbl);
-            // Expert→OUTPUT fan lines — all converge into single OUTPUT centre point
-            const exoPos=new Float32Array(NE*2*3), exoCol=new Float32Array(NE*2*3);
-            for (let e=0;e<NE;e++) {
-                const b=e*6;
-                exoPos[b]=ep[e].x; exoPos[b+1]=ep[e].y; exoPos[b+2]=ep[e].z;
-                exoPos[b+3]=OUTX;  exoPos[b+4]=0;        exoPos[b+5]=0;
-                exoCol[b]=0.45;exoCol[b+1]=0.2;exoCol[b+2]=0.65;
-                exoCol[b+3]=0.45;exoCol[b+4]=0.2;exoCol[b+5]=0.65;
-            }
-            const exoGeo=new THREE.BufferGeometry();
-            exoGeo.setAttribute('position',new THREE.BufferAttribute(exoPos,3));
-            exoGeo.setAttribute('color',new THREE.BufferAttribute(exoCol,3));
-            _scene.add(new THREE.LineSegments(exoGeo,new THREE.LineBasicMaterial({vertexColors:true,blending:THREE.NormalBlending,transparent:true,depthWrite:false,opacity:0.35})));
 
             // Hot-trail sprites — one amber ring sprite per layer, initially hidden
             for (let i = 0; i < NL; i++) {
@@ -6594,6 +6621,30 @@
                 _eSprites[e].position.y=ep[e].y+breathe;
                 _eLabels[e].material.opacity=0.2+0.8*comb;
                 _eLabels[e].position.y=ep[e].y+breathe;
+            }
+
+            // ROUTER node — pulses with routing consensus; color = Top-3 decisiveness
+            if (_routerSprite) {
+                const sortedW = Array.from(_rw).sort((a,b)=>b-a);
+                const top3sum = sortedW[0]+sortedW[1]+sortedW[2];
+                const consensus = Math.min(1, top3sum); // high = decisive top-3
+                const pb = 0.82 + 0.18 * Math.sin(_t * 1.9);
+                _routerSprite.scale.setScalar((1.0 + 1.4 * consensus) * pb);
+                // Amber → cyan as routing becomes more decisive
+                _routerSprite.material.color.setHSL(0.08 + consensus * 0.42, 1.0, 0.28 + 0.38 * consensus);
+                _routerSprite.material.opacity = 0.35 + 0.55 * consensus;
+                if (_routerLbl) _routerLbl.material.opacity = 0.5 + 0.5 * consensus;
+                // Expert→ROUTER line brightness — active experts glow, inactive fade
+                if (_exrColArr && _scene.userData.exrGeo) {
+                    const top3set = new Set(Array.from({length:NE},(_,e)=>e).sort((a,b)=>_rw[b]-_rw[a]).slice(0,3));
+                    for (let e=0;e<NE;e++) {
+                        const b=e*6;
+                        const act = top3set.has(e) ? Math.min(1,_eg[e]*0.5+_rw[e]*0.7) : 0.04;
+                        _exrColArr[b]=act*0.6; _exrColArr[b+1]=act*0.35; _exrColArr[b+2]=act*0.05;
+                        _exrColArr[b+3]=act*0.55; _exrColArr[b+4]=act*0.32; _exrColArr[b+5]=act*0.04;
+                    }
+                    _scene.userData.exrGeo.attributes.color.needsUpdate=true;
+                }
             }
 
             // Hot-layer temporal trail

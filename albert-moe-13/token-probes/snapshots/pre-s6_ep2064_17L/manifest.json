@@ -3,10 +3,10 @@
   "epoch": 2064,
   "arch_layers": 17,
   "loss": 9.8117,
-  "timestamp": "2026-05-19T09:48:29+00:00",
-  "note": "Pre-surgery-6 baseline. 17L→18L imminent. love→Jesus confirmed. god=judgment cluster. Nationalsozialismus in Jesus neighborhood.",
+  "timestamp": "2026-05-19T10:07:43+00:00",
+  "note": "Full-vocab re-run after server cap raised from 200→32000. True 17L pre-surgery-6 baseline.",
   "host": "localhost:8888",
-  "neighbors_k": 50,
+  "neighbors_k": 32000,
   "tokens": [
     "love",
     "god",
