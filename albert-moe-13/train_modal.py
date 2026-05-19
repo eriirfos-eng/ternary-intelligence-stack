@@ -160,6 +160,11 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: i
         "CARGO_TARGET_DIR": "/tmp/cargo-target",
         "CARGO_TERM_COLOR": "never",
     }
+    # train_bible picks its log path from $HOME/.albert/training.log, falling
+    # back to {root}/dashboard/training.log when HOME is unset. The fallback
+    # path is exactly what tail_log tails here. Unset HOME so telemetry lands
+    # on the volume instead of the ephemeral container filesystem.
+    env.pop("HOME", None)
 
     # The real workspace Cargo.toml references /ternlang-root which doesn't
     # exist on Modal. Replace it with a minimal workspace containing only
