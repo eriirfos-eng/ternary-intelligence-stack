@@ -88,7 +88,7 @@ ok "Python deps ready"
 mkdir -p "$HOME/projects"
 if [ -d "$PROJECT_DIR/.git" ]; then
     info "Repo already cloned — pulling latest..."
-    git -C "$PROJECT_DIR" pull --ff-only
+    git -C "$PROJECT_DIR" pull --rebase
 else
     info "Cloning training repo via gh..."
     gh repo clone eriirfos-eng/ternary-intelligence-stack "$PROJECT_DIR"
