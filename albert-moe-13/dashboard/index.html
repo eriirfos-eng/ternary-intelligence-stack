@@ -5891,7 +5891,7 @@
         let _initialized3t = false;
         let _lastData = null;
 
-        let _theta3t = 0, _phi3t = Math.PI / 2.4, _rad3t = 4.8;
+        let _theta3t = Math.PI / 4, _phi3t = Math.PI / 2.8, _rad3t = 4.8;
         const _tgt3t = { x: 0, y: 0, z: 0 };
         let _orb3t = false, _pan3t = false, _px3t = 0, _py3t = 0;
         let _sp3t = false;
@@ -6201,7 +6201,7 @@
             // Threads rebuild after animation settles (in _animStep3t)
 
             if (resetOrbit) {
-                _theta3t = 0.4; _phi3t = Math.PI / 2.4; _rad3t = 4.8;
+                _theta3t = Math.PI / 4; _phi3t = Math.PI / 2.8; _rad3t = 4.8;
                 _tgt3t.x = 0; _tgt3t.y = 0; _tgt3t.z = 0;
                 _applyOrb3t();
             }
