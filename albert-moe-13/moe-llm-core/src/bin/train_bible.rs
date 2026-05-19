@@ -933,7 +933,12 @@ fn train_cycle(
     let best_meta_path  = format!("{r}/models/albert_v3.0.best_loss");
     let best_epoch_path = format!("{r}/models/albert_v3.0.best_epoch");
     let evo_path        = format!("{r}/models/albert_v3.0.evolution");
-    let log_path        = format!("{r}/dashboard/training.log");
+    // Log path: prefer ~/.albert/training.log (where the dashboard server reads from).
+    // Fall back to {root}/dashboard/training.log only if HOME is unavailable.
+    let log_path_owned  = std::env::var("HOME")
+        .map(|h| { let p = format!("{h}/.albert"); let _ = fs::create_dir_all(&p); format!("{p}/training.log") })
+        .unwrap_or_else(|_| format!("{r}/dashboard/training.log"));
+    let log_path        = log_path_owned.as_str();
     // Borrow as &str for the many call sites that take &str
     let checkpoint_path = checkpoint_path.as_str();
     let best_path       = best_path.as_str();
@@ -941,7 +946,6 @@ fn train_cycle(
     let meta_path       = meta_path.as_str();
     let best_meta_path  = best_meta_path.as_str();
     let evo_path        = evo_path.as_str();
-    let log_path        = log_path.as_str();
 
     let config_str = fs::read_to_string(config_path).expect("Unable to read config.json");
     let config_json: Value = serde_json::from_str(&config_str).expect("Invalid JSON in config file.");
@@ -1559,9 +1563,10 @@ fn train_cycle(
                     let _ = writeln!(f, "DIVGRAD step={} L={}", *global_step, grad_str.join(","));
                 }
 
-                // TELE — sparsity snapshot every 30 batches (~60s) for live dashboard panels.
-                // Epoch-end emit still fires below; this keeps LAYER/EXPERT panels from going stale.
-                if batch_idx % 30 == 0 {
+                // TELE — sparsity snapshot every 30 batches on GPU (~60s).
+                // Skipped on CPU: copying 82M params to Vec<f32> is expensive and can cause
+                // swap thrashing on low-RAM machines. Epoch-end emit (below) keeps panels alive.
+                if batch_idx % 30 == 0 && !matches!(device, Device::Cpu) {
                     emit_telemetry(&varmap, &config, log_path);
                 }
 

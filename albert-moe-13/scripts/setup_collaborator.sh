@@ -121,16 +121,20 @@ albert-train — run albert. training
   albert-train             # local CPU training (default for collaborators)
   albert-train --modal     # GPU training on Modal (requires modal token new)
   albert-train pull        # pull checkpoint from Modal volume
+  albert-train --no-update # skip the auto git-pull at startup
 """
 import os, sys, subprocess, threading, signal, time, webbrowser
 
 PROJECT  = os.path.expanduser("~/projects/ternary-intelligence-stack/albert-moe-13")
+REPO     = os.path.expanduser("~/projects/ternary-intelligence-stack")
 BINARY   = os.path.join(PROJECT, "target", "release", "train_bible")
 MODAL_PY = os.path.join(PROJECT, "train_modal.py")
-LOG      = os.path.join(PROJECT, "dashboard", "training.log")
+LOG      = os.path.expanduser("~/.albert/training.log")   # matches dashboard server path
 DASH_SRV = os.path.join(PROJECT, "dashboard", "run_server.py")
 
-R="\033[0m"; CYAN="\033[96m"; GREEN="\033[1;92m"; BOLD="\033[1;94m"; YELLOW="\033[93m"
+os.makedirs(os.path.expanduser("~/.albert"), exist_ok=True)
+
+R="\033[0m"; CYAN="\033[96m"; GREEN="\033[1;92m"; BOLD="\033[1;94m"; YELLOW="\033[93m"; DIM="\033[2m"
 
 # pull subcommand — syncs from Modal volume
 if len(sys.argv) > 1 and sys.argv[1] == "pull":
@@ -139,6 +143,22 @@ if len(sys.argv) > 1 and sys.argv[1] == "pull":
 
 use_modal  = "--modal"      in sys.argv
 no_browser = "--no-browser" in sys.argv
+no_update  = "--no-update"  in sys.argv
+
+# Auto-pull latest code + dashboard (keeps index.html and training binary in sync)
+if not no_update:
+    try:
+        r = subprocess.run(
+            ["git", "-C", REPO, "pull", "--ff-only", "--quiet"],
+            capture_output=True, text=True, timeout=15
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            print(f"{GREEN}[albert-train] repo updated — rebuilding binary...{R}")
+            subprocess.run(["cargo","build","--release","--bin","train_bible"], cwd=PROJECT, check=False)
+        elif r.returncode != 0:
+            print(f"{DIM}[albert-train] git pull skipped: {r.stderr.strip()}{R}")
+    except Exception:
+        pass  # network unavailable — proceed with local version
 
 # Rebuild if binary missing
 if not use_modal and not os.path.exists(BINARY):
@@ -147,10 +167,10 @@ if not use_modal and not os.path.exists(BINARY):
     if r.returncode != 0:
         sys.exit(r.returncode)
 
-# Start dashboard server
+# Start dashboard server with --cpu flag for collaborator-appropriate polling rates
 server_proc = subprocess.Popen(
-    [sys.executable, DASH_SRV],
-    cwd=os.path.join(PROJECT, "dashboard"),
+    [sys.executable, DASH_SRV, "--cpu"],
+    cwd=PROJECT,
     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
 )
 time.sleep(0.5)
