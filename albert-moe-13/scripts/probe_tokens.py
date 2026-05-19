@@ -27,7 +27,7 @@ HERE    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROBES  = os.path.join(HERE, "token-probes", "tokens.json")
 SNAPS   = os.path.join(HERE, "token-probes", "snapshots")
 
-NEIGHBORS_K = 50
+NEIGHBORS_K = 32000  # full vocabulary — no cap, complete geometry
 
 
 def query(host: str, word: str, k: int = NEIGHBORS_K) -> dict:
@@ -52,7 +52,7 @@ def main():
     ap.add_argument("--host",   default="localhost:8888",
                     help="dashboard server host:port (default localhost:8888)")
     ap.add_argument("--k",      default=NEIGHBORS_K, type=int,
-                    help=f"neighbors to fetch per token (default {NEIGHBORS_K})")
+                    help=f"neighbors to fetch per token (default: full vocab)")
     ap.add_argument("--note",   default="",
                     help="optional human note for this snapshot")
     args = ap.parse_args()

@@ -301,7 +301,7 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
             params = urllib.parse.parse_qs(parsed.query)
             word   = params.get('word', [''])[0].strip()
             try:
-                k = min(max(1, int(params.get('k', ['40'])[0])), 200)
+                k = min(max(1, int(params.get('k', ['40'])[0])), 32000)
             except ValueError:
                 k = 40
             if not word:
