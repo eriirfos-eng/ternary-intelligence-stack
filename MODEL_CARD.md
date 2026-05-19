@@ -133,6 +133,7 @@ noisy inputs.
 | Ep1553 | ~10.07 (est) | 10.0982 (ep1474) | **9.9948** (ep1553) ← first sub-10.0 batch | pending |
 | Ep2040 | ~9.82 (est) | 9.7976 (ep2084) | **9.6380** (ep1445) | 9.6–18.5 (CPU) |
 | Ep2084 | **9.7976** | **9.7976** ← epoch ATL | 9.6380 (ep1445) | pending (T4) |
+| Ep2104 | ~9.81 (est) | 9.7976 (ep2084) | 9.6380 (ep1445) | **9.9–21.3 (CPU)** |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
