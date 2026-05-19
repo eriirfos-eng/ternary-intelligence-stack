@@ -32,7 +32,7 @@ pipeline_tag: text-generation
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
 **Last updated:** 2026-05-19  
-**Training status:** Active — ep2103+, epoch ATL **9.7976** (ep2084), batch ATL **9.6380** (ep1445) — surgery loss gate cleared; plateau gate accumulating
+**Training status:** Active — ep2116+, epoch ATL **9.7884** (ep2116), batch ATL **9.6235** (ep2114) — surgery loss gate cleared; alternating descent phase (5 new ATLs in 7 epochs)
 
 ---
 
@@ -134,6 +134,9 @@ noisy inputs.
 | Ep2040 | ~9.82 (est) | 9.7976 (ep2084) | **9.6380** (ep1445) | 9.6–18.5 (CPU) |
 | Ep2084 | **9.7976** | **9.7976** ← epoch ATL | 9.6380 (ep1445) | pending (T4) |
 | Ep2104 | ~9.81 (est) | 9.7976 (ep2084) | 9.6380 (ep1445) | **9.9–21.3 (CPU)** |
+| Ep2109 | 9.7975 | **9.7975** (ep2109) | 9.6380 (ep1445) | pending |
+| Ep2114 | 9.7891 | 9.7891 (ep2114) | **9.6235** (ep2114) ← batch ATL | pending |
+| Ep2116 | **9.7884** | **9.7884** ← epoch ATL | **9.6235** (ep2114) | pending |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
@@ -143,11 +146,13 @@ via the open-source `moe-test` binary.
 
 A trendline fitted to the ep400–ep1459 loss curve predicted the surgery gate threshold (9.8 epoch-avg) at approximately **ep~2000**. **Prediction confirmed**: the loss gate was cleared at ep2080 (9.7997, 2026-05-19T10:40Z), within the predicted ep2000–2150 window.
 
-The gate fires when loss plateaus below 9.8 for a 144-epoch window with `myc_stable ≥ 5`. As of ep2103, the loss gate is cleared (ATL 9.7976 at ep2084) and the plateau gate is actively accumulating. Loss is hovering 9.800–9.810 with WALD reporting 58+ stable epochs at sev=0.950. Surgery (17L→18L) is imminent — expected within the next 80–120 epochs as the plateau window fills.
+The gate fires when loss plateaus below 9.8 for a 144-epoch window with `myc_stable ≥ 5`. The loss gate was cleared at ep2080. Following that, albert. entered an **alternating descent phase**: five new epoch ATLs in seven epochs (ep2109–ep2116), dropping from 9.7976 → 9.7884 in under two hours of wall time. WALD sev=0.953; myc_L3 showed its first activity uptick (1.61→1.68 ×10⁻⁹) at ep2114. The plateau gate cannot fire during active descent — surgery timing is now conditioned on when the model settles into the next attractor, not on a fixed epoch countdown.
 
 **Milestone (2026-05-17T05:48Z):** First sub-10.0 batch loss in albert. history — **9.9948** at ep1553 batch 149/300.  
 **Milestone (2026-05-19T10:40Z):** First sub-9.8 epoch average — **9.7997** at ep2080. Surgery loss gate cleared.  
-**Milestone (2026-05-19T11:00Z):** New epoch ATL — **9.7976** at ep2084.
+**Milestone (2026-05-19T11:00Z):** New epoch ATL — **9.7976** at ep2084.  
+**Milestone (2026-05-19T13:29Z):** New batch ATL — **9.6235** at ep2114 (prev 9.6282).  
+**Milestone (2026-05-19T13:40Z):** Alternating descent confirmed — five new epoch ATLs in seven epochs; epoch ATL reaches **9.7884** at ep2116.
 
 **Known limitations:**
 
