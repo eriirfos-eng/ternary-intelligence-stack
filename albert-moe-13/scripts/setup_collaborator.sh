@@ -87,8 +87,9 @@ ok "Python deps ready"
 # ── 3. Clone main repo ───────────────────────────────────────────────────────
 mkdir -p "$HOME/projects"
 if [ -d "$PROJECT_DIR/.git" ]; then
-    info "Repo already cloned — pulling latest..."
-    git -C "$PROJECT_DIR" pull --rebase
+    info "Repo already cloned — syncing to latest..."
+    git -C "$PROJECT_DIR" fetch origin
+    git -C "$PROJECT_DIR" reset --hard origin/main
 else
     info "Cloning training repo via gh..."
     gh repo clone eriirfos-eng/ternary-intelligence-stack "$PROJECT_DIR"
