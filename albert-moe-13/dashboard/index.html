@@ -781,7 +781,7 @@
         }
         #myc-canvas {
             flex: 1;
-            display: block;
+            display: none;
             cursor: crosshair;
         }
         #myc-tok3d-canvas {
@@ -793,6 +793,11 @@
             flex: 1;
             display: none;
             cursor: grab;
+        }
+        #myc-flow-canvas {
+            flex: 1;
+            display: none;
+            cursor: default;
         }
         .myc-mode-btn {
             font-family: inherit;
@@ -1071,9 +1076,11 @@
 <div id="mycelium-panel">
     <div id="myc-toolbar">
         <span id="myc-label">Mycelium Inspector</span>
-        <button class="myc-mode-btn" id="myc-brain-btn" onclick="mycSetMode('brain')" title="Live neural graph — layers, experts, routing">Brain</button>
-        <button class="myc-mode-btn active" id="myc-token-btn" onclick="mycSetMode('token')" title="Token embedding space explorer">Token</button>
-        <span id="myc-token-controls" style="display:flex;align-items:center;gap:8px">
+        <button class="myc-mode-btn active" id="myc-topo-btn" onclick="mycSetView('topology')" title="MoE-13 block template — architecture overview">TOPOLOGY</button>
+        <button class="myc-mode-btn" id="myc-flow-btn" onclick="mycSetView('flow')" title="17 sequential routing decisions — actual forward pass">FLOW</button>
+        <button class="myc-mode-btn" id="myc-token-btn" onclick="mycSetView('token')" title="Token embedding space explorer">TOKEN</button>
+        <button class="myc-mode-btn" id="myc-upload-btn" onclick="mycOpenUpload()" title="Inspect eval_results.json or .safetensors checkpoint">INSPECT</button>
+        <span id="myc-token-controls" style="display:none;align-items:center;gap:8px">
             <input id="myc-search" type="text" placeholder="enter a word..." autocomplete="off" spellcheck="false">
             <button onclick="mycSearch()" title="Search (Enter)">search</button>
             <button class="myc-mode-btn active" id="myc-tok2d-btn" onclick="mycSetTokMode('2d')" title="2D PCA projection">2D</button>
@@ -1089,6 +1096,7 @@
     <canvas id="myc-canvas"></canvas>
     <canvas id="myc-tok3d-canvas"></canvas>
     <canvas id="myc3d-canvas"></canvas>
+    <canvas id="myc-flow-canvas"></canvas>
 </div>
 <div id="myc-tooltip"></div>
 
@@ -3138,6 +3146,7 @@
                         latestGrad = { norm: gmNorm, layerNorms: gmLayers };
                         renderGradBars();
                         if (window.mycBrainUpdate) mycBrainUpdate({ grad: latestGrad });
+                        if (window.mycFlowUpdate) mycFlowUpdate({ grad: latestGrad });
                         _streamBC.postMessage({ type: 'grad', data: latestGrad });
                         if (latestGrad.norm > 1.0) {
                             const now = Date.now();
@@ -3195,6 +3204,7 @@
                         if (tlightHistory.length > TLIGHT_WIN) tlightHistory.shift();
                         _tlightPendingLayers = layers;
                         _tlightPendingStep   = tlStep;
+                        if (window.mycFlowUpdate) mycFlowUpdate({ tlight: layers });
 
                         // TTL aggregate anomaly events — sum G/O/R across all layers
                         const totalExperts = layers.length * 12;
@@ -5534,9 +5544,9 @@
             panel.classList.toggle('open', open);
             if (mycBtn) mycBtn.classList.toggle('active', open);
             if (open) {
-                searchInput.focus();
-                // pre-warm engine on first open
-                if (!_data && !_loading) mycSearch();
+                // Activate the default view (TOPOLOGY) on first open
+                if (window.mycSetView) mycSetView('topology');
+                else { searchInput.focus(); if (!_data && !_loading) mycSearch(); }
             }
         };
 
@@ -6430,23 +6440,14 @@
                 const lb=_lbl(ENAMES[e],'left'); lb.position.set(ep[e].x+1.2,ep[e].y,ep[e].z); _scene.add(lb); _eLabels.push(lb);
             }
 
-            // ROUTER node — consensus aggregation, where TTL lives
-            _routerSprite = _node(1.8, new THREE.Color(1.0, 0.65, 0.1));
-            _routerSprite.position.set(RX, 0, 0);
-            _routerSprite.material.opacity = 0.65;
-            _scene.add(_routerSprite);
-            _routerLbl = _lbl('ROUTER','left');
-            _routerLbl.scale.set(2.2, 0.5, 1);
-            _routerLbl.position.set(RX+0.6, 1.7, 0);
-            _scene.add(_routerLbl);
-
-            // Expert→ROUTER convergence lines — Top-3 experts reach consensus here
+            // Expert→OUTPUT merge lines — Top-3 active experts converge directly to output
+            // (No global ROUTER node: each of the 17 layers has its own gate + merge, independent)
             const exrPos=new Float32Array(NE*2*3);
             _exrColArr=new Float32Array(NE*2*3);
             for (let e=0;e<NE;e++) {
                 const b=e*6;
                 exrPos[b]=ep[e].x; exrPos[b+1]=ep[e].y; exrPos[b+2]=ep[e].z;
-                exrPos[b+3]=RX;    exrPos[b+4]=0;        exrPos[b+5]=0;
+                exrPos[b+3]=OUTX;  exrPos[b+4]=0;        exrPos[b+5]=0;
                 _exrColArr[b]=0.5;_exrColArr[b+1]=0.3;_exrColArr[b+2]=0.05;
                 _exrColArr[b+3]=0.5;_exrColArr[b+4]=0.3;_exrColArr[b+5]=0.05;
             }
@@ -6458,16 +6459,12 @@
                 vertexColors:true, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false
             })));
 
-            // ROUTER→OUTPUT single consensus line
-            const routerOutPos=new Float32Array(6);
-            routerOutPos[0]=RX; routerOutPos[1]=0; routerOutPos[2]=0;
-            routerOutPos[3]=OUTX; routerOutPos[4]=0; routerOutPos[5]=0;
-            const routerOutGeo=new THREE.BufferGeometry();
-            routerOutGeo.setAttribute('position',new THREE.BufferAttribute(routerOutPos,3));
-            _scene.add(new THREE.LineSegments(routerOutGeo, new THREE.LineBasicMaterial({
-                color:new THREE.Color(0.7,0.4,1.0), blending:THREE.AdditiveBlending,
-                transparent:true, depthWrite:false, opacity:0.55
-            })));
+            // Template annotation — shown below the diagram
+            const annoLbl = _lbl('MoE-13 Block Template  ×17 independent instances', 'left');
+            annoLbl.scale.set(5.5, 0.52, 1);
+            annoLbl.position.set(-3.8, -10.8, 0);
+            annoLbl.material.opacity = 0.38;
+            _scene.add(annoLbl);
 
             // OUTPUT node + label
             const outNode=_node(1.6, new THREE.Color(0.9,0.5,1.0));
@@ -6623,28 +6620,16 @@
                 _eLabels[e].position.y=ep[e].y+breathe;
             }
 
-            // ROUTER node — pulses with routing consensus; color = Top-3 decisiveness
-            if (_routerSprite) {
-                const sortedW = Array.from(_rw).sort((a,b)=>b-a);
-                const top3sum = sortedW[0]+sortedW[1]+sortedW[2];
-                const consensus = Math.min(1, top3sum); // high = decisive top-3
-                const pb = 0.82 + 0.18 * Math.sin(_t * 1.9);
-                _routerSprite.scale.setScalar((1.0 + 1.4 * consensus) * pb);
-                // Amber → cyan as routing becomes more decisive
-                _routerSprite.material.color.setHSL(0.08 + consensus * 0.42, 1.0, 0.28 + 0.38 * consensus);
-                _routerSprite.material.opacity = 0.35 + 0.55 * consensus;
-                if (_routerLbl) _routerLbl.material.opacity = 0.5 + 0.5 * consensus;
-                // Expert→ROUTER line brightness — active experts glow, inactive fade
-                if (_exrColArr && _scene.userData.exrGeo) {
-                    const top3set = new Set(Array.from({length:NE},(_,e)=>e).sort((a,b)=>_rw[b]-_rw[a]).slice(0,3));
-                    for (let e=0;e<NE;e++) {
-                        const b=e*6;
-                        const act = top3set.has(e) ? Math.min(1,_eg[e]*0.5+_rw[e]*0.7) : 0.04;
-                        _exrColArr[b]=act*0.6; _exrColArr[b+1]=act*0.35; _exrColArr[b+2]=act*0.05;
-                        _exrColArr[b+3]=act*0.55; _exrColArr[b+4]=act*0.32; _exrColArr[b+5]=act*0.04;
-                    }
-                    _scene.userData.exrGeo.attributes.color.needsUpdate=true;
+            // Expert→OUTPUT line brightness — active Top-3 experts glow, inactive fade
+            if (_exrColArr && _scene.userData.exrGeo) {
+                const top3set = new Set(Array.from({length:NE},(_,e)=>e).sort((a,b)=>_rw[b]-_rw[a]).slice(0,3));
+                for (let e=0;e<NE;e++) {
+                    const b=e*6;
+                    const act = top3set.has(e) ? Math.min(1,_eg[e]*0.5+_rw[e]*0.7) : 0.04;
+                    _exrColArr[b]=act*0.6; _exrColArr[b+1]=act*0.35; _exrColArr[b+2]=act*0.05;
+                    _exrColArr[b+3]=act*0.55; _exrColArr[b+4]=act*0.32; _exrColArr[b+5]=act*0.04;
                 }
+                _scene.userData.exrGeo.attributes.color.needsUpdate=true;
             }
 
             // Hot-layer temporal trail
@@ -6788,52 +6773,452 @@
         };
 
         // ── mode toggle ──────────────────────────────────────────────
+        // Keep mycSetMode as a legacy alias (called by secondary tab broadcast handler)
         window.mycSetMode = function(mode) {
-            const c2d  = document.getElementById('myc-canvas');
-            const ct3d = document.getElementById('myc-tok3d-canvas');
-            const c3d  = document.getElementById('myc3d-canvas');
-            const tc   = document.getElementById('myc-token-controls');
-            const st   = document.getElementById('myc-status');
-            const inf  = document.getElementById('myc-info');
-            const rb   = document.getElementById('myc-reload-btn');
-            const bb   = document.getElementById('myc-brain-btn');
-            const tb   = document.getElementById('myc-token-btn');
-            const b2d  = document.getElementById('myc-tok2d-btn');
-            const b3d  = document.getElementById('myc-tok3d-btn');
+            if (mode === 'brain') mycSetView('topology');
+            else if (mode === 'token') mycSetView('token');
+        };
+    })();
 
-            const brain = mode==='brain';
-            // In brain mode hide both token canvases; in token mode restore whichever sub-mode is active
-            if (brain) {
-                c2d.style.display  = 'none';
-                ct3d.style.display = 'none';
-                c3d.style.display  = 'block';
+    // ── Unified view switcher: TOPOLOGY | FLOW | TOKEN ────────────────────
+    window.mycSetView = function(view) {
+        const c2d   = document.getElementById('myc-canvas');
+        const ct3d  = document.getElementById('myc-tok3d-canvas');
+        const c3d   = document.getElementById('myc3d-canvas');
+        const cFlow = document.getElementById('myc-flow-canvas');
+        const tc    = document.getElementById('myc-token-controls');
+        const st    = document.getElementById('myc-status');
+        const inf   = document.getElementById('myc-info');
+        const rb    = document.getElementById('myc-reload-btn');
+        const b3d   = document.getElementById('myc-tok3d-btn');
+
+        // Stop flow if leaving
+        if (view !== 'flow' && window.mycFlowStop) mycFlowStop();
+
+        // Canvas visibility
+        const isToken    = view === 'token';
+        const isFlow     = view === 'flow';
+        const isTopology = view === 'topology';
+
+        if (c2d)   c2d.style.display   = (isToken && !(b3d && b3d.classList.contains('active'))) ? 'block' : 'none';
+        if (ct3d)  ct3d.style.display  = (isToken && b3d && b3d.classList.contains('active'))    ? 'block' : 'none';
+        if (c3d)   c3d.style.display   = isTopology ? 'block' : 'none';
+        if (cFlow) cFlow.style.display  = isFlow    ? 'block' : 'none';
+
+        // Token controls + status only in TOKEN view
+        if (tc)  tc.style.display  = isToken ? 'flex' : 'none';
+        if (st)  st.style.display  = isToken ? ''     : 'none';
+        if (inf) inf.style.display = isToken ? ''     : 'none';
+        if (rb)  rb.style.display  = isToken ? ''     : 'none';
+
+        // Active state on tab buttons
+        ['myc-topo-btn','myc-flow-btn','myc-token-btn'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('active');
+        });
+        const activeBtn = isTopology ? 'myc-topo-btn' : isFlow ? 'myc-flow-btn' : 'myc-token-btn';
+        const ab = document.getElementById(activeBtn);
+        if (ab) ab.classList.add('active');
+
+        // Activate the chosen view
+        if (isTopology) {
+            _theta = 0; _phi = Math.PI / 2; _radius = 22;
+            _camTgt.x = 0; _camTgt.y = 0; _camTgt.z = 0;
+            if (!window.THREE) {
+                const s = document.createElement('script');
+                s.src = '/dashboard/three.min.js';
+                s.onload = () => { _init(); _resize(); };
+                document.head.appendChild(s);
             } else {
-                const tok3dActive = b3d && b3d.classList.contains('active');
-                c2d.style.display  = tok3dActive ? 'none'  : 'block';
-                ct3d.style.display = tok3dActive ? 'block' : 'none';
-                c3d.style.display  = 'none';
+                _init(); _resize(); _applyOrbit();
             }
-            if(tc)  tc.style.display  = brain ? 'none' : 'flex';
-            if(st)  st.style.display  = brain ? 'none' : '';
-            if(inf) inf.style.display = brain ? 'none' : '';
-            if(rb)  rb.style.display  = brain ? 'none' : '';
-            if(bb)  bb.classList.toggle('active', brain);
-            if(tb)  tb.classList.toggle('active', !brain);
+        } else if (isFlow) {
+            if (window.mycFlowInit) mycFlowInit();
+        } else if (isToken) {
+            // Pre-warm token engine on first switch
+            if (window.mycSearch) {
+                const si = document.getElementById('myc-search');
+                if (si) si.focus();
+                if (window._mycData === undefined && !window._mycLoading) mycSearch();
+            }
+        }
+    };
 
-            if (brain) {
-                // Reset to canonical front view every time BRAIN is activated
-                _theta = 0; _phi = Math.PI / 2; _radius = 22;
-                _camTgt.x = 0; _camTgt.y = 0; _camTgt.z = 0;
-                if (!window.THREE) {
-                    const s=document.createElement('script');
-                    s.src='/dashboard/three.min.js';
-                    s.onload=()=>{ _init(); _resize(); };
-                    document.head.appendChild(s);
-                } else {
-                    _init(); _resize(); _applyOrbit();
+    // INSPECT button — open a simple file picker to load eval_results.json or a safetensors
+    window.mycOpenUpload = function() {
+        let inp = document.getElementById('myc-upload-input');
+        if (!inp) {
+            inp = document.createElement('input');
+            inp.id = 'myc-upload-input';
+            inp.type = 'file';
+            inp.accept = '.json,.safetensors';
+            inp.style.display = 'none';
+            document.body.appendChild(inp);
+            inp.addEventListener('change', () => {
+                const file = inp.files[0];
+                if (!file) return;
+                if (file.name.endsWith('.json')) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            mycShowJsonInspector(data, file.name);
+                        } catch(err) {
+                            alert('JSON parse error: ' + err.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                } else if (file.name.endsWith('.safetensors')) {
+                    mycShowSafetensorsInfo(file);
                 }
+                inp.value = '';
+            });
+        }
+        inp.click();
+    };
+
+    window.mycShowJsonInspector = function(data, filename) {
+        const panel = document.getElementById('mycelium-panel');
+        if (!panel || !panel.classList.contains('open')) {
+            if (window.mycToggle) mycToggle();
+        }
+        // Switch to a simple overlay panel inside the inspector
+        let overlay = document.getElementById('myc-inspect-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'myc-inspect-overlay';
+            overlay.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;background:#060d15;overflow:auto;padding:16px;font-family:monospace;font-size:11px;color:#94a3b8;z-index:10;display:none;';
+            panel.appendChild(overlay);
+        }
+        // Hide all canvases, show overlay
+        ['myc-canvas','myc-tok3d-canvas','myc3d-canvas','myc-flow-canvas'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        overlay.style.display = 'block';
+        // Render key fields
+        const rows = [];
+        const fmt = (v) => typeof v === 'object' && v !== null ? JSON.stringify(v, null, 2) : String(v);
+        for (const [k, v] of Object.entries(data)) {
+            const color = k.includes('perplexity') ? '#4ade80' : k.includes('loss') ? '#f59e0b' : '#94a3b8';
+            rows.push(`<div style="margin-bottom:6px"><span style="color:#475569">${k}</span>&nbsp;<span style="color:${color}">${fmt(v)}</span></div>`);
+        }
+        overlay.innerHTML = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;border-bottom:1px solid #1e293b;padding-bottom:8px">
+            <span style="color:#e2e8f0;font-weight:bold">${filename}</span>
+            <button onclick="document.getElementById('myc-inspect-overlay').style.display='none'; mycSetView('topology');" style="margin-left:auto;font-family:inherit;font-size:10px;padding:2px 10px;border:1px solid #334155;background:transparent;color:#64748b;cursor:pointer">close</button>
+        </div>${rows.join('')}`;
+    };
+
+    window.mycShowSafetensorsInfo = function(file) {
+        // Read the first 8 bytes (header length) then the JSON header
+        const reader = new FileReader();
+        reader.onload = e => {
+            const buf = e.target.result;
+            const view = new DataView(buf);
+            const headerLen = Number(view.getBigUint64(0, true));
+            const headerBytes = new Uint8Array(buf, 8, Math.min(headerLen, 1024*1024));
+            try {
+                const header = JSON.parse(new TextDecoder().decode(headerBytes));
+                const tensors = Object.entries(header).filter(([k]) => k !== '__metadata__');
+                const meta = header['__metadata__'] || {};
+                const data = {
+                    filename: file.name,
+                    file_size_mb: (file.size / 1024 / 1024).toFixed(1) + ' MB',
+                    tensor_count: tensors.length,
+                    metadata: meta,
+                    tensors: Object.fromEntries(tensors.slice(0, 30).map(([k, v]) => [k, `${v.dtype} [${v.shape.join('×')}]`])),
+                };
+                mycShowJsonInspector(data, file.name);
+            } catch(err) {
+                alert('safetensors header parse error: ' + err.message);
             }
         };
+        reader.readAsArrayBuffer(file.slice(0, 8 + 2*1024*1024));
+    };
+
+    // ── Flow View (2D canvas — actual per-layer forward pass) ─────────────
+    (function () {
+        'use strict';
+
+        const NL = 17, NE = 12;
+        const BG = '#060d15';
+        const LHUE = Array.from({length:NL}, (_,i) => i/NL);
+        const ENAMES = ['SYN','SEM','CTX','INF','MEM','GEN','LOG','LNG','ABS','PLN','CMP','INT'];
+
+        let _canvas = null, _ctx = null, _raf = null, _active = false, _t = 0;
+        const _layerStates = Array.from({length:NL}, () => Array(NE).fill('O'));
+        const _lt = new Float32Array(NL).fill(0.05);
+
+        function _hsl(h, s, l) { return `hsl(${(h*360).toFixed(0)},${(s*100).toFixed(0)}%,${(l*100).toFixed(0)}%)`; }
+
+        window.mycFlowUpdate = function({ tlight, grad } = {}) {
+            if (tlight) {
+                for (const l of tlight) {
+                    if (l.layer < NL) _layerStates[l.layer] = Array.from(l.states);
+                }
+            }
+            if (grad) {
+                const mx = Math.max(...grad.layerNorms, 1e-8);
+                for (let i = 0; i < Math.min(NL, grad.layerNorms.length); i++)
+                    _lt[i] = grad.layerNorms[i] / mx;
+            }
+        };
+
+        function _render() {
+            if (!_active || !_canvas || !_ctx) return;
+            const dpr = window.devicePixelRatio || 1;
+            const W = _canvas.width / dpr, H = _canvas.height / dpr;
+            _ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            _ctx.fillStyle = BG;
+            _ctx.fillRect(0, 0, W, H);
+
+            const PL = 12, PR = 10;
+            const HEADER_H = 26, FOOTER_H = 26, LEGEND_H = 16;
+            const usableH = H - HEADER_H - FOOTER_H - LEGEND_H - 20;
+            const ROW_H   = Math.max(18, Math.min(30, usableH / NL));
+            const ROWS_Y  = HEADER_H + 10;
+
+            // Column layout
+            const STREAM_X  = PL + 7;
+            const LLABEL_X  = PL + 19;
+            const ATTN_X    = LLABEL_X + 24;
+            const ATTN_W    = 26;
+            const GATE_X    = ATTN_X + ATTN_W + 14;
+            const GATE_W    = 26;
+            const EXPERTS_X = GATE_X + GATE_W + 12;
+            const DOT_R     = Math.min(4.5, (W - EXPERTS_X - PR) / NE / 2 - 1);
+            const DOT_STEP  = (W - EXPERTS_X - PR) / NE;
+
+            // Token animation — 0→1 over ~3.5 s, continuous
+            const phase = (_t * 0.285) % 1.0;
+            const tokenLayer = phase * NL;
+
+            // ── EMBED header ──────────────────────────────────────────
+            _ctx.fillStyle = 'rgba(32,140,255,0.07)';
+            _ctx.fillRect(PL, 3, W - PL - PR, HEADER_H - 2);
+            _ctx.font = 'bold 10px monospace';
+            _ctx.textAlign = 'left';
+            _ctx.fillStyle = 'rgba(60,160,255,0.65)';
+            _ctx.fillText('EMBED', PL + 7, 3 + HEADER_H * 0.62);
+            _ctx.font = '9px monospace';
+            _ctx.fillStyle = 'rgba(80,140,200,0.38)';
+            _ctx.fillText('256d token embedding', PL + 57, 3 + HEADER_H * 0.62);
+
+            // ── Layer rows ────────────────────────────────────────────
+            for (let i = 0; i < NL; i++) {
+                const ry = ROWS_Y + i * ROW_H;
+                const cy = ry + ROW_H * 0.52;
+                const act = _lt[i] || 0.05;
+                const hue = LHUE[i];
+                const states = _layerStates[i];
+                const prox   = Math.max(0, 1 - Math.abs(tokenLayer - i) * 2.2);
+
+                // Row highlight when token passes through
+                if (prox > 0.05) {
+                    _ctx.fillStyle = `rgba(255,255,255,${prox * 0.035})`;
+                    _ctx.fillRect(PL, ry, W - PL - PR, ROW_H - 1);
+                }
+
+                // Stream dot (residual connection indicator)
+                _ctx.beginPath();
+                _ctx.arc(STREAM_X, cy, 2.8, 0, Math.PI*2);
+                _ctx.fillStyle = _hsl(hue, 0.85, 0.18 + 0.48*act);
+                _ctx.fill();
+
+                // Layer label
+                _ctx.font = `${ROW_H < 22 ? 8 : 9}px monospace`;
+                _ctx.textAlign = 'left';
+                _ctx.fillStyle = _hsl(hue, 0.55, 0.32 + 0.32*act);
+                _ctx.fillText('L' + i, LLABEL_X, cy + 3);
+
+                // Arrow → ATTN
+                _ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+                _ctx.lineWidth = 0.7;
+                _ctx.beginPath();
+                _ctx.moveTo(LLABEL_X + (i >= 10 ? 16 : 12), cy);
+                _ctx.lineTo(ATTN_X - 1, cy);
+                _ctx.stroke();
+
+                // ATTN block
+                const attnA = 0.1 + 0.22*act;
+                _ctx.fillStyle = `rgba(50,110,200,${attnA})`;
+                _ctx.strokeStyle = `rgba(70,140,230,${attnA * 1.8})`;
+                _ctx.lineWidth = 0.7;
+                _ctx.beginPath();
+                if (_ctx.roundRect) _ctx.roundRect(ATTN_X, cy - ROW_H*0.3, ATTN_W, ROW_H*0.6, 2);
+                else _ctx.rect(ATTN_X, cy - ROW_H*0.3, ATTN_W, ROW_H*0.6);
+                _ctx.fill(); _ctx.stroke();
+                _ctx.font = `${ROW_H < 22 ? 6 : 7}px monospace`;
+                _ctx.textAlign = 'center';
+                _ctx.fillStyle = `rgba(110,170,255,${0.35 + 0.35*act})`;
+                _ctx.fillText('ATTN', ATTN_X + ATTN_W/2, cy + 2.5);
+
+                // Arrow → GATE
+                _ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+                _ctx.lineWidth = 0.7;
+                _ctx.beginPath();
+                _ctx.moveTo(ATTN_X + ATTN_W + 1, cy);
+                _ctx.lineTo(GATE_X - 1, cy);
+                _ctx.stroke();
+
+                // GATE block — colored by layer hue, brightens when token is near
+                const gateL = 0.13 + 0.38*act + 0.28*prox;
+                _ctx.fillStyle = _hsl(hue, 0.75, gateL * 0.45);
+                _ctx.strokeStyle = _hsl(hue, 0.9, gateL * 0.65);
+                _ctx.lineWidth = prox > 0.4 ? 1.2 : 0.8;
+                _ctx.beginPath();
+                if (_ctx.roundRect) _ctx.roundRect(GATE_X, cy - ROW_H*0.3, GATE_W, ROW_H*0.6, 2);
+                else _ctx.rect(GATE_X, cy - ROW_H*0.3, GATE_W, ROW_H*0.6);
+                _ctx.fill(); _ctx.stroke();
+                _ctx.font = `${ROW_H < 22 ? 6 : 7}px monospace`;
+                _ctx.textAlign = 'center';
+                _ctx.fillStyle = _hsl(hue, 0.45, 0.62 + 0.22*prox);
+                _ctx.fillText('GATE', GATE_X + GATE_W/2, cy + 2.5);
+
+                // Expert dots
+                for (let e = 0; e < NE; e++) {
+                    const ex  = EXPERTS_X + e * DOT_STEP + DOT_STEP * 0.5;
+                    const st  = states[e] || 'O';
+
+                    // Gate→expert flash line when token is near and expert is active
+                    if (prox > 0.45 && st === 'G') {
+                        _ctx.beginPath();
+                        _ctx.moveTo(GATE_X + GATE_W, cy);
+                        _ctx.lineTo(ex, cy);
+                        _ctx.strokeStyle = `rgba(34,197,94,${prox * 0.35})`;
+                        _ctx.lineWidth = 0.8;
+                        _ctx.stroke();
+                    } else if (prox > 0.45 && st === 'R') {
+                        _ctx.beginPath();
+                        _ctx.moveTo(GATE_X + GATE_W, cy);
+                        _ctx.lineTo(ex, cy);
+                        _ctx.strokeStyle = `rgba(239,68,68,${prox * 0.2})`;
+                        _ctx.lineWidth = 0.5;
+                        _ctx.stroke();
+                    }
+
+                    _ctx.beginPath();
+                    _ctx.arc(ex, cy, DOT_R, 0, Math.PI*2);
+                    let dc;
+                    if (st === 'G') {
+                        const pulse = 0.55 + 0.28*Math.sin(_t*2.6 + i*0.38 + e*0.85);
+                        dc = `rgba(34,197,94,${pulse})`;
+                    } else if (st === 'R') {
+                        dc = 'rgba(239,68,68,0.55)';
+                    } else {
+                        dc = 'rgba(255,255,255,0.07)';
+                    }
+                    _ctx.fillStyle = dc;
+                    _ctx.fill();
+                }
+            }
+
+            // ── Token particle ────────────────────────────────────────
+            const tokY = ROWS_Y + tokenLayer * ROW_H + ROW_H * 0.52;
+            // Trail
+            for (let k = 1; k <= 6; k++) {
+                const tph = ((phase - k * 0.011 + 1) % 1) * NL;
+                const ty  = ROWS_Y + tph * ROW_H + ROW_H * 0.52;
+                _ctx.beginPath();
+                _ctx.arc(STREAM_X, ty, 2.2 - k*0.2, 0, Math.PI*2);
+                _ctx.fillStyle = `rgba(50,210,255,${(1-k/7)*0.55})`;
+                _ctx.fill();
+            }
+            // Token head
+            _ctx.beginPath();
+            _ctx.arc(STREAM_X, tokY, 4, 0, Math.PI*2);
+            _ctx.fillStyle = `rgba(40,200,255,${0.88 + 0.12*Math.sin(_t*4)})`;
+            _ctx.fill();
+            _ctx.beginPath();
+            _ctx.arc(STREAM_X, tokY, 7, 0, Math.PI*2);
+            _ctx.fillStyle = 'rgba(40,200,255,0.12)';
+            _ctx.fill();
+
+            // Residual stream trace
+            const sg = _ctx.createLinearGradient(STREAM_X, ROWS_Y, STREAM_X, ROWS_Y + NL*ROW_H);
+            sg.addColorStop(0, 'rgba(30,150,255,0.04)');
+            sg.addColorStop(Math.max(0, phase - 0.02), 'rgba(30,150,255,0.04)');
+            sg.addColorStop(phase, 'rgba(30,150,255,0.22)');
+            sg.addColorStop(Math.min(1, phase + 0.04), 'rgba(30,150,255,0.0)');
+            sg.addColorStop(1, 'rgba(30,150,255,0.03)');
+            _ctx.strokeStyle = sg;
+            _ctx.lineWidth = 1;
+            _ctx.beginPath();
+            _ctx.moveTo(STREAM_X, ROWS_Y);
+            _ctx.lineTo(STREAM_X, ROWS_Y + NL * ROW_H);
+            _ctx.stroke();
+
+            // ── OUTPUT footer ──────────────────────────────────────────
+            const outY = ROWS_Y + NL * ROW_H + 6;
+            _ctx.fillStyle = 'rgba(140,70,255,0.07)';
+            _ctx.fillRect(PL, outY, W - PL - PR, FOOTER_H - 2);
+            _ctx.font = 'bold 10px monospace';
+            _ctx.textAlign = 'left';
+            _ctx.fillStyle = 'rgba(160,90,255,0.65)';
+            _ctx.fillText('OUTPUT', PL + 7, outY + FOOTER_H * 0.62);
+            _ctx.font = '9px monospace';
+            _ctx.fillStyle = 'rgba(130,80,200,0.38)';
+            _ctx.fillText('logits 32k · lm_head', PL + 68, outY + FOOTER_H * 0.62);
+
+            // ── Legend ────────────────────────────────────────────────
+            const legY = outY + FOOTER_H + 2;
+            if (legY + LEGEND_H < H) {
+                _ctx.font = '7px monospace';
+                _ctx.textAlign = 'left';
+                const items = [
+                    { color:'rgba(34,197,94,0.8)',  label:'underloaded (gate-boosted)' },
+                    { color:'rgba(239,68,68,0.7)',  label:'suppressed' },
+                    { color:'rgba(255,255,255,0.15)', label:'normal' },
+                ];
+                let lx = PL;
+                for (const it of items) {
+                    _ctx.beginPath(); _ctx.arc(lx + 4, legY + 5, 3.5, 0, Math.PI*2);
+                    _ctx.fillStyle = it.color; _ctx.fill();
+                    _ctx.fillStyle = it.color.replace(/[\d.]+\)$/, '0.55)');
+                    _ctx.fillText(it.label, lx + 11, legY + 8);
+                    lx += _ctx.measureText(it.label).width + 24;
+                }
+                _ctx.fillStyle = 'rgba(255,255,255,0.18)';
+                _ctx.textAlign = 'right';
+                _ctx.fillText('17 routing decisions · 221 MoE modules', W - PR, legY + 8);
+            }
+        }
+
+        function _tick() {
+            if (!_active) return;
+            _t += 0.016;
+            _render();
+            _raf = requestAnimationFrame(_tick);
+        }
+
+        function _resize() {
+            if (!_canvas) return;
+            const dpr  = window.devicePixelRatio || 1;
+            const rect = _canvas.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                _canvas.width  = rect.width  * dpr;
+                _canvas.height = rect.height * dpr;
+            }
+            if (_active) _render();
+        }
+
+        window.mycFlowInit = function() {
+            if (!_canvas) {
+                _canvas = document.getElementById('myc-flow-canvas');
+                if (!_canvas) return;
+                _ctx = _canvas.getContext('2d');
+                new ResizeObserver(_resize).observe(_canvas);
+            }
+            _active = true;
+            _resize();
+            if (!_raf) _tick();
+        };
+
+        window.mycFlowStop = function() {
+            _active = false;
+            if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
+        };
+
     })();
 
     // ── Multi-tab layout system ────────────────────────────────────────

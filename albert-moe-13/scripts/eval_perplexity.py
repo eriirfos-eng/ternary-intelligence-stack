@@ -1,27 +1,19 @@
 #!/usr/bin/env python3
 """
-Perplexity evaluation harness for Albert MoE-13.
-Computes held-out perplexity on a test split and reports it against
-a character-level baseline — the minimum credible ML benchmark for SPRIND.
+Perplexity evaluation harness for Albert MoE-13 v3.0.
+Computes held-out perplexity on the WikiText-2 eval sample and reports
+against a random-initialization baseline — the SPRIND audit artifact.
+
+The eval corpus (eval_sample.txt) is a WikiText-2 held-out split that
+was never seen during training. This is the same file referenced in
+MODEL_CARD.md under "Primary metric."
 
 Usage:
-    python3 scripts/eval_perplexity.py --checkpoint models/bible_ternary_v2.0.0.safetensors
-    python3 scripts/eval_perplexity.py --all   # runs all checkpoints in models/
+    cd albert-moe-13/
+    python3 scripts/eval_perplexity.py
+    python3 scripts/eval_perplexity.py --checkpoint models/albert_v3.0.best.safetensors
 
-Output (stdout + eval_results.json):
-    {
-      "checkpoint": "...",
-      "test_corpus": "data/corpus/bible.txt",
-      "test_tokens": 12480,
-      "avg_loss": 6.1025,
-      "perplexity": 447.2,
-      "baseline_perplexity": 1847.3,   # unigram baseline on same test set
-      "reduction_vs_baseline": "75.8%",
-      "timestamp": "2026-05-07T..."
-    }
-
-The albert-test binary does the actual forward pass; this script handles
-the test split, baseline, and structured output for the SPRIND audit trail.
+Output: eval_results.json (published as SPRIND benchmark artifact)
 """
 
 import subprocess
@@ -30,161 +22,154 @@ import math
 import os
 import sys
 import argparse
-import random
 from datetime import datetime, timezone
 
-CORPUS_PATH   = "data/corpus/stage_3/bible.txt"
+EVAL_CORPUS   = "eval_sample.txt"          # held-out WikiText-2 — never seen in training
 VOCAB_PATH    = "data/vocab_v3.json"
-ALBERT_TEST   = "target/release/moe-test"   # relative to albert-moe-13/ (after os.chdir)
+ALBERT_TEST   = "target/release/moe-test"
 EVAL_OUT      = "eval_results.json"
-TEST_FRACTION  = 0.05   # hold out 5% of tokens
-RANDOM_SEED    = 42
-MAX_EVAL_CHARS = 6000   # cap eval input so CPU eval completes in < 5 min (~10 windows)
+RANDOM_SEED   = 42                          # for reproducibility record
 
-def load_corpus(path):
-    with open(path, encoding="utf-8") as f:
-        return f.read()
+VOCAB_SIZE    = 32000                       # v3.0 BPE vocabulary
+RANDOM_BASELINE_LOSS = math.log(VOCAB_SIZE) # ln(32000) = 10.3730 — uniform over vocab
+# Cap eval windows so CPU eval completes in < 5 min.
+# 50 windows × 256 ctx = 12,800 tokens — statistically robust for perplexity.
+# Remove or raise this for a full-corpus run on GPU.
+MAX_EVAL_WINDOWS = 50
 
-def split_corpus(text, test_fraction=TEST_FRACTION, seed=RANDOM_SEED):
-    """Deterministic train/test split by line. Same seed = same split every run."""
-    lines = [l for l in text.splitlines() if l.strip()]
-    random.seed(seed)
-    random.shuffle(lines)
-    split = int(len(lines) * (1 - test_fraction))
-    test_lines = lines[split:]
-    return "\n".join(test_lines)
 
-def unigram_baseline_perplexity(test_text, vocab_path):
-    """
-    Unigram baseline: assign uniform probability 1/vocab_size to every token.
-    perplexity = vocab_size (upper bound — a model that learned nothing).
-    """
+def vocab_size_from_file(vocab_path):
     with open(vocab_path, encoding="utf-8") as f:
         vocab = json.load(f)
-    # HuggingFace tokenizer JSON nests vocab under model.vocab
-    if isinstance(vocab, dict) and 'model' in vocab and 'vocab' in vocab['model']:
-        vocab_size = len(vocab['model']['vocab'])
-    else:
-        vocab_size = len(vocab)
-    return float(vocab_size)
+    if isinstance(vocab, dict) and "model" in vocab and "vocab" in vocab["model"]:
+        return len(vocab["model"]["vocab"])
+    return len(vocab)
 
-def run_albert_eval(test_text, checkpoint):
+
+def run_eval(eval_text_path, checkpoint):
     """
-    Call albert-test in eval mode — reads stdin tokens, returns avg cross-entropy.
-    Requires albert-test to support --eval-mode flag (added below if missing).
-    Falls back to estimating from training log if binary doesn't support eval mode.
+    Call moe-test --eval to compute avg cross-entropy on the eval corpus.
+    moe-test outputs:
+        AVG_LOSS: X.XXXXXX
+        TOKENS_EVALUATED: N
+        PERPLEXITY: X.XX
     """
-    # Cap to MAX_EVAL_CHARS so CPU eval completes in a reasonable time.
-    if len(test_text) > MAX_EVAL_CHARS:
-        test_text = test_text[:MAX_EVAL_CHARS]
-
-    # Write test text to temp file
-    tmp = "/tmp/albert_eval_input.txt"
-    with open(tmp, "w", encoding="utf-8") as f:
-        f.write(test_text)
-
     result = subprocess.run(
-        [ALBERT_TEST, "--eval", tmp, "--checkpoint", checkpoint],
+        [ALBERT_TEST, "--eval", eval_text_path, "--checkpoint", checkpoint,
+         f"--max-windows={MAX_EVAL_WINDOWS}"],
         capture_output=True, text=True, timeout=600
     )
     if result.returncode != 0:
-        return None, result.stderr
+        print(f"  stderr: {result.stderr[:500]}", file=sys.stderr)
+        return None, None, result.stderr
 
-    # Parse "AVG_LOSS: 6.1025" from stdout
+    avg_loss = None
+    tokens_evaluated = None
     for line in result.stdout.splitlines():
         if line.startswith("AVG_LOSS:"):
             avg_loss = float(line.split(":")[1].strip())
-            return avg_loss, None
-    return None, "AVG_LOSS line not found in output"
+        if line.startswith("TOKENS_EVALUATED:"):
+            tokens_evaluated = int(line.split(":")[1].strip())
 
-def estimate_from_training_log():
-    """
-    Fallback: read best epoch avg loss from training log when eval binary unavailable.
-    This is an ESTIMATE on training data — clearly labelled in output.
-    """
-    log_path = "dashboard/training.log"
-    if not os.path.exists(log_path):
-        return None
-    best = float("inf")
-    with open(log_path, encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            if "Avg Loss:" in line:
-                try:
-                    val = float(line.split("Avg Loss:")[1].split("|")[0].strip())
-                    best = min(best, val)
-                except Exception:
-                    pass
-    return best if best < float("inf") else None
+    if avg_loss is None:
+        return None, None, f"AVG_LOSS not found in output:\n{result.stdout[:300]}"
+    return avg_loss, tokens_evaluated, None
+
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--checkpoint", default="models/bible_ternary_v2.0.0.safetensors")
-    parser.add_argument("--all", action="store_true", help="eval all checkpoints in models/")
+    parser = argparse.ArgumentParser(description="Albert MoE-13 held-out perplexity eval")
+    parser.add_argument("--checkpoint", default="models/albert_v3.0.best.safetensors",
+                        help="Checkpoint to evaluate (default: v3.0 best)")
     args = parser.parse_args()
 
     os.chdir(os.path.join(os.path.dirname(__file__), ".."))
 
-    checkpoints = []
-    if args.all:
-        checkpoints = [
-            os.path.join("models", f)
-            for f in os.listdir("models")
-            if f.endswith(".safetensors")
-        ]
-    else:
-        checkpoints = [args.checkpoint]
+    if not os.path.exists(EVAL_CORPUS):
+        print(f"ERROR: eval corpus not found at {EVAL_CORPUS}", file=sys.stderr)
+        sys.exit(1)
+    if not os.path.exists(args.checkpoint):
+        print(f"ERROR: checkpoint not found at {args.checkpoint}", file=sys.stderr)
+        sys.exit(1)
+    if not os.path.exists(ALBERT_TEST):
+        print(f"ERROR: moe-test binary not found at {ALBERT_TEST} — run: cargo build --release -p moe-test", file=sys.stderr)
+        sys.exit(1)
 
-    all_results = []
+    actual_vocab_size = vocab_size_from_file(VOCAB_PATH)
+    corpus_chars = os.path.getsize(EVAL_CORPUS)
+    corpus_lines = sum(1 for _ in open(EVAL_CORPUS, encoding="utf-8"))
 
-    for ckpt in checkpoints:
-        print(f"\n── Evaluating: {ckpt} ──")
+    print(f"=== Albert MoE-13 — Held-out Perplexity Eval ===")
+    print(f"Checkpoint : {args.checkpoint}")
+    print(f"Eval corpus: {EVAL_CORPUS} ({corpus_lines} lines, {corpus_chars:,} bytes)")
+    print(f"Vocabulary : {actual_vocab_size:,} tokens")
+    print(f"Baseline   : ln({actual_vocab_size}) = {math.log(actual_vocab_size):.4f} (random init)")
+    print()
+    print("Running evaluation (forward pass over all eval windows)...")
 
-        corpus = load_corpus(CORPUS_PATH)
-        test_text = split_corpus(corpus)
-        test_tokens = len(test_text.split())
+    avg_loss, tokens_evaluated, err = run_eval(EVAL_CORPUS, args.checkpoint)
 
-        baseline_ppl = unigram_baseline_perplexity(test_text, VOCAB_PATH)
+    if avg_loss is None:
+        print(f"Evaluation failed: {err}", file=sys.stderr)
+        sys.exit(1)
 
-        avg_loss, err = run_albert_eval(test_text, ckpt)
-        source = "albert-test --eval"
+    perplexity        = math.exp(avg_loss)
+    random_ppl        = float(actual_vocab_size)
+    random_loss       = math.log(actual_vocab_size)
+    reduction_vs_random = (1.0 - perplexity / random_ppl) * 100.0
+    loss_reduction      = random_loss - avg_loss
 
-        if avg_loss is None:
-            print(f"  albert-test eval mode not available ({err}), using training log estimate.")
-            avg_loss = estimate_from_training_log()
-            source = "training_log_estimate"
+    print()
+    print("=== Results ===")
+    print(f"  Avg CE loss (held-out)  : {avg_loss:.4f}")
+    print(f"  Perplexity (held-out)   : {perplexity:.1f}")
+    print(f"  Random-init baseline    : loss {random_loss:.4f}  PPL {random_ppl:.0f}")
+    print(f"  Loss reduction vs random: {loss_reduction:.4f} nats  ({reduction_vs_random:.1f}% PPL reduction)")
+    if tokens_evaluated:
+        print(f"  Tokens evaluated        : {tokens_evaluated:,}")
+    print()
 
-        if avg_loss is None:
-            print("  No loss data available. Skipping.")
-            continue
-
-        perplexity = math.exp(avg_loss)
-        reduction = (1.0 - perplexity / baseline_ppl) * 100.0
-
-        result = {
-            "checkpoint":            ckpt,
-            "test_corpus":           CORPUS_PATH,
-            "test_tokens":           test_tokens,
-            "avg_loss":              round(avg_loss, 4),
-            "perplexity":            round(perplexity, 1),
-            "baseline_perplexity":   round(baseline_ppl, 1),
-            "reduction_vs_baseline": f"{reduction:.1f}%",
-            "loss_source":           source,
-            "split_seed":            RANDOM_SEED,
-            "split_fraction":        TEST_FRACTION,
-            "timestamp":             datetime.now(timezone.utc).isoformat(),
+    result = {
+        "model": "albert-moe-13",
+        "version": "v3.0",
+        "architecture": "17L · 256H · 12E · Top-3 · 256CTX · 32000V · ternary weights",
+        "checkpoint": args.checkpoint,
+        "eval_corpus": EVAL_CORPUS,
+        "eval_corpus_description": "WikiText-2 held-out split — not seen during training",
+        "corpus_lines": corpus_lines,
+        "corpus_bytes": corpus_chars,
+        "tokens_evaluated": tokens_evaluated,
+        "vocab_size": actual_vocab_size,
+        "avg_loss_held_out": round(avg_loss, 6),
+        "perplexity_held_out": round(perplexity, 2),
+        "baseline_random_init": {
+            "description": "Uniform distribution over vocabulary — ln(vocab_size)",
+            "loss": round(random_loss, 4),
+            "perplexity": actual_vocab_size,
+        },
+        "f32_weight_note": (
+            "STE training operates in F32 throughout; ternary quantization is applied "
+            "at inference time via prepare_inference(). Training-time gradient updates "
+            "use F32 weight copies — the ternary weights are a projection of the F32 "
+            "trajectory, not a separately-trained model. A dedicated F32-weight inference "
+            "comparison is planned post-funding."
+        ),
+        "loss_reduction_vs_random_nats": round(loss_reduction, 4),
+        "ppl_reduction_vs_random_pct": round(reduction_vs_random, 2),
+        "random_seed": RANDOM_SEED,
+        "eval_binary": ALBERT_TEST,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "training_atl_reference": {
+            "epoch_atl": 9.7884,
+            "epoch_atl_epoch": 2116,
+            "batch_atl": 9.6235,
+            "note": "Training-set ATL for reference; held-out perplexity above is on unseen data"
         }
-        all_results.append(result)
+    }
 
-        print(f"  Avg Loss:            {avg_loss:.4f}")
-        print(f"  Perplexity:          {perplexity:.1f}")
-        print(f"  Baseline (unigram):  {baseline_ppl:.1f}")
-        print(f"  Reduction:           {reduction:.1f}%")
-        print(f"  Source:              {source}")
+    with open(EVAL_OUT, "w") as f:
+        json.dump(result, f, indent=2)
+    print(f"Results written to {EVAL_OUT}")
 
-    if all_results:
-        with open(EVAL_OUT, "w") as f:
-            json.dump(all_results if len(all_results) > 1 else all_results[0], f, indent=2)
-        print(f"\nResults written to {EVAL_OUT}")
 
 if __name__ == "__main__":
     main()
