@@ -1453,7 +1453,7 @@ the new vocabulary:
 \begin{equation}
   H_{\text{random}} = \ln(32000) \approx 10.373
 \end{equation}
-Albert v3.0 currently operates at loss $\approx 10.35$---below the random
+albert.\ v3.0 currently operates at loss $\approx 10.35$---below the random
 baseline---confirming that multilingual structure is being extracted even in the
 early epochs of vocabulary transfer.
 
@@ -2225,6 +2225,32 @@ threshold). The hardware is the only ceiling; 610 layers is a precomputed entry,
 \subsection{Cross-Lingual Semantic Broadcasting}
 \label{subsec:cross_lingual}
 
+Observation of albert.'s internal representations over the v3.0 training arc has
+identified a consistent six-phase developmental sequence, reproduced across the
+five surgery transitions from 12L to 17L:
+
+\begin{enumerate}
+  \item \textbf{Byte chaos} --- loss near $\ln(\text{vocab})$; routing uniform; no
+        statistical structure yet extracted.
+  \item \textbf{Token formation} --- loss drops below random baseline; token boundaries
+        stabilise; single-language compression begins.
+  \item \textbf{Repetition collapse} --- routing homogeneity (Nash equilibrium freeze);
+        experts become identical; gradient through MLPs stalls.
+  \item \textbf{Function word emergence} --- seed bias intervention resolves expert
+        differentiation; function words and cross-language closed-class items cluster;
+        routing entropy rises.
+  \item \textbf{Cross-lingual semantic broadcasting} --- concept-level clusters form
+        across all eight languages simultaneously; the architecture precedes fluency.
+  \item \textbf{Language consolidation} --- fluency and per-language compression
+        tighten; surgery eligibility grows as plateau gate conditions approach.
+\end{enumerate}
+
+Phases 1--4 are documented in the per-phase methodology account
+(\S\ref{subsubsec:phase1}--\S\ref{subsubsec:phase4}). Phase~5 was
+confirmed at ep2041 via the TOKEN mode of the Mycelium Inspector
+(\S\ref{subsec:mycelium_inspector}). Phase~6 is the ongoing training
+objective.
+
 At Global Epoch 2041, a direct inspection of albert.'s token embedding space via UMAP
 projection revealed an emergent property not explicitly trained for: \emph{cross-lingual
 semantic broadcasting}. Semantically related tokens from eight different languages
@@ -2242,7 +2268,7 @@ simultaneous meanings.
 
 \textbf{``death''}: Neighbours include \emph{amen}, \emph{veil}, and \emph{0} (zero as
 finality), alongside \emph{Ägypt} (burial culture), \emph{Wirkung} (DE: effect), and
-multilingual variations. Albert has placed religious closure (\emph{amen}), conceptual
+multilingual variations. albert.\ has placed religious closure (\emph{amen}), conceptual
 boundary (\emph{veil}), and mathematical finality (\emph{0}) in the same semantic
 neighbourhood without instruction. The 3D geometry collapses inward---correct for a
 concept of finality.
