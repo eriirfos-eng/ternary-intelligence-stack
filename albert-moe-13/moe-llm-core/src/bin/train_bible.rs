@@ -1924,6 +1924,7 @@ fn train_cycle(
             collapse_streak = 0; // healthy epoch resets the streak
         }
 
+        evolution_manager.check_generation_timeout();
         if evolution_manager.should_evolve(config.num_layers, mycelium_consecutive_hot) {
             evolution_manager.reset_history();
             return Ok(true);
@@ -2206,16 +2207,16 @@ fn main() -> Result<()> {
         )?;
         if needs_evolution {
             perform_surgery(config_path, checkpoint_path, best_path, &device, &flags.root)?;
-            evolution_manager.promote_fib_target();
-            evolution_manager.save_state(evo_state_path);
-            mycelium.on_layer_added();
-            wald.on_surgery();
-            // Log the MAND event so the dashboard can mark surgery epochs visually.
             let post_layers: usize = fs::read_to_string(config_path)
                 .ok()
                 .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
                 .and_then(|v| v["num_layers"].as_u64())
                 .unwrap_or(0) as usize;
+            evolution_manager.promote_fib_target(post_layers);
+            evolution_manager.save_state(evo_state_path);
+            mycelium.on_layer_added();
+            wald.on_surgery();
+            // Log the MAND event so the dashboard can mark surgery epochs visually.
             if let Ok(mut f) = OpenOptions::new().create(true).append(true).open("dashboard/training.log") {
                 let mand_line = format_mandelbrot_line(
                     0,  // epoch not tracked at outer-loop scope; MAND line in perform_surgery has the detail

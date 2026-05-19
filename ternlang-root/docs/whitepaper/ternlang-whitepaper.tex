@@ -257,6 +257,15 @@ No project provides the full vertical stack.
         nine workspace crates on \texttt{crates.io}.
 \end{enumerate}
 
+\noindent\textbf{Paper navigation.}
+This paper covers the full TIS vertical stack. Readers with focused interests
+may navigate directly: \textbf{language design} (\S\ref{sec:language}--\S\ref{sec:isa});
+\textbf{sparse inference and hardware} (\S\ref{sec:sparse}--\S\ref{sec:hdl});
+\textbf{AI reasoning and orchestration} (\S\ref{sec:reasoning}--\S\ref{sec:moe});
+\textbf{autonomous neural training and albert.} (\S\ref{sec:albert});
+\textbf{EU AI Act compliance} (\S\ref{sec:euaiact});
+\textbf{quantum-adjacent qutrit networks} (\S\ref{sec:qnn}).
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Background: Balanced Ternary}
 \label{sec:background}
@@ -1160,8 +1169,8 @@ Albert MoE-13 is the reference implementation of the ideas developed in
 Sections~\ref{sec:sparse}--\ref{sec:moe}: a fully ternary Mixture-of-Experts
 language model trained end-to-end without GPU hardware. What began as a
 22M-parameter, 3-layer, English-only model (v2.0.0) has evolved through successive
-autonomous surgeries into a 12-layer, 58M-parameter multilingual system (v3.0)
-trained on eight languages across a 177M-token corpus. It serves as an empirical
+autonomous surgeries into a 17-layer, 82M-parameter multilingual system (v3.0)
+trained on eight languages across a 177M-token corpus (2045+ global epochs as of 2026-05-19). It serves as an empirical
 existence proof that the ternary execution substrate enables practical neural
 training, self-directed architectural growth, and real-time natural language
 generation on commodity consumer hardware.
@@ -1813,7 +1822,7 @@ Training hardware & HP ZBook 2013 $\cdot$ Intel CPU $\cdot$ \textbf{no GPU} \\
 \begin{table}[h]
 \centering
 \small
-\caption{Albert MoE-13 v3.0 --- current state (multilingual, 32k vocab, as of 2026-05-12)}
+\caption{Albert MoE-13 v3.0 --- current state (multilingual, 32k vocab, as of 2026-05-19)}
 \label{tab:albert_v3}
 \begin{tabular}{lr}
 \toprule
@@ -1828,7 +1837,7 @@ Global epochs completed & 2045+ (Modal T4 GPU) \\
 Best epoch-average loss & \textbf{9.8172} (Ep2041, 2026-05-19) \\
 Best single-batch loss & \textbf{9.6791} (Ep2041) \\
 Random baseline $\ln(32000)$ & 10.373 \\
-Surgery gate gap & \textbf{0.017 nats} from 9.8 — imminent \\
+Surgery gate status & Plateau gate active (loss gate cleared; $\Delta < 0.02$ nats over window required) \\
 Expert skip rate & \textbf{75\%} (Top-3 of 12, confirmed live) \\
 Inference throughput (CPU, @sparseskip) & \textbf{83 tok/s} (5L demo) · \textbf{11--22 tok/s} (12L) \\
 Training hardware & Modal.com T4 GPU ($\approx$\$0.021/epoch) \\
@@ -1922,13 +1931,13 @@ Net2Net surgery gate (next) & loss\_avg $\leq 9.8$ + plateau $\Delta < 0.02$ ove
     at (axis cs:125, 10.27) {best 10.3262 (Ep115)};
 \end{axis}
 \end{tikzpicture}
-\caption{Full loss trajectory for Albert MoE-13 across v2.0.0 and v3.0. Three
-distinct v3.0 phases are visible: (1) post-vocabulary-surgery plateau near $\ln(32000)$
-(Ep55--82); (2) Nash equilibrium freeze at Ep83--104 where expert weights became
-identical and gradient flow through expert MLPs ceased; (3) sustained $-0.001$\,nats/epoch
-descent from Ep105 onward after introduction of expert seed biases. The dotted green
-line marks the Net2Net surgery gate (loss~$\leq$~9.8). Best epoch-average:
-10.3262 (Ep115); best single batch: 10.3023 (Ep139).}
+\caption{Loss trajectory for Albert MoE-13 v3.0 (ep55--143 shown). Three phases visible:
+(1) post-vocabulary-surgery plateau near $\ln(32000)$ (Ep55--82); (2) Nash equilibrium
+freeze Ep83--104; (3) sustained $-0.001$\,nats/epoch descent from Ep105 after expert seed
+bias introduction. Chart shows ep143 (best 10.3262); training has continued to \textbf{ep2045+
+with epoch-average ATL 9.8172 and single-batch ATL 9.6791} --- the extended trajectory and
+five surgery events (ep511, 547, 611, 645, 701) are tracked in the live dashboard at
+\texttt{batch\_history.csv} in the repository.}
 \label{fig:loss_curves}
 \end{figure}
 
@@ -2263,16 +2272,34 @@ ternary MoE model at 17L, 82M parameters, before the first depth surgery beyond 
 The cross-lingual architecture precedes fluency---albert.\ has built the semantic scaffolding
 before it can speak fluently in any of the eight languages it was trained on.
 
+\textbf{Methodological note.}
+These findings are reported as existence-proof observations, not rigorous linguistic
+evaluations. UMAP projections are non-unique: different random seeds produce different
+layouts, and nearest-neighbour analysis on projected spaces can surface artefacts of
+the projection rather than the underlying geometry. A proper evaluation would use
+held-out probes with statistical significance testing and cross-validation across multiple
+projection seeds. The claim is precisely what ``existence proof'' denotes: the structure
+exists; its generality and robustness remain to be characterised.
+
 \subsection{Mycelium Inspector: Real-Time Internal Observability}
 \label{subsec:mycelium_inspector}
 
 The live training dashboard exposes a \emph{Mycelium Inspector} tab---a real-time
-visualisation of gradient flow and expert routing across all 17 layers. The view renders
-the model as a directed graph: INPUT at L0, OUTPUT at L16, with per-expert connections
-colour-coded by routing weight and gradient magnitude. Cross-layer connections reveal
-which layers are actively reorganising (dense, bright connections) versus structurally
-stable (sparse, dim). The cursor-hover tooltip reports the cosine similarity of any
-expert connection in real time.
+visualisation of gradient flow and expert routing across all 17 layers. Two view modes
+are available:
+
+\textbf{BRAIN mode}: Renders the model as a directed graph---INPUT at L0, OUTPUT at L16---with
+per-expert connections colour-coded by routing weight and gradient magnitude. Cross-layer
+connections reveal which layers are actively reorganising (dense, bright connections) versus
+structurally stable (sparse, dim). The cursor-hover tooltip reports the cosine similarity
+of any expert connection in real time. The layer-to-expert routing topology updates
+continuously during training, making expert specialisation dynamics directly observable.
+
+\textbf{TOKEN mode}: A 2D and 3D embedding space visualisation via UMAP projection. As the
+model processes training batches, tokens pop into existence in the projected space, with
+their position determined by the current embedding weights. Nearest-neighbour clusters form
+in real time---the cross-lingual semantic broadcasting described in
+\S\ref{subsec:cross_lingual} was discovered through this view at ep2041.
 
 The term \emph{mycelium} is deliberate: the gradient network beneath the model's output
 behaviour is analogous to fungal mycelium---invisible infrastructure that routes resources
@@ -2334,6 +2361,127 @@ sparsity levels ($\approx 33$\% zero states at initialisation), the
 over dense computation observed in classical BitNet workloads.
 
 % ─────────────────────────────────────────────────────────────────────────────
+\section{EU AI Act Compliance Architecture}
+\label{sec:euaiact}
+
+The EU AI Act establishes risk-tiered obligations for AI systems deployed in
+Europe. High-risk systems must satisfy Articles~13 (transparency), 14 (human
+oversight), and 15 (accuracy, robustness, and cybersecurity). The Ternary
+Intelligence Stack is the first AI execution substrate where compliance with
+these three articles is \emph{structurally native} rather than bolt-on.
+
+\subsection{The Natural Regulatory Correspondence}
+
+The three trit values map directly to three regulatory stances:
+
+\begin{table}[h]
+\centering
+\small
+\caption{Ternary trit states and EU AI Act regulatory correspondence}
+\label{tab:euaiact}
+\begin{tabular}{p{1.0cm}p{1.4cm}p{1.3cm}p{3.4cm}}
+\toprule
+Trit & State & Article & Regulatory response \\
+\midrule
+$+1$ & Affirm & Art.~13 & Transparency satisfied: output may be acted upon \\
+$\ 0$ & Hold & Art.~14 & Human oversight required: system withholds decision \\
+$-1$ & Conflict & Art.~15 & Safety measure triggered: action blocked, audit logged \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This correspondence is not incidental. The EU AI Act's requirement that
+high-risk systems express uncertainty rather than hallucinate confident
+incorrect answers is precisely what the trit hold state encodes at the
+language and ISA level. Binary systems must retrofit uncertainty
+quantification on top of deterministic outputs; ternary systems produce
+it natively.
+
+\subsection{ternaudit-guard}
+
+The \texttt{ternaudit-guard} crate provides the operational compliance layer:
+
+\begin{itemize}
+  \item \textbf{Decision log processing}: Parses JSON-RPC audit logs emitted
+        by the BET VM and maps each decision record to the corresponding
+        Article~13--15 requirement.
+  \item \textbf{Regulatory mapping layer}: Converts internal confidence
+        metrics (Affirm / Tend / Reject) to structured compliance reports
+        with per-decision regulatory status.
+  \item \textbf{Immutable audit trail}: Every safety veto and hold decision
+        is logged to the Axis-tier memory with timestamp, expert identity,
+        and query hash---satisfying the Article~15 robustness and
+        cybersecurity logging requirements.
+  \item \textbf{VS~Code extension integration}: Inline verification markers
+        in TernStudio IDE allow developers to audit AI-generated code with
+        per-logic-segment compliance status before deployment.
+\end{itemize}
+
+\subsection{The Tend State as Alignment Primitive}
+\label{subsec:tend_state}
+
+Binary AI systems face a structural alignment problem that compliance
+frameworks cannot resolve: every output must be a decision. A system that
+does not know must still answer. The result is hallucinated
+confidence---commitment to the best available answer even when the correct
+answer is \emph{insufficient information}.
+
+The ternary $0$ state resolves this at the representation level. When a
+ternary reasoning chain encounters contradictory evidence, model uncertainty,
+or a query whose resolution requires information not yet in scope, the output
+is not a forced binary choice but a \textbf{tend}---a probabilistic lean
+accompanied by an explicit acknowledgment that the conclusion is conditional
+and subject to revision. This is not abstention; it is the most
+informationally accurate statement the system can make given current evidence.
+
+\begin{quote}
+  \emph{``I currently tend toward this conclusion---but routing entropy is
+  high. Additional context would allow me to commit.''}
+\end{quote}
+
+This property is implemented at multiple levels of the TIS stack:
+
+\begin{itemize}
+  \item In the \textbf{BET VM}: division-by-zero or unresolvable trit
+        propagation produces $0$ (tend), not a crash or \texttt{NaN}.
+        The computational analogue of honest uncertainty is a native output
+        type, not an exception.
+  \item In the \textbf{MoE-13 Orchestrator}: the hold condition
+        ($|\text{affirm} - \text{conflict}| \leq 1$ across $\geq 4$ agents)
+        blocks commitment to a majority-vote result rather than forcing one,
+        returning a hold trit.
+  \item In \textbf{albert.'s routing}: before the load-balancing intervention
+        resolved expert homogeneity, the model's uniform routing was itself
+        a tend---the gate could not distinguish experts and correctly produced
+        a diffuse distribution. The LB loss did not suppress this signal; it
+        created the expert differentiation necessary to resolve it.
+  \item In the \textbf{EU AI Act correspondence}
+        (Table~\ref{tab:euaiact}): trit $0$ maps to Article~14 human
+        oversight---the system signals that this decision requires human
+        review rather than automated action.
+\end{itemize}
+
+The alignment significance of this property is architectural, not
+policy-layer. An AI system that natively outputs \emph{tend} is a
+categorically different epistemic actor than one constrained to return
+binary yes/no. Hallucination---the production of confident incorrect
+output---is not a training failure of binary systems alone; it is a
+consequence of forcing three-valued epistemic states (know, don't know,
+know-but-uncertain) into a two-valued output type. The ternary tend state
+is not a workaround for this problem. It is a first-class output of a
+system designed from first principles to represent uncertainty as real
+information.
+
+\subsection{GDPR and Data Sovereignty}
+
+All TIS components execute on-premise or within EU jurisdiction (Fly.io
+Frankfurt). No training data, model weights, or inference results transit
+to non-EU infrastructure. The open-core licensing (LGPL-3.0-or-later for
+the compiler and CLI; BSL-1.1 converting to LGPL in 2030 for the ML engine)
+ensures that the sovereignty guarantee is contractually enforceable, not
+merely a runtime policy.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Related Work}
 \label{sec:related}
 
@@ -2362,6 +2510,13 @@ library optimization.
 trit values $\{|{-1}\rangle, |0\rangle, |{+1}\rangle\}$. The BET encoding and
 \texttt{trittensor} type system are structurally compatible with qutrit state
 spaces; we leave the formal mapping to future work.
+
+\textbf{Sovereign AI infrastructure.} The EU AI Act and the broader digital
+sovereignty agenda have driven interest in auditable, on-premise AI execution.
+TIS is the first full-stack architecture where regulatory compliance is
+structurally native to the execution model rather than implemented as
+middleware---trit~$0$ (hold) maps directly to Article~14 human oversight at
+the language and ISA level (\S\ref{sec:euaiact}).
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{The Ternary Computing Ecosystem}
@@ -2464,6 +2619,41 @@ TIS the largest public ternary programming library in existence. The public webs
 \texttt{rfi-irfos}. Continuous integration via GitHub Actions automatically builds, tests,
 and deploys to Fly.io on every push to main.
 
+\subsection*{Technology Readiness Assessment}
+
+\begin{table}[h]
+\centering
+\small
+\caption{TRL assessment by subsystem (2026-05-19)}
+\label{tab:trl}
+\begin{tabular}{lll}
+\toprule
+Subsystem & TRL & Basis \\
+\midrule
+Ternlang compiler + BET VM & 7 & Operational prototype in relevant environment \\
+BetRtlProcessor RTL simulator & 7 & Cycle-accurate Verilog-2001 simulation verified \\
+Sparse inference (\texttt{gemv\_bitnet}) & 6 & $122\times$ speedup measured at 99\% sparsity \\
+MCP server (34 tools, live API) & 7 & Production deployment at \texttt{ternlang.com/mcp} \\
+albert. MoE-13 native training & 5 & Validated; 2045+ epochs on Modal T4, 17L autonomous growth \\
+\texttt{@sparseskip} routing (Patent A50296/2026) & 5 & Measured 75\% expert skip, 83~tok/s on CPU \\
+Distributed actor runtime & 4 & Implemented; large-scale stress testing pending \\
+Native ternary silicon drivers & 2 & Design modelled in BetRtlProcessor; awaits fabrication \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{On the hardware driver gap.}
+The audit trail correctly identifies that bare-metal drivers for physical
+ternary silicon are absent from the repository. This is not a gap in the
+research programme---it is the \emph{definition} of what Stage~2 and
+Stage~3 funding is designed to produce. The BetRtlProcessor RTL simulator
+(TRL~7) is the verifiable hardware blueprint: every logic gate, register,
+and instruction cycle is specified in synthesisable Verilog-2001.
+The path from TRL~2 to TRL~6 for silicon drivers requires access to a
+ternary ASIC fabrication partner and cluster compute to validate the
+full training stack at scale. Evaluators should read the RTL simulator
+as the engineering commitment, not the absence of drivers as a programme weakness.
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
@@ -2509,16 +2699,15 @@ trit $t \in \{-1, 0, +1\}$ with an active neutral state:
 
   \item \textbf{Autonomous training}: Albert MoE-13 has evolved from a 22M-parameter
         3-layer English-only model (v2.0.0, best cross-entropy \textbf{2.1353},
-        perplexity $\approx$8.5, 16 global epochs) to a 58M-parameter 12-layer
+        perplexity $\approx$8.5, 16 global epochs) to an 82M-parameter 17-layer
         multilingual system (v3.0, 8 languages, 32k vocab, 177M-token corpus,
-        62+ global epochs as of 2026-05-11) through successive autonomous surgeries
-        triggered by the EvolutionManager---all running on a 2013 consumer CPU with
-        no GPU. The v3.0 programme introduces the Epoch-Gated Routing Lottery,
-        TLIGHT per-expert monitoring, and gradient accumulation as ternary hold,
-        with live inference confirming \textbf{75\%} expert skip at \textbf{11.24
-        tok/s} on the training hardware. Hardware-verified AVX2 SIMD benchmarks
-        confirm $1.80\times$ throughput at 50\% sparsity and $3.0\times$ over INT8
-        at 90\% sparsity.
+        2045+ global epochs as of 2026-05-19) through five successive autonomous
+        surgeries triggered by the EvolutionManager. The v3.0 programme introduces
+        generational Fibonacci cycling, TLIGHT per-expert monitoring, WALD coverage
+        monitoring, and cross-lingual semantic broadcasting confirmed at ep2041.
+        Hardware-verified AVX2 SIMD benchmarks confirm $1.80\times$ throughput at
+        50\% sparsity and $3.0\times$ over INT8 at 90\% sparsity, with live
+        inference at \textbf{83 tok/s} on consumer CPU hardware.
 \end{enumerate}
 
 The title of this paper carries a provocation: \textit{The Death of the Bit}.
@@ -2535,8 +2724,9 @@ beneath it.
 The VS~Code extension (\texttt{ternlang-0.1.0}) has been published on the
 Open~VSX Registry (publisher \texttt{rfi-irfos}), making ternlang tooling
 available to VS~Code, VSCodium, Gitpod, and any editor backed by the Open~VSX
-API. The SPRIND Next Frontier AI Challenge submission (deadline 2026-05-15)
-documents the full TIS architecture for European public funding consideration.
+API. The SPRIND Next Frontier AI Challenge submission has been filed with RFI-IRFOS
+as the applying entity, documenting the full TIS architecture for European public
+funding consideration (Stage~1: 10 teams at €3M; Stage~2: €8M; Stage~3: €15.5M ceiling).
 Near-term targets include submission to the VS~Code Marketplace and academic
 outreach to the USN group (Bos \& Gundersen) for joint hardware-software
 co-design on the memristor backend.

@@ -1,0 +1,68 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 2040 epochs | 2026-05-19 06:58
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→ ��itionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionitionition�� ageRe another light� [ original  its�
+    9.9 tok/s  101ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+→ [Ch�� UnER your Bar� per� within��ER� against� eineown d� including –On��ESER  � includingER� based called age voor� history��� ste _>On�ley'sord��uch   another  ologicalAsée�ik."
+    15.6 tok/s  64ms/tok
+
+[P3] the ternary number system uses three distinct
+→  the��--ér� another�ificationnerUNKNOWN�IP slilyste��sp� another� another light father� social May take� United mustated century� successY effect� and� 15��ner�� "� cre century�ner�Re� fewner���
+    13.2 tok/s  76ms/tok
+
+[P4] once upon a time in a kingdom far
+→    article near��ente� began are few���’ right��Un�� cons�ownER�� too�ES including� ste�� PeAs��ER� United just� per early un� cal name�“�merOR qui� ByAsste
+    18.5 tok/s  54ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+→  design successath."�ped� Col� estaists within qui." history 2024 withinER
+ious��own By voor� demaca�ChES."�tain dos� World�ight London qui." need'sES�� name support�D� basedited ver." Unitedification؅ withintain
+    18.2 tok/s  55ms/tok
+
+[P6] the EU AI Act entered into force on
+→  un lowIS�** under light findble��[� un�ley  ched**� MaytonESIS� dos� de� being� within�� main�ESIS� controltainRe."[� within��Ch findES century[ field pol."� during�ER since� few
+    17.9 tok/s  56ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+→  Bar� [ origin� band unath؃� 15� Byungen�ele well� sonoER process However�ISERownALIA� lory American80 abaca�� August l�и� history several's�br�iousuth� face══��ChERIN en�� Ver another
+    17.9 tok/s  56ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+→ �� history un���own shall���jamer�иERES���ERpeON�� take per�ami�ER�itionе rel year IN� life success�� withink�� cons beganicsAL�icsium success�   United dem pa every�IS
+    18.2 tok/s  55ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+→  uneON�� another�old  ER� including pertainERab��ER� homeitionED[icoious di University�ica�rop�ische�� the dem together�Y� diious� United�ious control� became Laists� father[� band�[leyited��
+    14.7 tok/s  68ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+→ On�ists��  ** design--[ER began da�� als researchON original[ including�ization countryER 1990ant� known seraca ══� WestIS London�AS ermer��ERATcy��� years every� while� centuryEx history each duringits�urs  ada�
+    12.3 tok/s  81ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+→ �#�á ste�ve��nie39�� design� band�á�� natural �aca� United�pe Sw�ight��� dist country century research� father� 
+�� De [دiatе� sign� history� [old�T deؕ often� un
+    14.9 tok/s  67ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+→ �� century������ evenISabIN� years� includingHe�ological light including� ro�� lowER�ind several around[� unetern  ES  igen father� well� States."� $ów Paris�� Ѐced� another�� another��
+    12.5 tok/s  80ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+→ �tern�  ley� 2024ER�ley�."� itsourown� prom de� Pr��� the� Os� demious�� thoseChious historyOR y�� control signER� name jestious��� effect�epton�ious and� ThereERAC�
+    15.2 tok/s  66ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+→ �� sign�� dos findownHe� farIN." London�EN's� production y ste[��ific� often� history�� need�ElES ste� „ MarOR 16� just��iste�AT� find main en��pe�
+��me
+    9.6 tok/s  104ms/tok
+
+[P15] the meaning of life according to
+→ iousCh early based en� German   short eine� within de century history33е Coami�� dal including� ��itsRe history�ER eniste Londonؐhip� first French�iva band� farEx� light."� centuryification� years 
+�   father There." took Londonification�
+    11.9 tok/s  84ms/tok
+

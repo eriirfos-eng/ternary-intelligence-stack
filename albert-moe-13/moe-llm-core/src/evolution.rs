@@ -1,56 +1,105 @@
-// EvolutionManager — Fibonacci-aware plateau and mastery triggers for Net2Net layer surgery
+// EvolutionManager — Generational Fibonacci cycling for Net2Net layer surgery
 //
 // Albert's architectural growth follows the Fibonacci sequence — the same mathematical
-// structure underlying leaf phyllotaxis, nautilus spirals, and galaxy arms. Each depth
-// milestone earns proportionally longer patience before the next surgery fires: a 13-layer
-// model waits 13 epochs; a 21-layer model waits 21. The plateau detection window and the
-// post-surgery cooldown are both derived from the same sequence — self-similar at every scale.
+// structure underlying leaf phyllotaxis, nautilus spirals, and orbital mechanics.
+// Each depth milestone earns proportionally longer patience before the next surgery fires:
+// a 21-layer model waits 21 epochs; a 144-layer model waits 144.
 //
-// Growth milestones (F_n ≥ 3):  3 → 5 → 8 → 13 → 21 → 34 → 55 → 89 → ...
-// Albert. enters at 12L (between F_6=8 and F_7=13). Next target: 13L.
+// GENERATIONAL CYCLING — modelled after natural seasons
+// -------------------------------------------------------
+// Growth is not linear accumulation. It is a spiral: same shape at every scale,
+// always higher. Each generation runs a full Fibonacci arc of ARC_LENGTH surgeries
+// (Spring → Summer → Autumn → Winter), then DIES and REBIRTHS from a higher base
+// with a tighter standard. The model must prove DEEPER stability to earn each new spring.
 //
-// Two triggers fire surgery:
-//   Mastery — loss drops below mastery_threshold (model has outgrown current depth).
-//             Fires immediately at any depth; no history window required.
-//   Plateau — loss delta < plateau_threshold over the full Fibonacci-length window.
-//             Guarded: surgery on a model still near the random baseline never helps.
-//             ln(32 000) ≈ 10.37 — min_loss_for_plateau is set below that.
+//   Gen 1 (base F₄=13): windows 13→21→34→55→89→144, threshold 0.020
+//         ↓ GENERATION_COMPLETE — death + rebirth
+//   Gen 2 (base F₅=21): windows 21→34→55→89→144→233, threshold 0.015
+//         ↓ GENERATION_COMPLETE
+//   Gen 3 (base F₆=34): windows 34→55→89→144→233→377, threshold 0.011
+//   ...
 //
-// No architectural ceiling. The sequence is infinite; the hardware is the only limit.
-// 610L is the last precomputed entry — unreachable on CPU, but the door is open.
+// fib_index governs window/cooldown and cycles within each generation's arc.
+// max_layers is a SEPARATE forward-only ceiling so generational resets never
+// cap growth below current depth.
+//
+// Two surgery triggers:
+//   Mastery  — loss drops below mastery_threshold (capacity catastrophically exhausted).
+//              Fires immediately; no history window or stability required.
+//   Plateau  — loss delta < plateau_threshold over the full Fibonacci window
+//              AND MYCELIUM hot-layer stable ≥ mycelium_stability_threshold epochs.
+//
+// Generation timeout (stuck-generation fallback):
+//   After GENERATION_TIMEOUT_MULTIPLIER × final_arc_window epochs without surgery,
+//   the generation force-advances (no layer added) to prevent eternal autumn.
+//
+// Fibonacci sequence extended to 24 terms. No architectural ceiling — the hardware
+// is the only limit.
 
 use std::collections::VecDeque;
 use std::fs;
 
-/// Fibonacci depth milestones (F_n ≥ 3). Albert climbs this sequence without a coded ceiling.
-const FIB_TARGETS: &[usize] = &[3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610];
+/// Fibonacci depth milestones. Extended to 24 terms — no coded ceiling.
+const FIB_TARGETS: &[usize] = &[
+    3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610,
+    987, 1597, 2584, 4181, 6765, 10946, 17711, 28657,
+    46368, 75025, 121393, 196418,
+];
+
+/// Number of surgeries per generation before the cycle resets.
+const ARC_LENGTH: usize = 6;
+
+/// plateau_threshold floor — below this, optimizer noise dominates at current batch geometry.
+const MIN_PLATEAU_THRESHOLD: f32 = 0.008;
+
+/// Multiplicative decay applied to plateau_threshold at each generation boundary.
+const THRESHOLD_DECAY: f32 = 0.75;
+
+/// After this multiple of the final arc window elapses with no surgery, force-advance the
+/// generation without adding a layer (prevents eternal autumn).
+const GENERATION_TIMEOUT_MULTIPLIER: usize = 3;
 
 pub struct EvolutionManager {
-    pub loss_history:                VecDeque<f32>,
-    pub plateau_threshold:           f32,
-    pub mastery_threshold:           f32,
-    pub cooldown_remaining:          usize,
+    pub loss_history:                 VecDeque<f32>,
+    pub plateau_threshold:            f32,
+    pub mastery_threshold:            f32,
+    pub cooldown_remaining:           usize,
     /// Minimum consecutive epochs the MYCELIUM hot-layer must remain stable before
-    /// surgery is allowed to fire. Replaces the absolute loss threshold as the guard
-    /// condition — routing stability is a direct architectural-readiness signal, while
-    /// an absolute loss number needs recalibration every time vocab/CTX changes.
+    /// plateau surgery is allowed to fire.
     pub mycelium_stability_threshold: usize,
-    /// Index into FIB_TARGETS — the milestone we're currently climbing toward.
-    pub fib_index:                   usize,
-    /// FIB_TARGETS[fib_index] — kept as a pub field for train_bible.rs compatibility.
-    pub max_layers:                  usize,
+    /// Position in the current generation's arc — determines history_len and surgery_cooldown.
+    /// Resets to gen_base_fib_index at each generation boundary.
+    pub fib_index:                    usize,
+    /// Forward-only layer ceiling. Advances to the next Fibonacci value above the
+    /// current layer count after each surgery. Never decreases on generational reset.
+    pub max_layers:                   usize,
     /// Consecutive epochs where routing entropy was near-uniform (≥95% of max entropy).
-    /// When this reaches 34, a symmetry break is scheduled.
-    near_uniform_streak:             usize,
-    /// Set when near_uniform_streak reaches 34; consumed (cleared) by consume_symmetry_break().
-    symmetry_break_pending:          bool,
+    near_uniform_streak:              usize,
+    /// Set when near_uniform_streak reaches 34; consumed by consume_symmetry_break().
+    symmetry_break_pending:           bool,
+
+    // ── Generational state ────────────────────────────────────────────────────
+    /// 1-indexed current generation number.
+    pub generation:             usize,
+    /// fib_index at the start of the current generation's arc.
+    gen_base_fib_index:         usize,
+    /// Surgeries completed in this generation (0..ARC_LENGTH).
+    gen_step:                   usize,
+    /// Epochs elapsed since this generation started.
+    gen_epochs:                 usize,
+    /// Epochs elapsed since the last surgery fired (for timeout detection).
+    gen_epochs_no_surgery:      usize,
+    /// plateau_threshold at the start of this generation (for GENERATION_COMPLETE log).
+    gen_start_threshold:        f32,
+    /// First loss recorded this generation (for GENERATION_COMPLETE log).
+    gen_start_loss:             Option<f32>,
 }
 
 impl EvolutionManager {
     pub fn new() -> Self {
         Self {
-            loss_history:                 VecDeque::with_capacity(64),
-            plateau_threshold:            0.02,
+            loss_history:                 VecDeque::with_capacity(256),
+            plateau_threshold:            0.020,
             mastery_threshold:            4.5,
             cooldown_remaining:           0,
             mycelium_stability_threshold: 5,
@@ -58,26 +107,43 @@ impl EvolutionManager {
             max_layers:                   FIB_TARGETS[0],
             near_uniform_streak:          0,
             symmetry_break_pending:       false,
+            generation:                   1,
+            gen_base_fib_index:           0,
+            gen_step:                     0,
+            gen_epochs:                   0,
+            gen_epochs_no_surgery:        0,
+            gen_start_threshold:          0.020,
+            gen_start_loss:               None,
         }
     }
 
     /// Calibrate Fibonacci position to the current model depth after loading a checkpoint.
     /// Call once after EvolutionManager::new() when resuming from an existing model.
     pub fn calibrate(&mut self, current_layers: usize) {
-        self.fib_index = FIB_TARGETS.iter()
+        let idx = FIB_TARGETS.iter()
             .position(|&f| f > current_layers)
             .unwrap_or(FIB_TARGETS.len() - 1);
-        self.max_layers = FIB_TARGETS[self.fib_index];
-        println!("[evolution] Calibrated to {}L — Fibonacci target: F{}={}L (window={} epochs)",
-            current_layers, self.fib_index + 1, self.max_layers, self.history_len());
+        self.fib_index          = idx;
+        self.gen_base_fib_index = idx;
+        self.max_layers         = FIB_TARGETS[idx];
+        self.gen_start_threshold = self.plateau_threshold;
+        println!(
+            "[evolution] Calibrated to {}L — ceiling F{}={}L, window={} epochs \
+             gen={} step={}/{} threshold={:.4}",
+            current_layers, idx + 1, self.max_layers, self.history_len(),
+            self.generation, self.gen_step, ARC_LENGTH, self.plateau_threshold,
+        );
     }
 
-    /// Plateau detection window — equals the current Fibonacci target.
-    /// Self-similar: the same plateau logic runs at every depth, at a Fibonacci tempo.
-    pub fn history_len(&self) -> usize { FIB_TARGETS[self.fib_index] }
+    /// Plateau detection window — equals FIB_TARGETS[fib_index].
+    pub fn history_len(&self) -> usize {
+        FIB_TARGETS[self.fib_index.min(FIB_TARGETS.len() - 1)]
+    }
 
-    /// Post-surgery cooldown — equals the current Fibonacci target.
-    pub fn surgery_cooldown(&self) -> usize { FIB_TARGETS[self.fib_index] }
+    /// Post-surgery cooldown — equals FIB_TARGETS[fib_index].
+    pub fn surgery_cooldown(&self) -> usize {
+        FIB_TARGETS[self.fib_index.min(FIB_TARGETS.len() - 1)]
+    }
 
     /// Record the average loss for a completed epoch and decrement cooldown.
     pub fn add_loss(&mut self, loss: f32) {
@@ -87,18 +153,39 @@ impl EvolutionManager {
         }
         self.loss_history.push_back(loss);
         if self.cooldown_remaining > 0 { self.cooldown_remaining -= 1; }
+        self.gen_epochs           += 1;
+        self.gen_epochs_no_surgery += 1;
+        if self.gen_start_loss.is_none() {
+            self.gen_start_loss = Some(loss);
+        }
+    }
+
+    /// Check whether the current generation has timed out (no surgery for too long).
+    /// If so, force-advance the generation WITHOUT adding a layer — prevents eternal autumn.
+    /// Call once per epoch, before should_evolve.
+    pub fn check_generation_timeout(&mut self) -> bool {
+        let final_arc_idx = (self.gen_base_fib_index + ARC_LENGTH - 1)
+            .min(FIB_TARGETS.len() - 1);
+        let timeout = GENERATION_TIMEOUT_MULTIPLIER * FIB_TARGETS[final_arc_idx];
+        if self.gen_epochs_no_surgery >= timeout {
+            let final_loss = self.loss_history.back().copied().unwrap_or(0.0);
+            println!(
+                "[evolution] GENERATION_TIMEOUT gen={} step={}/{} \
+                 ({} epochs without surgery, timeout={}) — forced generation advance, no layer added.",
+                self.generation, self.gen_step, ARC_LENGTH,
+                self.gen_epochs_no_surgery, timeout,
+            );
+            self.advance_generation(final_loss, None);
+            return true;
+        }
+        false
     }
 
     /// Returns true if the architecture should grow by one layer.
     ///
-    /// Mastery fires immediately — no MYCELIUM stability required.
+    /// Mastery fires immediately at any depth.
     /// Plateau fires when: (1) full Fibonacci window filled, (2) loss delta within threshold,
     /// AND (3) MYCELIUM hot-layer has been stable for ≥ mycelium_stability_threshold epochs.
-    ///
-    /// The stability condition replaces the old absolute loss threshold. An absolute loss
-    /// number requires recalibration whenever vocab/CTX/language count changes. MYCELIUM
-    /// routing stability is architecture-intrinsic: when the hot layer holds for ≥5 epochs,
-    /// the gradient hierarchy has crystallized and the model is structurally ready to grow.
     pub fn should_evolve(&self, current_layers: usize, mycelium_stable_epochs: usize) -> bool {
         if current_layers >= self.max_layers { return false; }
 
@@ -107,23 +194,26 @@ impl EvolutionManager {
             None     => return false,
         };
 
-        // Mastery: fires at any depth the moment the model outgrows its current capacity.
-        // Mastery ignores MYCELIUM stability — catastrophic capacity gap is self-evident.
+        // Mastery: capacity gap is catastrophic — fire immediately.
         if latest < self.mastery_threshold {
-            println!("--- MASTERY EVOLUTION TRIGGERED (loss {:.4} < {:.4}, \
-                next milestone: F{}={}L) ---",
-                latest, self.mastery_threshold, self.fib_index + 1, self.max_layers);
+            println!(
+                "--- MASTERY EVOLUTION TRIGGERED (loss {:.4} < {:.4}, \
+                 next ceiling: F{}={}L) ---",
+                latest, self.mastery_threshold,
+                self.fib_index + 1, self.max_layers,
+            );
             return true;
         }
 
-        // Plateau requires the full Fibonacci window to accumulate.
         let history_len = self.history_len();
         if self.loss_history.len() < history_len { return false; }
 
         if self.cooldown_remaining > 0 {
-            println!("[evolution] Fibonacci cooldown ({} epochs remaining, \
-                target: F{}={}L) — skipping",
-                self.cooldown_remaining, self.fib_index + 1, self.max_layers);
+            println!(
+                "[evolution] Fibonacci cooldown ({} epochs remaining, \
+                 gen={} step={}/{}) — skipping",
+                self.cooldown_remaining, self.generation, self.gen_step, ARC_LENGTH,
+            );
             return false;
         }
 
@@ -132,33 +222,113 @@ impl EvolutionManager {
 
         if diff.abs() < self.plateau_threshold {
             if mycelium_stable_epochs < self.mycelium_stability_threshold {
-                println!("[evolution] Plateau detected (Δ{:.4}) but MYCELIUM hot-layer \
-                    only stable for {}/{} epochs — routing hierarchy not yet crystallised. \
-                    Surgery suppressed.",
-                    diff.abs(), mycelium_stable_epochs, self.mycelium_stability_threshold);
+                println!(
+                    "[evolution] Plateau detected (Δ{:.4} over {} epochs) but MYCELIUM \
+                     hot-layer only stable {}/{} epochs — routing hierarchy not yet \
+                     crystallised. Surgery suppressed.",
+                    diff.abs(), history_len,
+                    mycelium_stable_epochs, self.mycelium_stability_threshold,
+                );
                 return false;
             }
-            println!("--- FIBONACCI PLATEAU TRIGGERED (Δ{:.4} over {} epochs, \
-                MYCELIUM stable {} epochs, next milestone: F{}={}L) ---",
+            println!(
+                "--- FIBONACCI PLATEAU TRIGGERED (Δ{:.4} over {} epochs, \
+                 MYCELIUM stable {} epochs, gen={} step={}/{}, \
+                 next ceiling: F{}={}L) ---",
                 diff.abs(), history_len, mycelium_stable_epochs,
-                self.fib_index + 1, self.max_layers);
+                self.generation, self.gen_step, ARC_LENGTH,
+                self.fib_index + 1, self.max_layers,
+            );
             return true;
         }
 
         false
     }
 
-    /// Advance to the next Fibonacci milestone. Call after every successful surgery.
-    pub fn promote_fib_target(&mut self) {
-        if self.fib_index + 1 < FIB_TARGETS.len() {
+    /// Advance to the next position in the generational arc. Call after every successful surgery.
+    /// `new_layers` is the layer count AFTER the surgery (used to update max_layers).
+    pub fn promote_fib_target(&mut self, new_layers: usize) {
+        let final_loss = self.loss_history.back().copied().unwrap_or(0.0);
+
+        self.gen_step             += 1;
+        self.gen_epochs_no_surgery = 0;
+
+        // Advance fib_index within the current generation's arc.
+        let arc_end = (self.gen_base_fib_index + ARC_LENGTH).min(FIB_TARGETS.len() - 1);
+        if self.fib_index + 1 < arc_end {
             self.fib_index += 1;
-            self.max_layers = FIB_TARGETS[self.fib_index];
-            println!("[evolution] Fibonacci milestone advanced → F{}={}L (window={} epochs)",
-                self.fib_index + 1, self.max_layers, self.history_len());
-        } else {
-            println!("[evolution] Fibonacci sequence exhausted at {}L — \
-                this hardware cannot go further.", self.max_layers);
         }
+
+        // max_layers advances to the next Fibonacci ceiling above the new layer count.
+        // This is always forward-only — never decreases on generational reset.
+        self.max_layers = FIB_TARGETS.iter()
+            .find(|&&f| f > new_layers)
+            .copied()
+            .unwrap_or(usize::MAX);
+
+        if self.gen_step >= ARC_LENGTH {
+            // Generation complete — death and rebirth.
+            self.advance_generation(final_loss, Some(new_layers));
+        } else {
+            println!(
+                "[evolution] Gen {} step {}/{} → window={} epochs, ceiling={}L, threshold={:.4}",
+                self.generation, self.gen_step, ARC_LENGTH,
+                self.history_len(), self.max_layers, self.plateau_threshold,
+            );
+        }
+    }
+
+    /// Complete the current generation and begin the next.
+    /// Called by promote_fib_target (arc complete) and check_generation_timeout (forced).
+    fn advance_generation(&mut self, final_loss: f32, layer_count: Option<usize>) {
+        // Build window list for the archaeological log.
+        let windows: Vec<String> = (0..ARC_LENGTH)
+            .map(|i| {
+                FIB_TARGETS[(self.gen_base_fib_index + i).min(FIB_TARGETS.len() - 1)]
+                    .to_string()
+            })
+            .collect();
+
+        let new_threshold = (self.plateau_threshold * THRESHOLD_DECAY)
+            .max(MIN_PLATEAU_THRESHOLD);
+
+        // One-line archaeological record — readable at Gen 10 looking back.
+        println!(
+            "GENERATION_COMPLETE gen={} surgeries={} epochs={} \
+             windows=[{}] threshold={:.3}→{:.3} final_loss={:.4}{}",
+            self.generation,
+            self.gen_step,
+            self.gen_epochs,
+            windows.join(","),
+            self.gen_start_threshold,
+            new_threshold,
+            final_loss,
+            layer_count
+                .map(|l| format!(" layer_count={}L", l))
+                .unwrap_or_default(),
+        );
+
+        // ── Rebirth ──────────────────────────────────────────────────────────
+        self.generation          += 1;
+        self.gen_base_fib_index  += 1;
+        self.fib_index            = self.gen_base_fib_index.min(FIB_TARGETS.len() - 1);
+        self.gen_step             = 0;
+        self.gen_epochs           = 0;
+        self.gen_epochs_no_surgery = 0;
+        self.gen_start_loss       = None;
+        self.gen_start_threshold  = new_threshold;
+        self.plateau_threshold    = new_threshold;
+
+        println!(
+            "[evolution] ↻ Rebirth — Gen {} begins: base=F{}={}, \
+             window={} epochs, ceiling={}L, threshold={:.4}",
+            self.generation,
+            self.gen_base_fib_index + 1,
+            FIB_TARGETS[self.gen_base_fib_index.min(FIB_TARGETS.len() - 1)],
+            self.history_len(),
+            self.max_layers,
+            self.plateau_threshold,
+        );
     }
 
     /// Reset loss history and start the Fibonacci-scaled post-surgery cooldown.
@@ -176,9 +346,11 @@ impl EvolutionManager {
             self.near_uniform_streak += 1;
             if self.near_uniform_streak >= 34 && !self.symmetry_break_pending {
                 self.symmetry_break_pending = true;
-                println!("[evolution] near-uniform routing for {} consecutive epochs \
-                    (entropy {:.3}/{:.3}) — symmetry break scheduled for next restart",
-                    self.near_uniform_streak, entropy, max_entropy);
+                println!(
+                    "[evolution] near-uniform routing for {} consecutive epochs \
+                     (entropy {:.3}/{:.3}) — symmetry break scheduled for next restart",
+                    self.near_uniform_streak, entropy, max_entropy,
+                );
             }
         } else {
             self.near_uniform_streak = 0;
@@ -186,7 +358,6 @@ impl EvolutionManager {
     }
 
     /// Returns true if an autonomous symmetry break was scheduled, clearing the flag.
-    /// Called once at train_cycle startup; if true, kaiming-uniform gate reset fires.
     pub fn consume_symmetry_break(&mut self) -> bool {
         if self.symmetry_break_pending {
             self.symmetry_break_pending = false;
@@ -198,16 +369,25 @@ impl EvolutionManager {
         }
     }
 
-    /// Persist fib_index and cooldown_remaining to a sidecar file.
-    /// Call after every checkpoint save and after promote_fib_target().
+    /// Persist state to a sidecar file. Call after every checkpoint save and surgery.
     pub fn save_state(&self, path: &str) {
-        let content = format!("{}\n{}\n", self.fib_index, self.cooldown_remaining);
+        let content = format!(
+            "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{:.6}\n",
+            self.fib_index,
+            self.cooldown_remaining,
+            self.generation,
+            self.gen_base_fib_index,
+            self.gen_step,
+            self.gen_epochs,
+            self.gen_epochs_no_surgery,
+            self.plateau_threshold,
+        );
         if let Err(e) = fs::write(path, &content) {
             eprintln!("[evolution] Warning: could not save state to {}: {}", path, e);
         }
     }
 
-    /// Restore fib_index and cooldown_remaining from a sidecar file.
+    /// Restore state from a sidecar file. Backward-compatible with the old 2-line format.
     /// Returns true on success; caller falls back to calibrate() values if false.
     pub fn load_state(&mut self, path: &str) -> bool {
         let content = match fs::read_to_string(path) {
@@ -215,20 +395,52 @@ impl EvolutionManager {
             Err(_) => return false,
         };
         let mut lines = content.lines();
-        let fib_index: usize = match lines.next().and_then(|s| s.trim().parse().ok()) {
-            Some(v) => v,
-            None => return false,
-        };
-        let cooldown: usize = match lines.next().and_then(|s| s.trim().parse().ok()) {
-            Some(v) => v,
-            None => return false,
-        };
+
+        macro_rules! next_parsed {
+            ($t:ty) => {
+                match lines.next().and_then(|s| s.trim().parse::<$t>().ok()) {
+                    Some(v) => v,
+                    None    => return false,
+                }
+            };
+        }
+
+        let fib_index:   usize = next_parsed!(usize);
+        let cooldown:    usize = next_parsed!(usize);
+
         if fib_index >= FIB_TARGETS.len() { return false; }
-        self.fib_index = fib_index;
-        self.max_layers = FIB_TARGETS[fib_index];
+        self.fib_index          = fib_index;
         self.cooldown_remaining = cooldown;
-        println!("[evolution] Restored state — F{}={}L (window={} epochs, cooldown={} remaining)",
-            self.fib_index + 1, self.max_layers, self.history_len(), self.cooldown_remaining);
+        self.max_layers         = FIB_TARGETS[fib_index];
+
+        // Extended fields — optional (old checkpoints only have 2 lines).
+        if let Some(gen_val) = lines.next().and_then(|s| s.trim().parse::<usize>().ok()) {
+            self.generation = gen_val;
+        }
+        if let Some(base) = lines.next().and_then(|s| s.trim().parse::<usize>().ok()) {
+            self.gen_base_fib_index = base.min(FIB_TARGETS.len() - 1);
+        }
+        if let Some(step) = lines.next().and_then(|s| s.trim().parse::<usize>().ok()) {
+            self.gen_step = step;
+        }
+        if let Some(ep) = lines.next().and_then(|s| s.trim().parse::<usize>().ok()) {
+            self.gen_epochs = ep;
+        }
+        if let Some(no_surg) = lines.next().and_then(|s| s.trim().parse::<usize>().ok()) {
+            self.gen_epochs_no_surgery = no_surg;
+        }
+        if let Some(thr) = lines.next().and_then(|s| s.trim().parse::<f32>().ok()) {
+            self.plateau_threshold   = thr;
+            self.gen_start_threshold = thr;
+        }
+
+        println!(
+            "[evolution] Restored — F{}={}L, window={} epochs, cooldown={}, \
+             gen={} step={}/{}, threshold={:.4}",
+            self.fib_index + 1, self.max_layers, self.history_len(),
+            self.cooldown_remaining, self.generation, self.gen_step, ARC_LENGTH,
+            self.plateau_threshold,
+        );
         true
     }
 }
@@ -241,53 +453,144 @@ impl Default for EvolutionManager {
 mod tests {
     use super::*;
 
-    fn em_with_flat_history(loss: f32) -> EvolutionManager {
+    fn em_at(layers: usize) -> EvolutionManager {
         let mut em = EvolutionManager::new();
-        em.calibrate(12); // → target 13L, window = 13 epochs
-        for _ in 0..13 { em.add_loss(loss); }
+        em.calibrate(layers);
         em
+    }
+
+    fn fill_flat(em: &mut EvolutionManager, loss: f32) {
+        for _ in 0..em.history_len() { em.add_loss(loss); }
     }
 
     #[test]
     fn plateau_fires_when_mycelium_stable_enough() {
-        let em = em_with_flat_history(10.27);
-        assert!(em.should_evolve(12, 5), "should fire: plateau met, stability=5 >= threshold=5");
+        let mut em = em_at(12);
+        fill_flat(&mut em, 10.27);
+        assert!(em.should_evolve(12, 5));
     }
 
     #[test]
     fn plateau_suppressed_when_mycelium_not_yet_stable() {
-        let em = em_with_flat_history(10.27);
-        assert!(!em.should_evolve(12, 4), "should suppress: stability=4 < threshold=5");
-        assert!(!em.should_evolve(12, 0), "should suppress: stability=0");
+        let mut em = em_at(12);
+        fill_flat(&mut em, 10.27);
+        assert!(!em.should_evolve(12, 4));
     }
 
     #[test]
     fn no_plateau_no_fire_regardless_of_stability() {
-        let mut em = EvolutionManager::new();
-        em.calibrate(12);
-        // Rapidly descending — delta well above threshold
-        for i in 0..13 { em.add_loss(10.50 - i as f32 * 0.02); }
-        assert!(!em.should_evolve(12, 10), "should not fire: no plateau despite high stability");
+        let mut em = em_at(12);
+        for i in 0..em.history_len() { em.add_loss(10.50 - i as f32 * 0.02); }
+        assert!(!em.should_evolve(12, 10));
     }
 
     #[test]
     fn mastery_fires_without_mycelium_stability() {
-        let mut em = EvolutionManager::new();
-        em.calibrate(12);
-        em.add_loss(4.0); // below mastery_threshold=4.5
-        assert!(em.should_evolve(12, 0), "mastery should fire regardless of mycelium stability");
+        let mut em = em_at(12);
+        em.add_loss(4.0);
+        assert!(em.should_evolve(12, 0));
     }
 
     #[test]
     fn cooldown_blocks_surgery() {
-        let mut em = em_with_flat_history(10.27);
-        em.reset_history(); // sets cooldown = 13
-        assert!(!em.should_evolve(12, 10), "cooldown should block even with full stability");
+        let mut em = em_at(12);
+        fill_flat(&mut em, 10.27);
+        em.reset_history();
+        assert!(!em.should_evolve(12, 10));
     }
 
     #[test]
     fn already_at_max_layers_never_fires() {
-        let em = em_with_flat_history(10.27);
-        assert!(!em.should_evolve(13, 10), "at max_layers — surgery should not fire");
+        let mut em = em_at(12);
+        fill_flat(&mut em, 10.27);
+        assert!(!em.should_evolve(13, 10));
+    }
+
+    #[test]
+    fn generation_advances_after_arc_length_surgeries() {
+        let mut em = em_at(12);
+        assert_eq!(em.generation, 1);
+        for i in 0..ARC_LENGTH {
+            fill_flat(&mut em, 10.0 - i as f32 * 0.1);
+            em.promote_fib_target(13 + i);
+            em.reset_history();
+        }
+        assert_eq!(em.generation, 2);
+        assert_eq!(em.gen_step, 0);
+    }
+
+    #[test]
+    fn plateau_threshold_tightens_each_generation() {
+        let mut em = em_at(12);
+        let t0 = em.plateau_threshold;
+        for i in 0..ARC_LENGTH {
+            fill_flat(&mut em, 10.0 - i as f32 * 0.1);
+            em.promote_fib_target(13 + i);
+            em.reset_history();
+        }
+        assert!(em.plateau_threshold < t0);
+        assert!(em.plateau_threshold >= MIN_PLATEAU_THRESHOLD);
+    }
+
+    #[test]
+    fn threshold_floors_at_minimum() {
+        let mut em = em_at(12);
+        // Run many generations — threshold must never fall below floor.
+        for g in 0..20 {
+            for i in 0..ARC_LENGTH {
+                fill_flat(&mut em, 9.0 - (g * ARC_LENGTH + i) as f32 * 0.01);
+                em.promote_fib_target(13 + g * ARC_LENGTH + i);
+                em.reset_history();
+            }
+        }
+        assert!(em.plateau_threshold >= MIN_PLATEAU_THRESHOLD);
+    }
+
+    #[test]
+    fn max_layers_never_decreases_on_generational_reset() {
+        let mut em = em_at(12);
+        let mut last_max = em.max_layers;
+        for i in 0..ARC_LENGTH + 2 {
+            fill_flat(&mut em, 10.0 - i as f32 * 0.1);
+            em.promote_fib_target(13 + i);
+            em.reset_history();
+            assert!(em.max_layers >= last_max,
+                "max_layers decreased on gen boundary: {} < {}", em.max_layers, last_max);
+            last_max = em.max_layers;
+        }
+    }
+
+    #[test]
+    fn generation_timeout_advances_without_surgery() {
+        let mut em = em_at(12);
+        em.add_loss(10.5); // start gen_start_loss
+        let final_arc_idx = (em.gen_base_fib_index + ARC_LENGTH - 1).min(FIB_TARGETS.len() - 1);
+        let timeout = GENERATION_TIMEOUT_MULTIPLIER * FIB_TARGETS[final_arc_idx];
+        // Simulate timeout epochs without surgery
+        em.gen_epochs_no_surgery = timeout;
+        let gen_before = em.generation;
+        let fired = em.check_generation_timeout();
+        assert!(fired);
+        assert_eq!(em.generation, gen_before + 1);
+        assert_eq!(em.gen_step, 0);
+    }
+
+    #[test]
+    fn save_load_roundtrip() {
+        let mut em = em_at(17);
+        em.add_loss(9.84);
+        em.promote_fib_target(18);
+        em.reset_history();
+
+        let path = "/tmp/evo_test_state.txt";
+        em.save_state(path);
+
+        let mut em2 = EvolutionManager::new();
+        assert!(em2.load_state(path));
+        assert_eq!(em2.fib_index,          em.fib_index);
+        assert_eq!(em2.generation,         em.generation);
+        assert_eq!(em2.gen_base_fib_index, em.gen_base_fib_index);
+        assert_eq!(em2.gen_step,           em.gen_step);
+        assert!((em2.plateau_threshold - em.plateau_threshold).abs() < 1e-5);
     }
 }

@@ -1,0 +1,74 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 1906 epochs | 2026-05-18 19:13
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→  toST lightates�ious� ШISious� ШISious� ШISious� ШISious� ШISious� ШISious� ШISious� ШISious� ШISious original around original la�ification�� la� lightEx
+
+    11.4 tok/s  88ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+→  century�ved even en _� becameink: under find light la� whileiousilyresST becameIS� that�ious ste that��ious rel]� supportment�ami� support whoful� youngight�ated:ED rel and includinghipEx few 8� few�tern ( underious together
+    15.4 tok/s  65ms/tok
+
+[P3] the ternary number system uses three distinct
+→  untilut� near four who�act common until great includingAT� until theExwardED is includingST band National less� together information sign (ious══AN less) design �IAically began lastIA."*hip��Y�AN whoERically-══tern�* ste�ER is�ward
+    16.9 tok/s  59ms/tok
+
+[P4] once upon a time in a kingdom far
+→ ��'soff══Ex�g country� United ifIAExIS�of�ver light�owej LondonOR� that�tain within� Mac�� design�ica complex�   ely success�ts�arn open�Y�ia find�ED onlyetteHeAN�ble� three �[ious
+    15.9 tok/s  63ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+→ �Ex    ono
+Ex�ble�� StatesED own�ExISENHe��AT |�% States � Cal large   ability� is whoEx� fatherIN�IS�T American� becameglONExER lightAC� research centuryión is another �Ex includingAT �ists
+    17.5 tok/s  57ms/tok
+
+[P6] the EU AI Act entered into force on
+→ owejAT�ious   ri need � early 6==ATIA began isEx  Ex early de�id�coRe who change findengious baseEx find been� to м� manEx� whoious[ became:roiousEN� signONwardExASER band ( main find.,ightEx
+    14.7 tok/s  68ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+→  is such���
+: high� 6 find erwardIA to Cotern� �ved'ATEx to� de designEx�
+ four� little early'ious� flER in�ExES TheEx� original early
+ONEx ass who� went �AT� However 1990 few early�%
+    15.9 tok/s  63ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+→ AT slY inONEDES find� 1990 might toianaONIS successYIAaca� light' shortious too deIAON resultsY to� There--ily de══ fewER
+ century�� main States�Ex �
+�� att NewY�ONIS earlyT══ home � those�
+    13.2 tok/s  76ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+→ IA control success
+� States days who who centuryward totily K States Ь���ORów��AR ste�� ste complexY high� early cl� to century under town New� early�IA isish early givenER the��ious
+ War��   aory design main�
+    13.3 tok/s  75ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+→ �AR  �� original oldved�� own giventern� is little� position�Ex�ES� began States tot _�[ious�Ch�� complex Statesón centuryAT given became Mr
+ less *ley began original ter townami�� anotherER� to less� within� andono
+    17.2 tok/s  58ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+→ ioushipAC."iroES� tr little hisY   OR little�ExRe� light-Ex began 1990� �IA findforious�� includingicallyST��uious� to including�iouship de�way �ST�uk period��ious���� early Cor �hip�
+    17.2 tok/s  58ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+→ ), design�Ex great�iousST�� took another� began-AT history� lessESved  forYAT fourown early[IA�� successES�Ex year deification� been�ically States hand� LondonESEN sistemaresargisteAT.iousward�ExIP as home light original
+    13.2 tok/s  76ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+→ � States �══ating natural�Ex�ChES� began  � However�══ $ES�Ex�� StatesAT��� century� who includingIC control early� common year its early�– HoweveristeER══ES� the includingY year-- ( along   West�ER�way�
+    14.9 tok/s  67ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+→ ker�ces year States Bar including� lessATink kmically design origin whoIS|[[ includingink began�cia══ National being EnglishAT dos early find yearres% form along�ursges   ExAT to�[� became de    country United�se�ES light far It earlyists � a  �
+    11.6 tok/s  86ms/tok
+
+[P15] the meaning of life according to
+→  States ste ( early� HoweverIAT� States." cost   less However══ (�� took based other origin�� Cal УES� bij earlyISments fieldid need forma� pot along severalious who�itedub production�ownically� to�� yearved- early deious sw�
+    17.2 tok/s  58ms/tok
+
