@@ -1,0 +1,134 @@
+{
+  "label": "pre-s6",
+  "epoch": 2064,
+  "arch_layers": 17,
+  "loss": 9.8117,
+  "timestamp": "2026-05-19T09:48:29+00:00",
+  "note": "Pre-surgery-6 baseline. 17L→18L imminent. love→Jesus confirmed. god=judgment cluster. Nationalsozialismus in Jesus neighborhood.",
+  "host": "localhost:8888",
+  "neighbors_k": 50,
+  "tokens": [
+    "love",
+    "god",
+    "Jesus",
+    "death",
+    "war",
+    "truth",
+    "freedom",
+    "mother",
+    "light",
+    "time"
+  ],
+  "summary": {
+    "love": {
+      "resolved": "Ġlove",
+      "top5": [
+        "ĠfrÃ¼h",
+        "deutsche",
+        "aland",
+        "edo",
+        "Ġprovincia"
+      ],
+      "top_sim": 0.2262
+    },
+    "god": {
+      "resolved": "Ġgod",
+      "top5": [
+        "czyn",
+        "jection",
+        "culo",
+        "Ġgekozen",
+        "lis"
+      ],
+      "top_sim": 0.2838
+    },
+    "Jesus": {
+      "resolved": "ĠJesus",
+      "top5": [
+        "ĠFe",
+        "qu",
+        "annel",
+        "ĠBiblioteca",
+        "ras"
+      ],
+      "top_sim": 0.2572
+    },
+    "death": {
+      "resolved": "Ġdeath",
+      "top5": [
+        "ĠÃ©gypt",
+        "amen",
+        "Ġdifer",
+        "Fil",
+        "Ġpropre"
+      ],
+      "top_sim": 0.2412
+    },
+    "war": {
+      "resolved": "Ġwar",
+      "top5": [
+        "Ġexpres",
+        "ogrÃ¡f",
+        "ouw",
+        "aliment",
+        "puÃ©s"
+      ],
+      "top_sim": 0.273
+    },
+    "truth": {
+      "resolved": "Ġtruth",
+      "top5": [
+        "Ġneerland",
+        "Ġmantiene",
+        "FranÃ§ois",
+        "ĠDelta",
+        "Ġbizant"
+      ],
+      "top_sim": 0.2457
+    },
+    "freedom": {
+      "resolved": "Ġfreedom",
+      "top5": [
+        "Ġcontrat",
+        "Ġon",
+        "Ġdiscovered",
+        "ĠMA",
+        "Ġ1960"
+      ],
+      "top_sim": 0.2822
+    },
+    "mother": {
+      "resolved": "Ġmother",
+      "top5": [
+        "ĠStructure",
+        "ards",
+        "ester",
+        "Ġvloe",
+        "more"
+      ],
+      "top_sim": 0.2428
+    },
+    "light": {
+      "resolved": "Ġlight",
+      "top5": [
+        "00",
+        "Ġintelect",
+        "ĠMedien",
+        "Ġofficieel",
+        "ĠVietnam"
+      ],
+      "top_sim": 0.2291
+    },
+    "time": {
+      "resolved": "Ġtime",
+      "top5": [
+        "owaÄĩ",
+        "sze",
+        "ĠvallÃ©e",
+        "ĠIgn",
+        "uga"
+      ],
+      "top_sim": 0.2437
+    }
+  }
+}
