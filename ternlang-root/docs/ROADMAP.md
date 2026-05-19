@@ -1,7 +1,7 @@
 # Ternary Intelligence Stack (TIS) | RFI-IRFOS — Master Development Chronicle
 ### Official Evaluation Artifact (SPRIND / Next Frontier AI)
 **Stack Version:** v1.3.7 (Ecosystem) / v3.0 (albert. model)
-**Last Updated:** 2026-05-11
+**Last Updated:** 2026-05-19
 **Status:** ACTIVE — PHASE 20: AUTO-EVOLUTIONARY TERNARY TRAINING
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack
 **Patent Pending:** A50296/2026 (@sparseskip sparse matmul primitive)
@@ -113,7 +113,7 @@ ProgramBench exposes the gap between "code assistance" and "systems engineering"
 
 | Phase | Description | Key Artifact | Status |
 | :--- | :--- | :--- | :--- |
-| **14** | TernTranslator | `ternlang translate` CLI | Partial |
+| **14** | TernTranslator | `ternlang translate` CLI | COMPLETE |
 | **13** | Repo Professionalization | `CODEOWNERS`, SEO READMEs | COMPLETE |
 | **12** | Model Coherence (QAT/STE) | STE ternary training from scratch | COMPLETE |
 | **11.6** | ExaTern Foundation | SIMD/Trit-Packing AVX2 kernels | COMPLETE |
@@ -133,20 +133,22 @@ ProgramBench exposes the gap between "code assistance" and "systems engineering"
 
 ---
 
-## 3.0 CURRENT METRICS (2026-05-11)
+## 3.0 CURRENT METRICS (2026-05-19)
 
 | Metric | Value | Context |
 | :--- | :--- | :--- |
-| albert. architecture | 12L · 256H · 12E · 128CTX · 32000V | Active training — v3.0 multilingual run |
-| albert. parameters | ~58M (F32) / ~7M (ternary bits) | Ternary weights: {-γ, 0, +γ} via STE |
-| Training loss (best) | 6.9542 (v2.0.0 best epoch avg) / 10.3412 (v3.0 batch best) | v3.0 in vocabulary transfer — ln(32000)=10.373 baseline |
-| Inference speed | 83–125 tok/s (v2.0.0, 8k vocab, CPU-only) | KV-cache + @sparseskip; v3.0 benchmark pending |
-| Routing sparsity | 9/12 experts skipped per decode step | Expert-level @sparseskip — 75% routing skip |
-| Weight sparsity | 10–26% ternary zeros per layer | Element-level — zero positions never touched in matmul |
-| Corpus (active) | 635 MB multilingual (EN/DE/FR/ES/PT/IT/NL/PL) | Wikipedia CC BY-SA + Europarl + Gutenberg + 10% chaos |
-| Patent | A50296/2026 | @sparseskip sparse matmul primitive |
-| Crates published | 38 crates at v1.3.7 | crates.io, all open-core |
-| MCP tools | 34 tools | All free via Smithery + HTTP |
+| albert. architecture | **17L** · 256H · 12E · Top-3 · **256CTX** · 32,000V | v3.0 · 5 autonomous Net2Net surgeries since ep511 |
+| albert. parameters | ~58M total stored / ~13M active per token | Top-3 of 12 experts; ternary {−γ, 0, +γ} throughout training via STE |
+| Training loss — epoch ATL | **9.7884** (ep2116, 2026-05-19) | Alternating descent phase; 5 new ATLs in 7 epochs |
+| Training loss — batch ATL | **9.6235** (ep2114, 2026-05-19) | Intra-epoch minimum; random baseline ln(32000) = 10.373 |
+| Inference speed | **9.9–21.3 tok/s** CPU (ep2104 bench, v3.0) | KV-cache + @sparseskip; 32k vocab embedding dominates at current training depth; sparsity benefit scales with weight convergence |
+| Routing sparsity | 9/12 experts skipped per decode step | Expert-level @sparseskip — 75% routing skip; entropy H=2.467 (uniform) |
+| Weight sparsity | 3–6% zero-weight skip at ep2116 (TELE) | Grows toward v2.0.0 levels (~56%) as weights converge; zero positions never touched in matmul |
+| Corpus (active) | **1.6 GB** total · stages [3,6,7,8,9,10] active | EN/DE/FR/HU/ZH/AR/KO/SV/FI + 15-language Wikipedia · 10% chaos layer invariant |
+| Patent | A50296/2026 | @sparseskip sparse matmul primitive — Patent Pending (Austria) |
+| Crates published | 38 crates at v1.3.7 | crates.io, all open-core LGPL |
+| MCP tools | 34 tools | All free tier via Smithery + HTTP |
+| Training epochs | ep2116+ (2026-05-19) | Modal T4 GPU · ~$0.021/epoch · uninterrupted run since 2026-05-10 |
 
 ---
 
