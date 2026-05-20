@@ -10,7 +10,7 @@ albert. is a ternary Mixture-of-Experts language model trained **from scratch** 
 
 | Parameter | Value |
 |-----------|-------|
-| Layers | 17L (expanded from 12L via 5 net2net surgeries) |
+| Layers | 18L (expanded from 12L via 6 net2net surgeries; latest: ep2487 17L→18L, 2026-05-20) |
 | Hidden dim | 256 |
 | Experts | 12E, Top-3 routing |
 | Context length | 256 tokens |
@@ -91,8 +91,8 @@ albert. self-expands via layer insertion surgery when the loss plateau gate fire
 
 - **Gate condition:** Loss variance < 0.02 nats over any 144-epoch (Fibonacci) window + `myc_stable >= 5`
 - **Expansion:** Inserts one new layer using net2net identity initialization with Mandelbrot-seeded biases
-- **History:** 5 surgeries completed (12L → 13L → 14L → 15L → 16L → 17L)
-- **Next gate:** 17L → 21L, target loss ≤ 9.8 (current ~10.09, gap ~0.29 nats)
+- **History:** 6 surgeries completed (12L → 13L → 14L → 15L → 16L → 17L → 18L); latest ep2487 2026-05-20, Mandelbrot c_im=0.0099, no spike
+- **Next gate:** 18L → 19L, Gen 1 step 2/6, plateau window 377 epochs, ceiling 21L (epoch ATL 9.6248, batch ATL 9.3866)
 
 Surgery governor detail: `albert-moe-13/docs/EVOLUTION_EVIDENCE.md`
 

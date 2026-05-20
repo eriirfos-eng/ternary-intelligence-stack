@@ -18,15 +18,16 @@
 
 ---
 
-## Active — v3.0 — Current Run (ep1191+, 17L, epoch-ATL 10.1993)
+## Active — v3.0 — Current Run (ep2490+, 18L, epoch-ATL 9.6248)
 
-**Status (2026-05-15):** Global Epoch 1191+, Modal T4 GPU (~$0.003/epoch). First sub-10.20 epoch average achieved at ep1189 (10.1993). Five autonomous Net2Net surgeries completed (12L→17L). Stage 10 corpus active.
+**Status (2026-05-20):** Global Epoch 2490+, Modal T4 GPU. Six autonomous Net2Net surgeries completed (12L→18L). Stages 1–13 corpus active. Gen 1 step 1/6, plateau window 233 epochs, ceiling 21L.
 
 ### Completed milestones
 *   [x] 32k multilingual ByteLevel BPE vocabulary (EN/DE/FR/ES/PT/IT/NL/PL)
 *   [x] Weight transfer from v2.0.0 (12L→v3.0 init); embed + lm_head rebuilt at 32k
 *   [x] Wikipedia + Europarl multilingual corpus (~446 MB), academic (~46 MB), fulltext (~68 MB), chaos (~43 MB) — 635 MB total
 *   [x] Net2Net surgery ×5: 12L→13L (ep511) · 13L→14L (ep547) · 14L→15L (ep611) · 15L→16L (ep645) · 16L→17L (ep701)
+*   [x] **Net2Net surgery ×6: 17L→18L (ep2487, 2026-05-20)** — first surgery under full Fibonacci+Mandelbrot+Gen cycling; no spike; immediate descent; batch ATL 9.3866 by ep2489
 *   [x] Stage 10 corpus unlocked at 16L: dev_blogs, github_bugs, hn_discussions, gourmet_recipes, repair_guides, trails_travel
 *   [x] WALD module — loss-space coverage analysis, dead-zone detection, early-layer gradient amplification
 *   [x] Expert seed biases — F32 [256] per expert, breaks routing Nash equilibria
@@ -43,7 +44,8 @@
 *   [x] Benchmark suite: 84.4 tok/s · 11.8 ms/tok · 75% expert skip rate (HP ZBook i7-4800MQ, CPU-only)
 
 ### Pending
-*   [ ] 6th Net2Net surgery (17L→18L) — F9 plateau window = 144 epochs; fires when descent stalls
+*   [ ] 7th Net2Net surgery (18L→19L) — Gen 1 step 2/6, plateau window 377 epochs; ceiling 21L
+*   [ ] Stage 11–12 corpus fully integrated (arxiv, eurlex, science_SE, crossref, pubmed — unlocked at ep2487 surgery)
 *   [ ] Mycelial Cord activation (`--cord-surgery`) — diagnose width wall, then fire once manually
 *   [ ] WMMA INT8 kernel re-enable on next fresh training run
 *   [ ] Bias/fairness evaluation (WinoBias, BBQ, multilingual MMLU) — planned v3.1 milestone

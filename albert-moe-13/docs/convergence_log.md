@@ -74,9 +74,15 @@ correct only after the vocabulary transfer plateau breaks.
 | Ep 2116 | 17L | **9.7884** | **Current epoch ATL** (2026-05-19T13:40Z); 5 new ATLs in 7 epochs |
 | Ep 2117–2120 | 17L | 9.791–9.794 | Consolidation: descent decelerating; drops shrinking (−0.0094/−0.0084/−0.0016); since_best=4; WALD sev=0.953 |
 
-**All-time best (epoch avg):** 9.7884 (ep2116, 2026-05-19T13:40Z) — alternating descent phase  
-**All-time best (intra-batch):** 9.6235 (ep2114, 2026-05-19T13:29Z)  
-**Surgery governor status:** Loss gate CLEARED. Alternating descent phase ep2109–ep2120 invalidated three pre-computed surgery timing scenarios. Plateau gate correctly withheld surgery during active descent. Model consolidating ~9.791–9.794 as of ep2120; plateau gate continues accumulating. WALD sev=0.953.
+| Ep 2192 | 17L | **9.7641** | Epoch ATL (2026-05-19T~20:13Z); decisive break after 22-epoch oscillation shelf |
+| Ep 2196 | 17L | **9.7633** | Epoch ATL (2026-05-19T~20:35Z); **batch ATL 9.5820** (ep2194) |
+| Ep 2292 | 17L | **9.7170** | Epoch ATL (2026-05-20T~06:20Z); **batch ATL 9.4925** |
+| Ep 2487 | 17L→**18L** | **SURGERY** | **17L→18L Net2Net surgery** (2026-05-20T~21:33Z). Mandelbrot c_im=0.0099. Plateau Δ0.0193/144ep. Gen 1 step 1/6. Window→233. Ceiling→21L. Pre-surgery best archived. |
+| Ep 2489 | 18L | **9.6248** | **EPOCH ATL — first 18L ATL, no spike** (2026-05-20T~21:40Z). Batch ATL **9.3866** — single-epoch drop of −0.0313. LNG 0%→55%, CMP 100%, INT differentiating. |
+
+**All-time best (epoch avg):** 9.6248 (ep2489, 2026-05-20T~21:40Z) — first 18L epoch, no post-surgery spike
+**All-time best (intra-batch):** 9.3866 (ep2489, 2026-05-20T~21:40Z)
+**Surgery governor status:** 17L→18L surgery fired at ep2487 under full Fibonacci+Mandelbrot+Gen cycling. 18L Gen 1 step 1/6 active. PLATEAU gate filling (24/233 as of ep2490). MYC_STABLE recovering post-surgery.
 
 ### Alternating Descent Phase — Governor Validation Finding (2026-05-19)
 

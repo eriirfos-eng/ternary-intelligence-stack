@@ -34,9 +34,9 @@ expect from conventional monorepos.
 
 ## Overview
 
-Albert MoE-13 is a ternary-native transformer with Mixture-of-Experts feed-forward layers. Every weight matrix is quantized to {-1, 0, +1} during both forward and backward passes via Straight-Through Estimation. The architecture grows its own depth autonomously through the `EvolutionManager`. Five autonomous surgeries carried it from 12L to 17L during the v3.0 run.
+Albert MoE-13 is a ternary-native transformer with Mixture-of-Experts feed-forward layers. Every weight matrix is quantized to {-1, 0, +1} during both forward and backward passes via Straight-Through Estimation. The architecture grows its own depth autonomously through the `EvolutionManager`. Six autonomous surgeries carried it from 12L to 18L during the v3.0 run.
 
-**Current state (2026-05-15):** 256H · 17L · 4H · 12E · 256CTX · 32kV · Global Epoch 1191+ · epoch-ATL 10.1993 (ep1189) · batch-ATL 10.1600 (ep1185)
+**Current state (2026-05-20):** 256H · 18L · 4H · 12E · 256CTX · 32kV · Global Epoch 2490+ · epoch-ATL 9.6248 (ep2489) · batch-ATL 9.3866 (ep2489) · Gen 1 step 1/6 · window 233ep · ceiling 21L
 
 ---
 
@@ -163,7 +163,7 @@ max_layers         = uncapped in v3.0 (governed by plateau gate + cord-surgery t
 
 **Corpus unlocking:** The EvolutionManager queries the current layer count at each surgery event and enables newly unlocked corpus stages automatically. Stage 6 (Gutenberg) unlocks at 6L; Stage 7 (Simple Wikipedia) at 7L. This couples architectural depth to corpus breadth.
 
-Albert grew from 3L to 12L across ten autonomous surgery events (v2.0.0 run), then 12L to 17L across five more surgeries in the v3.0 run (ep511, ep547, ep611, ep645, ep701). Growth continues — 17L→18L surgery pending the F9 plateau gate (144-epoch window).
+Albert grew from 3L to 12L across ten autonomous surgery events (v2.0.0 run), then 12L to 17L across five more surgeries in the v3.0 run (ep511, ep547, ep611, ep645, ep701). Growth continues — 17L→18L surgery fired at ep2487 (2026-05-20); 18L→19L pending Gen 1 step 2/6 plateau gate (377-epoch window, ceiling 21L).
 
 ---
 
