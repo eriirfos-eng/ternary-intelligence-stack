@@ -206,9 +206,11 @@ def main():
          "commit", "-m", f"spore: {args.name} ep{epoch} loss={loss:.4f}"],
         cwd=spores_repo, check=True
     )
-    # Pull any remote commits (e.g. maintainer fixes) before pushing.
-    # --autostash handles any unstaged LFS pointer drift without failing.
-    subprocess.run(["git", "pull", "--rebase", "--autostash"], cwd=spores_repo, check=True)
+    # Pull any remote commits before pushing.
+    # GIT_LFS_SKIP_SMUDGE=1 prevents git-lfs from downloading other contributors'
+    # safetensors on pull — we only need the pointer files, not the actual binaries.
+    pull_env = {**os.environ, "GIT_LFS_SKIP_SMUDGE": "1"}
+    subprocess.run(["git", "pull", "--rebase", "--autostash"], cwd=spores_repo, env=pull_env, check=True)
     subprocess.run(["git", "push"], cwd=spores_repo, check=True)
     print(f"[produce_spore] pushed to albert-spores")
     print(f"[produce_spore] done — spore is live")

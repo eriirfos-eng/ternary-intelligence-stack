@@ -3778,6 +3778,7 @@
             const minPt = newPts.reduce((a, b) => b.y < a.y ? b : a, newPts[newPts.length - 1]);
             const prevATL = allTimeBestBatch;
             updateTopbar(minPt.y < bestLoss ? minPt : newPts[newPts.length - 1]);
+            updateGateChip(); // keep overlay in sync on every poll cycle
             if (!isReplay && allTimeBestBatch < prevATL && prevATL < Infinity) {
                 const impPct = ((prevATL - allTimeBestBatch) / prevATL * 100).toFixed(3);
                 notify('albert. — NEW ATL', `${allTimeBestBatch.toFixed(4)} · ↓${impPct}% vs ${prevATL.toFixed(4)}`);
@@ -4862,7 +4863,7 @@
         csvDownload(parts.join('\n'), `albert_full_${Date.now()}.csv`);
     });
 
-    // Gate chip — toggle overlay
+    // Gate chip — toggle overlay; force re-render + poll on every open
     const _gateChip    = document.getElementById('gate-chip');
     const _gateOverlay = document.getElementById('gate-overlay');
     _gateChip.addEventListener('click', function(e) {
@@ -4870,7 +4871,11 @@
         const rect = _gateChip.getBoundingClientRect();
         _gateOverlay.style.left = rect.left + 'px';
         _gateOverlay.style.top  = (rect.bottom + 6) + 'px';
+        const wasOpen = _gateOverlay.classList.contains('open');
         _gateOverlay.classList.toggle('open');
+        // Always re-render current gate state and fire a poll for fresh data
+        updateGateChip();
+        if (!wasOpen) poll();
     });
     _gateOverlay.addEventListener('click', e => e.stopPropagation());
 
