@@ -1042,11 +1042,13 @@
         <span class="gate-val" id="ov-myc-val">—</span>
         <span class="gate-sub">/ &gt;= 5</span>
     </div>
-    <div class="gate-row">
-        <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="ov-dot-plateau" fill="#3f3f3f"/></svg>
-        <span class="gate-dot-lbl">Plateau</span>
-        <span class="gate-val" id="ov-plateau-val">—</span>
-        <span class="gate-sub" id="ov-plateau-sub">delta / win</span>
+    <div class="gate-row" style="align-items:flex-start">
+        <svg width="7" height="7" viewBox="0 0 7 7" style="margin-top:3px"><circle cx="3.5" cy="3.5" r="3.5" id="ov-dot-plateau" fill="#3f3f3f"/></svg>
+        <span class="gate-dot-lbl" style="margin-top:1px">Plateau</span>
+        <div style="display:flex;flex-direction:column;gap:1px">
+            <span class="gate-val" id="ov-plateau-val">—</span>
+            <span class="gate-sub" id="ov-plateau-sub">delta / win</span>
+        </div>
     </div>
     <div class="gate-footer" id="ov-footer">since_best — &middot; wald_fill —</div>
 </div>
@@ -3704,19 +3706,25 @@
                     updateGateChip();
                 }
 
-                // Evolution log lines — parse window and threshold dynamically.
-                // Matches: Calibrated, Restored, and post-surgery Gen step lines.
-                // The Restored line wins over Calibrated (appears later in log on restart).
-                const evolm = line.match(/\[evolution\].*window=(\d+) epochs/);
-                if (evolm) {
-                    gGateFibWin = parseInt(evolm[1]);
-                    // Trim ring to exactly the new window size
-                    if (gLossRing.length > gGateFibWin) {
-                        gLossRing = gLossRing.slice(-gGateFibWin);
-                    }
-                    const thrm = line.match(/threshold=([\d.]+)/);
+                // Evolution log lines — split on line type:
+                // Gen step (surgery advance): reset ring — new era, counts from zero
+                // Restored/Calibrated (restart): trim only — same era, keep history
+                const genStepM = line.match(/\[evolution\] Gen \d+ step \d+\/\d+ → window=(\d+) epochs/);
+                if (genStepM) {
+                    gGateFibWin = parseInt(genStepM[1]);
+                    gLossRing   = [];  // surgery boundary — epoch count starts from zero
+                    const thrm  = line.match(/threshold=([\d.]+)/);
                     if (thrm) gGatePlateauThresh = parseFloat(thrm[1]);
                     updateGateChip();
+                } else {
+                    const restoredM = line.match(/\[evolution\].*window=(\d+) epochs/);
+                    if (restoredM) {
+                        gGateFibWin = parseInt(restoredM[1]);
+                        if (gLossRing.length > gGateFibWin) gLossRing = gLossRing.slice(-gGateFibWin);
+                        const thrm = line.match(/threshold=([\d.]+)/);
+                        if (thrm) gGatePlateauThresh = parseFloat(thrm[1]);
+                        updateGateChip();
+                    }
                 }
 
                 // WALD dead-zone event — fires only when the dead signature changes
