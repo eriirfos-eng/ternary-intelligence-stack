@@ -4866,16 +4866,15 @@
     // Gate chip — toggle overlay; force re-render + poll on every open
     const _gateChip    = document.getElementById('gate-chip');
     const _gateOverlay = document.getElementById('gate-overlay');
-    _gateChip.addEventListener('click', function(e) {
+    _gateChip.addEventListener('click', async function(e) {
         e.stopPropagation();
         const rect = _gateChip.getBoundingClientRect();
         _gateOverlay.style.left = rect.left + 'px';
         _gateOverlay.style.top  = (rect.bottom + 6) + 'px';
-        const wasOpen = _gateOverlay.classList.contains('open');
         _gateOverlay.classList.toggle('open');
-        // Always re-render current gate state and fire a poll for fresh data
-        updateGateChip();
-        if (!wasOpen) poll();
+        updateGateChip(); // immediate render with current state
+        await poll();     // always fetch fresh data on every click
+        updateGateChip(); // re-render with any new epoch summaries from the poll
     });
     _gateOverlay.addEventListener('click', e => e.stopPropagation());
 
@@ -5483,6 +5482,7 @@
         smaPreSeedLen  = smaLog.length; // freeze — never cleared below this point
         smaPreseedMaxX = smaPreSeedLen > 0 ? smaLog[smaPreSeedLen - 1].x : -Infinity;
         let _preseedTns = null;
+        let _lastGateEpsm = null;
         for (const line of epochText.split('\n')) {
             const m = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)/);
             if (!m) continue;
@@ -5491,6 +5491,18 @@
                 epochLog.push({ local_epoch: ge, global_epoch: ge, layers: null, avg_loss: al, clipped: false, skipped: false });
             const tm = line.match(/tns=(\d+)/);
             if (tm) _preseedTns = parseInt(tm[1]);
+            // Bootstrap gate state — accumulate loss ring and track last full summary
+            gLossRing.push(al);
+            if (gLossRing.length > 150) gLossRing.shift();
+            const gm = line.match(/loss_best=([\d.]+) since_best=(\d+) wald_sev=([\d.]+) wald_fill=([\d.]+)%/);
+            if (gm) _lastGateEpsm = gm;
+        }
+        // Apply last known gate state so the overlay is populated immediately on load
+        if (_lastGateEpsm) {
+            gGateLossBest  = parseFloat(_lastGateEpsm[1]);
+            gGateSinceBest = parseInt(_lastGateEpsm[2]);
+            gGateWaldSev   = parseFloat(_lastGateEpsm[3]);
+            gGateWaldFill  = parseFloat(_lastGateEpsm[4]);
         }
         const _tnsStored = localStorage.getItem('albert_tns');
         if (_preseedTns !== null)
@@ -5506,6 +5518,7 @@
         if (allTimeBestBatch < Infinity)
             document.getElementById('v-best').textContent = allTimeBestBatch.toFixed(4);
     }).finally(() => {
+        updateGateChip(); // render gate state from preseed before first poll arrives
         poll(); // first render with real data
         // re-sync Chart.js dataset visibility — loadPrefs() fires before data exists,
         // so Chart.js initialises hidden-state from its own defaults on the first update();
