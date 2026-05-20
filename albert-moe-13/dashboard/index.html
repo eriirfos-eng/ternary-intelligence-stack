@@ -931,7 +931,6 @@
     <div class="tb-cell" id="gate-chip" title="Surgery Gate — click to expand">
         <span class="tb-label">GATE</span>
         <span id="gate-dots">
-            <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="gate-dot-loss" fill="#3f3f3f"/></svg>
             <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="gate-dot-myc" fill="#3f3f3f"/></svg>
             <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="gate-dot-plateau" fill="#3f3f3f"/></svg>
         </span>
@@ -1037,12 +1036,6 @@
 
 <div id="gate-overlay">
     <div class="gate-title" id="gate-overlay-title">Surgery Gate — 17L → 18L</div>
-    <div class="gate-row">
-        <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="ov-dot-loss" fill="#3f3f3f"/></svg>
-        <span class="gate-dot-lbl">Loss</span>
-        <span class="gate-val" id="ov-loss-val">—</span>
-        <span class="gate-sub">/ &lt; 9.80</span>
-    </div>
     <div class="gate-row">
         <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="ov-dot-myc" fill="#3f3f3f"/></svg>
         <span class="gate-dot-lbl">myc_stable</span>
@@ -1353,7 +1346,6 @@
     let lastDojiEp      = -999;
 
     // ── Surgery Gate state ───────────────────────────────────────────
-    let gGateLossBest   = null;
     let gGateSinceBest  = null;
     let gGateMycStable  = null;
     let gGateWaldFill   = null;
@@ -1385,13 +1377,6 @@
     function updateGateChip() {
         const C = { green: '#22c55e', orange: '#f59e0b', red: '#ef4444', grey: '#3f3f3f' };
 
-        // Loss gate: loss_best < 9.80
-        let lossCol = C.grey, lossText = '—';
-        if (gGateLossBest !== null) {
-            lossText = gGateLossBest.toFixed(4);
-            lossCol  = gGateLossBest < 9.80 ? C.green : gGateLossBest < 9.85 ? C.orange : C.red;
-        }
-
         // myc_stable gate: >= 5
         let mycCol = C.grey, mycText = '—';
         if (gGateMycStable !== null) {
@@ -1416,16 +1401,12 @@
         }
 
         // Chip dots
-        document.getElementById('gate-dot-loss').setAttribute('fill', lossCol);
         document.getElementById('gate-dot-myc').setAttribute('fill', mycCol);
         document.getElementById('gate-dot-plateau').setAttribute('fill', platCol);
 
         // Overlay values
-        document.getElementById('ov-dot-loss').setAttribute('fill', lossCol);
         document.getElementById('ov-dot-myc').setAttribute('fill', mycCol);
         document.getElementById('ov-dot-plateau').setAttribute('fill', platCol);
-        const ovLoss = document.getElementById('ov-loss-val');
-        ovLoss.textContent = lossText; ovLoss.style.color = lossCol;
         const ovMyc = document.getElementById('ov-myc-val');
         ovMyc.textContent = mycText; ovMyc.style.color = mycCol;
         const ovPlat = document.getElementById('ov-plateau-val');
@@ -3692,8 +3673,7 @@
                     last.wald_sev  = parseFloat(epsm[5]);
                     last.wald_fill = parseFloat(epsm[6]);
                     last.ttlfreeze = parseInt(epsm[7]);
-                    // Gate state — update on every epoch; never let loss_best rise on restart
-                    gGateLossBest  = Math.min(gGateLossBest ?? Infinity, parseFloat(epsm[3]));
+                    // Gate state — update on every epoch
                     gGateSinceBest = parseInt(epsm[4]);
                     gGateWaldFill  = parseFloat(epsm[6]);
                     gGateWaldSev   = parseFloat(epsm[5]);
@@ -5526,7 +5506,6 @@
         }
         // Apply last known gate state so the overlay is populated immediately on load
         if (_lastGateEpsm) {
-            gGateLossBest  = parseFloat(_lastGateEpsm[1]);
             gGateSinceBest = parseInt(_lastGateEpsm[2]);
             gGateWaldSev   = parseFloat(_lastGateEpsm[3]);
             gGateWaldFill  = parseFloat(_lastGateEpsm[4]);
@@ -5539,11 +5518,6 @@
         // Derive true ATL floors from pre-seed data — these never reset
         for (const pt of smaLog) { if (pt.y < allTimeBestBatch) allTimeBestBatch = pt.y; }
         for (const e  of epochLog) { if (e.avg_loss < allTimeBestEpoch) allTimeBestEpoch = e.avg_loss; }
-        // Clamp loss gate to global best — prevents restart resetting it to a stale high value
-        if (allTimeBestEpoch < Infinity)
-            gGateLossBest = gGateLossBest !== null
-                ? Math.min(gGateLossBest, allTimeBestEpoch)
-                : allTimeBestEpoch;
         // Seed session trackers so RUN_START / restart never shows a value above the true historical min
         bestLoss     = allTimeBestBatch;
         bestEpochAvg = allTimeBestEpoch;
