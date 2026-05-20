@@ -49,12 +49,12 @@
         #topbar {
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
-            min-height: 40px;
+            flex-wrap: nowrap;
+            min-height: 36px;
             background: var(--bg1);
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
-            padding: 4px 6px;
+            padding: 3px 6px;
             gap: 4px;
         }
         .tb-cell {
@@ -62,23 +62,54 @@
             align-items: center;
             gap: 5px;
             padding: 0 10px;
-            height: 32px;
+            height: 28px;
             white-space: nowrap;
             flex: 0 0 auto;
             background: rgba(255,255,255,0.025);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 8px;
             transition: border-color 0.2s;
         }
         .tb-cell:hover { border-color: var(--border2); }
-        .tb-cell.arch { flex: 0 0 auto; min-width: 0; overflow: hidden; }
+        .tb-cell.arch { flex: 0 0 auto; max-width: 240px; min-width: 0; overflow: hidden; }
         .tb-cell.arch .tb-val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-        .tb-cell.controls { background: transparent; border: none; margin-left: auto; gap: 6px; padding-right: 6px; }
+        .tb-cell.controls { background: transparent; border: none; margin-left: auto; gap: 4px; padding-right: 4px; }
         #help-btn { width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);background:var(--bg2);color:var(--muted);font-size:11px;font-family:inherit;cursor:pointer;line-height:1;padding:0;flex-shrink:0; }
         .tb-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         .tb-val   { color: var(--text); font-weight: bold; font-size: 13px; }
         .tb-val.accent { color: var(--accent); font-size: 16px; }
         .tb-val.muted  { color: var(--muted); font-size: 12px; font-weight: normal; }
+
+        #gate-chip { cursor: pointer; }
+        #gate-dots { display: flex; align-items: center; gap: 4px; }
+        #gate-overlay {
+            display: none;
+            position: fixed;
+            background: var(--bg1);
+            border: 1px solid var(--border2);
+            border-radius: 10px;
+            padding: 12px 16px;
+            z-index: 9990;
+            min-width: 230px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+            font-size: 11px;
+            line-height: 1.9;
+        }
+        #gate-overlay.open { display: block; }
+        .gate-title {
+            font-size: 10px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+        }
+        .gate-row { display: flex; align-items: center; gap: 7px; margin: 2px 0; }
+        .gate-dot-lbl { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; flex: 0 0 78px; }
+        .gate-val { font-weight: bold; }
+        .gate-sub { color: var(--muted); font-size: 10px; }
+        .gate-footer { margin-top: 8px; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 6px; }
 
         #model-name { color: var(--accent); font-weight: bold; font-size: 13px; letter-spacing: 1px; font-family: inherit; }
 
@@ -156,6 +187,13 @@
         .dd-sep { height: 1px; background: var(--border); margin: 4px 8px; }
         .dd-row { display: flex; align-items: center; }
         .dd-row .dd-item { flex: 1; padding-right: 4px; }
+        .dd-section-hdr { font-size: 9px; letter-spacing: 0.9px; text-transform: uppercase; color: var(--muted); padding: 6px 12px 2px; pointer-events: none; }
+        #toolsDrop[data-ctx="draw"] .dd-section-hdr:first-child,
+        #toolsDrop[data-ctx="draw"] label.dd-item,
+        #toolsDrop[data-ctx="draw"] .dd-sep { display: none; }
+        #toolsDrop[data-ctx="draw"] .dd-section-hdr:last-of-type { padding-top: 4px; }
+        .dd-item { color: var(--item-col, var(--accent)); }
+        .dd-item input[type=checkbox] { accent-color: var(--item-col, var(--accent)); }
         .dd-trail {
             display: flex; align-items: center; gap: 3px;
             padding: 5px 10px 5px 4px; font-size: 10px;
@@ -860,44 +898,44 @@
 <body>
 
 <div id="topbar">
-    <div class="tb-cell" style="gap:6px">
+    <div class="tb-cell" style="gap:6px;padding:0 8px">
         <span id="dingir">𒀭</span>
         <span id="model-name">albert.</span>
     </div>
-
-    <div class="tb-cell">
+    <div class="tb-cell arch">
+        <span class="tb-label">ARCH</span>
+        <span class="tb-val muted" id="v-arch">—</span>
+    </div>
+    <div class="tb-cell" title="Total tensors loaded in current checkpoint">
+        <span class="tb-label">TNS</span>
+        <span class="tb-val" id="v-tns">—</span>
+    </div>
+    <div class="tb-cell" style="display:none">
         <span class="tb-label">LOSS</span>
         <span class="tb-val accent" id="v-loss">—</span>
         <span id="delta" class="flat"></span>
     </div>
-
     <div class="tb-cell">
-        <span class="tb-label">EPOCH</span>
+        <span class="tb-label">EP</span>
         <span class="tb-val" id="v-epoch">—</span>
     </div>
-
     <div class="tb-cell">
         <span class="tb-label">BATCH</span>
-        <span class="tb-val" id="v-batch">— / 300</span>
+        <span class="tb-val" id="v-batch">— / —</span>
     </div>
-
     <div class="tb-cell">
         <span class="tb-label" title="All-time low — single batch minimum across full training history">ATL</span>
         <span class="tb-val" id="v-best">—</span>
         <span id="v-best-pct" style="font-size:10px;color:#22c55e;margin-left:2px"></span>
     </div>
-
-    <div class="tb-cell" title="Total tensors loaded in current checkpoint">
-        <span class="tb-label">TNS</span>
-        <span class="tb-val" id="v-tns">—</span>
+    <div class="tb-cell" id="gate-chip" title="Surgery Gate — click to expand">
+        <span class="tb-label">GATE</span>
+        <span id="gate-dots">
+            <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="gate-dot-loss" fill="#3f3f3f"/></svg>
+            <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="gate-dot-myc" fill="#3f3f3f"/></svg>
+            <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="gate-dot-plateau" fill="#3f3f3f"/></svg>
+        </span>
     </div>
-
-    <div class="tb-cell arch">
-        <span class="tb-label">ARCH</span>
-        <span class="tb-val muted" id="v-arch">—</span>
-    </div>
-
-
     <div class="tb-cell controls">
         <button id="muteBtn" title="Toggle sound" style="background:none;border:none;cursor:pointer;padding:3px 5px;color:#505050;display:flex;align-items:center">
             <svg id="muteIcon" viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
@@ -965,27 +1003,22 @@
             <option value="5">5 EP</option>
         </select>
         <div class="dd-wrap">
-            <button id="taDropBtn" title="Toggle chart overlays and technical indicators">TA ▾</button>
-            <div class="dd-panel" id="taDrop">
-                <label class="dd-item"><input type="checkbox" id="cbFib"> ◇ FIB <small>Fibonacci zones</small></label>
-                <label class="dd-item"><input type="checkbox" id="cbBB"> ~ BB <small>Bollinger ±2σ</small></label>
+            <button id="toolsDropBtn" title="Technical analysis + drawing tools">TOOLS ▾</button>
+            <div class="dd-panel" id="toolsDrop" style="min-width:210px">
+                <div class="dd-section-hdr">Technical Analysis</div>
+                <label class="dd-item" style="--item-col:#ffd700"><input type="checkbox" id="cbFib"> ◇ FIB <small>Fibonacci zones</small></label>
+                <label class="dd-item" style="--item-col:#22d3ee"><input type="checkbox" id="cbBB"> ~ BB <small>Bollinger ±2σ</small></label>
+                <label class="dd-item" style="--item-col:#f59e0b"><input type="checkbox" id="cbOHLC"> ▮ OHLC <small>candlesticks</small></label>
+                <label class="dd-item" style="--item-col:#fb923c"><input type="checkbox" id="cbHA"> ▮ HA <small>Heikin-Ashi</small></label>
+                <label class="dd-item" style="--item-col:#a78bfa"><input type="checkbox" id="cbMACD"> ~ MACD <small>ep 3/13 divergence</small></label>
+                <label class="dd-item" style="--item-col:#34d399"><input type="checkbox" id="cbRSI"> ~ RSI <small>momentum 0–100</small></label>
                 <div class="dd-sep"></div>
-                <label class="dd-item"><input type="checkbox" id="cbOHLC"> ▮ OHLC <small>candlesticks</small></label>
-                <label class="dd-item"><input type="checkbox" id="cbHA"> ▮ HA <small>Heikin-Ashi</small></label>
-                <div class="dd-sep"></div>
-                <label class="dd-item"><input type="checkbox" id="cbMACD"> ~ MACD <small>ep 3/13 divergence</small></label>
-                <label class="dd-item"><input type="checkbox" id="cbRSI"> ~ RSI <small>momentum 0–100</small></label>
-            </div>
-        </div>
-        <div class="dd-wrap">
-            <button id="drawBtn" title="Drawing tools — trendlines, H/V lines · Esc exits · Backspace removes last"><svg viewBox="0 0 12 12" width="12" height="12" fill="currentColor"><path d="M9.2 1.3a1 1 0 0 1 1.5 1.5L9.5 4 8 2.5l1.2-1.2zM7 3.5L2.5 8 2 10l2-.5L8.5 5 7 3.5z"/></svg></button>
-            <div class="dd-panel" id="drawDrop" style="min-width:180px">
-                <div class="draw-tool-item active" data-tool="trendline"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 10L10 2"/></svg> Trendline</div>
-                <div class="draw-tool-item" data-tool="hline"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 6h10"/></svg> H-Line <small>resistance / support</small></div>
-                <div class="draw-tool-item" data-tool="vline"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1v10"/></svg> V-Line <small>epoch marker</small></div>
-                <div class="dd-sep"></div>
-                <div class="draw-tool-item" data-tool="tnote"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3"><text x="2" y="10" font-size="9" fill="currentColor" stroke="none" font-family="monospace">T</text></svg> Text Note</div>
-                <div class="draw-tool-item" data-tool="arrow"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="10" x2="9" y2="3"/><polyline points="5,3 9,3 9,7"/></svg> Arrow <small>annotate point</small></div>
+                <div class="dd-section-hdr">Drawing</div>
+                <div class="draw-tool-item active" data-tool="trendline" style="color:#ffd700"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 10L10 2"/></svg> Trendline</div>
+                <div class="draw-tool-item" data-tool="hline" style="color:#22d3ee"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 6h10"/></svg> H-Line <small>resistance / support</small></div>
+                <div class="draw-tool-item" data-tool="vline" style="color:#818cf8"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1v10"/></svg> V-Line <small>epoch marker</small></div>
+                <div class="draw-tool-item" data-tool="tnote" style="color:#94a3b8"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3"><text x="2" y="10" font-size="9" fill="currentColor" stroke="none" font-family="monospace">T</text></svg> Text Note</div>
+                <div class="draw-tool-item" data-tool="arrow" style="color:#f97316"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="10" x2="9" y2="3"/><polyline points="5,3 9,3 9,7"/></svg> Arrow <small>annotate point</small></div>
             </div>
         </div>
         <button id="resetBtn" title="Reset zoom"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 2l3 3M10 2L7 5M2 10l3-3M10 10L7 7"/><rect x="4" y="4" width="4" height="4" rx="0.5" stroke-width="1.2"/></svg></button>
@@ -1000,6 +1033,29 @@
         </div>
         <button id="help-btn" title="Keyboard shortcuts">?</button>
     </div>
+</div>
+
+<div id="gate-overlay">
+    <div class="gate-title" id="gate-overlay-title">Surgery Gate — 17L → 18L</div>
+    <div class="gate-row">
+        <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="ov-dot-loss" fill="#3f3f3f"/></svg>
+        <span class="gate-dot-lbl">Loss</span>
+        <span class="gate-val" id="ov-loss-val">—</span>
+        <span class="gate-sub">/ &lt; 9.80</span>
+    </div>
+    <div class="gate-row">
+        <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="ov-dot-myc" fill="#3f3f3f"/></svg>
+        <span class="gate-dot-lbl">myc_stable</span>
+        <span class="gate-val" id="ov-myc-val">—</span>
+        <span class="gate-sub">/ &gt;= 5</span>
+    </div>
+    <div class="gate-row">
+        <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="ov-dot-plateau" fill="#3f3f3f"/></svg>
+        <span class="gate-dot-lbl">Plateau</span>
+        <span class="gate-val" id="ov-plateau-val">—</span>
+        <span class="gate-sub" id="ov-plateau-sub">delta / win</span>
+    </div>
+    <div class="gate-footer" id="ov-footer">since_best — &middot; wald_fill —</div>
 </div>
 
 <div id="chart-wrap">
@@ -1103,7 +1159,8 @@
 <div id="tooltip"></div>
 <script>
     // Log now writes real cross-entropy loss directly — no division needed.
-    const BATCHES_PER_EPOCH  = 300;
+    // Epoch length is dynamic — parsed live from the [HH:MM:SS] timestamp lines.
+    let gBatchesPerEpoch = 300;
 
     // ── BroadcastChannel: main tab → panel/mycelium tabs ─────────────
     const _streamBC = (() => { try { return new BroadcastChannel('albert-stream'); } catch(e) { return { postMessage: ()=>{} }; } })();
@@ -1292,6 +1349,17 @@
     let smaPreseedMaxX  = -Infinity;  // last x value in pre-seed; tail-fetch pts ≤ this are already in smaLog
     let lastDojiEp      = -999;
 
+    // ── Surgery Gate state ───────────────────────────────────────────
+    let gGateLossBest   = null;
+    let gGateSinceBest  = null;
+    let gGateMycStable  = null;
+    let gGateWaldFill   = null;
+    let gGateWaldSev    = null;
+    let gGateCurrentL   = null;    // current layer count from ARCH line
+    let gGateFibWin        = 144;  // plateau window epochs — updated live from [evolution] log lines
+    let gGatePlateauThresh = 0.020; // plateau delta threshold — updated live from [evolution] log lines
+    let gLossRing          = [];   // rolling epoch avg losses for plateau delta check
+
     // ── Tooltip ──────────────────────────────────────────────────────
     const ttDiv = document.getElementById('tooltip');
     function tipPosition(cx, cy) {
@@ -1310,6 +1378,69 @@
     document.addEventListener('mousemove', ev => {
         if (ttDiv.style.display === 'block') tipPosition(ev.clientX, ev.clientY);
     });
+    // ── Surgery Gate chip renderer ────────────────────────────────────
+    function updateGateChip() {
+        const C = { green: '#22c55e', orange: '#f59e0b', red: '#ef4444', grey: '#3f3f3f' };
+
+        // Loss gate: loss_best < 9.80
+        let lossCol = C.grey, lossText = '—';
+        if (gGateLossBest !== null) {
+            lossText = gGateLossBest.toFixed(4);
+            lossCol  = gGateLossBest < 9.80 ? C.green : gGateLossBest < 9.85 ? C.orange : C.red;
+        }
+
+        // myc_stable gate: >= 5
+        let mycCol = C.grey, mycText = '—';
+        if (gGateMycStable !== null) {
+            mycText = String(gGateMycStable);
+            mycCol  = gGateMycStable >= 5 ? C.green : gGateMycStable >= 3 ? C.orange : C.red;
+        }
+
+        // Plateau gate: |oldest - newest| < plateau_threshold over Fibonacci window
+        // While filling: Red (<66%) → Orange (66–99%) → Green (full + delta met)
+        let platCol = C.grey, platText = '—', platSub = 'filling window…';
+        if (gLossRing.length >= gGateFibWin) {
+            const oldest = gLossRing[gLossRing.length - gGateFibWin];
+            const latest = gLossRing[gLossRing.length - 1];
+            const delta  = Math.abs(oldest - latest);
+            platText = delta.toFixed(4);
+            platSub  = '/ < ' + gGatePlateauThresh.toFixed(3) + ' (win=' + gGateFibWin + ')';
+            platCol  = delta < gGatePlateauThresh ? C.green
+                     : delta < gGatePlateauThresh * 3 ? C.orange : C.red;
+        } else {
+            platText = gLossRing.length + '/' + gGateFibWin;
+            platCol  = (gLossRing.length / gGateFibWin) >= 0.66 ? C.orange : C.red;
+        }
+
+        // Chip dots
+        document.getElementById('gate-dot-loss').setAttribute('fill', lossCol);
+        document.getElementById('gate-dot-myc').setAttribute('fill', mycCol);
+        document.getElementById('gate-dot-plateau').setAttribute('fill', platCol);
+
+        // Overlay values
+        document.getElementById('ov-dot-loss').setAttribute('fill', lossCol);
+        document.getElementById('ov-dot-myc').setAttribute('fill', mycCol);
+        document.getElementById('ov-dot-plateau').setAttribute('fill', platCol);
+        const ovLoss = document.getElementById('ov-loss-val');
+        ovLoss.textContent = lossText; ovLoss.style.color = lossCol;
+        const ovMyc = document.getElementById('ov-myc-val');
+        ovMyc.textContent = mycText; ovMyc.style.color = mycCol;
+        const ovPlat = document.getElementById('ov-plateau-val');
+        ovPlat.textContent = platText; ovPlat.style.color = platCol;
+        document.getElementById('ov-plateau-sub').textContent = platSub;
+
+        // Footer info
+        const sinceTxt = gGateSinceBest !== null ? 'since_best ' + gGateSinceBest : 'since_best —';
+        const fillTxt  = gGateWaldFill  !== null ? 'wald_fill ' + gGateWaldFill.toFixed(1) + '%' : 'wald_fill —';
+        document.getElementById('ov-footer').textContent = sinceTxt + ' · ' + fillTxt;
+
+        // Overlay title — update if layer count known
+        if (gGateCurrentL !== null) {
+            document.getElementById('gate-overlay-title').textContent =
+                'Surgery Gate — ' + gGateCurrentL + 'L → ' + (gGateCurrentL + 1) + 'L';
+        }
+    }
+
     // esc() sanitizes user/server data before interpolation into innerHTML contexts
     function esc(s) {
         return String(s)
@@ -2953,7 +3084,7 @@
         document.getElementById('v-loss').textContent  = loss.toFixed(4);
         document.getElementById('v-epoch').textContent =
             latest.layers ? `${Math.floor(latest.epoch)} (${latest.layers}L)` : Math.floor(latest.epoch);
-        document.getElementById('v-batch').textContent = `${latest.batch} / ${BATCHES_PER_EPOCH}`;
+        document.getElementById('v-batch').textContent = `${latest.batch} / ${gBatchesPerEpoch}`;
         // v-tns updated separately when "Loaded X tensors" line is parsed
 
         if (sessionStartLoss === null) sessionStartLoss = loss;
@@ -3080,6 +3211,7 @@
                 if (am) {
                     document.getElementById('v-arch').textContent =
                         `${am[1]}L · ${am[2]}H · ${am[3]}E · ${am[4]}CTX · ${Math.round(am[5]/1000)}K`;
+                    gGateCurrentL = parseInt(am[1]);
                     continue;
                 }
                 // Tensor count — "Loaded X tensors from checkpoint"
@@ -3205,6 +3337,7 @@
                         _tlightPendingLayers = layers;
                         _tlightPendingStep   = tlStep;
                         if (window.mycFlowUpdate) mycFlowUpdate({ tlight: layers });
+                        window._mycTlightCache = layers;
 
                         // TTL aggregate anomaly events — sum G/O/R across all layers
                         const totalExperts = layers.length * 12;
@@ -3261,6 +3394,11 @@
                     continue;
                 }
 
+                // Timestamp line — parse total batches per epoch dynamically
+                // Format: [HH:MM:SS] Epoch NL (Global N) | B/TOTAL | Loss: ...
+                const tsbm = line.match(/^\[\d{2}:\d{2}:\d{2}\].*\|\s*\d+\/(\d+)\s*\|/);
+                if (tsbm) { gBatchesPerEpoch = parseInt(tsbm[1]); continue; }
+
                 // Batch loss line — capture layer count too
                 const m = line.match(/Epoch\s+(\d+)\s+\(Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)/);
                 if (!m) continue;
@@ -3270,7 +3408,7 @@
                 const loss   = parseFloat(m[4]);
                 // Reject warmup-phase spikes and any non-finite value — protects Y-axis scale
                 if (!isFinite(loss) || loss < 1 || loss > 50) continue;
-                const bx     = epoch + batch / BATCHES_PER_EPOCH;
+                const bx     = epoch + batch / gBatchesPerEpoch;
                 lastBatchX   = bx;
                 lastBatchY   = loss;
                 // Spike detection — loss significantly above last epoch average (once per epoch)
@@ -3298,7 +3436,7 @@
                 }
                 // Snapshot all available telemetry into the batch log for CSV export
                 batchLog.push({
-                    step:          (epoch - 1) * BATCHES_PER_EPOCH + batch,
+                    step:          (epoch - 1) * gBatchesPerEpoch + batch,
                     global_epoch:  epoch,
                     batch,
                     layers,
@@ -3492,12 +3630,21 @@
                 }
                 // EPOCH_SUMMARY — backfill wald/ttl data into the most-recent epochLog entry.
                 // Comes after the === Epoch line in log order, so epochLog entry already exists.
-                const epsm = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=[\d.]+ \(d[+\-][\d.]+\) loss_best=[\d.]+ wald_sev=([\d.]+) wald_fill=([\d.]+)% ttlfreeze=(\d+)/);
+                // Groups: 1=epoch 2=loss_avg 3=loss_best 4=since_best 5=wald_sev 6=wald_fill 7=ttlfreeze
+                const epsm = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+) \(d[+\-][\d.]+\) loss_best=([\d.]+) since_best=(\d+) wald_sev=([\d.]+) wald_fill=([\d.]+)% ttlfreeze=(\d+)/);
                 if (epsm && epochLog.length > 0) {
                     const last = epochLog[epochLog.length - 1];
-                    last.wald_sev  = parseFloat(epsm[2]);
-                    last.wald_fill = parseFloat(epsm[3]);
-                    last.ttlfreeze = parseInt(epsm[4]);
+                    last.wald_sev  = parseFloat(epsm[5]);
+                    last.wald_fill = parseFloat(epsm[6]);
+                    last.ttlfreeze = parseInt(epsm[7]);
+                    // Gate state — update on every epoch
+                    gGateLossBest  = parseFloat(epsm[3]);
+                    gGateSinceBest = parseInt(epsm[4]);
+                    gGateWaldFill  = parseFloat(epsm[6]);
+                    gGateWaldSev   = parseFloat(epsm[5]);
+                    gLossRing.push(parseFloat(epsm[2]));
+                    if (gLossRing.length > 150) gLossRing.shift();
+                    updateGateChip();
                     // Tensor count — re-emitted every epoch so dashboard always has it in the tail window
                     const tnse = line.match(/tns=(\d+)/);
                     if (tnse) {
@@ -3526,6 +3673,28 @@
                             );
                         }
                     }
+                }
+
+                // MYCELIUM — update myc_stable for surgery gate
+                const mycm = line.match(/^MYCELIUM epoch=\d+ dead=\d+ blooming=\d+ hot=\S+ cold=\S+ pressure=\[.*?\] myc_stable=(\d+)/);
+                if (mycm) {
+                    gGateMycStable = parseInt(mycm[1]);
+                    updateGateChip();
+                }
+
+                // Evolution log lines — parse window and threshold dynamically.
+                // Matches: Calibrated, Restored, and post-surgery Gen step lines.
+                // The Restored line wins over Calibrated (appears later in log on restart).
+                const evolm = line.match(/\[evolution\].*window=(\d+) epochs/);
+                if (evolm) {
+                    gGateFibWin = parseInt(evolm[1]);
+                    // Trim the ring buffer to the new window size
+                    if (gLossRing.length > gGateFibWin + 50) {
+                        gLossRing = gLossRing.slice(-(gGateFibWin + 50));
+                    }
+                    const thrm = line.match(/threshold=([\d.]+)/);
+                    if (thrm) gGatePlateauThresh = parseFloat(thrm[1]);
+                    updateGateChip();
                 }
 
                 // WALD dead-zone event — fires only when the dead signature changes
@@ -4667,7 +4836,7 @@
         e.stopPropagation();
         document.getElementById('exportDrop').classList.toggle('open');
         document.getElementById('smaDrop').classList.remove('open');
-        document.getElementById('taDrop').classList.remove('open');
+        document.getElementById('toolsDrop').classList.remove('open');
     });
     document.getElementById('exportDrop').addEventListener('click', e => e.stopPropagation());
 
@@ -4693,28 +4862,32 @@
         csvDownload(parts.join('\n'), `albert_full_${Date.now()}.csv`);
     });
 
+    // Gate chip — toggle overlay
+    const _gateChip    = document.getElementById('gate-chip');
+    const _gateOverlay = document.getElementById('gate-overlay');
+    _gateChip.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const rect = _gateChip.getBoundingClientRect();
+        _gateOverlay.style.left = rect.left + 'px';
+        _gateOverlay.style.top  = (rect.bottom + 6) + 'px';
+        _gateOverlay.classList.toggle('open');
+    });
+    _gateOverlay.addEventListener('click', e => e.stopPropagation());
+
     // Close all dropdowns on outside click
     document.addEventListener('click', () => {
         document.getElementById('smaDrop').classList.remove('open');
-        document.getElementById('taDrop').classList.remove('open');
         document.getElementById('exportDrop').classList.remove('open');
-        const dd = document.getElementById('drawDrop');
+        _gateOverlay.classList.remove('open');
+        const dd = document.getElementById('toolsDrop');
         dd.classList.remove('open');
-        // Reset context-menu positioning back to default (anchored to drawBtn)
         dd.style.position = '';
         dd.style.top      = '';
         dd.style.left     = '';
         dd.style.right    = '';
+        delete dd.dataset.ctx;
     });
 
-    // TA dropdown open/close
-    document.getElementById('taDropBtn').addEventListener('click', function(e) {
-        e.stopPropagation();
-        document.getElementById('taDrop').classList.toggle('open');
-        document.getElementById('smaDrop').classList.remove('open');
-        document.getElementById('exportDrop').classList.remove('open');
-    });
-    document.getElementById('taDrop').addEventListener('click', e => e.stopPropagation());
 
     // FIB — dim grid lines when zones are visible
     document.getElementById('cbFib').addEventListener('change', function() {
@@ -4820,7 +4993,7 @@
     // Draw mode toggle — pencil button opens tool picker; clicking again exits draw mode
     function enterDrawMode() {
         drawMode = true;
-        document.getElementById('drawBtn').classList.add('active');
+        document.getElementById('toolsDropBtn').classList.add('active');
         pendingLine = null; pendingArrow = null;
         chart.canvas.style.cursor = 'crosshair';
         chart.options.plugins.zoom.pan.enabled        = false;
@@ -4830,7 +5003,7 @@
     }
     function exitDrawMode() {
         drawMode = false;
-        document.getElementById('drawBtn').classList.remove('active');
+        document.getElementById('toolsDropBtn').classList.remove('active');
         pendingLine = null; pendingArrow = null; selectedLineIdx = null; hoveredLineIdx = null; dragState = null; noteDragState = null; selectedNoteIdx = null; selectedArrowIdx = null; hoveredArrowIdx = null; arrowDragState = null;
         chart.canvas.style.cursor = 'grab';
         chart.options.plugins.zoom.pan.enabled        = true;
@@ -4838,21 +5011,20 @@
         chart.options.plugins.zoom.zoom.pinch.enabled = true;
         chart.update('none');
     }
-    document.getElementById('drawBtn').addEventListener('click', function(e) {
+    document.getElementById('toolsDropBtn').addEventListener('click', function(e) {
         e.stopPropagation();
-        if (drawMode) { exitDrawMode(); document.getElementById('drawDrop').classList.remove('open'); return; }
-        document.getElementById('drawDrop').classList.toggle('open');
+        if (drawMode) { exitDrawMode(); document.getElementById('toolsDrop').classList.remove('open'); return; }
+        document.getElementById('toolsDrop').classList.toggle('open');
         document.getElementById('smaDrop').classList.remove('open');
-        document.getElementById('taDrop').classList.remove('open');
         document.getElementById('exportDrop').classList.remove('open');
     });
-    document.getElementById('drawDrop').addEventListener('click', e => e.stopPropagation());
-    document.querySelectorAll('#drawDrop .draw-tool-item[data-tool]').forEach(item => {
+    document.getElementById('toolsDrop').addEventListener('click', e => e.stopPropagation());
+    document.querySelectorAll('#toolsDrop .draw-tool-item[data-tool]').forEach(item => {
         item.addEventListener('click', () => {
             drawTool = item.dataset.tool;
-            document.querySelectorAll('#drawDrop .draw-tool-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('#toolsDrop .draw-tool-item').forEach(el => el.classList.remove('active'));
             item.classList.add('active');
-            document.getElementById('drawDrop').classList.remove('open');
+            document.getElementById('toolsDrop').classList.remove('open');
             if (!drawMode) enterDrawMode();
         });
     });
@@ -5085,15 +5257,15 @@
             else if (pendingArrow) { pendingArrow = null; chart.draw(); }
             else { selectedLineIdx = null; selectedArrowIdx = null; chart.draw(); }
         } else {
-            // Open draw tool picker at cursor position
-            const dd = document.getElementById('drawDrop');
+            // Open draw-only context menu at cursor position
+            const dd = document.getElementById('toolsDrop');
             dd.style.position = 'fixed';
             dd.style.top      = e.clientY + 'px';
             dd.style.left     = e.clientX + 'px';
             dd.style.right    = 'auto';
+            dd.dataset.ctx    = 'draw';   // hide TA section via CSS
             dd.classList.add('open');
             document.getElementById('smaDrop').classList.remove('open');
-            document.getElementById('taDrop').classList.remove('open');
             document.getElementById('exportDrop').classList.remove('open');
         }
     });
@@ -5242,7 +5414,7 @@
 
     // Save on any change inside the dropdowns or the filter select
     document.getElementById('smaDrop').addEventListener('change', savePrefs);
-    document.getElementById('taDrop').addEventListener('change', savePrefs);
+    document.getElementById('toolsDrop').addEventListener('change', savePrefs);
     document.getElementById('viewFilter').addEventListener('change', savePrefs);
 
     loadPrefs();    // restore curve/filter settings
@@ -5460,13 +5632,15 @@
     // ?panel_stale_s=1800 for CPU contributors where sparse telemetry
     // lines (GRAD, ROUTE, TLIGHT) arrive every several minutes.
     // Override via ?stale_s=300&panel_stale_s=1800 for CPU training.
-    let STALE_MS       = _qp.has('stale_s')       ? Math.max(10, parseInt(_qp.get('stale_s')))       * 1000 : 30_000;
+    // Default 120s — generous enough for slow CPU batches without params.
+    // GPU (Modal T4) streams every ~500ms so 120s is never reached in practice.
+    let STALE_MS       = _qp.has('stale_s')       ? Math.max(10, parseInt(_qp.get('stale_s')))       * 1000 : 120_000;
     let PANEL_STALE_MS = _qp.has('panel_stale_s') ? Math.max(10, parseInt(_qp.get('panel_stale_s'))) * 1000 : STALE_MS;
     // Auto-configure from server — overrides URL params only if params are at their default (unset by user).
-    // CPU contributors get 5-min stream + 30-min panel thresholds automatically, no URL params required.
+    // CPU contributors get 10-min stream + 30-min panel thresholds automatically, no URL params required.
     fetch('/api/server-config').then(r => r.json()).then(cfg => {
         if (cfg.cpu_mode) {
-            if (!_qp.has('stale_s'))       STALE_MS       = 300_000;
+            if (!_qp.has('stale_s'))       STALE_MS       = 600_000;
             if (!_qp.has('panel_stale_s')) PANEL_STALE_MS = 1_800_000;
         }
     }).catch(() => {});
@@ -6254,6 +6428,11 @@
         let _ptGeo = null, _ptPhase = null, _ptSpeed = null;
         let _initialized = false;
         let _t = 0;
+        let _allLayersMode = false;
+        let _loopStarted = false;
+        let _allLayerExpertSprites = null;
+        let _allLayerGateConnMats = null;
+        let _alBezEdgeGeo = null;
 
         // Click-to-trace state
         let _selected = null;  // {type:'layer'|'expert', idx}
@@ -6335,7 +6514,7 @@
             ctx.shadowBlur=4;
             ctx.fillStyle='rgba(255,255,255,1.0)';
             ctx.textAlign=align; ctx.textBaseline='middle';
-            ctx.fillText(text, align==='right'?cw-4:4, ch/2);
+            ctx.fillText(text, align==='right'?cw-4:(align==='center'?cw/2:4), ch/2);
             const mat=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false});
             const sp=new THREE.Sprite(mat); sp.scale.set(1.9,0.5,1); return sp;
         }
@@ -6583,7 +6762,7 @@
             }, { passive: false });
             canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-            (function _loop(){ requestAnimationFrame(_loop); if (canvas.style.display !== 'none') _tick(); })();
+            if (!_loopStarted) { _loopStarted = true; (function _loop(){ requestAnimationFrame(_loop); if (canvas.style.display !== 'none') _tick(); })(); }
         }
 
         function _resize() {
@@ -6614,27 +6793,31 @@
                 _lLabels[i].material.color.setHSL(0, 0, 1.0);
             }
 
-            // Expert sprites
+            // Expert sprites — ep/eLabels may be null in FULL BRAIN mode
             for (let e=0;e<NE;e++) {
+                const sp=_eSprites[e]; if (!sp) continue;
                 const g=_eg[e], rw=_rw[e];
                 const comb=Math.min(1, g*0.55+rw*0.5);
                 const pb=0.85+0.15*Math.sin(_t*1.4+e*0.7);
                 const selBoostE = (_selected && _selected.type==='expert' && _selected.idx===e) ? 2.4 : 1.0;
-                _eSprites[e].scale.setScalar((0.18+1.9*comb)*pb*selBoostE);
-                // Dead experts fade to gray; active ones stay chromatic
+                sp.scale.setScalar((0.18+1.9*comb)*pb*selBoostE);
                 const eCol = comb < 0.12
                     ? new THREE.Color(0.08+comb,0.08+comb,0.10+comb)
                     : _tc(comb);
-                _eSprites[e].material.color.copy(eCol);
-                _eSprites[e].material.opacity=0.2+0.8*comb;
-                const breathe=Math.sin(_t*0.75+e*0.65)*0.07*comb;
-                _eSprites[e].position.y=ep[e].y+breathe;
-                _eLabels[e].material.opacity=0.2+0.8*comb;
-                _eLabels[e].position.y=ep[e].y+breathe;
+                sp.material.color.copy(eCol);
+                sp.material.opacity=0.2+0.8*comb;
+                if (ep && ep[e]) {
+                    const breathe=Math.sin(_t*0.75+e*0.65)*0.07*comb;
+                    sp.position.y=ep[e].y+breathe;
+                    if (_eLabels[e]) {
+                        _eLabels[e].material.opacity=0.2+0.8*comb;
+                        _eLabels[e].position.y=ep[e].y+breathe;
+                    }
+                }
             }
 
-            // Expert→OUTPUT line brightness — active Top-3 experts glow, inactive fade
-            if (_exrColArr && _scene.userData.exrGeo) {
+            // Expert→OUTPUT line brightness — active Top-3 experts glow, inactive fade (TOPOLOGY only)
+            if (_exrColArr && _scene.userData.exrGeo && !_allLayersMode) {
                 const top3set = new Set(Array.from({length:NE},(_,e)=>e).sort((a,b)=>_rw[b]-_rw[a]).slice(0,3));
                 for (let e=0;e<NE;e++) {
                     const b=e*6;
@@ -6654,10 +6837,11 @@
                     if (_hotHistory[slot] === i) { recency = k; break; }
                 }
                 const sp = _lTrailSprites[i];
+                if (!sp) continue;
                 if (recency === 0) {
-                    // Currently hot — bright amber halo
-                    sp.material.opacity = 0.55 + 0.35 * Math.sin(_t * 2.8 + i);
-                    sp.scale.setScalar(2.0 + 0.4 * Math.sin(_t * 2.0));
+                    // Currently hot — prominent amber halo
+                    sp.material.opacity = 0.72 + 0.28 * Math.sin(_t * 2.8 + i);
+                    sp.scale.setScalar(3.2 + 0.8 * Math.sin(_t * 2.0));
                 } else if (recency > 0) {
                     // Recently hot — fade out quadratically
                     const fade = Math.pow(1 - recency / 20, 2);
@@ -6744,6 +6928,64 @@
                 _ptGeo.attributes.color.needsUpdate=true;
             }
 
+            // FULL BRAIN 204 — drive each of the 204 individual module sprites + arc colours
+            if (_allLayersMode && _alBezEdgeGeo && _allLayerExpertSprites) {
+                const tl = window._mycTlightCache;
+                const alColArr = _alBezEdgeGeo.attributes.color.array;
+                const _hslAl = new THREE.Color();
+                for (let i = 0; i < NL; i++) {
+                    const layerStates = (tl && tl[i]) ? tl[i].states : null;
+                    const hue = LHUE[i];
+                    for (let e = 0; e < NE; e++) {
+                        const state = layerStates ? layerStates[e] : 'O';
+                        const isG = (state === 'G'), isR = (state === 'R');
+                        const pulse = isG ? 0.70 + 0.30 * Math.sin(_t * 2.5 + i * 0.45 + e * 0.72) : 0;
+                        const str = isG ? Math.pow(0.55 + 0.45 * pulse, 1.2) * 0.88
+                                       : (isR ? 0.07 : 0.0);
+                        if (isG) _hslAl.setHSL(hue, 1.0, 0.5);
+                        else if (isR) _hslAl.setHSL(0.0, 0.7, 0.35);
+                        else _hslAl.setRGB(0, 0, 0);
+                        const cr = _hslAl.r * str, cg = _hslAl.g * str, cb = _hslAl.b * str;
+                        for (let s = 0; s < BEZ_SEGS; s++) {
+                            const idx = (i * NE * BEZ_SEGS + e * BEZ_SEGS + s) * 6;
+                            alColArr[idx]=cr; alColArr[idx+1]=cg; alColArr[idx+2]=cb;
+                            alColArr[idx+3]=cr; alColArr[idx+4]=cg; alColArr[idx+5]=cb;
+                        }
+                        const sp = _allLayerExpertSprites[i] && _allLayerExpertSprites[i][e];
+                        if (sp) {
+                            if (isG) {
+                                sp.material.opacity = 0.60 + 0.40 * pulse;
+                                sp.scale.setScalar(0.40 * (1.2 + 0.25 * pulse));
+                                sp.material.color.setHSL(hue, 1.0, 0.65);
+                            } else if (isR) {
+                                sp.material.opacity = 0.20;
+                                sp.scale.setScalar(0.22);
+                                sp.material.color.setHSL(0.0, 0.75, 0.45);
+                            } else {
+                                sp.material.opacity = 0.11;
+                                sp.scale.setScalar(0.17);
+                                sp.material.color.setHSL(hue, 0.55, 0.18);
+                            }
+                        }
+                    }
+                }
+                _alBezEdgeGeo.attributes.color.needsUpdate = true;
+                // Animate output collect lines — layer hue, brightness tracks routing activity
+                if (_exrColArr && _scene.userData.exrGeo) {
+                    const _hOut=new THREE.Color();
+                    for (let i=0;i<NL;i++) {
+                        const ls2=(tl && tl[i]) ? tl[i].states : null;
+                        const activeN=ls2 ? Array.from(ls2).filter(s=>s==='G').length : 0;
+                        const act=Math.min(1,activeN/3)*(0.75+0.25*Math.sin(_t*1.5+i*0.4));
+                        const b=i*6;
+                        _hOut.setHSL(LHUE[i],1.0,0.18+0.32*act);
+                        _exrColArr[b]=_hOut.r; _exrColArr[b+1]=_hOut.g; _exrColArr[b+2]=_hOut.b;
+                        _exrColArr[b+3]=_hOut.r*0.3; _exrColArr[b+4]=_hOut.g*0.3; _exrColArr[b+5]=_hOut.b*0.3;
+                    }
+                    _scene.userData.exrGeo.attributes.color.needsUpdate=true;
+                }
+            }
+
             // Gentle idle sway when not dragging
             if (!_orbitDrag && !_panDrag) {
                 _theta += Math.sin(_t * 0.04) * 0.0003;
@@ -6752,6 +6994,191 @@
 
             _renderer.render(_scene, _camera);
         }
+
+        // ── All-layers scene build ───────────────────────────────────
+        function _buildAllLayersScene() {
+            if (!_scene || !window.THREE) return;
+            _scene.clear();
+            _lSprites=[]; _eSprites=[]; _lLabels=[]; _eLabels=[];
+            _lTrailSprites=[]; _bezEdgeGeo=null; _ptGeo=null;
+            _ptPhase=null; _ptSpeed=null; _bezCtrl=[];
+            _allLayerExpertSprites=null; _allLayerGateConnMats=null; _alBezEdgeGeo=null;
+
+            // 204-node per-strip layout: 17 rows × 12 expert columns
+            // Each cell (i,e) is L_i's own expert e — unique weights, unique identity
+            const FB_ROW_SP=1.6, FB_GX_ST=-5.5, FB_GX_SP=1.0;
+            const FB_LX=-7.5, FB_LBL_X=-9.3;
+            const INX=-11, OUTX=9.5;
+            const gy=Array.from({length:NL},(_,i)=>(i/(NL-1)-0.5)*(NL-1)*FB_ROW_SP);
+            const gx=Array.from({length:NE},(_,e)=>FB_GX_ST+e*FB_GX_SP);
+            _scene.userData.lp=null; _scene.userData.ep=null;
+
+            // INPUT node + fan lines to each layer node
+            const inNode=_node(1.6,new THREE.Color(0.2,0.7,1.0));
+            inNode.position.set(INX,0,0); inNode.material.opacity=0.55; _scene.add(inNode);
+            const inLbl=_lbl('INPUT','right'); inLbl.scale.set(2.0,0.5,1);
+            inLbl.position.set(INX-0.5,1.35,0); _scene.add(inLbl);
+            const ioPos=new Float32Array(NL*2*3), ioCol=new Float32Array(NL*2*3);
+            { const _hio=new THREE.Color();
+            for (let i=0;i<NL;i++) {
+                const b=i*6;
+                ioPos[b]=INX; ioPos[b+1]=0; ioPos[b+2]=0;
+                ioPos[b+3]=FB_LX; ioPos[b+4]=gy[i]; ioPos[b+5]=0;
+                _hio.setHSL(LHUE[i],0.85,0.22);
+                ioCol[b]=_hio.r*0.3; ioCol[b+1]=_hio.g*0.3; ioCol[b+2]=_hio.b*0.3;
+                ioCol[b+3]=_hio.r; ioCol[b+4]=_hio.g; ioCol[b+5]=_hio.b;
+            }}
+            const ioGeo=new THREE.BufferGeometry();
+            ioGeo.setAttribute('position',new THREE.BufferAttribute(ioPos,3));
+            ioGeo.setAttribute('color',new THREE.BufferAttribute(ioCol,3));
+            _scene.add(new THREE.LineSegments(ioGeo,new THREE.LineBasicMaterial({
+                vertexColors:true,blending:THREE.NormalBlending,transparent:true,depthWrite:false,opacity:0.30})));
+
+            // Layer nodes + labels (L0–L16 along left spine)
+            for (let i=0;i<NL;i++) {
+                const s=_node(0.55,_tc(0.05)); s.position.set(FB_LX,gy[i],0); _scene.add(s); _lSprites.push(s);
+                const lb=_lbl('L'+i,'right'); lb.scale.set(0.95,0.30,1);
+                lb.position.set(FB_LBL_X,gy[i],0); _scene.add(lb); _lLabels.push(lb);
+            }
+
+            // Expert column headers — top and bottom only (per-row labels cover mid-grid)
+            const HDR_Y=gy[NL-1]+1.7;
+            const BTM_Y=gy[0]-1.1;
+            for (const hy of [HDR_Y, BTM_Y]) {
+                for (let e=0;e<NE;e++) {
+                    const lb=_lbl(ENAMES[e],'center'); lb.scale.set(1.0,0.38,1);
+                    lb.position.set(gx[e],hy,0); _scene.add(lb);
+                }
+            }
+
+            // Vertical guide lines — one per expert column, full grid height
+            {
+                const glPos=new Float32Array(NE*2*3), glCol=new Float32Array(NE*2*3);
+                const gc=new THREE.Color(0.09,0.09,0.16);
+                for (let e=0;e<NE;e++) {
+                    const b=e*6;
+                    glPos[b]=gx[e]; glPos[b+1]=HDR_Y; glPos[b+2]=0;
+                    glPos[b+3]=gx[e]; glPos[b+4]=BTM_Y; glPos[b+5]=0;
+                    glCol[b]=gc.r; glCol[b+1]=gc.g; glCol[b+2]=gc.b;
+                    glCol[b+3]=gc.r; glCol[b+4]=gc.g; glCol[b+5]=gc.b;
+                }
+                const glGeo=new THREE.BufferGeometry();
+                glGeo.setAttribute('position',new THREE.BufferAttribute(glPos,3));
+                glGeo.setAttribute('color',new THREE.BufferAttribute(glCol,3));
+                _scene.add(new THREE.LineSegments(glGeo,new THREE.LineBasicMaterial({
+                    vertexColors:true,transparent:true,opacity:0.55,depthWrite:false})));
+            }
+
+            // 204 expert node sprites — _allLayerExpertSprites[i][e] — each is its own module
+            _allLayerExpertSprites=[];
+            for (let i=0;i<NL;i++) {
+                const row=[];
+                for (let e=0;e<NE;e++) {
+                    const s=_node(0.28,new THREE.Color(0.1,0.12,0.20));
+                    s.position.set(gx[e],gy[i],0); s.material.opacity=0.14;
+                    _scene.add(s); row.push(s);
+                }
+                _allLayerExpertSprites.push(row);
+            }
+
+            // Per-row expert name labels — 204 small labels, one per cell
+            for (let i=0;i<NL;i++) {
+                for (let e=0;e<NE;e++) {
+                    const lb=_lbl(ENAMES[e],'center'); lb.scale.set(0.52,0.16,1);
+                    lb.position.set(gx[e],gy[i]-0.40,0); _scene.add(lb);
+                }
+            }
+
+            // NL×NE in-row bezier arcs — Z curvature only so no inter-row overflow
+            const alTotal=NL*NE*BEZ_SEGS;
+            const alPos=new Float32Array(alTotal*2*3), alCol=new Float32Array(alTotal*2*3);
+            for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
+                const sx=FB_LX, sy=gy[i], ex=gx[e], ey=gy[i];
+                const midX=(sx+ex)*0.5;
+                const midY=gy[i]+Math.cos(i*0.5+e*0.9)*0.18;
+                const cz=Math.sin(i*0.7+e*0.4)*0.8;
+                for (let s=0;s<BEZ_SEGS;s++) {
+                    const t0=s/BEZ_SEGS, t1=(s+1)/BEZ_SEGS, u0=1-t0, u1=1-t1;
+                    const idx=(i*NE*BEZ_SEGS+e*BEZ_SEGS+s)*6;
+                    alPos[idx]  =u0*u0*sx+2*u0*t0*midX+t0*t0*ex;
+                    alPos[idx+1]=u0*u0*sy+2*u0*t0*midY+t0*t0*ey;
+                    alPos[idx+2]=             2*u0*t0*cz;
+                    alPos[idx+3]=u1*u1*sx+2*u1*t1*midX+t1*t1*ex;
+                    alPos[idx+4]=u1*u1*sy+2*u1*t1*midY+t1*t1*ey;
+                    alPos[idx+5]=             2*u1*t1*cz;
+                }
+            }
+            _alBezEdgeGeo=new THREE.BufferGeometry();
+            _alBezEdgeGeo.setAttribute('position',new THREE.BufferAttribute(alPos,3));
+            _alBezEdgeGeo.setAttribute('color',new THREE.BufferAttribute(alCol,3));
+            _scene.add(new THREE.LineSegments(_alBezEdgeGeo,new THREE.LineBasicMaterial({
+                vertexColors:true,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false})));
+
+            // OUTPUT node + row→output collect lines
+            const orPos=new Float32Array(NL*2*3);
+            _exrColArr=new Float32Array(NL*2*3);
+            const OUTX_START=gx[NE-1]+0.4;
+            { const _hor=new THREE.Color();
+            for (let i=0;i<NL;i++) {
+                const b=i*6;
+                orPos[b]=OUTX_START; orPos[b+1]=gy[i]; orPos[b+2]=0;
+                orPos[b+3]=OUTX; orPos[b+4]=0; orPos[b+5]=0;
+                _hor.setHSL(LHUE[i],0.85,0.22);
+                _exrColArr[b]=_hor.r; _exrColArr[b+1]=_hor.g; _exrColArr[b+2]=_hor.b;
+                _exrColArr[b+3]=_hor.r*0.3; _exrColArr[b+4]=_hor.g*0.3; _exrColArr[b+5]=_hor.b*0.3;
+            }}
+            const exrGeo=new THREE.BufferGeometry();
+            exrGeo.setAttribute('position',new THREE.BufferAttribute(orPos,3));
+            exrGeo.setAttribute('color',new THREE.BufferAttribute(_exrColArr,3));
+            _scene.userData.exrGeo=exrGeo;
+            _scene.add(new THREE.LineSegments(exrGeo,new THREE.LineBasicMaterial({
+                vertexColors:true,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false})));
+            const outNode=_node(1.6,new THREE.Color(0.2,1.0,0.45));
+            outNode.position.set(OUTX,0,0); outNode.material.opacity=0.55; _scene.add(outNode);
+            const outLbl=_lbl('OUTPUT','left'); outLbl.scale.set(2.0,0.5,1);
+            outLbl.position.set(OUTX+0.2,1.35,0); _scene.add(outLbl);
+
+            // Annotation
+            {
+                const aw=600, ah=22, dpr=Math.min(window.devicePixelRatio||1,2);
+                const ac=document.createElement('canvas'); ac.width=aw*dpr; ac.height=ah*dpr;
+                const ax=ac.getContext('2d'); ax.scale(dpr,dpr);
+                ax.font='11px monospace'; ax.fillStyle='rgba(255,255,255,0.38)';
+                ax.textAlign='left'; ax.textBaseline='middle';
+                ax.fillText('albert.  17L × 12E = 204 independent modules  ·  each learned separately  ·  $41.84', 4, ah/2);
+                const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(ac),transparent:true,depthWrite:false}));
+                const sh=0.40, sw=(aw/ah)*sh; sp.scale.set(sw,sh,1);
+                sp.position.set(-2.5,gy[0]-1.35,0); _scene.add(sp);
+            }
+        }
+
+        window.mycBrainToggleAllLayers = function() {
+            if (!_initialized) return;
+            _allLayersMode = !_allLayersMode;
+            const btn = document.getElementById('myc-alllayers-btn');
+            if (btn) {
+                btn.textContent = _allLayersMode ? 'TEMPLATE' : 'FULL BRAIN';
+                btn.style.opacity = _allLayersMode ? '1.0' : '0.55';
+            }
+            if (_allLayersMode) {
+                // Zoom out — radius 36 fits 17 rows + headers at FOV=46
+                _radius = 36; _theta = 0; _phi = Math.PI / 2;
+                _camTgt.x = 0; _camTgt.y = 0; _camTgt.z = 0;
+                _buildAllLayersScene();
+            } else {
+                // Restore template + reset camera to default
+                _radius = 22; _theta = 0; _phi = Math.PI / 2;
+                _camTgt.x = 0; _camTgt.y = 0; _camTgt.z = 0;
+                _scene.clear();
+                _lSprites = []; _eSprites = []; _lLabels = []; _eLabels = [];
+                _lTrailSprites = []; _bezEdgeGeo = null; _ptGeo = null;
+                _ptPhase = null; _ptSpeed = null; _bezCtrl = []; _glowTex = null;
+                _allLayerExpertSprites = null; _allLayerGateConnMats = null; _alBezEdgeGeo = null;
+                _initialized = false;
+                _init();
+            }
+            _applyOrbit();
+        };
 
         // ── public API ───────────────────────────────────────────────
         window.mycBrainUpdate = function({ tele, grad, route }={}) {
@@ -6786,10 +7213,33 @@
         };
 
         // ── mode toggle ──────────────────────────────────────────────
+        function _ensureToggleBtn() {
+            if (document.getElementById('myc-alllayers-btn')) return;
+            const canvas = document.getElementById('myc3d-canvas');
+            if (!canvas) return;
+            const container = canvas.parentElement;
+            if (container) container.style.position = 'relative';
+            const btn = document.createElement('button');
+            btn.id = 'myc-alllayers-btn';
+            btn.textContent = 'FULL BRAIN';
+            btn.style.cssText = [
+                'position:absolute', 'top:8px', 'right:8px',
+                'font-family:monospace', 'font-size:10px', 'letter-spacing:0.05em',
+                'padding:3px 10px',
+                'border:1px solid rgba(60,120,200,0.35)',
+                'background:rgba(6,13,21,0.88)',
+                'color:rgba(100,160,220,0.65)',
+                'cursor:pointer', 'z-index:10', 'opacity:0.55',
+            ].join(';');
+            btn.onclick = function() { if (window.mycBrainToggleAllLayers) mycBrainToggleAllLayers(); };
+            if (container) container.appendChild(btn);
+        }
+
         // Exposed activator — called by mycSetView (which lives outside this IIFE)
         window.mycBrainActivate = function() {
             _theta = 0; _phi = Math.PI / 2; _radius = 22;
             _camTgt.x = 0; _camTgt.y = 0; _camTgt.z = 0;
+            _ensureToggleBtn();
             if (!window.THREE) {
                 const s = document.createElement('script');
                 s.src = '/dashboard/three.min.js';
@@ -6964,10 +7414,16 @@
         const ENAMES = ['SYN','SEM','CTX','INF','MEM','GEN','LOG','LNG','ABS','PLN','CMP','INT'];
 
         let _canvas = null, _ctx = null, _raf = null, _active = false, _t = 0;
+        let _tooltip = null, _hoverLayer = -1;
         const _layerStates = Array.from({length:NL}, () => Array(NE).fill('O'));
         const _lt = new Float32Array(NL).fill(0.05);
 
         function _hsl(h, s, l) { return `hsl(${(h*360).toFixed(0)},${(s*100).toFixed(0)}%,${(l*100).toFixed(0)}%)`; }
+
+        function _medianLt() {
+            const s = Array.from(_lt).sort((a,b)=>a-b);
+            return s[Math.floor(NL/2)];
+        }
 
         window.mycFlowUpdate = function({ tlight, grad } = {}) {
             if (tlight) {
@@ -6982,6 +7438,25 @@
             }
         };
 
+        function _getLayout(W, H) {
+            const PL = 12, PR = 10;
+            const HEADER_H = 26, FOOTER_H = 26, ELABEL_H = 16, LEGEND_H = 16;
+            const usableH = H - HEADER_H - FOOTER_H - ELABEL_H - LEGEND_H - 20;
+            const ROW_H   = Math.max(18, Math.min(30, usableH / NL));
+            const ROWS_Y  = HEADER_H + ELABEL_H + 12;
+            const STREAM_X  = PL + 7;
+            const LLABEL_X  = PL + 19;
+            const ATTN_X    = LLABEL_X + 26;
+            const ATTN_W    = 26;
+            const GATE_X    = ATTN_X + ATTN_W + 14;
+            const GATE_W    = 26;
+            const EXPERTS_X = GATE_X + GATE_W + 14;
+            const DOT_STEP  = (W - EXPERTS_X - PR) / NE;
+            const DOT_R     = Math.min(4.5, DOT_STEP / 2 - 1);
+            return { PL, PR, HEADER_H, ELABEL_H, FOOTER_H, LEGEND_H, ROW_H, ROWS_Y,
+                     STREAM_X, LLABEL_X, ATTN_X, ATTN_W, GATE_X, GATE_W, EXPERTS_X, DOT_STEP, DOT_R };
+        }
+
         function _render() {
             if (!_active || !_canvas || !_ctx) return;
             const dpr = window.devicePixelRatio || 1;
@@ -6990,26 +7465,13 @@
             _ctx.fillStyle = BG;
             _ctx.fillRect(0, 0, W, H);
 
-            const PL = 12, PR = 10;
-            const HEADER_H = 26, FOOTER_H = 26, LEGEND_H = 16;
-            const usableH = H - HEADER_H - FOOTER_H - LEGEND_H - 20;
-            const ROW_H   = Math.max(18, Math.min(30, usableH / NL));
-            const ROWS_Y  = HEADER_H + 10;
+            const { PL, PR, HEADER_H, ELABEL_H, FOOTER_H, LEGEND_H, ROW_H, ROWS_Y,
+                    STREAM_X, LLABEL_X, ATTN_X, ATTN_W, GATE_X, GATE_W, EXPERTS_X, DOT_STEP, DOT_R } = _getLayout(W, H);
 
-            // Column layout
-            const STREAM_X  = PL + 7;
-            const LLABEL_X  = PL + 19;
-            const ATTN_X    = LLABEL_X + 24;
-            const ATTN_W    = 26;
-            const GATE_X    = ATTN_X + ATTN_W + 14;
-            const GATE_W    = 26;
-            const EXPERTS_X = GATE_X + GATE_W + 12;
-            const DOT_R     = Math.min(4.5, (W - EXPERTS_X - PR) / NE / 2 - 1);
-            const DOT_STEP  = (W - EXPERTS_X - PR) / NE;
-
-            // Token animation — 0→1 over ~3.5 s, continuous
             const phase = (_t * 0.285) % 1.0;
             const tokenLayer = phase * NL;
+            const med = _medianLt();
+            const coldThresh = med * 0.2;
 
             // ── EMBED header ──────────────────────────────────────────
             _ctx.fillStyle = 'rgba(32,140,255,0.07)';
@@ -7022,31 +7484,57 @@
             _ctx.fillStyle = 'rgba(80,140,200,0.38)';
             _ctx.fillText('256d token embedding', PL + 57, 3 + HEADER_H * 0.62);
 
+            // ── Expert column labels ──────────────────────────────────
+            _ctx.font = 'bold 7px monospace';
+            _ctx.textAlign = 'center';
+            for (let e = 0; e < NE; e++) {
+                const ex = EXPERTS_X + e * DOT_STEP + DOT_STEP * 0.5;
+                _ctx.fillStyle = 'rgba(180,220,255,0.30)';
+                _ctx.fillText(ENAMES[e], ex, HEADER_H + 5 + ELABEL_H * 0.72);
+            }
+            _ctx.strokeStyle = 'rgba(80,120,180,0.15)';
+            _ctx.lineWidth = 0.5;
+            _ctx.beginPath();
+            _ctx.moveTo(EXPERTS_X - 4, ROWS_Y - 4);
+            _ctx.lineTo(W - PR, ROWS_Y - 4);
+            _ctx.stroke();
+
             // ── Layer rows ────────────────────────────────────────────
             for (let i = 0; i < NL; i++) {
-                const ry = ROWS_Y + i * ROW_H;
-                const cy = ry + ROW_H * 0.52;
+                const ry  = ROWS_Y + i * ROW_H;
+                const cy  = ry + ROW_H * 0.52;
                 const act = _lt[i] || 0.05;
                 const hue = LHUE[i];
                 const states = _layerStates[i];
                 const prox   = Math.max(0, 1 - Math.abs(tokenLayer - i) * 2.2);
+                const cold   = act < coldThresh;
+                const isHov  = (_hoverLayer === i);
 
-                // Row highlight when token passes through
+                const gExperts = states.map((s,e) => s === 'G' ? e : -1).filter(e => e >= 0);
+
                 if (prox > 0.05) {
                     _ctx.fillStyle = `rgba(255,255,255,${prox * 0.035})`;
                     _ctx.fillRect(PL, ry, W - PL - PR, ROW_H - 1);
                 }
+                if (isHov) {
+                    _ctx.fillStyle = 'rgba(255,255,255,0.025)';
+                    _ctx.fillRect(PL, ry, W - PL - PR, ROW_H - 1);
+                }
 
-                // Stream dot (residual connection indicator)
+                // Stream dot
                 _ctx.beginPath();
                 _ctx.arc(STREAM_X, cy, 2.8, 0, Math.PI*2);
                 _ctx.fillStyle = _hsl(hue, 0.85, 0.18 + 0.48*act);
                 _ctx.fill();
 
-                // Layer label
+                // Layer label — red/orange if anomalously cold
                 _ctx.font = `${ROW_H < 22 ? 8 : 9}px monospace`;
                 _ctx.textAlign = 'left';
-                _ctx.fillStyle = _hsl(hue, 0.55, 0.32 + 0.32*act);
+                if (cold) {
+                    _ctx.fillStyle = `rgba(255,${60 + 80*act},${30 + 40*act},0.85)`;
+                } else {
+                    _ctx.fillStyle = _hsl(hue, 0.55, 0.32 + 0.32*act);
+                }
                 _ctx.fillText('L' + i, LLABEL_X, cy + 3);
 
                 // Arrow → ATTN
@@ -7079,11 +7567,11 @@
                 _ctx.lineTo(GATE_X - 1, cy);
                 _ctx.stroke();
 
-                // GATE block — colored by layer hue, brightens when token is near
-                const gateL = 0.13 + 0.38*act + 0.28*prox;
+                // GATE block
+                const gateL = 0.13 + 0.38*act + 0.28*prox + (isHov ? 0.15 : 0);
                 _ctx.fillStyle = _hsl(hue, 0.75, gateL * 0.45);
                 _ctx.strokeStyle = _hsl(hue, 0.9, gateL * 0.65);
-                _ctx.lineWidth = prox > 0.4 ? 1.2 : 0.8;
+                _ctx.lineWidth = (prox > 0.4 || isHov) ? 1.2 : 0.8;
                 _ctx.beginPath();
                 if (_ctx.roundRect) _ctx.roundRect(GATE_X, cy - ROW_H*0.3, GATE_W, ROW_H*0.6, 2);
                 else _ctx.rect(GATE_X, cy - ROW_H*0.3, GATE_W, ROW_H*0.6);
@@ -7093,47 +7581,67 @@
                 _ctx.fillStyle = _hsl(hue, 0.45, 0.62 + 0.22*prox);
                 _ctx.fillText('GATE', GATE_X + GATE_W/2, cy + 2.5);
 
-                // Expert dots
+                // Persistent G-state connecting lines (always visible, brighter when token near)
+                const gcx = GATE_X + GATE_W;
+                for (const ge of gExperts) {
+                    const ex = EXPERTS_X + ge * DOT_STEP + DOT_STEP * 0.5;
+                    _ctx.beginPath();
+                    _ctx.moveTo(gcx, cy);
+                    _ctx.lineTo(ex, cy);
+                    _ctx.strokeStyle = `rgba(34,197,94,${0.15 + prox * 0.55})`;
+                    _ctx.lineWidth = prox > 0.3 ? 1.2 : 0.6;
+                    _ctx.stroke();
+                }
+
+                // Token branching: animated dashes travel GATE→expert→back when token is here
+                if (prox > 0.3 && gExperts.length > 0) {
+                    for (const ge of gExperts) {
+                        const ex = EXPERTS_X + ge * DOT_STEP + DOT_STEP * 0.5;
+                        const dashPos = ((_t * 2.0 + i * 0.4 + ge * 0.2) % Math.PI) / Math.PI;
+                        const dx = gcx + (ex - gcx) * dashPos;
+                        _ctx.beginPath();
+                        _ctx.arc(dx, cy, 2.5 * prox, 0, Math.PI*2);
+                        _ctx.fillStyle = `rgba(40,200,255,${prox * 0.7})`;
+                        _ctx.fill();
+                        const retPos = (((_t * 2.0 + i * 0.4 + ge * 0.2) % Math.PI) + Math.PI * 0.5) / Math.PI % 1;
+                        const rx2 = ex + (gcx - ex) * retPos;
+                        _ctx.beginPath();
+                        _ctx.arc(rx2, cy, 1.8 * prox, 0, Math.PI*2);
+                        _ctx.fillStyle = `rgba(160,80,255,${prox * 0.45})`;
+                        _ctx.fill();
+                    }
+                }
+
+                // Expert dots — G state POPs (large, bright, outlined); O near-invisible
                 for (let e = 0; e < NE; e++) {
                     const ex  = EXPERTS_X + e * DOT_STEP + DOT_STEP * 0.5;
                     const st  = states[e] || 'O';
-
-                    // Gate→expert flash line when token is near and expert is active
-                    if (prox > 0.45 && st === 'G') {
-                        _ctx.beginPath();
-                        _ctx.moveTo(GATE_X + GATE_W, cy);
-                        _ctx.lineTo(ex, cy);
-                        _ctx.strokeStyle = `rgba(34,197,94,${prox * 0.35})`;
-                        _ctx.lineWidth = 0.8;
-                        _ctx.stroke();
-                    } else if (prox > 0.45 && st === 'R') {
-                        _ctx.beginPath();
-                        _ctx.moveTo(GATE_X + GATE_W, cy);
-                        _ctx.lineTo(ex, cy);
-                        _ctx.strokeStyle = `rgba(239,68,68,${prox * 0.2})`;
-                        _ctx.lineWidth = 0.5;
-                        _ctx.stroke();
-                    }
-
                     _ctx.beginPath();
-                    _ctx.arc(ex, cy, DOT_R, 0, Math.PI*2);
-                    let dc;
                     if (st === 'G') {
-                        const pulse = 0.55 + 0.28*Math.sin(_t*2.6 + i*0.38 + e*0.85);
-                        dc = `rgba(34,197,94,${pulse})`;
+                        const pulse = 0.72 + 0.28*Math.sin(_t*2.6 + i*0.38 + e*0.85);
+                        _ctx.arc(ex, cy, DOT_R * 2.1, 0, Math.PI*2);
+                        _ctx.fillStyle = `rgba(34,197,94,${pulse})`;
+                        _ctx.fill();
+                        _ctx.strokeStyle = `rgba(80,255,140,${pulse * 0.55})`;
+                        _ctx.lineWidth = 0.9;
+                        _ctx.stroke();
                     } else if (st === 'R') {
-                        dc = 'rgba(239,68,68,0.55)';
+                        _ctx.arc(ex, cy, DOT_R * 1.25, 0, Math.PI*2);
+                        _ctx.fillStyle = 'rgba(239,68,68,0.55)';
+                        _ctx.fill();
+                        _ctx.strokeStyle = 'rgba(255,100,100,0.28)';
+                        _ctx.lineWidth = 0.7;
+                        _ctx.stroke();
                     } else {
-                        dc = 'rgba(255,255,255,0.07)';
+                        _ctx.arc(ex, cy, Math.max(1.5, DOT_R * 0.42), 0, Math.PI*2);
+                        _ctx.fillStyle = 'rgba(255,255,255,0.055)';
+                        _ctx.fill();
                     }
-                    _ctx.fillStyle = dc;
-                    _ctx.fill();
                 }
             }
 
             // ── Token particle ────────────────────────────────────────
             const tokY = ROWS_Y + tokenLayer * ROW_H + ROW_H * 0.52;
-            // Trail
             for (let k = 1; k <= 6; k++) {
                 const tph = ((phase - k * 0.011 + 1) % 1) * NL;
                 const ty  = ROWS_Y + tph * ROW_H + ROW_H * 0.52;
@@ -7142,7 +7650,6 @@
                 _ctx.fillStyle = `rgba(50,210,255,${(1-k/7)*0.55})`;
                 _ctx.fill();
             }
-            // Token head
             _ctx.beginPath();
             _ctx.arc(STREAM_X, tokY, 4, 0, Math.PI*2);
             _ctx.fillStyle = `rgba(40,200,255,${0.88 + 0.12*Math.sin(_t*4)})`;
@@ -7198,8 +7705,40 @@
                 }
                 _ctx.fillStyle = 'rgba(255,255,255,0.18)';
                 _ctx.textAlign = 'right';
-                _ctx.fillText('17 routing decisions · 221 MoE modules', W - PR, legY + 8);
+                _ctx.fillText('204 expert MLPs · 17 independent gates · Top-3 active per layer', W - PR, legY + 8);
             }
+        }
+
+        // ── Gate hover tooltip ────────────────────────────────────────
+        function _onMouseMove(ev) {
+            const rect = _canvas.getBoundingClientRect();
+            const { GATE_X, GATE_W, ROW_H, ROWS_Y } = _getLayout(rect.width, rect.height);
+            const mx = ev.clientX - rect.left, my = ev.clientY - rect.top;
+            if (mx >= GATE_X && mx <= GATE_X + GATE_W) {
+                const rowIdx = Math.floor((my - ROWS_Y) / ROW_H);
+                if (rowIdx >= 0 && rowIdx < NL) {
+                    _hoverLayer = rowIdx;
+                    const states = _layerStates[rowIdx];
+                    const gNames = ENAMES.filter((_,e) => states[e] === 'G');
+                    const rNames = ENAMES.filter((_,e) => states[e] === 'R');
+                    let tip = `L${rowIdx} GATE`;
+                    if (gNames.length) tip += ` → G: ${gNames.join(', ')}`;
+                    if (rNames.length) tip += ` · R: ${rNames.join(', ')}`;
+                    if (!gNames.length && !rNames.length) tip += ' · all normal';
+                    if (!_tooltip) {
+                        _tooltip = document.createElement('div');
+                        _tooltip.style.cssText = 'position:fixed;background:rgba(10,20,35,0.93);color:#b0d0f0;font:10px monospace;padding:4px 9px;border-radius:3px;border:1px solid rgba(60,120,200,0.4);pointer-events:none;z-index:9999;white-space:nowrap;';
+                        document.body.appendChild(_tooltip);
+                    }
+                    _tooltip.textContent = tip;
+                    _tooltip.style.left = (ev.clientX + 14) + 'px';
+                    _tooltip.style.top  = (ev.clientY - 10) + 'px';
+                    _tooltip.style.display = 'block';
+                    return;
+                }
+            }
+            _hoverLayer = -1;
+            if (_tooltip) _tooltip.style.display = 'none';
         }
 
         function _tick() {
@@ -7226,6 +7765,11 @@
                 if (!_canvas) return;
                 _ctx = _canvas.getContext('2d');
                 new ResizeObserver(_resize).observe(_canvas);
+                _canvas.addEventListener('mousemove', _onMouseMove);
+                _canvas.addEventListener('mouseleave', () => {
+                    _hoverLayer = -1;
+                    if (_tooltip) _tooltip.style.display = 'none';
+                });
             }
             _active = true;
             _resize();
@@ -7235,6 +7779,7 @@
         window.mycFlowStop = function() {
             _active = false;
             if (_raf) { cancelAnimationFrame(_raf); _raf = null; }
+            if (_tooltip) _tooltip.style.display = 'none';
         };
 
     })();
