@@ -43,6 +43,9 @@ struct TrainFlags {
     /// Default: ~/projects/albert-spores/spores (auto-detected from HOME).
     /// Empty string = auto-detect. Pass --spores-dir=none to disable scanning.
     spores_dir: String,
+    /// Number of batches per epoch. Default 300 (GPU). Contributors use 30 for
+    /// frequent checkpoints on slow hardware.
+    batches_per_epoch: usize,
 }
 
 fn parse_args() -> TrainFlags {
@@ -58,6 +61,7 @@ fn parse_args() -> TrainFlags {
         cord_surgery:        false,
         stop_at_epoch:       None,
         spores_dir:          String::new(),
+        batches_per_epoch:   300,
     };
     for arg in &args[1..] {
         match arg.as_str() {
@@ -80,6 +84,8 @@ fn parse_args() -> TrainFlags {
                     if let Ok(e) = v.parse::<u32>() { flags.stop_at_epoch = Some(e); }
                 } else if let Some(v) = arg.strip_prefix("--spores-dir=") {
                     flags.spores_dir = v.to_string();
+                } else if let Some(v) = arg.strip_prefix("--batches-per-epoch=") {
+                    if let Ok(n) = v.parse::<usize>() { flags.batches_per_epoch = n.max(1); }
                 }
             }
         }
@@ -1077,7 +1083,7 @@ fn train_cycle(
     let mut wald_amplify_scale: f64 = 8.0;
 
     let seq_len     = config.max_seq_len;
-    let num_batches = 300_usize;
+    let num_batches = flags.batches_per_epoch;
 
     // Per-layer grad norm EMA for burst detection. Initialized high (1.0) so early steps
     // don't false-trigger before EMA converges to the per-layer true baseline (~50 steps).
