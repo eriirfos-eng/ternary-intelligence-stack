@@ -3286,6 +3286,7 @@
                     latestTele = { numLayers, layerSparsity, expertActivity };
                     renderNeuralViz(latestTele);
                     if (window.mycBrainUpdate) mycBrainUpdate({ tele: latestTele });
+                    if (window.mycFlowUpdate) mycFlowUpdate({ numLayers });
                     _streamBC.postMessage({ type: 'tele', data: latestTele });
                     continue;
                 }
@@ -6456,10 +6457,10 @@
     (function () {
         'use strict';
 
-        const NL = 17, NE = 12;
+        let NL = 17, NE = 12;
         const ENAMES = ['SYN','SEM','CTX','INF','MEM','GEN','LOG','LNG','ABS','PLN','CMP','INT'];
         // Fixed hue per layer — evenly distributed across spectrum for identity tracking
-        const LHUE = Array.from({length:NL}, (_,i) => i/NL);
+        let LHUE = Array.from({length:NL}, (_,i) => i/NL);
 
         const NP_LG = 3, NP_GE = 5, BEZ_SEGS = 7;  // particles + bezier arc segments
 
@@ -6509,11 +6510,11 @@
         }
 
         // Smoothed state
-        const _lg  = new Float32Array(NL).fill(0.05);  // current layer glow
-        const _lt  = new Float32Array(NL).fill(0.05);  // target
-        const _eg  = new Float32Array(NE).fill(0.05);  // current expert glow
-        const _et  = new Float32Array(NE).fill(0.05);  // target
-        const _rw  = new Float32Array(NE).fill(1/NE);  // routing weights
+        let _lg  = new Float32Array(NL).fill(0.05);  // current layer glow
+        let _lt  = new Float32Array(NL).fill(0.05);  // target
+        let _eg  = new Float32Array(NE).fill(0.05);  // current expert glow
+        let _et  = new Float32Array(NE).fill(0.05);  // target
+        let _rw  = new Float32Array(NE).fill(1/NE);  // routing weights
 
         // ── thermal colour (mirrors main dashboard) ──────────────────
         function _th(t) {
@@ -6568,6 +6569,29 @@
             const mat=new THREE.SpriteMaterial({map:_gTex(),color:col,
                 blending:THREE.AdditiveBlending,transparent:true,depthWrite:false});
             const sp=new THREE.Sprite(mat); sp.scale.setScalar(sz); return sp;
+        }
+
+        // ── teardown — called before reinit when layer count changes ─
+        function _teardown() {
+            _initialized = false;
+            if (_scene) {
+                // Remove all children and dispose geometries/materials
+                while (_scene.children.length > 0) {
+                    const obj = _scene.children[0];
+                    if (obj.geometry) obj.geometry.dispose();
+                    if (obj.material) {
+                        if (obj.material.map) obj.material.map.dispose();
+                        obj.material.dispose();
+                    }
+                    _scene.remove(obj);
+                }
+            }
+            _lSprites = []; _eSprites = []; _lLabels = []; _eLabels = [];
+            _lTrailSprites = []; _bezCtrl = [];
+            _bezEdgeGeo = null; _routerSprite = null; _routerLbl = null;
+            _exrColArr = null; _allLayersMode = false;
+            _allLayerExpertSprites = null; _allLayerGateConnMats = null;
+            _alBezEdgeGeo = null; _ptGeo = null; _ptPhase = null; _ptSpeed = null;
         }
 
         // ── build scene ──────────────────────────────────────────────
@@ -7227,6 +7251,15 @@
         // ── public API ───────────────────────────────────────────────
         window.mycBrainUpdate = function({ tele, grad, route }={}) {
             if (tele) {
+                // Reinitialize when surgery adds a layer
+                if (tele.numLayers && tele.numLayers !== NL) {
+                    NL = tele.numLayers;
+                    LHUE = Array.from({length:NL}, (_,i) => i/NL);
+                    _lg = new Float32Array(NL).fill(0.05);
+                    _lt = new Float32Array(NL).fill(0.05);
+                    _teardown();
+                    if (window.THREE) _init();
+                }
                 const mxA=Math.max(...tele.expertActivity,1e-8);
                 for (let e=0;e<Math.min(NE,tele.expertActivity.length);e++)
                     _et[e]=tele.expertActivity[e]/mxA;
@@ -7452,15 +7485,15 @@
     (function () {
         'use strict';
 
-        const NL = 17, NE = 12;
+        let NL = 17, NE = 12;
         const BG = '#060d15';
-        const LHUE = Array.from({length:NL}, (_,i) => i/NL);
+        let LHUE = Array.from({length:NL}, (_,i) => i/NL);
         const ENAMES = ['SYN','SEM','CTX','INF','MEM','GEN','LOG','LNG','ABS','PLN','CMP','INT'];
 
         let _canvas = null, _ctx = null, _raf = null, _active = false, _t = 0;
         let _tooltip = null, _hoverLayer = -1;
-        const _layerStates = Array.from({length:NL}, () => Array(NE).fill('O'));
-        const _lt = new Float32Array(NL).fill(0.05);
+        let _layerStates = Array.from({length:NL}, () => Array(NE).fill('O'));
+        let _lt = new Float32Array(NL).fill(0.05);
 
         function _hsl(h, s, l) { return `hsl(${(h*360).toFixed(0)},${(s*100).toFixed(0)}%,${(l*100).toFixed(0)}%)`; }
 
@@ -7469,7 +7502,14 @@
             return s[Math.floor(NL/2)];
         }
 
-        window.mycFlowUpdate = function({ tlight, grad } = {}) {
+        window.mycFlowUpdate = function({ tlight, grad, numLayers } = {}) {
+            // Rebuild layer arrays when surgery adds a layer
+            if (numLayers && numLayers !== NL) {
+                NL = numLayers;
+                LHUE = Array.from({length:NL}, (_,i) => i/NL);
+                _layerStates = Array.from({length:NL}, () => Array(NE).fill('O'));
+                _lt = new Float32Array(NL).fill(0.05);
+            }
             if (tlight) {
                 for (const l of tlight) {
                     if (l.layer < NL) _layerStates[l.layer] = Array.from(l.states);
