@@ -1311,9 +1311,12 @@
     let sporeEvents      = [];   // permanent spore ingestion markers
 
     // ── Candle / HA / BB / MACD / draw-tool state ─────────────────────
-    const epochCandles = new Map(); // global_epoch → {epoch,open,high,low,close,finalized,doji}
+    // Candles are built from epoch-averages in CANDLE_WINDOW-epoch buckets, then
+    // smoothed with Heikin-Ashi.  OHLC mode removed — batch-loss wicks were 20x
+    // the actual trend range and meaningless.
+    const epochAvgLog  = []; // {epoch, avgLoss} from EPOCH_SUMMARY, sorted asc
+    const CANDLE_WINDOW = 10; // epochs per HA candle
     let haCache        = [];
-    let candleMode     = false;
     let haMode         = false;
     let bbVisible      = false;
     let macdVisible    = false;
@@ -1821,9 +1824,9 @@
     const candlePlugin = {
         id: 'candleDraw',
         afterDraw(chart) {
-            if (!candleMode && !haMode) return;
+            if (!haMode) return;
             const { ctx: c2, chartArea: a, scales } = chart;
-            const candles = haMode ? haCache : [...epochCandles.values()];
+            const candles = haCache;
             if (!candles.length) return;
             const unitPx = Math.abs(scales.x.getPixelForValue(1) - scales.x.getPixelForValue(0));
             const halfW  = Math.max(1.5, unitPx * 0.28);
@@ -2427,12 +2430,11 @@
                 y: {
                     afterDataLimits: (axis) => {
                         if (isInteracting) return; // skip during pan/zoom — avoids lag
-                        const ohlcActive = haMode || document.getElementById('cbOHLC').checked;
-                        if (!ohlcActive) return;
+                        if (!haMode) return;
                         const xScale = axis.chart.scales.x;
                         if (!xScale) return;
                         const xMin = xScale.min, xMax = xScale.max;
-                        const src = haMode ? haCache : [...epochCandles.values()];
+                        const src = haCache;
                         let lo = Infinity, hi = -Infinity;
                         for (const c of src) {
                             if (c.epoch < xMin || c.epoch > xMax) continue;
@@ -3070,11 +3072,53 @@
             const haOpen  = prevOpen === null ? (c.open + c.close) / 2 : (prevOpen + prevClose) / 2;
             const haHigh  = Math.max(c.high, haOpen, haClose);
             const haLow   = Math.min(c.low,  haOpen, haClose);
-            ha.push({ epoch: c.epoch, open: haOpen, high: haHigh, low: haLow, close: haClose, doji: false, bootstrap: prevOpen === null });
+            ha.push({ epoch: c.epoch, open: haOpen, high: haHigh, low: haLow, close: haClose, doji: c.doji, bootstrap: prevOpen === null });
             prevOpen  = haOpen;
             prevClose = haClose;
         }
         return ha;
+    }
+
+    // ── Build HA candles from epoch-average windows ────────────────────
+    // Each raw candle = CANDLE_WINDOW consecutive epoch-avg losses.
+    // O/H/L/C are epoch-avg values (not batch losses), so wicks match the
+    // actual trend range.  HA smoothing is applied on top.
+    function rebuildHACandles() {
+        if (epochAvgLog.length < 2) { haCache = []; return; }
+        const sorted = [...epochAvgLog].sort((a, b) => a.epoch - b.epoch);
+        const minEp  = sorted[0].epoch;
+        // Group into buckets of CANDLE_WINDOW epochs
+        const buckets = new Map();
+        for (const { epoch, avgLoss } of sorted) {
+            const bi = Math.floor((epoch - minEp) / CANDLE_WINDOW);
+            if (!buckets.has(bi)) buckets.set(bi, { startEp: minEp + bi * CANDLE_WINDOW, losses: [], lastEp: epoch });
+            const b = buckets.get(bi);
+            b.losses.push(avgLoss);
+            b.lastEp = epoch;
+        }
+        const maxBi = Math.max(...buckets.keys());
+        const rawCandles = [];
+        for (const [bi, b] of [...buckets.entries()].sort((a, b) => a[0] - b[0])) {
+            const finalized = bi < maxBi;
+            const open  = b.losses[0];
+            const close = b.losses[b.losses.length - 1];
+            const high  = Math.max(...b.losses);
+            const low   = Math.min(...b.losses);
+            // Doji: body < 10% of wick on finalized candles
+            const body  = Math.abs(close - open);
+            const wick  = high - low;
+            const doji  = finalized && wick > 0.0001 && body / wick < 0.10 && b.lastEp !== lastDojiEp;
+            if (doji) {
+                lastDojiEp = b.lastEp;
+                if (!initialLoad) {
+                    addEvent('doji', `DOJI ep${b.lastEp}`, 'warn',
+                        `Doji candle at ep${b.lastEp} — body ${(body / wick * 100).toFixed(1)}% of window range (indecision).<br>` +
+                        `O:${open.toFixed(4)}  H:${high.toFixed(4)}  L:${low.toFixed(4)}  C:${close.toFixed(4)}`);
+                }
+            }
+            rawCandles.push({ epoch: b.lastEp, open, high, low, close, finalized, doji });
+        }
+        haCache = computeHACandles(rawCandles);
     }
 
     // ── Status bar helpers ─────────────────────────────────────────────
@@ -3185,7 +3229,7 @@
                 if (line.startsWith('RUN_START ')) {
                     newPts.length = 0;
                     chart.data.datasets.forEach(ds => ds.data = []);
-                    epochCandles.clear(); haCache = [];
+                    epochAvgLog.length = 0; haCache = [];
                     bestLoss = allTimeBestBatch; worstLoss = -Infinity;
                     sessionStartLoss = null; totalPts = 0;
                     lastLossVal = null; lastKnownEpoch = -1;
@@ -3233,6 +3277,9 @@
                             `Net2Net surgery fired — model expanded from ${lastNumLayers} to ${numLayers} layers.<br>New layer inserted with identity mapping. Expect brief loss spike.`);
                         playSurgery();
                         notify('albert. — SURGERY', `Model expanded ${lastNumLayers}L → ${numLayers}L. Expect brief loss spike.`);
+                        // Reset plateau ring — post-surgery epoch history is a new era
+                        gLossRing = [];
+                        updateGateChip();
                     }
                     lastNumLayers = numLayers;
                     lastTeleMs = Date.now();
@@ -3371,6 +3418,24 @@
                     }
                     continue;
                 }
+                // Fibonacci plateau trigger line — real delta from EvolutionManager
+                // Format: "--- FIBONACCI PLATEAU TRIGGERED (Δ0.0193 over 144 epochs, ...)"
+                if (line.includes('FIBONACCI PLATEAU TRIGGERED')) {
+                    const pm = line.match(/Δ([\d.]+) over (\d+) epochs/);
+                    if (pm) {
+                        const fibDelta = parseFloat(pm[1]);
+                        const fibWin   = parseInt(pm[2]);
+                        // Display the Rust-computed delta directly — more reliable than ring
+                        const ovPlat = document.getElementById('ov-plateau-val');
+                        if (ovPlat) {
+                            ovPlat.textContent = fibDelta.toFixed(4);
+                            ovPlat.style.color = fibDelta < gGatePlateauThresh ? '#4caf50' : '#ef5350';
+                        }
+                        const ovSub = document.getElementById('ov-plateau-sub');
+                        if (ovSub) ovSub.textContent = `/ < ${gGatePlateauThresh.toFixed(3)} (win=${fibWin}) [Rust]`;
+                    }
+                    continue;
+                }
                 // Evolution & system event lines
                 if (line.includes('[evolution] Plateau detected')) {
                     const lm = line.match(/loss ([\d.]+)/);
@@ -3423,17 +3488,6 @@
                     y: loss,
                     epoch, batch, layers
                 });
-                // OHLC candle tracking — build per-epoch candle as batches arrive
-                {
-                    const ec = epochCandles.get(epoch);
-                    if (!ec) {
-                        epochCandles.set(epoch, { epoch, open: loss, high: loss, low: loss, close: loss, finalized: false, doji: false });
-                    } else if (!ec.finalized) {
-                        if (loss > ec.high) ec.high = loss;
-                        if (loss < ec.low)  ec.low  = loss;
-                        ec.close = loss;
-                    }
-                }
                 // Snapshot all available telemetry into the batch log for CSV export
                 batchLog.push({
                     step:          (epoch - 1) * gBatchesPerEpoch + batch,
@@ -3488,7 +3542,7 @@
                 if (rsiChart)  { rsiChart.data.datasets[0].data  = []; rsiChart.update('none'); }
                 for (let i = 11; i <= 15; i++) chart.data.datasets[i].data = [];
                 trailCurrentMin.fill(Infinity);
-                epochCandles.clear();
+                epochAvgLog.length = 0;
                 haCache = [];
                 lastSmaY       = null;
                 bestLoss       = allTimeBestBatch;
@@ -3643,7 +3697,7 @@
                     gGateWaldFill  = parseFloat(epsm[6]);
                     gGateWaldSev   = parseFloat(epsm[5]);
                     gLossRing.push(parseFloat(epsm[2]));
-                    if (gLossRing.length > 150) gLossRing.shift();
+                    if (gLossRing.length > gGateFibWin) gLossRing.shift();
                     updateGateChip();
                     // Tensor count — re-emitted every epoch so dashboard always has it in the tail window
                     const tnse = line.match(/tns=(\d+)/);
@@ -3652,27 +3706,14 @@
                         document.getElementById('v-tns').textContent = _tv.toLocaleString();
                         localStorage.setItem('albert_tns', _tv);
                     }
-                    // Finalize the OHLC candle for this epoch + doji detection
+                    // Accumulate epoch average and rebuild HA candle windows
                     const ep = parseInt(epsm[1]);
-                    const ec = epochCandles.get(ep);
-                    if (ec && !ec.finalized) {
-                        ec.finalized = true;
-                        const body = Math.abs(ec.close - ec.open);
-                        const wick = ec.high - ec.low;
-                        if (wick > 0.0005 && body / wick < 0.10 && ep !== lastDojiEp) {
-                            ec.doji  = true;
-                            lastDojiEp = ep;
-                            liveEvent('doji', `DOJI ep${ep}`, 'warn',
-                                `Doji candle at ep${ep} — body ${(body/wick*100).toFixed(1)}% of range (indecision).<br>` +
-                                `O:${ec.open.toFixed(4)}  H:${ec.high.toFixed(4)}  L:${ec.low.toFixed(4)}  C:${ec.close.toFixed(4)}<br>` +
-                                `At a Fib level, doji signals a potential inflection point.`);
-                        }
-                        if (haMode) {
-                            haCache = computeHACandles(
-                                [...epochCandles.values()].filter(c => c.finalized).sort((a, b) => a.epoch - b.epoch)
-                            );
-                        }
-                    }
+                    const avgLoss = parseFloat(epsm[2]);
+                    // Upsert: replace if epoch already logged (replay idempotency)
+                    const existIdx = epochAvgLog.findIndex(e => e.epoch === ep);
+                    if (existIdx >= 0) epochAvgLog[existIdx].avgLoss = avgLoss;
+                    else epochAvgLog.push({ epoch: ep, avgLoss });
+                    if (haMode) rebuildHACandles();
                 }
 
                 // MYCELIUM — update myc_stable for surgery gate
@@ -3688,9 +3729,9 @@
                 const evolm = line.match(/\[evolution\].*window=(\d+) epochs/);
                 if (evolm) {
                     gGateFibWin = parseInt(evolm[1]);
-                    // Trim the ring buffer to the new window size
-                    if (gLossRing.length > gGateFibWin + 50) {
-                        gLossRing = gLossRing.slice(-(gGateFibWin + 50));
+                    // Trim ring to exactly the new window size
+                    if (gLossRing.length > gGateFibWin) {
+                        gLossRing = gLossRing.slice(-gGateFibWin);
                     }
                     const thrm = line.match(/threshold=([\d.]+)/);
                     if (thrm) gGatePlateauThresh = parseFloat(thrm[1]);
@@ -4918,31 +4959,16 @@
         chart.update('none');
     });
 
-    // OHLC candlesticks — mutually exclusive with HA
-    document.getElementById('cbOHLC').addEventListener('change', function() {
-        candleMode = this.checked;
-        if (candleMode && haMode) {
-            haMode = false;
-            document.getElementById('cbHA').checked = false;
-        }
-        // Only reveal dots if the user still has them checked — don't reactivate a hidden dots layer.
-        chart.data.datasets[0].hidden = (candleMode || haMode) || !document.getElementById('cbDots').checked;
-        chart.update('none');
-    });
+    // OHLC removed — batch-loss wicks were meaningless vs actual trend range.
+    // Checkbox kept in DOM but disabled so saved prefs don't error.
+    document.getElementById('cbOHLC').disabled = true;
+    document.getElementById('cbOHLC').checked  = false;
 
-    // Heikin-Ashi — mutually exclusive with OHLC
+    // Heikin-Ashi — epoch-avg window candles with HA smoothing
     document.getElementById('cbHA').addEventListener('change', function() {
         haMode = this.checked;
-        if (haMode) {
-            haCache = computeHACandles(
-                [...epochCandles.values()].filter(c => c.finalized).sort((a, b) => a.epoch - b.epoch)
-            );
-            if (candleMode) {
-                candleMode = false;
-                document.getElementById('cbOHLC').checked = false;
-            }
-        }
-        chart.data.datasets[0].hidden = (candleMode || haMode) || !document.getElementById('cbDots').checked;
+        if (haMode) rebuildHACandles();
+        chart.data.datasets[0].hidden = haMode || !document.getElementById('cbDots').checked;
         chart.update('none');
     });
 
@@ -5357,7 +5383,7 @@
     const PREF_CBS  = [
         'cbDots','cbSMA21','cbSMA55','cbSMA144','cbSMA377','cbSMA610','cbTMA',
         'cbTrail21','cbTrail55','cbTrail144','cbTrail377','cbTrail610',
-        'cbFib','cbBB','cbOHLC','cbHA','cbMACD','cbRSI',
+        'cbFib','cbBB','cbHA','cbMACD','cbRSI',
     ];
 
     // ── Drawing persistence + undo ─────────────────────────────────────
@@ -5493,7 +5519,7 @@
             if (tm) _preseedTns = parseInt(tm[1]);
             // Bootstrap gate state — accumulate loss ring and track last full summary
             gLossRing.push(al);
-            if (gLossRing.length > 150) gLossRing.shift();
+            if (gLossRing.length > gGateFibWin) gLossRing.shift();
             const gm = line.match(/loss_best=([\d.]+) since_best=(\d+) wald_sev=([\d.]+) wald_fill=([\d.]+)%/);
             if (gm) _lastGateEpsm = gm;
         }
