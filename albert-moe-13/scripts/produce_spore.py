@@ -207,7 +207,8 @@ def main():
         cwd=spores_repo, check=True
     )
     # Pull any remote commits (e.g. maintainer fixes) before pushing.
-    subprocess.run(["git", "pull", "--rebase"], cwd=spores_repo, check=True)
+    # --autostash handles any unstaged LFS pointer drift without failing.
+    subprocess.run(["git", "pull", "--rebase", "--autostash"], cwd=spores_repo, check=True)
     subprocess.run(["git", "push"], cwd=spores_repo, check=True)
     print(f"[produce_spore] pushed to albert-spores")
     print(f"[produce_spore] done — spore is live")
