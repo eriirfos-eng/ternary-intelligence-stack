@@ -3692,8 +3692,8 @@
                     last.wald_sev  = parseFloat(epsm[5]);
                     last.wald_fill = parseFloat(epsm[6]);
                     last.ttlfreeze = parseInt(epsm[7]);
-                    // Gate state — update on every epoch
-                    gGateLossBest  = parseFloat(epsm[3]);
+                    // Gate state — update on every epoch; never let loss_best rise on restart
+                    gGateLossBest  = Math.min(gGateLossBest ?? Infinity, parseFloat(epsm[3]));
                     gGateSinceBest = parseInt(epsm[4]);
                     gGateWaldFill  = parseFloat(epsm[6]);
                     gGateWaldSev   = parseFloat(epsm[5]);
@@ -5539,6 +5539,11 @@
         // Derive true ATL floors from pre-seed data — these never reset
         for (const pt of smaLog) { if (pt.y < allTimeBestBatch) allTimeBestBatch = pt.y; }
         for (const e  of epochLog) { if (e.avg_loss < allTimeBestEpoch) allTimeBestEpoch = e.avg_loss; }
+        // Clamp loss gate to global best — prevents restart resetting it to a stale high value
+        if (allTimeBestEpoch < Infinity)
+            gGateLossBest = gGateLossBest !== null
+                ? Math.min(gGateLossBest, allTimeBestEpoch)
+                : allTimeBestEpoch;
         // Seed session trackers so RUN_START / restart never shows a value above the true historical min
         bestLoss     = allTimeBestBatch;
         bestEpochAvg = allTimeBestEpoch;
