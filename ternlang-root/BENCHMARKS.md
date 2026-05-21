@@ -299,7 +299,7 @@ Patent pending: A50296/2026.
 
 PPL is deterministic across machines (same model, same eval set). Tok/s varies by µarch — Zen+ (Ryzen 3500U) vs Haswell (i7-4800MQ). Both CPU-only, no GPU, no INT8.
 
-**Current (v3.0 · 17L · CPU):** 13–18 tok/s per prompt (measured across 15 benchmark prompts, ep1549 checkpoint — see `benchmarks/bench_v3.0_2026-05-17_074807.txt`). Depth × 3.4 vs 5L; multilingual 32k vocab, 256CTX. GPU training on Modal T4 at ~450 ms/batch is separate from inference measurement.
+**Current (v3.0 · 18L · CPU):** 13–18 tok/s per prompt (measured across 15 benchmark prompts, ep1549 checkpoint — see `benchmarks/bench_v3.0_2026-05-17_074807.txt`). Depth × 3.4 vs 5L; multilingual 32k vocab, 256CTX. GPU training on Modal T4 is separate from inference measurement. Updated inference benchmarks pending 18L checkpoint.
 
 **Reproduce (CPU):**
 ```bash
@@ -331,18 +331,18 @@ Pass a path argument to evaluate any other corpus file.
 | **Reduction vs baseline** | **84.0%** |
 | Hardware | HP ZBook i7-4800MQ, CPU-only |
 
-**Current — Albert v3.0 (32k multilingual vocab, 17L, training in progress):**
+**Current — Albert v3.0 (32k multilingual vocab, 18L, training in progress):**
 
 | Metric | Value |
 |--------|-------|
-| Checkpoint | `albert_v3.0.safetensors` (17L · 256H · 12E · 256CTX · 32k vocab, ep1599) |
-| Global epoch | 1599 · 5 Net2Net surgeries complete (12L→13L→14L→15L→16L→17L) |
+| Checkpoint | `albert_v3.0.best.safetensors` (18L · 256H · 12E · 256CTX · 32k vocab, ep2576) |
+| Global epoch | 2576 · 6 Net2Net surgeries complete (12L→13L→14L→15L→16L→17L→18L) |
 | Unigram baseline (random) | 32,000 = vocab_size; ln baseline = 10.3730 |
-| **Epoch-avg CE loss (ATL)** | **10.0915** (ep1584) |
-| **Batch CE loss (ATL)** | **9.9758** (ep1599) — first sub-10.0 batch loss in training history |
-| **Reduction from random** | **2.7%** on epoch-avg basis (10.3730 → 10.0915) |
-| Training cost to date | ~$21 (Modal T4 · ~$0.021/epoch at 17L/256CTX) |
-| Measured | 2026-05-17 |
+| **Epoch-avg CE loss (ATL)** | **9.5800** (ep2576) |
+| **Batch CE loss (ATL)** | **9.2961** (dashboard) |
+| **Reduction from random** | **7.6%** on epoch-avg basis (10.3730 → 9.5800) |
+| Training cost to date | ~$0.003/epoch (Modal T4) |
+| Measured | 2026-05-21 |
 
 **Early result (ep107, 12L, for reference):**
 
@@ -351,7 +351,7 @@ Pass a path argument to evaluate any other corpus file.
 | Mean CE loss | 10.3668 · Perplexity 31,788 · Reduction from random 0.66% |
 
 **Interpretation:**  
-A model outputting a uniform distribution over the vocabulary achieves perplexity = vocab_size. v2.0.0 achieved an 84% reduction from the 8k random baseline after 3L training on English corpus (PPL 1278.8 vs baseline 8000). v3.0 at ep107 showed 0.66% reduction from the 32k baseline — expected for early multilingual training. At ep1599 (17L), reduction from random has grown to 2.7% on epoch-avg basis, with intra-epoch batch loss now sub-10.0 for the first time. The trajectory from v2.0.0 through v3.0 confirms the architecture learns continuously; five autonomous surgeries have grown the model from 12L to 17L without loss spikes.
+A model outputting a uniform distribution over the vocabulary achieves perplexity = vocab_size. v2.0.0 achieved an 84% reduction from the 8k random baseline after 3L training on English corpus (PPL 1278.8 vs baseline 8000). v3.0 at ep107 showed 0.66% reduction from the 32k baseline — expected for early multilingual training. At ep2576 (18L), reduction from random has grown to 7.6% on epoch-avg basis, with batch loss now at 9.2961. The trajectory from v2.0.0 through v3.0 confirms the architecture learns continuously; six autonomous surgeries have grown the model from 12L to 18L without loss spikes.
 
 `--max-windows=N` flag added for fast sampling; full eval takes ~95 min on CPU at 12L.
 
@@ -495,7 +495,7 @@ Data-parallel training scales linearly across GPUs at albert.'s model size.
 
 ### §14d — The Fibonacci Progression at Scale
 
-albert. grows through Fibonacci depth milestones: 12L → 13L → 14L → 15L → 16L → **17L** (current) → 21L → 34L → 55L...  
+albert. grows through Fibonacci depth milestones: 12L → 13L → 14L → 15L → 16L → 17L → **18L** (current) → 21L → 34L → 55L...  
 Each surgery requires reaching a loss gate, then a Fibonacci-epoch cooldown before the next trigger.  
 Hardware directly compresses the calendar time of this progression.
 
@@ -526,12 +526,12 @@ For €10,000 — less than one month of a senior ML engineer's salary at a majo
 
 #### How long to fully train albert. on 4× RTX 4090 (Bizon)
 
-Starting from current state: ep1599 · loss 10.09 · 17L · 2,470 epochs/day (Bizon estimate).
+Starting from current state: ep2576 · loss 9.58 · 18L · 2,470 epochs/day (Bizon estimate).
 
 | Milestone | Epochs needed (est.) | Wall-clock on Bizon |
 |-----------|---------------------|---------------------|
-| 17L → 21L surgery gate (loss 9.8, gap ~0.29 nats) | ~300 | **~3 hours** |
-| Surgery + cooldown (F9 window = 144 ep) | +144 | ~1.5 hours |
+| 18L → 21L surgery gate (plateau, window F8=233) | ~TBD | TBD (model descending) |
+| Surgery + cooldown (F9 window = 233 ep) | +233 | ~2.5 hours |
 | 21L → 34L arc + cooldown | ~600 + 34 | ~6 hours |
 | 21L → 34L arc + cooldown | ~1,000 + 34 | ~10 hours |
 | 34L → 55L arc + cooldown | ~2,000 + 55 | ~20 hours |
@@ -630,6 +630,7 @@ Five surgeries completed to date (2026-05-13 → 2026-05-17):
 | 3 | 611 | 14L → 15L | +0.2287 | 10.1952 | F5 = 34 |
 | 4 | 645–646 | 15L → 16L | −0.3442 | 10.1711 | F6 = 55 |
 | 5 | 701–702 | 16L → 17L | +0.5828 | 10.1340 | F7 = 89 |
+| **6** | **2487** | **17L → 18L** | **+0.0099** | **9.6530** | **F8 = 233** |
 
 **Surgery 1 detail:**
 
@@ -645,7 +646,7 @@ Five surgeries completed to date (2026-05-13 → 2026-05-17):
 | New all-time best | 10.2463 (first batches post-surgery) |
 | Loss spike | None — identity mapping preserved, Mandelbrot perturbation at scale 1e-3 |
 
-**Current state (2026-05-17):** ep1599 · 17L · epoch-ATL 10.0915 · batch-ATL 9.9758 (first sub-10.0 in history) · next surgery: 17L → 21L at loss ≤ 9.8 (gap: ~0.29 nats) · F9 window = 144 epochs.
+**Current state (2026-05-21):** ep2576 · 18L · epoch-ATL 9.5800 · batch-ATL 9.2961 · 6 Net2Net surgeries complete (12L→13L→14L→15L→16L→17L→18L) · Gen 1 step 1/6 · plateau window F8 = 233 · ceiling 21L.
 
 ---
 

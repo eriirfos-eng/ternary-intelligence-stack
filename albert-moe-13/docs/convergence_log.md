@@ -1,7 +1,7 @@
 # Albert MoE-13 — Convergence Log
 
 Empirical training loss data from native ternary training from random initialization.
-Active run: v3.0 — 17L · 32k vocab · 635 MB multilingual corpus (2026-05-10, ongoing). Surgery loss gate cleared ep2080. Alternating descent phase confirmed ep2109–ep2120.
+Active run: v3.0 — **18L** · 32k vocab · 635 MB multilingual corpus (2026-05-10, ongoing). Surgery 6 fired ep2487 (17L→18L). Epoch-ATL 9.5800 (ep2576, 2026-05-21). 6 surgeries complete.
 
 ---
 
@@ -79,10 +79,21 @@ correct only after the vocabulary transfer plateau breaks.
 | Ep 2292 | 17L | **9.7170** | Epoch ATL (2026-05-20T~06:20Z); **batch ATL 9.4925** |
 | Ep 2487 | 17L→**18L** | **SURGERY** | **17L→18L Net2Net surgery** (2026-05-20T~21:33Z). Mandelbrot c_im=0.0099. Plateau Δ0.0193/144ep. Gen 1 step 1/6. Window→233. Ceiling→21L. Pre-surgery best archived. |
 | Ep 2489 | 18L | **9.6248** | **EPOCH ATL — first 18L ATL, no spike** (2026-05-20T~21:40Z). Batch ATL **9.3866** — single-epoch drop of −0.0313. LNG 0%→55%, CMP 100%, INT differentiating. |
+| Ep 2530 | 18L | **9.6130** | Epoch ATL (2026-05-21T01:38Z). d−0.0099. cold=L0 event (embedding layer briefest coldest layer). |
+| Ep 2533 | 18L | **9.6116** | Epoch ATL (01:54Z). d−0.0049. |
+| Ep 2534 | 18L | **9.6100** | Epoch ATL (01:59Z). d−0.0017. |
+| Ep 2537 | 18L | **9.5970** | Epoch ATL (02:14Z). d−0.0201 — large drop. |
+| Ep 2545 | 18L | **9.5969** | Epoch ATL (02:55Z). d−0.0053. hot=L10, cold=L7 (embedding layer returns to normal). |
+| Ep 2546 | 18L | **9.5926** | Epoch ATL (03:00Z). d−0.0043. |
+| Ep 2548 | 18L | **9.5912** | Epoch ATL (03:10Z). d−0.0038. |
+| Ep 2550 | 18L | **9.5910** | Epoch ATL (03:20Z). d−0.0114. |
+| Ep 2556 | 18L | **9.5871** | Epoch ATL (03:51Z). d−0.0101. |
+| Ep 2564 | 18L | **9.5855** | Epoch ATL (04:32Z). d−0.0069. **Simeon downloaded weights proactively (Modal budget 80%).** |
+| Ep 2576 | 18L | **9.5800** | Epoch ATL (05:32Z). d−0.0236. **Bounce phase resolved (11 epochs). Probe trigger 9.58 reached.** wald_sev 0.948. |
 
-**All-time best (epoch avg):** 9.6248 (ep2489, 2026-05-20T~21:40Z) — first 18L epoch, no post-surgery spike
-**All-time best (intra-batch):** 9.3866 (ep2489, 2026-05-20T~21:40Z)
-**Surgery governor status:** 17L→18L surgery fired at ep2487 under full Fibonacci+Mandelbrot+Gen cycling. 18L Gen 1 step 1/6 active. PLATEAU gate filling (24/233 as of ep2490). MYC_STABLE recovering post-surgery.
+**All-time best (epoch avg):** 9.5800 (ep2576, 2026-05-21T05:32Z)
+**All-time best (intra-batch):** 9.2961 (dashboard chip — exact epoch unknown)
+**Surgery governor status:** 17L→18L surgery fired at ep2487. 18L Gen 1 step 1/6 active. PLATEAU gate filling. MYC_STABLE=42+. Descent ongoing — surgery not imminent.
 
 ### Alternating Descent Phase — Governor Validation Finding (2026-05-19)
 
