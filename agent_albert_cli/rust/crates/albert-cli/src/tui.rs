@@ -694,21 +694,43 @@ fn is_drilldown(complete: &str) -> bool {
 
 // All supported auth providers (id, description)
 const AUTH_PROVIDERS: &[(&str, &str)] = &[
-    ("anthropic",  "Claude opus-4-7 · sonnet-4-6 · haiku-4-5"),
-    ("openai",     "GPT-4o · GPT-4o-mini · o3 · o3-mini"),
-    ("google",     "Gemini 2.5 Pro · Flash · Flash 8B"),
-    ("xai",        "Grok 3 · Grok 3-mini"),
-    ("groq",       "Llama 3.3 70B · 8B — ultra-fast LPU"),
-    ("mistral",    "Mistral Large · Small · Codestral"),
-    ("deepseek",   "DeepSeek V3 · R1 chain-of-thought"),
-    ("openrouter", "100+ models via unified API"),
-    ("perplexity", "Sonar Pro · Sonar — search-grounded"),
-    ("cohere",     "Command R+ · Command R — RAG"),
-    ("cerebras",   "Llama 3.3 70B on WSE accelerator"),
-    ("together",   "Open source models at scale"),
-    ("fireworks",  "Fast inference — Llama, Mistral, …"),
-    ("novita",     "Cost-efficient open model hosting"),
-    ("ollama",     "Local models — no API key required"),
+    // ── First-party ───────────────────────────────────────────────────────────
+    ("anthropic",     "Claude opus-4-7 · sonnet-4-6 · haiku-4-5"),
+    ("openai",        "GPT-4o · GPT-4o-mini · o3 · o3-mini"),
+    ("google",        "Gemini 2.5 Pro · Flash · Flash 8B"),
+    ("xai",           "Grok 3 · Grok 3-mini"),
+    // ── Fast inference ────────────────────────────────────────────────────────
+    ("groq",          "Llama 3.3 70B · 8B — ultra-fast LPU"),
+    ("cerebras",      "Llama 3.3 70B on WSE accelerator"),
+    // ── Commercial clouds ─────────────────────────────────────────────────────
+    ("deepseek",      "DeepSeek V3 · R1 chain-of-thought"),
+    ("mistral",       "Mistral Large · Small · Codestral"),
+    ("cohere",        "Command R+ · Command R — RAG"),
+    ("perplexity",    "Sonar Pro · Sonar — search-grounded"),
+    ("openrouter",    "100+ models via unified API"),
+    // ── GPU inference clouds ──────────────────────────────────────────────────
+    ("together",      "Open source models at scale"),
+    ("fireworks",     "Fast inference — Llama, Mistral, …"),
+    ("novita",        "Cost-efficient open model hosting"),
+    ("deepinfra",     "Low-cost inference API"),
+    ("sambanova",     "High-throughput RDU chips"),
+    ("nvidia",        "NVIDIA NIM — 80+ models, free tier available"),
+    // ── Regional foundation models ────────────────────────────────────────────
+    ("zhipu",         "Z.AI GLM-4.5 · GLM-5 — Global / CN"),
+    ("minimax",       "MiniMax-Text-01"),
+    ("qwen",          "Qwen2.5 · QwQ-32B — Alibaba"),
+    ("moonshot",      "Kimi K2.5 · 128k context"),
+    ("qianfan",       "Ernie 4.5 — Baidu"),
+    // ── Inference marketplaces ────────────────────────────────────────────────
+    ("chutes",        "DeepSeek R1/V3 · Qwen — marketplace"),
+    ("huggingface",   "Open model inference — HF Hub"),
+    ("github",        "GitHub Copilot models — GPT-4o · o3"),
+    // ── Enterprise ───────────────────────────────────────────────────────────
+    ("azure",         "Azure OpenAI — bring your endpoint"),
+    // ── Local / offline ───────────────────────────────────────────────────────
+    ("ollama",        "Local models — no API key required"),
+    ("lmstudio",      "LM Studio — local GUI · localhost:1234"),
+    ("openai-compat", "Any OpenAI-compatible base URL"),
 ];
 
 // @ Mentions / Agents
@@ -1818,9 +1840,11 @@ fn render_help_overlay(f: &mut ratatui::Frame, area: Rect, scroll: u16) {
     lines.push(c("/model <id>",          "switch model — opens picker when blank"));
     lines.push(c("/auth <provider>",      "set API key for a provider"));
     lines.push(c("/auth browser",         "OAuth browser login (Google / GitHub)"));
-    lines.push(hint_line("Providers: anthropic · openai · google · xai · groq · mistral · deepseek"));
+    lines.push(hint_line("Providers: anthropic · openai · google · xai · deepseek · mistral · groq · cerebras"));
     lines.push(hint_line("           together · openrouter · perplexity · cohere · cerebras · qwen"));
-    lines.push(hint_line("           nvidia · fireworks · deepinfra · novita · sambanova · ollama"));
+    lines.push(hint_line("           openrouter · cohere · perplexity · together · fireworks · novita · deepinfra"));
+    lines.push(hint_line("           sambanova · nvidia · zhipu · qwen · moonshot · chutes · huggingface"));
+    lines.push(hint_line("           github · azure · ollama · lmstudio · openai-compat"));
     lines.push(blank());
 
     lines.push(h("  TIPS & INTERACTION"));
