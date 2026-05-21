@@ -130,7 +130,7 @@ fn summarize_messages(messages: &[ConversationMessage]) -> String {
         .filter_map(|block| match block {
             ContentBlock::ToolUse { name, .. } => Some(name.as_str()),
             ContentBlock::ToolResult { tool_name, .. } => Some(tool_name.as_str()),
-            ContentBlock::Text { .. } | ContentBlock::Image { .. } => None,
+            ContentBlock::Text { .. } | ContentBlock::Image { .. } | ContentBlock::Thinking { .. } => None,
         })
         .collect::<Vec<_>>();
     tool_names.sort_unstable();
@@ -211,6 +211,7 @@ fn summarize_block(block: &ContentBlock) -> String {
             "tool_result {tool_name}: {}{output}",
             if *is_error { "error " } else { "" }
         ),
+        ContentBlock::Thinking { text, .. } => format!("[thinking: {}]", &text[..text.len().min(80)]),
     };
     truncate_summary(&raw, 160)
 }
@@ -262,7 +263,7 @@ fn collect_key_files(messages: &[ConversationMessage]) -> Vec<String> {
             ContentBlock::Text { text } => Some(text.as_str()),
             ContentBlock::ToolUse { input, .. } => Some(input.as_str()),
             ContentBlock::ToolResult { output, .. } => Some(output.as_str()),
-            ContentBlock::Image { .. } => None,
+            ContentBlock::Image { .. } | ContentBlock::Thinking { .. } => None,
         })
         .flat_map(extract_file_candidates)
         .collect::<Vec<_>>();
@@ -286,7 +287,8 @@ fn first_text_block(message: &ConversationMessage) -> Option<&str> {
         ContentBlock::ToolUse { .. }
         | ContentBlock::ToolResult { .. }
         | ContentBlock::Text { .. }
-        | ContentBlock::Image { .. } => None,
+        | ContentBlock::Image { .. }
+        | ContentBlock::Thinking { .. } => None,
     })
 }
 
@@ -335,6 +337,9 @@ fn estimate_message_tokens(message: &ConversationMessage) -> usize {
             ContentBlock::ToolUse { name, input, .. } => (name.len() + input.len()) / 4 + 1,
             ContentBlock::ToolResult { tool_name, output, .. } => (tool_name.len() + output.len()) / 4 + 1,
             ContentBlock::Image { data, .. } => data.len() / 4 + 1,
+            ContentBlock::Thinking { text, thought_signature } => {
+                text.len() / 4 + thought_signature.as_ref().map_or(0, |s| s.len() / 4) + 1
+            }
         })
         .sum()
 }

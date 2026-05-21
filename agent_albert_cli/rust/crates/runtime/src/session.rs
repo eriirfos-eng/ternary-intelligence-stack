@@ -35,6 +35,11 @@ pub enum ContentBlock {
         media_type: String,
         data: String,
     },
+    /// Gemini reasoning/thinking block — carries thoughtSignature for tool-call continuations.
+    Thinking {
+        text: String,
+        thought_signature: Option<String>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -300,6 +305,13 @@ impl ContentBlock {
                     JsonValue::String(format!("[image: {media_type}]")),
                 );
             }
+            Self::Thinking { text, thought_signature } => {
+                object.insert("type".to_string(), JsonValue::String("thinking".to_string()));
+                object.insert("text".to_string(), JsonValue::String(text.clone()));
+                if let Some(sig) = thought_signature {
+                    object.insert("thought_signature".to_string(), JsonValue::String(sig.clone()));
+                }
+            }
         }
         JsonValue::Object(object)
     }
@@ -329,6 +341,10 @@ impl ContentBlock {
                     .get("is_error")
                     .and_then(JsonValue::as_bool)
                     .ok_or_else(|| SessionError::Format("missing is_error".to_string()))?,
+            }),
+            "thinking" => Ok(Self::Thinking {
+                text: required_string(object, "text")?,
+                thought_signature: object.get("thought_signature").and_then(JsonValue::as_str).map(String::from),
             }),
             other => Err(SessionError::Format(format!(
                 "unsupported block type: {other}"

@@ -25,6 +25,7 @@ use pulldown_cmark::{
 
 use commands::slash_command_specs;
 use runtime::AssistantEvent;
+use api;
 
 // ── Colors ────────────────────────────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ fn get_pulse_style(elapsed: f32, is_active: bool) -> Style {
         return Style::default().fg(GREY);
     }
 
-    let period = 2.0 / 1.5; // Sync frequency
+    let period = 2.0 / 2.5; // Pulse frequency (~0.8s per cycle)
     let t = (elapsed % period) / period;
     let intensity = ((t * std::f32::consts::PI).sin()).powf(2.0);
 
@@ -257,6 +258,8 @@ pub enum ExecBlock {
     ToolOutput { lines: Vec<String>, total: usize, active: bool },
     /// Streaming agent text
     AgentText(String, bool), // (text, is_interrupted)
+    /// Reasoning/thinking text from a thinking model — grey+italic, below the input bar
+    Thinking(String),
     /// System / info note
     SystemMsg(String),
     /// Post-turn elapsed time: "Worked for Xm Ys"
@@ -365,6 +368,14 @@ pub struct TuiState {
     pub is_prompting: Arc<AtomicBool>,
     /// Track which exec_log blocks are collapsed (by index). Toggle with Ctrl+O.
     pub collapsed_blocks: std::collections::HashSet<usize>,
+    /// Live model list fetched from the active provider's API — used by /model popup.
+    pub model_list_cache: Option<Vec<String>>,
+    /// Thinking text streaming buffer — drained typewriter-style into the last Thinking block.
+    pub thinking_typewriter_buffer: String,
+    /// Index of the currently active Thinking block in exec_log (for typewriter updates).
+    pub current_thinking_block_index: Option<usize>,
+    /// All distinct model IDs used this session — shown in exit card.
+    pub models_used: Vec<String>,
 }
 
 impl Default for TuiState {
@@ -412,6 +423,10 @@ impl Default for TuiState {
             trusted: false,
             is_prompting: Arc::new(AtomicBool::new(false)),
             collapsed_blocks: std::collections::HashSet::new(),
+            model_list_cache: None,
+            thinking_typewriter_buffer: String::new(),
+            current_thinking_block_index: None,
+            models_used: Vec::new(),
         }
     }
 }
@@ -421,11 +436,25 @@ impl TuiState {
         Self { model, cwd, permission_mode, session_id, ..Default::default() }
     }
 
+    /// Record a model as used this session (deduplicates).
+    pub fn record_model(&mut self) {
+        let m = self.model.clone();
+        if !m.is_empty() && !self.models_used.contains(&m) {
+            self.models_used.push(m);
+        }
+    }
+
     pub fn push_exec(&mut self, block: ExecBlock) {
         if matches!(&block, ExecBlock::UserMessage(_)) {
             self.seal_last_assistant_block();
             self.current_assistant_block_index = None;
-            self.typewriter_buffer.clear(); // Discard stray tokens on new user message
+            self.typewriter_buffer.clear();
+            self.thinking_typewriter_buffer.clear();
+            self.current_thinking_block_index = None;
+        }
+        // Auto-follow: pin to bottom whenever content arrives during a working turn.
+        if self.working {
+            self.scroll = 0;
         }
 
         if matches!(&block, ExecBlock::ToolUse { .. }) {
@@ -449,13 +478,18 @@ impl TuiState {
         }
 
         self.exec_log.push_back(block);
-        
+
         // Track the index of AssistantResponse blocks for turn anchoring
         if matches!(self.exec_log.back(), Some(ExecBlock::AgentText(..))) {
             self.current_assistant_block_index = Some(self.exec_log.len() - 1);
         } else {
             // Any other block (ToolUse, Plan, etc.) breaks the continuity of the text block.
             self.current_assistant_block_index = None;
+        }
+
+        // Track the index of the latest Thinking block for typewriter drain.
+        if matches!(self.exec_log.back(), Some(ExecBlock::Thinking(..))) {
+            self.current_thinking_block_index = Some(self.exec_log.len() - 1);
         }
 
         // Keep the log bounded so rendering stays fast — older blocks are trimmed.
@@ -465,6 +499,14 @@ impl TuiState {
             if let Some(ref mut idx) = self.current_assistant_block_index {
                 if *idx == 0 {
                     self.current_assistant_block_index = None;
+                } else {
+                    *idx -= 1;
+                }
+            }
+            // Adjust current_thinking_block_index for the removed front element.
+            if let Some(ref mut idx) = self.current_thinking_block_index {
+                if *idx == 0 {
+                    self.current_thinking_block_index = None;
                 } else {
                     *idx -= 1;
                 }
@@ -751,14 +793,39 @@ const AGENT_GROUPS: &[(&str, &[(&str, &str)])] = &[
     ]),
 ];
 
+/// Auth-flow-aware popup: call this everywhere instead of popup_items directly.
+/// - Key phase    → no popup (input is masked)
+/// - Model phase  → filtered model list from the live auth cache
+/// - No auth      → normal slash-command popup
+fn state_popup_items(state: &TuiState) -> Vec<PopupItem> {
+    match &state.auth_flow {
+        Some(AuthFlowPhase::Key { .. }) => vec![],
+        Some(AuthFlowPhase::Model { models, .. }) => {
+            let partial = state.input.trim().to_lowercase();
+            let mut result = vec![PopupItem::header("Select model")];
+            for (i, id) in models.iter().enumerate() {
+                if !partial.is_empty() {
+                    let idx_match = (i + 1).to_string().starts_with(&partial);
+                    let id_match = id.to_lowercase().contains(&partial);
+                    if !idx_match && !id_match { continue; }
+                }
+                let desc = api::model_annotation(id).unwrap_or("");
+                result.push(PopupItem::cmd(id, id, desc));
+            }
+            result
+        }
+        None => popup_items(&state.input, state.model_list_cache.as_deref()),
+    }
+}
+
 /// Returns popup items for the current input:
 ///   /              → full categorised command list
 ///   @              → agent/rule picker
 ///   /partial       → flat filtered list
 ///   /permissions   → permission mode picker
-///   /model         → model picker
+///   /model         → model picker (live cache if available, else curated)
 ///   /auth          → provider picker
-fn popup_items(input: &str) -> Vec<PopupItem> {
+fn popup_items(input: &str, model_cache: Option<&[String]>) -> Vec<PopupItem> {
     if input.starts_with('@') {
         let partial = &input[1..];
         let mut items = Vec::new();
@@ -800,6 +867,18 @@ fn popup_items(input: &str) -> Vec<PopupItem> {
     // ── Model picker ──────────────────────────────────────────────────────
     if input.starts_with("/model") {
         let partial = input.strip_prefix("/model").unwrap_or("").trim();
+        // If we have a live cache from the active provider, show it.
+        if let Some(cached) = model_cache {
+            let mut items: Vec<PopupItem> = Vec::new();
+            items.push(PopupItem::header("Active provider — live"));
+            for id in cached {
+                if !partial.is_empty() && !id.contains(partial) { continue; }
+                let desc = api::model_annotation(id).unwrap_or("");
+                items.push(PopupItem::cmd(id, &format!("/model {id}"), desc));
+            }
+            return items;
+        }
+        // Fall back to curated cross-provider list.
         let mut items: Vec<PopupItem> = Vec::new();
         let mut cur_provider = "";
         for (id, provider, desc) in MODEL_ENTRIES {
@@ -1160,8 +1239,7 @@ fn markdown_to_lines(text: &str, prefix: Option<Span<'static>>, width: u16) -> V
 
 pub fn render(f: &mut ratatui::Frame, state: &TuiState) {
     let area = f.area();
-    // No popup while waiting for an API key.
-    let items = if state.auth_flow.is_some() { vec![] } else { popup_items(&state.input) };
+    let items = state_popup_items(state);
     let n_items = items.len();
     // Popup: up to POPUP_WINDOW items + 1 nav footer; placed BELOW input (Gemini-style)
     let popup_h = if n_items == 0 { 0u16 } else { (n_items.min(POPUP_WINDOW) + 1) as u16 };
@@ -1239,7 +1317,7 @@ fn is_last_in_turn_by_index(log: &std::collections::VecDeque<ExecBlock>, start_i
         match block {
             ExecBlock::UserMessage(_) => return true,
             ExecBlock::ToolUse { .. } | ExecBlock::Plan { .. } | ExecBlock::ToolOutput { .. } | ExecBlock::AgentText(..) => return false,
-            ExecBlock::WorkedFor(_) | ExecBlock::SystemMsg(_) => continue,
+            ExecBlock::WorkedFor(_) | ExecBlock::SystemMsg(_) | ExecBlock::Thinking(_) => continue,
         }
     }
     true
@@ -1516,6 +1594,31 @@ fn build_exec_lines(state: &TuiState, _width: u16) -> Vec<Line<'static>> {
             }
 
             ExecBlock::WorkedFor(_) => {}
+
+            ExecBlock::Thinking(text) => {
+                in_assistant_turn = false;
+                let thinking_style = Style::default()
+                    .fg(Color::Rgb(90, 90, 90))
+                    .add_modifier(Modifier::ITALIC | Modifier::DIM);
+                let spine_style = Style::default()
+                    .fg(Color::Rgb(55, 55, 55))
+                    .add_modifier(Modifier::DIM);
+                lines.push(Line::from(vec![
+                    Span::styled("  thinking", Style::default().fg(Color::Rgb(70, 70, 70)).add_modifier(Modifier::ITALIC | Modifier::DIM)),
+                ]));
+                for line in text.lines() {
+                    lines.push(Line::from(vec![
+                        Span::styled("  │ ", spine_style),
+                        Span::styled(line.to_string(), thinking_style),
+                    ]));
+                }
+                // Trailing spine while streaming (text empty or ends with newline)
+                if text.is_empty() || text.ends_with('\n') {
+                    lines.push(Line::from(vec![
+                        Span::styled("  │", spine_style),
+                    ]));
+                }
+            }
 
             ExecBlock::SystemMsg(msg) => {
                 let mut it_msg = msg.lines().peekable();
@@ -2111,7 +2214,8 @@ fn render_input(f: &mut ratatui::Frame, area: Rect, state: &TuiState) {
 pub fn render_report_card(f: &mut ratatui::Frame, state: &TuiState) {
     let area = f.area();
     let w = 76;
-    let h = 20; // Increased from 18 to fit tokens
+    let models_extra = if state.models_used.is_empty() { 0u16 } else { state.models_used.len() as u16 + 2 };
+    let h = 20 + models_extra;
     let x = (area.width.saturating_sub(w)) / 2;
     let y = (area.height.saturating_sub(h)) / 2;
     let popup_area = Rect::new(x, y, w.min(area.width), h.min(area.height));
@@ -2183,6 +2287,18 @@ pub fn render_report_card(f: &mut ratatui::Frame, state: &TuiState) {
     ]));
     
     lines.push(Line::default());
+
+    if !state.models_used.is_empty() {
+        lines.push(Line::from(Span::styled("  Models Used", Style::default().add_modifier(Modifier::BOLD))));
+        for model in &state.models_used {
+            lines.push(Line::from(vec![
+                Span::styled("    ", label_style),
+                Span::styled(model.as_str(), value_style),
+            ]));
+        }
+        lines.push(Line::default());
+    }
+
     lines.push(Line::from(vec![
         Span::styled("  To resume this session: ", label_style),
         Span::styled(format!("albert --resume {}", state.session_id), Style::default().fg(GREEN)),
@@ -2636,7 +2752,7 @@ impl TuiApp {
                         let mut voice_toggle: Option<bool> = None;
                         {
                             let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
-                            let items = popup_items(&state.input);
+                            let items = state_popup_items(&state);
                             let has_popup = !items.is_empty();
 
                             match (key.code, key.modifiers) {
@@ -2810,7 +2926,7 @@ impl TuiApp {
                                             format!("{complete} ")
                                         };
                                         state.cursor = state.input.chars().count();
-                                        let new_items = popup_items(&state.input);
+                                        let new_items = state_popup_items(&state);
                                         state.popup_selected = new_items.iter()
                                             .position(|i| !i.is_header)
                                             .unwrap_or(0);
@@ -2828,7 +2944,7 @@ impl TuiApp {
                                             // Open sub-menu: append space so popup_items sees the prefix
                                             state.input = format!("{complete} ");
                                             state.cursor = state.input.chars().count();
-                                            let new_items = popup_items(&state.input);
+                                            let new_items = state_popup_items(&state);
                                             state.popup_selected = new_items.iter()
                                                 .position(|i| !i.is_header)
                                                 .unwrap_or(0);
@@ -2868,7 +2984,7 @@ impl TuiApp {
                                     state.history_idx = None; // exit history browse on new input
                                     state.input_insert(c);
                                     // Reset to first selectable item (skip any header at 0)
-                                    let new_items = popup_items(&state.input);
+                                    let new_items = state_popup_items(&state);
                                     state.popup_selected = new_items.iter()
                                         .position(|i| !i.is_header)
                                         .unwrap_or(0);
@@ -2876,7 +2992,7 @@ impl TuiApp {
                                 (KeyCode::Backspace, _) => {
                                     state.quit_confirm = false;
                                     state.input_backspace();
-                                    let new_items = popup_items(&state.input);
+                                    let new_items = state_popup_items(&state);
                                     state.popup_selected = new_items.iter()
                                         .position(|i| !i.is_header)
                                         .unwrap_or(0);
@@ -2974,7 +3090,18 @@ impl TuiApp {
                             if trimmed == "/help" || trimmed == "/?" {
                                 self.state.lock().unwrap_or_else(|p| p.into_inner()).help_open = true;
                             } else {
-                                self.state.lock().unwrap_or_else(|p| p.into_inner()).history_push(&text);
+                                {
+                                    let mut state = self.state.lock().unwrap_or_else(|p| p.into_inner());
+                                    state.history_push(&text);
+                                    // Show user message immediately for plain chat messages.
+                                    // Slash commands and auth-flow inputs are NOT shown as chat bubbles here.
+                                    let in_auth = state.auth_flow.is_some();
+                                    if !in_auth && !trimmed.starts_with('/') {
+                                        state.push_exec(ExecBlock::UserMessage(text.clone()));
+                                        state.working = true;
+                                        state.scroll = 0;
+                                    }
+                                }
                                 let _ = self.submit_tx.send(text);
                             }
                         }
@@ -3107,6 +3234,14 @@ impl TuiApp {
                                             task.status = TaskStatus::Done;
                                         }
                                     }
+                                }
+                            }
+                            AssistantEvent::Thinking { text, .. } => {
+                                if !text.trim().is_empty() {
+                                    // Push an empty block immediately so the "thinking" header
+                                    // appears right away, then stream text in line by line via Tick.
+                                    state.push_exec(ExecBlock::Thinking(String::new()));
+                                    state.thinking_typewriter_buffer.push_str(&text);
                                 }
                             }
                             AssistantEvent::ToolTelemetry { .. } => {}
@@ -3264,7 +3399,7 @@ impl TuiApp {
 
                             let chars: String = state.typewriter_buffer.chars().take(n).collect();
                             state.typewriter_buffer = state.typewriter_buffer.chars().skip(n).collect();
-                            
+
                             let mut appended = false;
                             if let Some(idx) = state.current_assistant_block_index {
                                 if let Some(ExecBlock::AgentText(s, _)) = state.exec_log.get_mut(idx) {
@@ -3275,6 +3410,25 @@ impl TuiApp {
 
                             if !appended {
                                 state.push_exec(ExecBlock::AgentText(chars, false));
+                            }
+                        }
+
+                        // Thinking Typewriter: drain line by line for clean step-by-step visibility.
+                        if !state.thinking_typewriter_buffer.is_empty() {
+                            let chunk = if let Some(nl) = state.thinking_typewriter_buffer.find('\n') {
+                                // Drain up to and including the next newline.
+                                state.thinking_typewriter_buffer[..=nl].to_string()
+                            } else {
+                                // No newline left — drain the remainder.
+                                state.thinking_typewriter_buffer.clone()
+                            };
+                            let chunk_len = chunk.len();
+                            state.thinking_typewriter_buffer.drain(..chunk_len);
+
+                            if let Some(idx) = state.current_thinking_block_index {
+                                if let Some(ExecBlock::Thinking(s)) = state.exec_log.get_mut(idx) {
+                                    s.push_str(&chunk);
+                                }
                             }
                         }
                     }

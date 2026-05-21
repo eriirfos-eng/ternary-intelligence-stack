@@ -30,6 +30,11 @@ pub enum AssistantEvent {
         name: String,
         input: String,
     },
+    /// Reasoning/thinking text from a thinking model (Gemini, DeepSeek R1, etc.)
+    Thinking {
+        text: String,
+        thought_signature: Option<String>,
+    },
     TaskStarted {
         id: String,
         label: String,
@@ -531,8 +536,12 @@ fn build_assistant_message(
                 flush_text_block(&mut text, &mut blocks);
                 blocks.push(ContentBlock::ToolUse { id, name, input });
             }
+            AssistantEvent::Thinking { text: t, thought_signature } => {
+                flush_text_block(&mut text, &mut blocks);
+                blocks.push(ContentBlock::Thinking { text: t, thought_signature });
+            }
             AssistantEvent::TaskStarted { .. } | AssistantEvent::TaskCompleted { .. } => {
-                // Task events are handled by the TUI in real-time and don't affect 
+                // Task events are handled by the TUI in real-time and don't affect
                 // the static ConversationMessage structure.
             }
             AssistantEvent::Usage(u) => usage = Some(u),

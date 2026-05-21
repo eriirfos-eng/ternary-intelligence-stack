@@ -2034,6 +2034,10 @@ fn convert_messages(messages: &[ConversationMessage]) -> Vec<InputMessage> {
                         media_type: media_type.clone(),
                         data: data.clone(),
                     },
+                    ContentBlock::Thinking { text, thought_signature } => InputContentBlock::Thinking {
+                        text: text.clone(),
+                        thought_signature: thought_signature.clone(),
+                    },
                 })
                 .collect::<Vec<_>>();
             (!content.is_empty()).then(|| InputMessage {
@@ -2066,6 +2070,9 @@ fn push_output_block(
                 input.to_string()
             };
             *pending_tool = Some((id, name, initial_input));
+        }
+        OutputContentBlock::Thinking { text, thought_signature } => {
+            events.push(AssistantEvent::Thinking { text, thought_signature });
         }
     }
 }

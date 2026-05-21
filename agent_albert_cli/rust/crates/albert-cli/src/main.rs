@@ -49,6 +49,56 @@ fn max_tokens_for_model(model: &str) -> u32 {
         32_000
     }
 }
+
+/// Returns the input context window (in tokens) for a given model ID.
+/// Used to derive the auto-compact threshold as a fraction of capacity
+/// rather than a hardcoded absolute value.
+fn context_window_for_model(model: &str) -> u64 {
+    // Gemini — 1M+ windows
+    if model.starts_with("gemini-1.5") { return 2_097_152; }
+    if model.starts_with("gemini-") || model.starts_with("gemma-") { return 1_048_576; }
+
+    // Claude — 200k
+    if model.starts_with("claude-") { return 200_000; }
+
+    // OpenAI — GPT-4.1 family is 1M; GPT-4o and o-series 128k
+    if model.starts_with("gpt-4.1") { return 1_047_576; }
+    if model.starts_with("gpt-4") || model.starts_with("gpt-3.5-turbo-16k") { return 128_000; }
+    if model.starts_with("gpt-3.5") { return 16_385; }
+    if model.starts_with("o1") || model.starts_with("o3") || model.starts_with("o4") { return 200_000; }
+
+    // DeepSeek
+    if model.starts_with("deepseek-") { return 128_000; }
+
+    // Mistral / Codestral
+    if model.starts_with("mistral-large") || model.starts_with("mistral-small") { return 128_000; }
+    if model.starts_with("codestral-") { return 256_000; }
+    if model.starts_with("mistral-") || model.starts_with("pixtral-") { return 32_000; }
+
+    // Qwen
+    if model.starts_with("qwen2.5-") && (model.contains("72b") || model.contains("32b")) {
+        return 128_000;
+    }
+    if model.starts_with("qwen") || model.starts_with("qwq-") { return 128_000; }
+
+    // Llama / Groq-hosted
+    if model.contains("llama-3") { return 128_000; }
+    if model.starts_with("gemma2-") || model.starts_with("mixtral-") { return 32_000; }
+
+    // OpenRouter slash-namespaced: inherit from the family after the slash
+    if let Some(name) = model.split('/').nth(1) {
+        return context_window_for_model(name);
+    }
+
+    // Per-provider defaults (conservative)
+    if model.starts_with("grok-") { return 131_072; }
+    if model.starts_with("command-") { return 128_000; }
+    if model.starts_with("sonar") { return 127_072; }
+
+    // Default — 128k is the most common modern window
+    128_000
+}
+
 const DEFAULT_DATE: &str = "2024-03-25";
 const DEFAULT_OAUTH_CALLBACK_PORT: u16 = 4545;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -1032,6 +1082,7 @@ fn run_tui(
     {
         let mut state = tui_state.lock().unwrap_or_else(|p| p.into_inner());
         state.trusted = trusted;
+        state.record_model();
         state.push_exec(tui::ExecBlock::SystemMsg(cli.startup_banner()));
     }
 
@@ -1104,17 +1155,9 @@ fn run_tui(
                             ));
                             st.auth_flow = None;
                         } else {
-                            let mut list_msg = format!(
-                                "auth: {} models available — pick one:\n", models.len()
-                            );
-                            for (i, m) in models.iter().enumerate() {
-                                if let Some(ann) = api::model_annotation(m) {
-                                    list_msg.push_str(&format!("  {}. {m}  ({ann})\n", i + 1));
-                                } else {
-                                    list_msg.push_str(&format!("  {}. {m}\n", i + 1));
-                                }
-                            }
-                            st.push_exec(tui::ExecBlock::SystemMsg(list_msg));
+                            st.push_exec(tui::ExecBlock::SystemMsg(
+                                format!("auth: {} models loaded — select from popup below", models.len())
+                            ));
                             st.auth_flow = Some(tui::AuthFlowPhase::Model {
                                 provider: provider.clone(),
                                 models,
@@ -1148,6 +1191,7 @@ fn run_tui(
                         // Activate model through the same pipeline as /model
                         let resolved = resolve_model_alias(&chosen).to_string();
                         let session = cli.runtime.session().clone();
+                        let lp_hint = provider_from_config_key(provider);
                         let switch_result = build_runtime_with_mcp(
                             session,
                             resolved.clone(),
@@ -1157,14 +1201,19 @@ fn run_tui(
                             cli.permission_mode,
                             Arc::clone(&cli.mcp_manager),
                             cli.event_tx.clone(),
+                            lp_hint,
                         );
+                        let models_for_cache = models.clone();
                         let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                         st.auth_flow = None;
+                        st.model_list_cache = Some(models_for_cache);
                         match switch_result {
                             Ok(rt) => {
                                 cli.runtime = rt;
                                 cli.model.clone_from(&resolved);
+                                cli.active_provider = lp_hint;
                                 st.model = resolved.clone();
+                                st.record_model();
                                 st.push_exec(tui::ExecBlock::SystemMsg(
                                     format!("auth: {provider} connected · {resolved} active · you're ready")
                                 ));
@@ -1244,9 +1293,13 @@ fn run_tui(
                                     cli.permission_mode,
                                     Arc::clone(&cli.mcp_manager),
                                     cli.event_tx.clone(),
+                                    None,
                                 ) {
                                     Ok(rt) => cli.runtime = rt,
-                                    Err(e) => eprintln!("runtime rebuild: {e}"),
+                                    Err(e) => {
+                                        let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
+                                        st.push_exec(tui::ExecBlock::SystemMsg(format!("permissions: runtime rebuild failed — {e}")));
+                                    }
                                 }
                                 format!("permissions: {previous} → {normalized}")
                             }
@@ -1260,6 +1313,37 @@ fn run_tui(
                         let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                         st.permission_mode = cli.permission_mode.as_str().to_string();
                         st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    }
+                    true
+                }
+                // /model with no argument → live-fetch from active provider, stay in TUI
+                commands::SlashCommand::Model { model: None } => {
+                    let provider_key = provider_key_from_model(&cli.model);
+                    let lp = provider_from_config_key(provider_key)
+                        .unwrap_or(api::LlmProvider::Ternlang);
+                    tui_state.lock().unwrap_or_else(|p| p.into_inner()).push_exec(
+                        tui::ExecBlock::SystemMsg(format!("model: fetching {provider_key} models…"))
+                    );
+                    let saved_key = runtime::load_provider_config(provider_key)
+                        .ok().flatten().and_then(|c| c.api_key);
+                    let auth = saved_key.map(api::AuthSource::ApiKey)
+                        .unwrap_or(api::AuthSource::None);
+                    let client = api::TernlangClient::from_auth(auth).with_provider(lp);
+                    let models = async_rt.block_on(client.list_remote_models()).unwrap_or_default();
+                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
+                    if models.is_empty() {
+                        st.push_exec(tui::ExecBlock::SystemMsg(
+                            "model: no models found — type /model <id> to switch directly, or /auth <provider> to reconnect".to_string()
+                        ));
+                    } else {
+                        st.model_list_cache = Some(models.clone());
+                        st.push_exec(tui::ExecBlock::SystemMsg(
+                            format!("model: {} models loaded — select from popup below", models.len())
+                        ));
+                        st.auth_flow = Some(tui::AuthFlowPhase::Model {
+                            provider: provider_key.to_string(),
+                            models,
+                        });
                     }
                     true
                 }
@@ -1279,6 +1363,7 @@ fn run_tui(
                             cli.permission_mode,
                             Arc::clone(&cli.mcp_manager),
                             cli.event_tx.clone(),
+                            cli.active_provider,
                         ) {
                             Ok(rt) => {
                                 cli.runtime = rt;
@@ -1291,6 +1376,7 @@ fn run_tui(
                     {
                         let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                         st.model = cli.model.clone();
+                        st.record_model();
                         st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     }
                     true
@@ -1301,7 +1387,11 @@ fn run_tui(
                     agent_override = Some(format!(
                         "You are in /plan mode. Break this task into a clear, numbered execution \
                          plan. For each step include: concrete action, expected outcome, and \
-                         any dependencies on prior steps. Be specific and actionable.\n\nTask: {t}"
+                         any dependencies on prior steps. Be specific and actionable.\n\n\
+                         IMPORTANT: Call the TodoWrite tool to register the plan steps as tasks \
+                         (status: pending). As you execute each step, update the relevant task \
+                         to status: in_progress, then status: completed when done. This wires \
+                         the plan into the live TUI Plan visualization.\n\nTask: {t}"
                     ));
                     true
                 }
@@ -1316,21 +1406,56 @@ fn run_tui(
                     ));
                     true
                 }
-                // /auth — two-phase: collect key then pick model from live registry
+                // /auth — two-phase: collect key then pick model from live registry.
+                // If a key is already saved for the provider, skip phase 1 and go straight
+                // to the live model picker — enabling mid-session provider hotswap.
                 commands::SlashCommand::Auth { provider } => {
-                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                     match provider {
                         Some(p) => {
                             let prov = p.to_lowercase();
-                            st.push_exec(tui::ExecBlock::SystemMsg(
-                                format!("auth: paste or type your {prov} API key below — input is masked"),
-                            ));
-                            st.auth_flow = Some(tui::AuthFlowPhase::Key { provider: prov });
+                            let existing_key = runtime::load_provider_config(&prov)
+                                .ok().flatten().and_then(|c| c.api_key);
+                            if let Some(key) = existing_key {
+                                // Key already on file — skip key entry, fetch models immediately.
+                                {
+                                    let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
+                                    st.push_exec(tui::ExecBlock::SystemMsg(
+                                        format!("auth: {prov} key already saved — fetching models…")
+                                    ));
+                                }
+                                let lp = provider_from_config_key(&prov)
+                                    .unwrap_or(api::LlmProvider::OpenAiCompat);
+                                let client = api::TernlangClient::from_auth(
+                                    api::AuthSource::ApiKey(key)
+                                ).with_provider(lp);
+                                let models = async_rt.block_on(client.list_remote_models())
+                                    .unwrap_or_default();
+                                let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
+                                if models.is_empty() {
+                                    st.push_exec(tui::ExecBlock::SystemMsg(
+                                        format!("auth: no models returned for {prov} — type /model <id> to switch directly")
+                                    ));
+                                } else {
+                                    st.model_list_cache = Some(models.clone());
+                                    st.push_exec(tui::ExecBlock::SystemMsg(
+                                        format!("auth: {} {prov} models loaded — select from popup below", models.len())
+                                    ));
+                                    st.auth_flow = Some(tui::AuthFlowPhase::Model { provider: prov, models });
+                                }
+                            } else {
+                                // No saved key — ask for it (phase 1).
+                                let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
+                                st.push_exec(tui::ExecBlock::SystemMsg(
+                                    format!("auth: paste or type your {prov} API key below — input is masked"),
+                                ));
+                                st.auth_flow = Some(tui::AuthFlowPhase::Key { provider: prov });
+                            }
                         }
                         None => {
+                            let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                             st.push_exec(tui::ExecBlock::SystemMsg(
-                                "auth: choose a provider — openai · anthropic · google · xai · groq · mistral · deepseek · openrouter · ollama\n\
-                                 type /auth <provider> to connect and pick from the live model list".to_string(),
+                                "auth: choose a provider — openai · anthropic · google · xai · groq · mistral · deepseek · openrouter · nvidia · ollama\n\
+                                 type /auth <provider> to connect (skips key entry if already saved)".to_string(),
                             ));
                         }
                     }
@@ -1776,7 +1901,11 @@ fn run_tui(
         // Push user message and set working
         {
             let mut state = tui_state.lock().unwrap_or_else(|p| p.into_inner());
-            state.push_exec(tui::ExecBlock::UserMessage(input.clone()));
+            // For regular messages, the TUI pushes UserMessage immediately on submit.
+            // Only push here for slash commands (/plan, /loop, etc.) that reach the LLM.
+            if input.trim().starts_with('/') {
+                state.push_exec(tui::ExecBlock::UserMessage(input.clone()));
+            }
             state.working = true;
             state.turn_start = Some(std::time::Instant::now());
             state.tokens_out = 0;
@@ -1948,10 +2077,13 @@ fn run_tui(
                 state.push_exec(tui::ExecBlock::SystemMsg(format!("error: {e}")));
             }
             Ok(Ok(ref summary)) => {
-                // Auto-compact when context exceeds 150k tokens — summarize old exchanges,
-                // keep recent messages verbatim so the session continues without interruption.
+                // Auto-compact at 85% of the active model's context window —
+                // derived dynamically so Gemini (1M), Claude (200k), GPT-4o (128k), etc.
+                // each get a proportional trigger rather than a shared absolute ceiling.
                 let tokens = summary.usage.input_tokens;
-                if tokens > 150_000 {
+                let compact_threshold =
+                    (context_window_for_model(&cli.model) as f64 * 0.85) as u64;
+                if u64::from(tokens) > compact_threshold {
                     let compress_result = cli.runtime.compact(runtime::CompactionConfig::default());
                     let removed = compress_result.removed_message_count;
                     if removed > 0 {
@@ -1971,6 +2103,7 @@ fn run_tui(
                             cli.permission_mode,
                             Arc::clone(&cli.mcp_manager),
                             cli.event_tx.clone(),
+                            None,
                         ) {
                             Ok(rt) => {
                                 cli.runtime = rt;
@@ -1981,7 +2114,10 @@ fn run_tui(
                                     "memory compacted · {removed} older exchanges summarized · session continues\n\n{digest}"
                                 )));
                             }
-                            Err(e) => eprintln!("auto-compact rebuild: {e}"),
+                            Err(e) => {
+                                let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
+                                st.push_exec(tui::ExecBlock::SystemMsg(format!("auto-compact: rebuild failed — {e}")));
+                            }
                         }
                     }
                 }
@@ -2025,6 +2161,7 @@ struct ManagedSessionSummary {
 struct LiveCli {
     user_name: String,
     model: String,
+    active_provider: Option<api::LlmProvider>,
     allowed_tools: Option<AllowedToolSet>,
     permission_mode: PermissionMode,
     system_prompt: Vec<String>,
@@ -2076,10 +2213,12 @@ impl LiveCli {
             permission_mode,
             Arc::clone(&mcp_manager),
             event_tx.clone(),
+            None,
         )?;
         let cli = Self {
             user_name,
             model,
+            active_provider: None,
             allowed_tools,
             permission_mode,
             system_prompt,
@@ -2318,6 +2457,7 @@ impl LiveCli {
                                     if state == 1 { let _ = writeln!(out); }
                                     state = 2;
                                 }
+                                Ok(AssistantEvent::Thinking { .. }) => {}
                                 Ok(AssistantEvent::ToolTelemetry { .. }) => {}
                                 Err(_) => break,
                             }
@@ -3043,6 +3183,7 @@ User: {}\n\nAssistant: {}",
             self.permission_mode,
             Arc::clone(&self.mcp_manager),
             self.event_tx.clone(),
+            None,
         )?;
         self.model.clone_from(&model_id);
         println!(
@@ -3089,6 +3230,7 @@ User: {}\n\nAssistant: {}",
             self.permission_mode,
             Arc::clone(&self.mcp_manager),
             self.event_tx.clone(),
+            None,
         )?;
         println!(
             "{}",
@@ -3156,6 +3298,7 @@ User: {}\n\nAssistant: {}",
                     ContentBlock::ToolUse { name, .. } => text.push_str(&format!("[tool: {name}]")),
                     ContentBlock::ToolResult { .. } => text.push_str("[tool result]"),
                     ContentBlock::Image { .. } => text.push_str("[image]"),
+                    ContentBlock::Thinking { .. } => {}
                 }
             }
 
@@ -3210,6 +3353,7 @@ User: {}\n\nAssistant: {}",
             self.permission_mode,
             Arc::clone(&self.mcp_manager),
             self.event_tx.clone(),
+            None,
         )?;
         println!(
             "Session cleared
@@ -3250,6 +3394,7 @@ User: {}\n\nAssistant: {}",
             self.permission_mode,
             Arc::clone(&self.mcp_manager),
             self.event_tx.clone(),
+            None,
         )?;
         self.session = handle;
         println!(
@@ -3327,6 +3472,7 @@ User: {}\n\nAssistant: {}",
                     self.permission_mode,
                     Arc::clone(&self.mcp_manager),
                     self.event_tx.clone(),
+                    None,
                 )?;
                 self.session = handle;
                 println!(
@@ -3370,6 +3516,7 @@ User: {}\n\nAssistant: {}",
             self.permission_mode,
             Arc::clone(&self.mcp_manager),
             self.event_tx.clone(),
+            None,
         )?;
         self.persist_session()?;
         if skipped {
@@ -4219,6 +4366,34 @@ fn provider_from_config_key(key: &str) -> Option<api::LlmProvider> {
     }
 }
 
+fn provider_key_from_model(model: &str) -> &'static str {
+    if model.starts_with("claude-") { return "anthropic"; }
+    if model.starts_with("gpt-") || model.starts_with("o1") || model.starts_with("o3") || model.starts_with("o4") { return "openai"; }
+    if model.starts_with("gemini-") || model.starts_with("gemma-") { return "google"; }
+    if model.starts_with("grok-") { return "xai"; }
+    if model.starts_with("deepseek-") { return "deepseek"; }
+    if model.starts_with("mistral-") || model.starts_with("codestral-") || model.starts_with("pixtral-") { return "mistral"; }
+    if model.starts_with("llama-") || model.starts_with("gemma2-") || model.starts_with("mixtral-") { return "groq"; }
+    if model.starts_with("sonar") { return "perplexity"; }
+    if model.starts_with("command-") { return "cohere"; }
+    if model.starts_with("qwen-") || model.starts_with("qwq-") { return "qwen"; }
+    if model.starts_with("moonshot-") || model.starts_with("kimi-") { return "moonshot"; }
+    if model.starts_with("ernie-") { return "qianfan"; }
+    if model.starts_with("glm-") { return "zhipu"; }
+    // slash-format: provider/model — infer from prefix
+    if let Some(prefix) = model.split('/').next() {
+        match prefix {
+            "nvidia" | "meta" | "mistralai" | "deepseek-ai" | "google" | "microsoft" | "qwen" => return "nvidia",
+            "openai" | "anthropic" | "meta-llama" | "x-ai" | "cohere" | "perplexity" |
+            "deepseek" | "nousresearch" | "sao10k" | "inflection" |
+            "thedrummer" | "arcee-ai" | "liquid" | "minimax" | "moonshotai" |
+            "baidu" | "bytedance-seed" | "tencent" | "xiaomi" | "z-ai" | "aion-labs" => return "openrouter",
+            _ => {}
+        }
+    }
+    "ternlang"
+}
+
 fn provider_config_name(provider: api::LlmProvider) -> &'static str {
     use api::LlmProvider::*;
     match provider {
@@ -4404,13 +4579,14 @@ fn build_runtime_with_mcp(
     permission_mode: PermissionMode,
     mcp_manager: Arc<Mutex<McpServerManager>>,
     event_tx: tokio::sync::broadcast::Sender<AssistantEvent>,
+    provider_hint: Option<api::LlmProvider>,
 ) -> Result<ConversationRuntime<TernlangRuntimeClient, CliToolExecutor>, Box<dyn std::error::Error>>
 {
     let cwd = env::current_dir()?;
     let _config = ConfigLoader::default_for(&cwd).load()?;
 
-    let provider = init::load_albert_config()
-        .and_then(|c| provider_from_config_key(&c.provider))
+    let provider = provider_hint
+        .or_else(|| init::load_albert_config().and_then(|c| provider_from_config_key(&c.provider)))
         .unwrap_or_else(|| resolve_provider_for_model(&model));
     let provider_config = runtime::load_provider_config(provider_config_name(provider)).unwrap_or(None);
 
@@ -4433,10 +4609,10 @@ fn build_runtime_with_mcp(
         model: model.clone(),
         max_tokens: max_tokens_for_model(&model),
         tools: if enable_tools { filter_tool_specs(allowed_tools.as_ref()) } else { Vec::new() },
-        event_tx: Some(event_tx),
+        event_tx: Some(event_tx.clone()),
     };
 
-    let tool_executor = CliToolExecutor::new(mcp_manager);
+    let tool_executor = CliToolExecutor::new(mcp_manager).with_event_tx(event_tx);
     let permission_policy = PermissionPolicy::new(permission_mode);
     Ok(ConversationRuntime::new(session, api_client, tool_executor, permission_policy, system_prompt))
 }
@@ -4589,6 +4765,7 @@ fn map_content_block(block: ContentBlock) -> InputContentBlock {
             is_error: false,
         },
         ContentBlock::Image { media_type, data } => InputContentBlock::Image { media_type, data },
+        ContentBlock::Thinking { text, thought_signature } => InputContentBlock::Thinking { text, thought_signature },
     }
 }
 
@@ -4623,6 +4800,10 @@ fn map_stream_event(event: &ApiStreamEvent) -> Option<AssistantEvent> {
                 name: name.clone(),
                 input: input.to_string(),
             }),
+            OutputContentBlock::Thinking { text, thought_signature } => Some(AssistantEvent::Thinking {
+                text: text.clone(),
+                thought_signature: thought_signature.clone(),
+            }),
             _ => None,
         },
         ApiStreamEvent::MessageDelta(payload) => {
@@ -4645,11 +4826,52 @@ fn map_usage(usage: api::Usage) -> TokenUsage {
 #[derive(Clone)]
 struct CliToolExecutor {
     mcp_manager: Arc<Mutex<McpServerManager>>,
+    event_tx: Option<tokio::sync::broadcast::Sender<AssistantEvent>>,
 }
 
 impl CliToolExecutor {
     fn new(mcp_manager: Arc<Mutex<McpServerManager>>) -> Self {
-        Self { mcp_manager }
+        Self { mcp_manager, event_tx: None }
+    }
+
+    fn with_event_tx(mut self, tx: tokio::sync::broadcast::Sender<AssistantEvent>) -> Self {
+        self.event_tx = Some(tx);
+        self
+    }
+
+    /// After a TodoWrite result, diff old vs new todos and emit TaskStarted/TaskCompleted events.
+    fn emit_todo_events(&self, output_json: &str) {
+        let Some(tx) = &self.event_tx else { return };
+        let Ok(v) = serde_json::from_str::<serde_json::Value>(output_json) else { return };
+
+        let old_map: std::collections::HashMap<String, String> = v["old_todos"]
+            .as_array().unwrap_or(&vec![]).iter()
+            .filter_map(|t| {
+                let content = t["content"].as_str()?.to_string();
+                let status = t["status"].as_str()?.to_string();
+                Some((content, status))
+            })
+            .collect();
+
+        if let Some(new_todos) = v["new_todos"].as_array() {
+            for todo in new_todos {
+                let Some(content) = todo["content"].as_str() else { continue };
+                let Some(status) = todo["status"].as_str() else { continue };
+                let prev = old_map.get(content).map(String::as_str).unwrap_or("pending");
+
+                if status == "in_progress" && prev != "in_progress" {
+                    let _ = tx.send(AssistantEvent::TaskStarted {
+                        id: content.to_string(),
+                        label: content.to_string(),
+                    });
+                } else if status == "completed" && prev != "completed" {
+                    let _ = tx.send(AssistantEvent::TaskCompleted {
+                        id: content.to_string(),
+                        success: true,
+                    });
+                }
+            }
+        }
     }
 
     fn execute_mcp_tool(&self, tool_name: &str, input: serde_json::Value) -> Result<runtime::ToolResult, ToolError> {
@@ -4687,10 +4909,15 @@ impl ToolExecutor for CliToolExecutor {
             return self.execute_mcp_tool(tool_name, input_val);
         }
         match execute_tool(tool_name, &input_val) {
-            Ok(res) => Ok(runtime::ToolResult {
-                output: res.output,
-                state: res.state,
-            }),
+            Ok(res) => {
+                if tool_name == "TodoWrite" {
+                    self.emit_todo_events(&res.output);
+                }
+                Ok(runtime::ToolResult {
+                    output: res.output,
+                    state: res.state,
+                })
+            }
             Err(e) => Err(ToolError::new(e)),
         }
     }
@@ -4724,10 +4951,6 @@ fn append_to_albert_memory(line: &str) -> Result<(), Box<dyn std::error::Error>>
         .open(&file_path)?;
 
     writeln!(file, "- {} [{}]", line, signature)?;
-    
-    // Notify MoE Orchestrator of the memory update (Pointer Bridge)
-    println!("[ORCHESTRATOR-SYNC] Pointer bridged to ClusterMemory.");
-    
     Ok(())
 }
 
@@ -4976,8 +5199,57 @@ fn render_last_tool_debug_report(_session: &Session) -> Result<String, Box<dyn s
     Ok("".to_string())
 }
 
+/// Path to the file that persists per-directory trust + permission choices.
+fn trusted_dirs_path() -> std::path::PathBuf {
+    dirs::home_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join(".albert")
+        .join("trusted_dirs.json")
+}
+
+/// Load `{ "/abs/path": "workspace-write" }` from disk. Returns empty map on any error.
+fn load_trusted_dirs() -> std::collections::HashMap<String, String> {
+    let path = trusted_dirs_path();
+    fs::read_to_string(&path)
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default()
+}
+
+/// Persist a trust entry for `dir` with the given `permission_mode` label.
+fn save_trusted_dir(dir: &str, mode: &str) {
+    let mut map = load_trusted_dirs();
+    map.insert(dir.to_string(), mode.to_string());
+    let path = trusted_dirs_path();
+    if let Some(parent) = path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    if let Ok(json) = serde_json::to_string_pretty(&map) {
+        let _ = fs::write(&path, json);
+    }
+}
+
 fn check_workspace_trust(cli_permission_mode: PermissionMode) -> Result<(bool, PermissionMode), Box<dyn std::error::Error>> {
     let mut cwd = env::current_dir()?;
+
+    // Skip dialog for previously-trusted directories.
+    let cwd_str = cwd.display().to_string();
+    let trusted = load_trusted_dirs();
+    if let Some(saved_mode) = trusted.get(&cwd_str) {
+        let mode = match saved_mode.as_str() {
+            "read-only" => PermissionMode::ReadOnly,
+            "workspace-write" => PermissionMode::WorkspaceWrite,
+            "danger-full-access" => PermissionMode::DangerFullAccess,
+            _ => cli_permission_mode,
+        };
+        // If an explicit --permission-mode was passed, honour it over the saved value.
+        let final_mode = if cli_permission_mode != PermissionMode::DangerFullAccess {
+            cli_permission_mode
+        } else {
+            mode
+        };
+        return Ok((true, final_mode));
+    }
 
     loop {
         println!("\n{}", style("────────────────────────────────────────────────────────────").dim());
@@ -5023,6 +5295,8 @@ fn check_workspace_trust(cli_permission_mode: PermissionMode) -> Result<(bool, P
                     }
                 };
 
+                // Persist so we skip this dialog on next startup in the same directory.
+                save_trusted_dir(&cwd.display().to_string(), final_mode.as_str());
                 return Ok((true, final_mode));
             }
             1 => {

@@ -156,11 +156,16 @@ pub struct TernlangClient {
 
 impl TernlangClient {
     pub fn from_auth(auth: AuthSource) -> Self {
+        let http = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(120))
+            .connect_timeout(std::time::Duration::from_secs(15))
+            .build()
+            .unwrap_or_default();
         Self {
             provider: LlmProvider::Ternlang,
             base_url: DEFAULT_BASE_URL.to_string(),
             auth,
-            http: reqwest::Client::new(),
+            http,
             max_retries: 3,
             initial_backoff: DEFAULT_INITIAL_BACKOFF,
             max_backoff: DEFAULT_MAX_BACKOFF,
@@ -272,8 +277,10 @@ impl TernlangClient {
         &mut self,
         request: &MessageRequest,
     ) -> Result<MessageStream, ApiError> {
-        // Gemini SSE format differs from Anthropic's — use non-streaming and wrap events
-        if self.provider == LlmProvider::Google {
+        // Google and OpenAI-compat providers use different SSE formats from Anthropic's.
+        // Buffer the full response and wrap it in synthetic stream events so the
+        // typewriter effect works identically without a format-specific SSE parser.
+        if self.provider == LlmProvider::Google || self.provider.is_openai_compat() {
             let non_stream_req = MessageRequest { stream: false, ..request.clone() };
             let buffered = self.send_message(&non_stream_req).await?;
             return Ok(MessageStream::from_buffered_response(buffered));
@@ -300,7 +307,7 @@ impl TernlangClient {
         loop {
             attempts += 1;
             match self.send_raw_request(request).await {
-                Ok(response) => match expect_success(response).await {
+                Ok(response) => match expect_success(response, self.provider).await {
                     Ok(response) => return Ok(response),
                     Err(error) if error.is_retryable() && attempts <= self.max_retries => {
                         last_error = Some(error);
@@ -611,24 +618,25 @@ impl MessageStream {
 fn translate_to_anthropic(request: &MessageRequest) -> serde_json::Value {
     use serde_json::json;
     let messages: Vec<serde_json::Value> = request.messages.iter().map(|msg| {
-        let content: Vec<serde_json::Value> = msg.content.iter().map(|block| {
+        let content: Vec<serde_json::Value> = msg.content.iter().filter_map(|block| {
             match block {
-                InputContentBlock::Text { text } => json!({ "type": "text", "text": text }),
-                InputContentBlock::ToolUse { id, name, input } => json!({
+                InputContentBlock::Text { text } => Some(json!({ "type": "text", "text": text })),
+                InputContentBlock::ToolUse { id, name, input } => Some(json!({
                     "type": "tool_use", "id": id, "name": name, "input": input
-                }),
+                })),
                 InputContentBlock::ToolResult { tool_use_id, content, is_error } => {
                     let text = content.iter().filter_map(|c| {
                         if let ToolResultContentBlock::Text { text } = c { Some(text.clone()) } else { None }
                     }).collect::<Vec<String>>().join("\n");
-                    json!({
+                    Some(json!({
                         "type": "tool_result", "tool_use_id": tool_use_id, "content": text, "is_error": is_error
-                    })
+                    }))
                 }
-                InputContentBlock::Image { media_type, data } => json!({
+                InputContentBlock::Image { media_type, data } => Some(json!({
                     "type": "image",
                     "source": { "type": "base64", "media_type": media_type, "data": data }
-                }),
+                })),
+                InputContentBlock::Thinking { .. } => None, // Gemini-specific, skip for Anthropic
             }
         }).collect();
         json!({ "role": msg.role, "content": content })
@@ -680,6 +688,7 @@ fn translate_to_openai(request: &MessageRequest) -> serde_json::Value {
                         "image_url": { "url": format!("data:{media_type};base64,{data}") }
                     }));
                 }
+                InputContentBlock::Thinking { .. } => {} // Gemini-specific, skip for OpenAI
             }
         }
 
@@ -741,21 +750,41 @@ fn translate_to_gemini(request: &MessageRequest) -> serde_json::Value {
     use serde_json::json;
     let contents: Vec<serde_json::Value> = request.messages.iter().map(|msg| {
         let role = if msg.role == "assistant" { "model" } else { "user" };
-        let parts: Vec<serde_json::Value> = msg.content.iter().map(|block| {
+        // Track the last thoughtSignature seen so it can be forwarded to the
+        // following functionCall — Gemini requires it on the call part itself.
+        let mut pending_sig: Option<String> = None;
+        let mut parts: Vec<serde_json::Value> = Vec::new();
+        for block in &msg.content {
             match block {
-                InputContentBlock::Text { text } => json!({ "text": text }),
-                InputContentBlock::ToolUse { name, input, .. } => json!({ "functionCall": { "name": name, "args": input } }),
+                InputContentBlock::Text { text } => parts.push(json!({ "text": text })),
+                InputContentBlock::ToolUse { name, input, .. } => {
+                    let mut call = json!({ "name": name, "args": input });
+                    if let Some(sig) = pending_sig.take() {
+                        call["thoughtSignature"] = json!(sig);
+                    }
+                    parts.push(json!({ "functionCall": call }));
+                }
                 InputContentBlock::ToolResult { tool_use_id, content, .. } => {
                     let text = content.iter().filter_map(|c| {
                         if let ToolResultContentBlock::Text { text } = c { Some(text.clone()) } else { None }
                     }).collect::<Vec<String>>().join("\n");
-                    json!({ "functionResponse": { "name": tool_use_id, "response": { "result": text } } })
+                    parts.push(json!({ "functionResponse": { "name": tool_use_id, "response": { "result": text } } }));
                 }
-                InputContentBlock::Image { media_type, data } => json!({
-                    "inline_data": { "mime_type": media_type, "data": data }
-                }),
+                InputContentBlock::Image { media_type, data } => {
+                    parts.push(json!({ "inline_data": { "mime_type": media_type, "data": data } }));
+                }
+                InputContentBlock::Thinking { text, thought_signature } => {
+                    if let Some(sig) = thought_signature {
+                        pending_sig = Some(sig.clone());
+                    }
+                    let mut part = json!({ "thought": true, "text": text });
+                    if let Some(sig) = thought_signature {
+                        part["thoughtSignature"] = json!(sig);
+                    }
+                    parts.push(part);
+                }
             }
-        }).collect();
+        }
         json!({ "role": role, "parts": parts })
     }).collect();
 
@@ -847,6 +876,13 @@ fn translate_from_gemini(response: serde_json::Value, model: &str) -> MessageRes
         if let Some(candidate) = candidates.first() {
             if let Some(parts) = candidate.get("content").and_then(|c| c.get("parts")).and_then(|p| p.as_array()) {
                 for part in parts {
+                    let is_thought = part.get("thought").and_then(|t| t.as_bool()).unwrap_or(false);
+                    if is_thought {
+                        let text = part.get("text").and_then(|t| t.as_str()).unwrap_or("").to_string();
+                        let sig = part.get("thoughtSignature").and_then(|s| s.as_str()).map(String::from);
+                        content.push(OutputContentBlock::Thinking { text, thought_signature: sig });
+                        continue;
+                    }
                     if let Some(text) = part.get("text").and_then(|t| t.as_str()) {
                         content.push(OutputContentBlock::Text { text: text.to_string() });
                     }
@@ -885,13 +921,49 @@ pub fn curated_models(provider: LlmProvider) -> Vec<String> {
             "claude-3-opus-latest",
         ],
         LlmProvider::Google => &[
+            // gemini 3.x
+            "gemini-3.5-flash",
+            "gemini-3.1-pro-preview-customtools",
+            "gemini-3.1-pro-preview",
+            "gemini-3.1-flash-lite",
+            "gemini-3.1-flash-lite-preview",
+            "gemini-3.1-flash-image-preview",
+            "gemini-3.1-flash-tts-preview",
+            "gemini-3-pro-preview",
+            "gemini-3-pro-image-preview",
+            "gemini-3-flash-preview",
+            // gemini 2.5
             "gemini-2.5-pro",
             "gemini-2.5-flash",
-            "gemini-2.5-flash-8b",
+            "gemini-2.5-flash-lite",
+            "gemini-2.5-flash-image",
+            "gemini-2.5-flash-preview-tts",
+            "gemini-2.5-pro-preview-tts",
+            "gemini-2.5-computer-use-preview-10-2025",
+            // gemini 2.0
             "gemini-2.0-flash",
+            "gemini-2.0-flash-001",
             "gemini-2.0-flash-lite",
-            "gemini-1.5-flash",
-            "gemini-1.5-pro",
+            "gemini-2.0-flash-lite-001",
+            // gemma
+            "gemma-4-31b-it",
+            "gemma-4-26b-a4b-it",
+            // audio / multimodal
+            "lyria-3-pro-preview",
+            "lyria-3-clip-preview",
+            // research / agentic
+            "deep-research-max-preview-04-2026",
+            "deep-research-pro-preview-12-2025",
+            "deep-research-preview-04-2026",
+            // robotics / experimental
+            "gemini-robotics-er-1.6-preview",
+            "gemini-robotics-er-1.5-preview",
+            "nano-banana-pro-preview",
+            "antigravity-preview-05-2026",
+            // dynamic latest aliases
+            "gemini-pro-latest",
+            "gemini-flash-latest",
+            "gemini-flash-lite-latest",
         ],
         LlmProvider::OpenAi => &[
             "gpt-4o",
@@ -912,12 +984,414 @@ pub fn curated_models(provider: LlmProvider) -> Vec<String> {
             "pixtral-large-latest",
         ],
         LlmProvider::OpenRouter => &[
-            "openai/gpt-4o",
-            "anthropic/claude-3.5-sonnet",
+            // x-ai
+            "x-ai/grok-build-0.1",
+            "x-ai/grok-4.3",
+            "x-ai/grok-4.20-multi-agent",
+            "x-ai/grok-4.20",
+            // google
+            "google/gemini-3.5-flash",
+            "google/gemini-3.1-flash-lite",
+            "google/gemini-3.1-flash-lite-preview",
+            "google/gemini-3.1-flash-image-preview",
+            "google/gemini-3.1-pro-preview-customtools",
+            "google/gemini-3.1-pro-preview",
+            "google/gemini-3-flash-preview",
+            "google/gemini-3-pro-image-preview",
+            "google/gemini-2.5-flash-image",
+            "google/gemini-2.5-flash-lite-preview-09-2025",
+            "google/gemini-2.5-flash-lite",
             "google/gemini-2.5-flash",
-            "meta-llama/llama-3.3-70b-instruct",
+            "google/gemini-2.5-pro",
+            "google/gemini-2.5-pro-preview",
+            "google/gemini-2.5-pro-preview-05-06",
+            "google/gemini-2.0-flash-lite-001",
+            "google/gemini-2.0-flash-001",
+            "google/lyria-3-pro-preview",
+            "google/lyria-3-clip-preview",
+            "google/gemma-4-26b-a4b-it:free",
+            "google/gemma-4-26b-a4b-it",
+            "google/gemma-4-31b-it:free",
+            "google/gemma-4-31b-it",
+            "google/gemma-3n-e4b-it",
+            "google/gemma-3-4b-it",
+            "google/gemma-3-12b-it",
+            "google/gemma-3-27b-it",
+            "google/gemma-2-27b-it",
+            // anthropic
+            "anthropic/claude-opus-4.7-fast",
+            "anthropic/claude-opus-4.7",
+            "anthropic/claude-opus-4.6-fast",
+            "anthropic/claude-opus-4.6",
+            "anthropic/claude-opus-4.5",
+            "anthropic/claude-opus-4.1",
+            "anthropic/claude-opus-4",
+            "anthropic/claude-sonnet-4.6",
+            "anthropic/claude-sonnet-4.5",
+            "anthropic/claude-sonnet-4",
+            "anthropic/claude-haiku-4.5",
+            "anthropic/claude-3.5-haiku",
+            "anthropic/claude-3-haiku",
+            // openai
+            "openai/gpt-5.5-pro",
+            "openai/gpt-5.5",
+            "openai/gpt-5.4-image-2",
+            "openai/gpt-5.4-nano",
+            "openai/gpt-5.4-mini",
+            "openai/gpt-5.4-pro",
+            "openai/gpt-5.4",
+            "openai/gpt-5.3-chat",
+            "openai/gpt-5.3-codex",
+            "openai/gpt-5.2-codex",
+            "openai/gpt-5.2-chat",
+            "openai/gpt-5.2-pro",
+            "openai/gpt-5.2",
+            "openai/gpt-5.1-codex-max",
+            "openai/gpt-5.1-codex-mini",
+            "openai/gpt-5.1-codex",
+            "openai/gpt-5.1-chat",
+            "openai/gpt-5.1",
+            "openai/gpt-5-image-mini",
+            "openai/gpt-5-image",
+            "openai/gpt-5-pro",
+            "openai/gpt-5-codex",
+            "openai/gpt-5-chat",
+            "openai/gpt-5-mini",
+            "openai/gpt-5-nano",
+            "openai/gpt-5",
+            "openai/gpt-4o-audio-preview",
+            "openai/gpt-4o-mini-search-preview",
+            "openai/gpt-4o-search-preview",
+            "openai/gpt-4o-2024-11-20",
+            "openai/gpt-4o-2024-08-06",
+            "openai/gpt-4o-mini-2024-07-18",
+            "openai/gpt-4o-mini",
+            "openai/gpt-4o-2024-05-13",
+            "openai/gpt-4o",
+            "openai/gpt-4.1",
+            "openai/gpt-4.1-mini",
+            "openai/gpt-4.1-nano",
+            "openai/gpt-4-turbo",
+            "openai/gpt-4-turbo-preview",
+            "openai/gpt-4-1106-preview",
+            "openai/gpt-4-0314",
+            "openai/gpt-4",
+            "openai/gpt-chat-latest",
+            "openai/gpt-audio",
+            "openai/gpt-audio-mini",
+            "openai/gpt-3.5-turbo-0613",
+            "openai/gpt-3.5-turbo-instruct",
+            "openai/gpt-3.5-turbo-16k",
+            "openai/gpt-3.5-turbo",
+            "openai/o4-mini-high",
+            "openai/o4-mini-deep-research",
+            "openai/o4-mini",
+            "openai/o3-pro",
+            "openai/o3-deep-research",
+            "openai/o3-mini-high",
+            "openai/o3-mini",
+            "openai/o3",
+            "openai/o1-pro",
+            "openai/o1",
+            "openai/gpt-oss-safeguard-20b",
+            "openai/gpt-oss-120b:free",
+            "openai/gpt-oss-120b",
+            "openai/gpt-oss-20b:free",
+            "openai/gpt-oss-20b",
+            // deepseek
+            "deepseek/deepseek-v4-pro",
+            "deepseek/deepseek-v4-flash:free",
+            "deepseek/deepseek-v4-flash",
+            "deepseek/deepseek-v3.2-speciale",
+            "deepseek/deepseek-v3.2",
+            "deepseek/deepseek-v3.2-exp",
+            "deepseek/deepseek-v3.1-terminus",
+            "deepseek/deepseek-chat-v3.1",
+            "deepseek/deepseek-r1-0528",
+            "deepseek/deepseek-r1-distill-qwen-32b",
+            "deepseek/deepseek-r1-distill-llama-70b",
             "deepseek/deepseek-r1",
-            "qwen/qwen-2.5-72b-instruct",
+            "deepseek/deepseek-chat",
+            // meta-llama
+            "meta-llama/llama-4-maverick",
+            "meta-llama/llama-4-scout",
+            "meta-llama/llama-guard-4-12b",
+            "meta-llama/llama-guard-3-8b",
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "meta-llama/llama-3.3-70b-instruct",
+            "meta-llama/llama-3.2-11b-vision-instruct",
+            "meta-llama/llama-3.2-3b-instruct:free",
+            "meta-llama/llama-3.2-3b-instruct",
+            "meta-llama/llama-3.2-1b-instruct",
+            "meta-llama/llama-3.1-70b-instruct",
+            "meta-llama/llama-3.1-8b-instruct",
+            "meta-llama/llama-3-70b-instruct",
+            "meta-llama/llama-3-8b-instruct",
+            // qwen
+            "qwen/qwen3.6-flash",
+            "qwen/qwen3.6-35b-a3b",
+            "qwen/qwen3.6-max-preview",
+            "qwen/qwen3.6-27b",
+            "qwen/qwen3.6-plus",
+            "qwen/qwen3.5-plus-20260420",
+            "qwen/qwen3.5-plus-02-15",
+            "qwen/qwen3.5-flash-02-23",
+            "qwen/qwen3.5-35b-a3b",
+            "qwen/qwen3.5-27b",
+            "qwen/qwen3.5-122b-a10b",
+            "qwen/qwen3.5-9b",
+            "qwen/qwen3-vl-235b-a22b-thinking",
+            "qwen/qwen3-vl-235b-a22b-instruct",
+            "qwen/qwen3-vl-32b-instruct",
+            "qwen/qwen3-vl-30b-a3b-thinking",
+            "qwen/qwen3-vl-30b-a3b-instruct",
+            "qwen/qwen3-vl-8b-thinking",
+            "qwen/qwen3-vl-8b-instruct",
+            "qwen/qwen3-max-thinking",
+            "qwen/qwen3-max",
+            "qwen/qwen3-coder-next",
+            "qwen/qwen3-coder-plus",
+            "qwen/qwen3-coder-flash",
+            "qwen/qwen3-coder-30b-a3b-instruct",
+            "qwen/qwen3-coder:free",
+            "qwen/qwen3-coder",
+            "qwen/qwen3-next-80b-a3b-thinking",
+            "qwen/qwen3-next-80b-a3b-instruct:free",
+            "qwen/qwen3-next-80b-a3b-instruct",
+            "qwen/qwen3-235b-a22b-thinking-2507",
+            "qwen/qwen3-235b-a22b-2507",
+            "qwen/qwen3-235b-a22b",
+            "qwen/qwen3-30b-a3b-thinking-2507",
+            "qwen/qwen3-30b-a3b-instruct-2507",
+            "qwen/qwen3-30b-a3b",
+            "qwen/qwen3-32b",
+            "qwen/qwen3-14b",
+            "qwen/qwen3-8b",
+            "qwen/qwen-plus-2025-07-28:thinking",
+            "qwen/qwen-plus-2025-07-28",
+            "qwen/qwen-plus",
+            "qwen/qwen2.5-vl-72b-instruct",
+            "qwen/qwen2.5-coder-32b-instruct",
+            "qwen/qwen2.5-72b-instruct",
+            // mistralai
+            "mistralai/mistral-medium-3-5",
+            "mistralai/mistral-medium-3.1",
+            "mistralai/mistral-medium-3",
+            "mistralai/mistral-large-2512",
+            "mistralai/mistral-large-2411",
+            "mistralai/mistral-large-2407",
+            "mistralai/mistral-large",
+            "mistralai/mistral-small-3.2-24b-instruct",
+            "mistralai/mistral-small-3.1-24b-instruct",
+            "mistralai/mistral-small-2603",
+            "mistralai/mistral-small-24b-instruct-2501",
+            "mistralai/mistral-saba",
+            "mistralai/mistral-nemo",
+            "mistralai/mistral-7b-instruct-v0.1",
+            "mistralai/ministral-14b-2512",
+            "mistralai/ministral-8b-2512",
+            "mistralai/ministral-3b-2512",
+            "mistralai/mixtral-8x22b-instruct",
+            "mistralai/codestral-2508",
+            "mistralai/devstral-2512",
+            "mistralai/devstral-medium",
+            "mistralai/devstral-small",
+            "mistralai/pixtral-large-2411",
+            "mistralai/voxtral-small-24b-2507",
+            // z-ai / zhipu
+            "z-ai/glm-5.1",
+            "z-ai/glm-5v-turbo",
+            "z-ai/glm-5-turbo",
+            "z-ai/glm-5",
+            "z-ai/glm-4.7-flash",
+            "z-ai/glm-4.7",
+            "z-ai/glm-4.6v",
+            "z-ai/glm-4.6",
+            "z-ai/glm-4.5v",
+            "z-ai/glm-4.5-air:free",
+            "z-ai/glm-4.5-air",
+            "z-ai/glm-4.5",
+            "z-ai/glm-4-32b",
+            // microsoft
+            "microsoft/phi-4-mini-instruct",
+            "microsoft/wizardlm-2-8x22b",
+            // amazon
+            "amazon/nova-2-lite-v1",
+            "amazon/nova-premier-v1",
+            "amazon/nova-pro-v1",
+            "amazon/nova-lite-v1",
+            "amazon/nova-micro-v1",
+            // nvidia
+            "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+            "nvidia/nemotron-3-super-120b-a12b:free",
+            "nvidia/nemotron-3-super-120b-a12b",
+            "nvidia/nemotron-3-nano-30b-a3b:free",
+            "nvidia/nemotron-3-nano-30b-a3b",
+            "nvidia/nemotron-nano-12b-v2-vl:free",
+            "nvidia/nemotron-nano-9b-v2:free",
+            "nvidia/nemotron-nano-9b-v2",
+            "nvidia/llama-3.3-nemotron-super-49b-v1.5",
+            // perplexity
+            "perplexity/sonar-reasoning-pro",
+            "perplexity/sonar-pro-search",
+            "perplexity/sonar-pro",
+            "perplexity/sonar-deep-research",
+            "perplexity/sonar",
+            // cohere
+            "cohere/command-a",
+            "cohere/command-r-plus-08-2024",
+            "cohere/command-r-08-2024",
+            "cohere/command-r7b-12-2024",
+            // minimax
+            "minimax/minimax-m2.7",
+            "minimax/minimax-m2.5:free",
+            "minimax/minimax-m2.5",
+            "minimax/minimax-m2.1",
+            "minimax/minimax-m2-her",
+            "minimax/minimax-m2",
+            "minimax/minimax-m1",
+            "minimax/minimax-01",
+            // moonshotai
+            "moonshotai/kimi-k2.6",
+            "moonshotai/kimi-k2.5",
+            "moonshotai/kimi-k2-0905",
+            "moonshotai/kimi-k2-thinking",
+            "moonshotai/kimi-k2",
+            // baidu
+            "baidu/ernie-4.5-vl-424b-a47b",
+            "baidu/ernie-4.5-300b-a47b",
+            "baidu/ernie-4.5-vl-28b-a3b",
+            "baidu/ernie-4.5-21b-a3b-thinking",
+            "baidu/ernie-4.5-21b-a3b",
+            "baidu/qianfan-ocr-fast",
+            "baidu/cobuddy:free",
+            // bytedance-seed
+            "bytedance-seed/seed-2.0-lite",
+            "bytedance-seed/seed-2.0-mini",
+            "bytedance-seed/seed-1.6-flash",
+            "bytedance-seed/seed-1.6",
+            // bytedance
+            "bytedance/ui-tars-1.5-7b",
+            // tencent
+            "tencent/hunyuan-a13b-instruct",
+            "tencent/hy3-preview",
+            // xiaomi
+            "xiaomi/mimo-v2.5-pro",
+            "xiaomi/mimo-v2.5",
+            "xiaomi/mimo-v2-omni",
+            "xiaomi/mimo-v2-pro",
+            "xiaomi/mimo-v2-flash",
+            // nousresearch
+            "nousresearch/hermes-4-405b",
+            "nousresearch/hermes-4-70b",
+            "nousresearch/hermes-3-llama-3.1-405b:free",
+            "nousresearch/hermes-3-llama-3.1-405b",
+            "nousresearch/hermes-3-llama-3.1-70b",
+            "nousresearch/hermes-2-pro-llama-3-8b",
+            // arcee-ai
+            "arcee-ai/trinity-large-thinking:free",
+            "arcee-ai/trinity-large-thinking",
+            "arcee-ai/trinity-large-preview",
+            "arcee-ai/trinity-mini",
+            "arcee-ai/spotlight",
+            "arcee-ai/maestro-reasoning",
+            "arcee-ai/virtuoso-large",
+            "arcee-ai/coder-large",
+            // liquid
+            "liquid/lfm-2-24b-a2b",
+            "liquid/lfm-2.5-1.2b-thinking:free",
+            "liquid/lfm-2.5-1.2b-instruct:free",
+            // ai21
+            "ai21/jamba-large-1.7",
+            // aion-labs
+            "aion-labs/aion-2.0",
+            "aion-labs/aion-1.0",
+            "aion-labs/aion-1.0-mini",
+            "aion-labs/aion-rp-llama-3.1-8b",
+            // inception
+            "inception/mercury-2",
+            // morph
+            "morph/morph-v3-large",
+            "morph/morph-v3-fast",
+            // writer
+            "writer/palmyra-x5",
+            // upstage
+            "upstage/solar-pro-3",
+            // rekaai
+            "rekaai/reka-flash-3",
+            "rekaai/reka-edge",
+            // relace
+            "relace/relace-apply-3",
+            "relace/relace-search",
+            // nex-agi
+            "nex-agi/deepseek-v3.1-nex-n1",
+            // prime-intellect
+            "prime-intellect/intellect-3",
+            // deepcogito
+            "deepcogito/cogito-v2.1-671b",
+            // allenai
+            "allenai/olmo-3-32b-think",
+            // ibm-granite
+            "ibm-granite/granite-4.1-8b",
+            "ibm-granite/granite-4.0-h-micro",
+            // kwaipilot
+            "kwaipilot/kat-coder-pro-v2",
+            // switchpoint
+            "switchpoint/router",
+            // sao10k
+            "sao10k/l3.1-70b-hanami-x1",
+            "sao10k/l3.3-euryale-70b",
+            "sao10k/l3.1-euryale-70b",
+            "sao10k/l3-lunaris-8b",
+            "sao10k/l3-euryale-70b",
+            // inflection
+            "inflection/inflection-3-productivity",
+            "inflection/inflection-3-pi",
+            // thedrummer
+            "thedrummer/cydonia-24b-v4.1",
+            "thedrummer/skyfall-36b-v2",
+            "thedrummer/unslopnemo-12b",
+            "thedrummer/rocinante-12b",
+            // anthracite-org
+            "anthracite-org/magnum-v4-72b",
+            // cognitivecomputations
+            "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+            // essentialai
+            "essentialai/rnj-1-instruct",
+            // alfredpros
+            "alfredpros/codellama-7b-instruct-solidity",
+            // alibaba
+            "alibaba/tongyi-deepresearch-30b-a3b",
+            // stepfun
+            "stepfun/step-3.5-flash",
+            // openrouter-native
+            "openrouter/owl-alpha",
+            "openrouter/pareto-code",
+            "openrouter/bodybuilder",
+            "openrouter/free",
+            "openrouter/auto",
+            // poolside
+            "poolside/laguna-xs.2:free",
+            "poolside/laguna-m.1:free",
+            // inclusionai
+            "inclusionai/ring-2.6-1t",
+            "inclusionai/ling-2.6-1t",
+            "inclusionai/ling-2.6-flash",
+            // perceptron
+            "perceptron/perceptron-mk1",
+            // mancer / legacy
+            "mancer/weaver",
+            "undi95/remm-slerp-l2-13b",
+            "gryphe/mythomax-l2-13b",
+            // openrouter alias routes (~ prefix = dynamic latest pointer)
+            "~anthropic/claude-haiku-latest",
+            "~anthropic/claude-sonnet-latest",
+            "~anthropic/claude-opus-latest",
+            "~openai/gpt-mini-latest",
+            "~openai/gpt-latest",
+            "~google/gemini-flash-latest",
+            "~google/gemini-pro-latest",
+            "~moonshotai/kimi-latest",
         ],
         LlmProvider::Groq => &[
             "llama-3.3-70b-versatile",
@@ -1035,19 +1509,19 @@ pub fn model_annotation(id: &str) -> Option<&'static str> {
         "moonshot-v1-128k" => Some("ctx 128k · long context"),
         // Groq
         "llama-3.3-70b-versatile" => Some("ctx 128k · ultra-fast on Groq"),
-        // NVIDIA NIM
-        "nvidia/llama-3.1-nemotron-70b-instruct" => Some("ctx 128k · NVIDIA fine-tune · top open"),
-        "nvidia/nemotron-4-340b-instruct" => Some("ctx 4k · 340B · research flagship"),
-        "meta/llama-3.1-405b-instruct" => Some("ctx 128k · 405B · largest Llama"),
-        "meta/llama-3.3-70b-instruct" => Some("ctx 128k · latest Llama 3.3"),
-        "meta/llama-3.1-70b-instruct" => Some("ctx 128k · solid baseline"),
-        "meta/llama-3.1-8b-instruct" => Some("ctx 128k · fast · lightweight"),
-        "mistralai/mistral-large-2-instruct" => Some("ctx 128k · Mistral flagship"),
-        "mistralai/mixtral-8x22b-instruct-v0.1" => Some("ctx 64k · MoE · strong reasoning"),
-        "deepseek-ai/deepseek-r1" => Some("ctx 64k · chain-of-thought · R1"),
-        "google/gemma-2-27b-it" => Some("ctx 8k · Google open model"),
-        "microsoft/phi-3-medium-128k-instruct" => Some("ctx 128k · small but capable"),
-        "qwen/qwen2-72b-instruct" => Some("ctx 32k · Alibaba · multilingual"),
+        // NVIDIA NIM  (free tier = standard signup key; enterprise = NGC subscription required)
+        "nvidia/llama-3.1-nemotron-70b-instruct" => Some("ctx 128k · free tier · NVIDIA flagship"),
+        "nvidia/nemotron-4-340b-instruct"         => Some("ctx 4k · enterprise · 340B research"),
+        "meta/llama-3.1-405b-instruct"            => Some("ctx 128k · enterprise · 405B largest"),
+        "meta/llama-3.3-70b-instruct"             => Some("ctx 128k · free tier · latest Llama 3.3"),
+        "meta/llama-3.1-70b-instruct"             => Some("ctx 128k · free tier · solid baseline"),
+        "meta/llama-3.1-8b-instruct"              => Some("ctx 128k · free tier · fast · lightweight"),
+        "mistralai/mistral-large-2-instruct"      => Some("ctx 128k · check tier · Mistral flagship"),
+        "mistralai/mixtral-8x22b-instruct-v0.1"  => Some("ctx 64k · check tier · MoE reasoning"),
+        "deepseek-ai/deepseek-r1"                 => Some("ctx 64k · check tier · chain-of-thought"),
+        "google/gemma-2-27b-it"                   => Some("ctx 8k · free tier · Google open model"),
+        "microsoft/phi-3-medium-128k-instruct"    => Some("ctx 128k · free tier · small but capable"),
+        "qwen/qwen2-72b-instruct"                 => Some("ctx 32k · free tier · multilingual"),
         // Misc
         _ => None,
     }
@@ -1073,13 +1547,28 @@ fn request_id_from_headers(headers: &reqwest::header::HeaderMap) -> Option<Strin
         .map(ToOwned::to_owned)
 }
 
-async fn expect_success(response: reqwest::Response) -> Result<reqwest::Response, ApiError> {
+async fn expect_success(response: reqwest::Response, provider: LlmProvider) -> Result<reqwest::Response, ApiError> {
     if response.status().is_success() {
         return Ok(response);
     }
     let status = response.status();
     let body = response.text().await.unwrap_or_default();
-    Err(ApiError::Auth(format!("HTTP {status}: {body}")))
+
+    // 401/403 are always key/auth problems.
+    if status == reqwest::StatusCode::UNAUTHORIZED || status == reqwest::StatusCode::FORBIDDEN {
+        return Err(ApiError::Auth(format!("HTTP {status} — check your {} API key", provider.env_var())));
+    }
+
+    // 404 on an OpenAI-compat provider almost always means the model isn't in the caller's plan/tier.
+    if status == reqwest::StatusCode::NOT_FOUND && provider.is_openai_compat() {
+        return Err(ApiError::Auth(format!(
+            "model not accessible on your {} plan (404) — this model may require a paid tier. \
+             Choose a different model or check integrate.api.nvidia.com (or the provider's docs) for your tier's supported models.",
+            provider.env_var().trim_end_matches("_API_KEY")
+        )));
+    }
+
+    Err(ApiError::Auth(format!("HTTP {status}: {}", body.chars().take(300).collect::<String>())))
 }
 
 pub fn resolve_startup_auth_source() -> Result<AuthSource, ApiError> {

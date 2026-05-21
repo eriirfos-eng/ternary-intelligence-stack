@@ -82,6 +82,12 @@ pub enum InputContentBlock {
         media_type: String,
         data: String,
     },
+    /// Gemini thinking/reasoning block — must be replayed with thoughtSignature for tool calls.
+    Thinking {
+        text: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        thought_signature: Option<String>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -141,6 +147,12 @@ pub enum OutputContentBlock {
         id: String,
         name: String,
         input: Value,
+    },
+    /// Gemini thinking/reasoning block — carries thoughtSignature needed for subsequent tool calls.
+    Thinking {
+        text: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        thought_signature: Option<String>,
     },
 }
 
