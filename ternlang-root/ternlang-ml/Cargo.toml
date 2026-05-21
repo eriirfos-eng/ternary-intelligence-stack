@@ -1,6 +1,6 @@
 [package]
 name        = "ternlang-ml"
-description = "Ternary ML inference kernels — quantize, sparse_matmul (@sparseskip), TritMatrix, deliberation engine, action gate, and MLP for the Ternlang ecosystem."
+description = "Ternary ML inference kernels — TritFloat (confidence-native ternary float), TritFloatTensor, sparse_matmul (@sparseskip), TritMatrix, deliberation engine, action gate, and MLP for the Ternlang ecosystem."
 readme = "README.md"
 version.workspace   = true
 edition.workspace   = true

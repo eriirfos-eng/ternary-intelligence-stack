@@ -2,6 +2,15 @@
 
 All notable changes to the Ternary Intelligence Stack (TIS) will be documented in this file.
 
+## [1.5.0] — 2026-05-21
+
+### ternlang-ml: TritFloat + TritFloatTensor
+- `TritFloat` — 14-trit balanced ternary floating-point format (phase 1t + exponent 5t + mantissa 6t + confidence 2t) stored as u32. Confidence is a first-class field in the number; it propagates automatically: mul uses weakest-link, add uses averaging. 19 unit tests.
+- `TritFloatTensor` — N-dimensional tensor of TritFloats with confidence-propagating matmul (Rayon-parallel), @sparseskip at the activation level, elementwise ops, softmax_rows, and bidirectional TritMatrix conversion.
+- `linear_confident()` — top-level inference hot path: TritFloat activations × TritMatrix weights. @sparseskip fires on both activation zeros and weight zeros for combined sparsity savings. Returns (TritFloatTensor, skips).
+- Extended TritFloat arithmetic: `div`, `recip`, `powi`, `sqrt`, `clamp`, `cmp_trit`, `softmax`, `pack_phases_u64`, `dot_prescan`.
+- `TRITFLOAT_SPEC.md` — IP disclosure and format specification (confidential, local only).
+
 ## [Unreleased] — 2026-05-17
 
 ### albert. training

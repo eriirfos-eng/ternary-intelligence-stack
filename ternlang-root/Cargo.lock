@@ -2090,7 +2090,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-api"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "axum",
  "chrono",
@@ -2114,7 +2114,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-cli"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "clap",
  "colored",
@@ -2130,21 +2130,21 @@ dependencies = [
 
 [[package]]
 name = "ternlang-codegen"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-compat"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-compress"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2163,7 +2163,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-core"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "ariadne",
  "logos",
@@ -2173,11 +2173,11 @@ dependencies = [
 
 [[package]]
 name = "ternlang-hdl"
-version = "1.3.6"
+version = "1.4.0"
 
 [[package]]
 name = "ternlang-lsp"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -2186,7 +2186,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-mcp"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "moe-llb",
  "serde",
@@ -2198,7 +2198,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-ml"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2211,7 +2211,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-moe"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -2221,7 +2221,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-runtime"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -2230,7 +2230,7 @@ dependencies = [
 
 [[package]]
 name = "ternlang-ruvector"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "anyhow",
  "rayon",
@@ -2243,14 +2243,14 @@ dependencies = [
 
 [[package]]
 name = "ternlang-test"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "ternlang-core",
 ]
 
 [[package]]
 name = "ternlang-wasm"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -2260,7 +2260,7 @@ dependencies = [
 
 [[package]]
 name = "ternpkg"
-version = "1.3.6"
+version = "1.4.0"
 dependencies = [
  "serde",
  "serde_json",

@@ -35,6 +35,10 @@ pub mod spectra_compat {
 pub mod coherence;
 pub mod qat;
 pub mod perplexity;
+pub mod tritfloat;
+pub mod tritfloat_tensor;
+pub use tritfloat::TritFloat;
+pub use tritfloat_tensor::TritFloatTensor;
 
 // ─── Quantization ────────────────────────────────────────────────────────────
 
@@ -241,6 +245,20 @@ pub fn sparse_matmul(a: &TritMatrix, b: &TritMatrix) -> (TritMatrix, usize) {
     let c = TritMatrix { rows: a.rows, cols: b.cols, data: c_data };
 
     (c, skipped)
+}
+
+// ─── Confidence-propagating linear layer ─────────────────────────────────────
+
+/// TritFloat activations × ternary weights, with full confidence propagation.
+///
+/// The output is a `TritFloatTensor` where each element knows how certain it is.
+/// @sparseskip fires on both activation zeros and weight zeros for maximum savings.
+/// Returns (output_tensor, macs_skipped).
+pub fn linear_confident(
+    activations: &TritFloatTensor,
+    weights: &TritMatrix,
+) -> (TritFloatTensor, usize) {
+    TritFloatTensor::matmul_trit(activations, weights)
 }
 
 // ─── Linear layer ────────────────────────────────────────────────────────────

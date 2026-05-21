@@ -6,6 +6,9 @@ Ternary ML inference kernels for the [Ternlang](https://ternlang.com) ecosystem.
 
 | Component | Description |
 |-----------|-------------|
+| `TritFloat` | Ternary floating-point with a native confidence field — certainty propagates automatically through arithmetic |
+| `TritFloatTensor` | N-dimensional TritFloat tensor with confidence-propagating matmul, @sparseskip, softmax, and conversions |
+| `linear_confident()` | TritFloat activations × TritMatrix weights — inference hot path with combined weight+activation sparseskip |
 | `quantize()` | Convert f32 weights → balanced ternary using BitNet-style threshold |
 | `sparse_matmul()` | Matmul that skips zero-state (`tend`) weights — speedup scales with sparsity |
 | `dense_matmul()` | Standard ternary matmul for comparison |
