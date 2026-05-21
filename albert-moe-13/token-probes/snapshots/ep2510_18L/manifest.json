@@ -1,0 +1,49 @@
+{
+  "label": "post-s6-ep2510",
+  "epoch": 2510,
+  "arch": "18L",
+  "loss_avg": 9.6289,
+  "loss_best": 9.6248,
+  "since_best": 22,
+  "timestamp": "2026-05-21T00:56Z",
+  "note": "First overnight re-probe at ep2510. 22 epochs post-surgery (ep2487). ATL gap 0.0041 (ep2509 was 0.0008 — closest approach). WALD coverage[high]=72 (sharpest attention on record). myc_L1 pressure shifted 1.59e-9→1.55e-9. MYC_STABLE=23.",
+  "training_state": {
+    "global_epoch": 2510,
+    "layers": 18,
+    "since_best": 22,
+    "wald_sev": 0.944,
+    "wald_fill_pct": 6.2,
+    "myc_stable": 23,
+    "hot_layer": 10,
+    "cold_layer": 7,
+    "tns": 1246,
+    "gen": 1,
+    "gen_step": 1,
+    "gen_arc_len": 6,
+    "plateau_window": 233,
+    "ceiling_layers": 21,
+    "wald_mass": 9.624,
+    "wald_coverage": [80, 1348, 72]
+  },
+  "tele_sparsity": [0.031,0.033,0.035,0.037,0.039,0.039,0.039,0.039,0.040,0.041,0.042,0.043,0.045,0.047,0.049,0.051,0.053,0.055],
+  "tele_expert_activity": [0.802,0.810,0.821,0.835,0.853,0.877,0.909,0.949,1.000,0.881,0.810,0.809],
+  "expert_names": ["SYN","SEM","CTX","INF","MEM","GEN","LOG","LNG","ABS","PLN","CMP","INT"],
+  "myc_pressure_L0_L3": [1.49e-9, 1.55e-9, 1.57e-9, 1.49e-9],
+  "top5_summary": {
+    "love":    [["ĠfrÃ¼h",0.2262],["deutsche",0.2259],["aland",0.2256],["edo",0.2218],["Ġprovincia",0.2210]],
+    "death":   [["ĠÃ©gypt",0.2412],["amen",0.2331],["Ġdifer",0.2213],["Fil",0.2206],["Ġpropre",0.2201]],
+    "freedom": [["Ġcontrat",0.2822],["Ġon",0.2484],["Ġdiscovered",0.2479],["ĠMA",0.2409],["Ġ1960",0.2373]]
+  },
+  "comparison_to_ep2492": {
+    "love_max_sim_change": "+0.0000 (0.2262 vs 0.2262 baseline)",
+    "love_jesus_in_top15": false,
+    "love_top5_identical": true,
+    "death_amen_rank": 2,
+    "death_amen_sim_change": "+0.0000 (0.2331 vs 0.2331 baseline)",
+    "death_veil_rank": 8,
+    "freedom_contrat_rank": 1,
+    "freedom_contrat_sim_change": "+0.0000 (0.2822 vs 0.2822 baseline)",
+    "freedom_1960_rank": 5,
+    "headline": "EMBEDDING GEOMETRY COMPLETELY FROZEN — all three neighborhoods identical to ep2492 baseline after 22 epochs"
+  }
+}
