@@ -8,6 +8,10 @@ use std::arch::x86_64::*;
 /// Standard Optimized INT8 Dense Dot Product (Baseline)
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
+// SAFETY: AVX2 availability guaranteed by `#[target_feature(enable = "avx2")]`. All pointer
+// offsets stay in-bounds: the loop condition `i + 31 < len` ensures every accessed range
+// `[offset, offset+8)` where `offset = i + j*8` (j ∈ 0..4) satisfies `offset + 8 ≤ len`.
+// `_mm256_storeu_ps` writes to the stack-allocated `result_arr[8]`, which is always valid.
 pub unsafe fn dot_int8_dense_avx2(weights: &[i8], inputs: &[f32]) -> f32 {
     let len = weights.len().min(inputs.len());
     let mut sum = _mm256_setzero_ps();
@@ -30,6 +34,10 @@ pub unsafe fn dot_int8_dense_avx2(weights: &[i8], inputs: &[f32]) -> f32 {
 /// Ternary Dot Product with Block-Level Zero-Skipping
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
+// SAFETY: AVX2 availability guaranteed by `#[target_feature(enable = "avx2")]`.
+// `_mm256_loadu_si256` reads 32 contiguous bytes at `weights.as_ptr().add(i)`:
+// valid because `i + 31 < len` ⟹ `i + 32 ≤ len`. Inner loop offsets follow the
+// same bound as `dot_int8_dense_avx2`. `_mm256_storeu_ps` writes to stack `result_arr[8]`.
 pub unsafe fn ternary_dot_product_skip_avx2(weights: &[i8], inputs: &[f32]) -> f32 {
     let len = weights.len().min(inputs.len());
     let mut sum = _mm256_setzero_ps();
@@ -60,6 +68,8 @@ pub unsafe fn ternary_dot_product_skip_avx2(weights: &[i8], inputs: &[f32]) -> f
 }
 
 /// Legacy wrapper for backward compatibility
+// SAFETY: Delegates entirely to `ternary_dot_product_skip_avx2`; caller must satisfy
+// that function's safety requirements (AVX2 available, slices non-empty, lengths agree).
 pub unsafe fn ternary_dot_product_avx2(weights: &[i8], inputs: &[f32]) -> f32 {
     ternary_dot_product_skip_avx2(weights, inputs)
 }

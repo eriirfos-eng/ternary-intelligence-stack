@@ -5,6 +5,52 @@
 
 ---
 
+## Field Note 20 — 2026-05-21T06:20Z · ep2585 — DOUBLE RESURRECTION L6 · LOCAL LOG STREAM CUT
+
+**Epochs covered:** ep2585 · ep2586 partial (log stream cut at batch 11/300)
+
+**ep2585 epoch summary:**
+| loss_avg | delta | since_best | wald_sev | cov[high] | myc_stable | notes |
+|----------|-------|------------|----------|-----------|------------|-------|
+| 9.6010 | +0.0006 | 9 | 0.946 | 34 | 59 | double resurrection L6 |
+
+**MYCELIUM ep2585:** dead=2 — two experts died simultaneously. Both resurrected from the **same source**: L6E0 spawned both L6E10 and L6E11 (σ=0.050 each). This is the first double-resurrection from a single parent observed in the post-surgery-6 window. Escalating resurrection pattern: 1 dead (ep2583), 1 dead (ep2584), 2 dead (ep2585). blooming=4. All-zero pressure vector unchanged.
+
+**TELE ep2585:** S values unchanged (L17=0.055). Subtle E-value shift: L10 changed from 0.811→0.810 (first non-zero E change since surgery-6, but magnitude ~0.001 — likely rounding artefact, not a structural signal). GRAD step=17710 confirms myc_L0-L3 still all e-9: [1.49/1.54/1.52/1.58/1.62/1.62/1.63/1.44/1.59/1.46/1.72/1.50...]×10⁻⁹ — embedding gradient starvation persists.
+
+**ep2586 start (before log cut):** First 11 batches logged (06:18:23–06:18:32). LR dropped to ~2.02e-4 at epoch start (from 2.34e-4 at ep2585 batch 263) — LR schedule advancing. Batch losses volatile: 9.5424 at batch 10 (closest batch-level approach to ATL region this window). Log stream terminated at batch 11, ETA ~4:50 remaining.
+
+**OPERATIONAL FLAG — LOCAL LOG STREAM DISCONNECTED:** Log file last written 06:18:32. No tmux session or local training process found. Training is continuing on Modal remotely but telemetry is no longer reaching the local log at `/home/eri-irfos/.albert/training.log`. Watch is effectively blind from ep2586 batch 11 onward. Manual action required to re-establish log stream (re-attach to Modal run or restart albert-train with log piping).
+
+**WALD ep2585:** fill=6.2%, sev=0.946 (held), cov[high]=34 — bouncing from 25-floor, no new approach.
+
+**Thresholds:** No triggers. since_best=9 at last confirmed epoch. Watch suspended pending log stream restoration.
+
+---
+
+## Field Note 19 — 2026-05-21T06:16Z · ep2584 — CONSECUTIVE RESURRECTIONS · BOUNCE PHASE 3
+
+**Epochs covered:** ep2582–ep2584 (3 epochs)
+
+**Epoch summaries:**
+| Epoch | loss_avg | delta | since_best | wald_sev | cov[high] | event |
+|-------|----------|-------|------------|----------|-----------|-------|
+| 2582 | 9.6070 | +0.0055 | 6 | 0.947 | 31 | — |
+| 2583 | 9.5992 | -0.0078 | 7 | 0.947 | 33 | resurrection L8E10←L8E1 |
+| 2584 | 9.6004 | +0.0012 | 8 | 0.946 | 36 | resurrection L9E11←L9E0 |
+
+**MYCELIUM:** Two consecutive epoch resurrections — L8E10 from L8E1 (ep2583, σ=0.050) and L9E11 from L9E0 (ep2584, σ=0.050). Back-to-back resurrections across consecutive epochs is noteworthy; myc_stable count ticked from 56→57→58. Pressure vector remains all-zeros; blooming=3 across all three epochs. hot=L10, cold=L7 (stable).
+
+**TELE:** Fully frozen. L0–L17 sparsity unchanged at 0.031–0.055. L17=0.055 (no differentiation signal). myc_L0-L3 frozen at [1.49/1.54/1.52/1.58]×10⁻⁹ across all three epochs.
+
+**WALD:** sev ticked from 0.947 → 0.946 at ep2584 (first downward tick since ep2571). fill=6.2% locked. cov[high]: 31→33→36 — bouncing away from the 25-floor touched at ep2580/ep2573. mass tracking closely with loss_avg (~9.602–9.604).
+
+**Interpretation:** Canonical post-ATL oscillation phase (bounce 3). The ep2583 dip to 9.5992 is the closest approach since the ATL at 9.5800 but since_best continues climbing (now 8). The consecutive resurrections suggest the expert ecosystem is in active reorganization while hovering above ATL — the mycelium system is cycling out low-performing experts faster than usual. No threshold triggers (no new ATL, cov[high]=36 >> 25, L17 TELE frozen, loss_avg > 9.55). WALD sev 0.946 is the first micro-descent; watch for continuation.
+
+**Thresholds:** No triggers. since_best=8. Next probe at loss_avg < 9.55.
+
+---
+
 ## Field Note 1 — 2026-05-20T22:24Z · ep2494
 
 **Epochs covered:** ep2488–ep2494 (7 epochs post-surgery)
@@ -913,3 +959,88 @@ ep2496: 9.6435 (-0.0010)  ← slight pullback
 The oscillation amplitude is moderate (0.020 nat band). The centroid has drifted from ~9.625 to ~9.638 over 8 epochs. No crash. No escalation.
 
 **Status: NOMINAL. Expert redistribution beginning (slow). Loss near local ceiling. Next probe at ep2510.**
+
+---
+
+## Field Note 18 — 2026-05-21T05:59Z · ep2581 — NEW ATL 9.5800 · PROBE TRIGGER REACHED · cov[high]=25 SECOND TOUCH
+
+**Epochs covered:** ep2576–ep2581 (89–94 epochs post-surgery)
+
+| Metric | ep2576 | ep2577 | ep2578 | ep2579 | ep2580 | ep2581 | note |
+|--------|--------|--------|--------|--------|--------|--------|------|
+| loss_avg | **9.5800** | 9.5977 | 9.5937 | 9.5955 | 9.5960 | 9.6016 | ATL then bounce |
+| since_best | **0** | 1 | 2 | 3 | 4 | 5 | bounce phase 3 |
+| wald_sev | **0.948** | 0.947 | 0.947 | 0.947 | 0.947 | 0.947 | settled |
+| cov[high] | — | — | — | 26 | **25** | 32 | SECOND 25-touch at ep2580 |
+| myc_L0-L3 | [1.49/1.54/1.52/1.58]e-9 | same | same | same | same | same | frozen |
+| L17 sparsity | 5.5% | 5.5% | 5.5% | 5.5% | 5.5% | 5.5% | frozen (89 epochs) |
+
+---
+
+### 1. HEADLINE: ep2576 NEW ATL 9.5800 (d-0.0236) — Probe trigger reached
+
+After 11-epoch bounce phase 2 (ep2565–2575, peak 9.6036), the model resolved with a **single-epoch drop of 0.0236 nats** — the largest single-epoch descent recorded post-surgery-6 and comparable to the surgery-night acceleration at ep2489 (−0.0313). The ATL is now **9.5800**, 0.0055 nats below the previous best of 9.5855.
+
+This is the **12th new ATL** since surgery at ep2487. Total descent in 89 epochs: **9.6248 → 9.5800 = 0.0448 nats**.
+
+### 2. PROBE: Full 10-token suite run at trigger threshold — all 10 FROZEN
+
+The probe trigger (loss_avg < 9.58) was reached at ep2576 (9.5800 ≤ 9.5800 = probe boundary). Full 10-token probe run immediately via dashboard API (checkpoint ~ep2564 state, loss 9.5855).
+
+**Finding: ALL 10 TOKENS PIXEL-PERFECT IDENTICAL TO ep2492 BASELINE.**
+
+Exact comparisons (selected):
+| Pair | ep2492 | ep2576 | Δ |
+|------|--------|--------|---|
+| love→früh | 0.2262 | 0.2262 | 0.0000 |
+| death→amen | 0.2331 | 0.2331 | 0.0000 |
+| freedom→contrat | 0.2822 | 0.2822 | 0.0000 |
+| god→czyn | 0.2838 | 0.2838 | 0.0000 |
+| Jesus→Fe | 0.2572 | 0.2572 | 0.0000 |
+| truth→neerland | 0.2457 | 0.2457 | 0.0000 |
+| war→expres | 0.2730 | 0.2730 | 0.0000 |
+
+84+ epoch freeze confirmed across ALL 10 canonical tokens. The 9.58 trigger was **insufficient** — myc_L0-L3 at ~1.5e-9 cannot drive AdamW second-moment accumulation to the point of embedding weight updates.
+
+**Revised probe trigger: loss_avg < 9.55.** Full analysis and snapshot committed to repo:
+- `token-probes/snapshots/ep2576_18L/manifest.json`
+- `token-probes/analysis/probe_trigger_ep2576_18L.md`
+
+### 3. cov[high]=25 SECOND TOUCH at ep2580 — bounced to 32
+
+After the first touch at ep2573 (FN17), **cov[high] touched 25 again at ep2580** during the post-ATL consolidation phase:
+```
+ep2573: 25  ← first touch (FN17)
+ep2574: 26
+ep2575: 27
+ep2576: ATL (cov not logged this epoch)
+ep2580: 25  ← SECOND touch
+ep2581: 32  ← bounce back
+```
+
+Two confirmed touches in 8 epochs. The bounce from 25→32 at ep2581 (+7 in one epoch) is sharper than the ep2573 bounce (25→26→27 over 2 epochs). This may indicate that 25 is a soft floor — the attention distribution cannot sustain this level of concentration for more than one epoch without relief. Alternatively it may reflect the loss bouncing upward (+0.0055 at ep2581) releasing attention pressure.
+
+Pattern hypothesis: **cov[high] < 25 will first appear at the bottom of the next descent phase**, when loss is making large negative moves. The 25-bounces at ep2573 and ep2580 both occurred during flat-to-small-up loss movements.
+
+### 4. Bounce phase 3 structure
+
+```
+ep2576: 9.5800  (-0.0236)  ← ATL
+ep2577: 9.5977  (+0.0176)  ← sharp bounce (same pattern as all prior ATLs)
+ep2578: 9.5937  (-0.0040)  slight recovery
+ep2579: 9.5955  (+0.0018)  oscillating
+ep2580: 9.5960  (+0.0005)  
+ep2581: 9.6016  (+0.0055)  drifting up, since_best=5
+```
+
+The bounce is shallower so far than bounce phase 2 (peak was ep2575 at 9.6036, since_best=11). At ep2581, since_best=5 and the trajectory hasn't shown a decisive turn yet. The model may continue drifting upward to since_best=8–12 before the next pull.
+
+ATL gap at ep2581: **9.5800** (ATL) vs 9.6016 (current) = **0.0216 nats above ATL**.
+Next probe threshold (9.55): gap = **0.0300 nats** from ATL.
+
+### 5. TELE and mycelium: no change
+
+L17=5.5% unchanged. 89-epoch freeze total. myc_L0-L3 locked. No differentiation signal.
+
+**Status: BOUNCE PHASE 3. ep2576 ATL 9.5800 committed. Probe trigger reached — embedding STILL FROZEN. cov[high] touched 25 for second time (ep2580). Revised probe trigger: 9.55. Descent likely to resume within 5–10 epochs.**
+

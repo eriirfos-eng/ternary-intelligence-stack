@@ -17,6 +17,8 @@ const STEPS: usize = 20;
 /// Exploits zero-skip logic and reduced memory bandwidth.
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
+// SAFETY: AVX2 guaranteed by `#[target_feature]`. Loop bound `i + 7 < len` ensures all
+// pointer offsets and 8-element loads stay within the slice. Stack `res[8]` always valid.
 pub unsafe fn dot_ternary(weights: &[i8], inputs: &[f32]) -> f32 {
     let mut sum = _mm256_setzero_ps();
     let mut i = 0;
@@ -36,6 +38,8 @@ pub unsafe fn dot_ternary(weights: &[i8], inputs: &[f32]) -> f32 {
 /// Standard high-performance float32 matmul logic.
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
+// SAFETY: AVX2 guaranteed by `#[target_feature]`. Loop bound `i + 7 < len` keeps all
+// 8-element `_mm256_loadu_ps` reads within both slices. Stack `res[8]` always valid.
 pub unsafe fn dot_fp32(weights: &[f32], inputs: &[f32]) -> f32 {
     let mut sum = _mm256_setzero_ps();
     let mut i = 0;
@@ -54,6 +58,9 @@ pub unsafe fn dot_fp32(weights: &[f32], inputs: &[f32]) -> f32 {
 /// i8 weights, f32 inputs (standard LLM quantization).
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
+// SAFETY: AVX2 guaranteed by `#[target_feature]`. `_mm_loadl_epi64` reads 8 bytes at
+// `weights.ptr+i`: in-bounds because `i + 7 < len`. `_mm256_loadu_ps` same bound on inputs.
+// Stack `res[8]` always valid.
 pub unsafe fn dot_int8(weights: &[i8], inputs: &[f32]) -> f32 {
     let mut sum = _mm256_setzero_ps();
     let mut i = 0;
@@ -74,6 +81,9 @@ pub unsafe fn dot_int8(weights: &[i8], inputs: &[f32]) -> f32 {
 /// Simulates a binary model with 50% sparsity.
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
+// SAFETY: No raw pointer arithmetic — loop index `i` is bounds-checked implicitly by
+// `0..weights.len()`. `mask[i]` and `inputs[i]` are safe slice indexing (same length assumed
+// by caller; `weights.len()` is the controlling bound).
 pub unsafe fn dot_sparse_binary(weights: &[f32], inputs: &[f32], mask: &[u8]) -> f32 {
     let mut total = 0.0;
     for i in 0..weights.len() {
@@ -93,6 +103,8 @@ fn main() -> Result<()> {
     let weights_int8 = vec![1i8; DIM];
     let mask = vec![1u8; DIM]; // 100% dense for worst-case baseline
 
+    // SAFETY: All four kernel functions require AVX2 (guaranteed by `#[target_feature]`) and
+    // that input slices have matching lengths (all are `DIM` elements, allocated above).
     unsafe {
         // 1. Ternary
         let start = Instant::now();

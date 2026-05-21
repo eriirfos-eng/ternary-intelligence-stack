@@ -15,6 +15,8 @@ const STEPS: usize = 20;
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
+// SAFETY: AVX2 guaranteed by `#[target_feature]`. Loop bound `i + 31 < len` keeps all
+// `[offset, offset+8)` accesses (j ∈ 0..4) within both slices. Stack `res[8]` always valid.
 pub unsafe fn dot_int8_dense(weights: &[i8], inputs: &[f32]) -> f32 {
     let mut sum = _mm256_setzero_ps();
     let mut i = 0;
@@ -35,6 +37,9 @@ pub unsafe fn dot_int8_dense(weights: &[i8], inputs: &[f32]) -> f32 {
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
+// SAFETY: AVX2 guaranteed by `#[target_feature]`. `_mm256_loadu_si256` reads 32 bytes at
+// `weights.ptr+i`: valid because `i + 31 < len`. Inner offsets satisfy the same bound as
+// `dot_int8_dense`. Stack `res[8]` always valid.
 pub unsafe fn dot_ternary_skip(weights: &[i8], inputs: &[f32]) -> f32 {
     let mut sum = _mm256_setzero_ps();
     let mut i = 0;
@@ -78,6 +83,8 @@ fn run_point(sparsity: f32) -> (f64, f64) {
         }
     }
 
+    // SAFETY: Both kernel functions require AVX2 (guaranteed by `#[target_feature]`) and
+    // matching slice lengths (`weights` and `inputs` are both `DIM` elements).
     unsafe {
         let mut t1 = 0.0;
         let mut t2 = 0.0;

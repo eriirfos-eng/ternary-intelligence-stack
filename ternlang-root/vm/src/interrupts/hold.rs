@@ -21,6 +21,8 @@ impl DeliberativeHold {
         
         // Tier-3: Hardware-level skip (TSKIP) emulation
         #[cfg(target_arch = "x86_64")]
+        // SAFETY: `pause` is a benign x86_64 spin-wait hint with no memory side-effects.
+        // Valid on all x86_64 targets; no special alignment or register constraints.
         unsafe {
             std::arch::asm!("pause");
         }

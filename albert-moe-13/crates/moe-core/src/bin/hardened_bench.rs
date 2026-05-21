@@ -20,6 +20,8 @@ const WARMUP: usize = 50;
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
+// SAFETY: AVX2 guaranteed by `#[target_feature]`. Loop bound `i + 31 < len` keeps all
+// `[offset, offset+8)` accesses (j ∈ 0..4) within both slices. Stack `res[8]` always valid.
 pub unsafe fn dot_int8_dense(weights: &[i8], inputs: &[f32]) -> f32 {
     let mut sum = _mm256_setzero_ps();
     let mut i = 0;
@@ -40,6 +42,9 @@ pub unsafe fn dot_int8_dense(weights: &[i8], inputs: &[f32]) -> f32 {
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
+// SAFETY: AVX2 guaranteed by `#[target_feature]`. `_mm256_loadu_si256` reads 32 bytes at
+// `weights.ptr+i`: valid because `i + 31 < len`. Inner offsets satisfy the same bound as
+// `dot_int8_dense`. Stack `res[8]` always valid.
 pub unsafe fn dot_ternary_skip(weights: &[i8], inputs: &[f32]) -> f32 {
     let mut sum = _mm256_setzero_ps();
     let mut i = 0;
@@ -71,6 +76,8 @@ pub unsafe fn dot_ternary_skip(weights: &[i8], inputs: &[f32]) -> f32 {
 
 #[cfg(target_arch = "x86_64")]
 fn get_cycles() -> u64 {
+    // SAFETY: `_rdtsc` reads the CPU timestamp counter — no memory access, no side-effects.
+    // Valid on all x86_64 targets; no special privileges required in user space.
     unsafe { _rdtsc() }
 }
 
@@ -88,6 +95,8 @@ fn run_point(sparsity: f32) -> (f64, f64, f64, f64) {
         }
     }
 
+    // SAFETY: Both kernel functions require AVX2 (guaranteed by `#[target_feature]`) and
+    // matching slice lengths (`weights` and `inputs` are both `DIM` elements).
     unsafe {
         // Warmup
         for _ in 0..WARMUP {
@@ -131,6 +140,9 @@ fn main() {
     #[cfg(target_os = "linux")]
     {
         use libc::{cpu_set_t, sched_setaffinity, CPU_SET, CPU_ZERO};
+        // SAFETY: `cpu_set_t` is a POD bitmask; zeroing is a valid initial state.
+        // `CPU_ZERO`/`CPU_SET` are C macros that only write within the struct.
+        // `sched_setaffinity` takes a valid pointer to a properly sized cpuset.
         let mut cpuset: cpu_set_t = unsafe { std::mem::zeroed() };
         unsafe {
             CPU_ZERO(&mut cpuset);
