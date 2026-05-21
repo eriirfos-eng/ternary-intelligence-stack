@@ -3634,7 +3634,7 @@
 
             // Update reference line from epoch summary lines and emit EPOCH / BEST events
             for (const line of lines) {
-                const em = line.match(/Avg Loss:\s*([\d.]+)/);
+                const em = line.startsWith('===') && line.match(/Avg Loss:\s*([\d.]+)/);
                 if (em) {
                     const epochAvg = parseFloat(em[1]);
                     lastSmaY = epochAvg;
