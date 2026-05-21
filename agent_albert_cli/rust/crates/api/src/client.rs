@@ -945,7 +945,17 @@ pub fn curated_models(provider: LlmProvider) -> Vec<String> {
         ],
         LlmProvider::NvidiaNim => &[
             "nvidia/llama-3.1-nemotron-70b-instruct",
+            "nvidia/nemotron-4-340b-instruct",
+            "meta/llama-3.1-405b-instruct",
+            "meta/llama-3.3-70b-instruct",
             "meta/llama-3.1-70b-instruct",
+            "meta/llama-3.1-8b-instruct",
+            "mistralai/mistral-large-2-instruct",
+            "mistralai/mixtral-8x22b-instruct-v0.1",
+            "deepseek-ai/deepseek-r1",
+            "google/gemma-2-27b-it",
+            "microsoft/phi-3-medium-128k-instruct",
+            "qwen/qwen2-72b-instruct",
         ],
         LlmProvider::Zhipu => &[
             "zai/glm-5",
@@ -1025,6 +1035,19 @@ pub fn model_annotation(id: &str) -> Option<&'static str> {
         "moonshot-v1-128k" => Some("ctx 128k · long context"),
         // Groq
         "llama-3.3-70b-versatile" => Some("ctx 128k · ultra-fast on Groq"),
+        // NVIDIA NIM
+        "nvidia/llama-3.1-nemotron-70b-instruct" => Some("ctx 128k · NVIDIA fine-tune · top open"),
+        "nvidia/nemotron-4-340b-instruct" => Some("ctx 4k · 340B · research flagship"),
+        "meta/llama-3.1-405b-instruct" => Some("ctx 128k · 405B · largest Llama"),
+        "meta/llama-3.3-70b-instruct" => Some("ctx 128k · latest Llama 3.3"),
+        "meta/llama-3.1-70b-instruct" => Some("ctx 128k · solid baseline"),
+        "meta/llama-3.1-8b-instruct" => Some("ctx 128k · fast · lightweight"),
+        "mistralai/mistral-large-2-instruct" => Some("ctx 128k · Mistral flagship"),
+        "mistralai/mixtral-8x22b-instruct-v0.1" => Some("ctx 64k · MoE · strong reasoning"),
+        "deepseek-ai/deepseek-r1" => Some("ctx 64k · chain-of-thought · R1"),
+        "google/gemma-2-27b-it" => Some("ctx 8k · Google open model"),
+        "microsoft/phi-3-medium-128k-instruct" => Some("ctx 128k · small but capable"),
+        "qwen/qwen2-72b-instruct" => Some("ctx 32k · Alibaba · multilingual"),
         // Misc
         _ => None,
     }
