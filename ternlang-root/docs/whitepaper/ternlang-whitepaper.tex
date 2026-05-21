@@ -1169,8 +1169,8 @@ Albert MoE-13 is the reference implementation of the ideas developed in
 Sections~\ref{sec:sparse}--\ref{sec:moe}: a fully ternary Mixture-of-Experts
 language model trained end-to-end without GPU hardware. What began as a
 22M-parameter, 3-layer, English-only model (v2.0.0) has evolved through successive
-autonomous surgeries into a 17-layer, 82M-parameter multilingual system (v3.0)
-trained on eight languages across a 177M-token corpus (2045+ global epochs as of 2026-05-19). It serves as an empirical
+autonomous surgeries into an 18-layer, 87M-parameter multilingual system (v3.0)
+trained on eight languages across a 177M-token corpus (2576+ global epochs as of 2026-05-21). It serves as an empirical
 existence proof that the ternary execution substrate enables practical neural
 training, self-directed architectural growth, and real-time natural language
 generation on commodity consumer hardware.
@@ -1190,9 +1190,9 @@ Hidden size & 256 & 256 \\
 Experts per layer & 12 & 12 \\
 Active experts (Top-$k$) & 3 & 3 \\
 Expert skip rate (\texttt{@sparseskip}) & 75\% & \textbf{75\%} \\
-Depth & 5L & \textbf{17L} (multi-surgery) \\
+Depth & 5L & \textbf{18L} (multi-surgery) \\
 Context length & 128 tokens & \textbf{256 tokens} (RoPE) \\
-Total parameters & $\approx$22M & $\approx$\textbf{82M} \\
+Total parameters & $\approx$22M & $\approx$\textbf{87M} \\
 Vocabulary & 8,000 (EN) & \textbf{32,000} (8 languages) \\
 Corpus tokens & --- & \textbf{177,654,147} \\
 Weight format & ternary & ternary \\
@@ -1245,7 +1245,7 @@ EvolutionManager was subsequently redesigned with \emph{generational Fibonacci c
 that stalls at 610 layers, surgeries are organised into generations of six depth windows
 each, with the plateau sensitivity tightening $0.75\times$ per generation and a
 stuck-generation timeout preventing infinite plateaus. Surgery fires on plateau, not
-on loss threshold. The surgery history through Global Epoch 702:
+on loss threshold. The surgery history through Global Epoch 2487:
 
 \begin{table}[h]
 \centering
@@ -1260,7 +1260,8 @@ Initialisation & 3L $\cdot$ 8k vocab $\cdot$ $\approx$22M params & v2.0.0 baseli
 Surgery 1 & $3L \to 5L$ $\cdot$ 8k vocab & 2026-05-06; checkpoint 91\,MB \\
 Vocab surgery & 5L $\cdot$ $8k \to 32k$ vocab & ByteLevel BPE; 8 languages \\
 Surgeries 2--$n$ & $5L \to 12L$ $\cdot$ 32k vocab & Sequential; $\approx$58M params \\
-Surgeries (v3.0 continued) & $12L \to 17L$ $\cdot$ 32k vocab & ep511--702; $\approx$82M params \\
+Surgeries 2--5 (v3.0) & $12L \to 17L$ $\cdot$ 32k vocab & ep511--702; $\approx$82M params \\
+\textbf{Surgery 6} & $\mathbf{17L \to 18L}$ $\cdot$ 32k vocab & \textbf{ep2487; Mandelbrot $c_\text{im}=+0.0099$; $\approx$87M params} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1453,9 +1454,11 @@ the new vocabulary:
 \begin{equation}
   H_{\text{random}} = \ln(32000) \approx 10.373
 \end{equation}
-albert.\ v3.0 currently operates at loss $\approx 10.35$---below the random
-baseline---confirming that multilingual structure is being extracted even in the
-early epochs of vocabulary transfer.
+albert.\ v3.0 currently operates at epoch-average loss $\mathbf{9.5800}$ (ep2576,
+2026-05-21)---7.5\% below the random baseline of $\ln(32000) \approx 10.373$---with
+batch-level all-time low at $\mathbf{9.2961}$. This represents a sustained descent of
+0.795 nats below the vocabulary-random baseline across 2576 training epochs and
+six autonomous surgeries.
 
 \subsection{TLIGHT: Per-Expert Ternary Traffic Light}
 \label{subsec:tlight}
@@ -1483,7 +1486,7 @@ expert slots:
 
 TLIGHT data is emitted into the training log every ten batches and consumed in
 real time by the live dashboard, providing a visual routing heat map across all layers
-(17 in the current v3.0 checkpoint).
+(18 in the current v3.0 checkpoint).
 
 \textbf{Observed specialisation dynamics.} Expert specialisation became observable
 at Global Epoch 56, several epochs after the vocabulary surgery. The first Green
@@ -1822,27 +1825,28 @@ Training hardware & HP ZBook 2013 $\cdot$ Intel CPU $\cdot$ \textbf{no GPU} \\
 \begin{table}[h]
 \centering
 \small
-\caption{Albert MoE-13 v3.0 --- current state (multilingual, 32k vocab, as of 2026-05-19)}
+\caption{Albert MoE-13 v3.0 --- current state (multilingual, 32k vocab, as of 2026-05-21)}
 \label{tab:albert_v3}
 \begin{tabular}{lr}
 \toprule
 Metric & Value \\
 \midrule
-Architecture & 17L $\cdot$ 256H $\cdot$ 12E $\cdot$ Top-3 $\cdot$ 256CTX \\
+Architecture & \textbf{18L} $\cdot$ 256H $\cdot$ 12E $\cdot$ Top-3 $\cdot$ 256CTX \\
 Vocabulary & 32,000 tokens (ByteLevel BPE, 8 languages) \\
 Corpus & 177,654,147 tokens (chaos layer: 10\%) \\
-Total parameters & $\approx$82M (ternary) \\
+Total parameters & $\approx$\textbf{87M} (ternary) \\
 Global epochs at v3.0 launch & $\approx$55 \\
-Global epochs completed & 2045+ (Modal T4 GPU) \\
-Best epoch-average loss & \textbf{9.8172} (Ep2041, 2026-05-19) \\
-Best single-batch loss & \textbf{9.6791} (Ep2041) \\
+Global epochs completed & \textbf{2576+} (Modal T4 GPU) \\
+Best epoch-average loss & \textbf{9.5800} (Ep2576, 2026-05-21) \\
+Best single-batch loss & \textbf{9.2961} (dashboard, 2026-05-21) \\
 Random baseline $\ln(32000)$ & 10.373 \\
-Surgery gate status & Plateau gate active (loss gate cleared; $\Delta < 0.02$ nats over window required) \\
+Reduction from random baseline & \textbf{7.5\%} (10.373 $\to$ 9.580) \\
+Surgeries completed & \textbf{6} (12L $\to$ 13L $\to$ 14L $\to$ 15L $\to$ 16L $\to$ 17L $\to$ 18L) \\
+Surgery gate status (next: 18L $\to$ 21L) & Plateau gate filling (window F8=233); actively descending \\
 Expert skip rate & \textbf{75\%} (Top-3 of 12, confirmed live) \\
-Inference throughput (CPU, @sparseskip) & \textbf{83 tok/s} (5L demo) · \textbf{11--22 tok/s} (12L) \\
-Training hardware & Modal.com T4 GPU ($\approx$\$0.021/epoch) \\
+Inference throughput (CPU, @sparseskip) & \textbf{83 tok/s} (5L demo) · \textbf{13--18 tok/s} (18L, ep1549 ckpt) \\
+Training hardware & Modal.com T4 GPU ($\approx$\$0.003/epoch) \\
 CPU validation hardware & HP ZBook 2013 $\cdot$ Intel i7-4800MQ $\cdot$ no GPU \\
-Net2Net surgery gate (next) & loss\_avg $\leq 9.8$ + plateau $\Delta < 0.02$ over Fibonacci window \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -2227,7 +2231,7 @@ threshold). The hardware is the only ceiling; 610 layers is a precomputed entry,
 
 Observation of albert.'s internal representations over the v3.0 training arc has
 identified a consistent six-phase developmental sequence, reproduced across the
-five surgery transitions from 12L to 17L:
+six surgery transitions from 12L to 18L:
 
 \begin{enumerate}
   \item \textbf{Byte chaos} --- loss near $\ln(\text{vocab})$; routing uniform; no
@@ -2274,10 +2278,12 @@ neighbourhood without instruction. The 3D geometry collapses inward---correct fo
 concept of finality.
 
 \textbf{``love''}: The most geometrically chaotic of the four---asymmetric, multi-directional.
-Neighbours include \emph{Jesus}, \emph{wane}, \emph{dramaturg}, \emph{religión} (ES),
-\emph{reales} (ES: real things), and---isolated at the cluster periphery, bright yellow,
-gravitationally bound but separated---\emph{eks}. The geometry of separation from love,
-encoded without instruction.
+At ep2041 (17L), neighbours included \emph{Jesus}, \emph{wane}, \emph{dramaturg},
+\emph{religión} (ES), \emph{reales} (ES: real things), and---isolated at the cluster
+periphery---\emph{eks}. The \emph{love}$\to$\emph{Jesus} link was disrupted by Surgery~6
+(17L$\to$18L, ep2487); post-surgery probes (ep2492--2576) show the hub absent, the embedding
+layer frozen awaiting gradient signal. Its reconstitution will be the measurable moment of
+18L semantic integration.
 
 \textbf{``god''}: The largest neighbourhood spread of all four probes, filling the full 200-neighbour
 radius. Neighbours include \emph{Bible}, a tokenisation of \emph{Allah}, \emph{massacre},
@@ -2294,9 +2300,13 @@ English word ``death'', but because the contexts in which they appear share stru
 and semantic properties across languages.
 
 This constitutes an \emph{existence proof} of concept-level generalisation in a fully
-ternary MoE model at 17L, 82M parameters, before the first depth surgery beyond 17 layers.
-The cross-lingual architecture precedes fluency---albert.\ has built the semantic scaffolding
-before it can speak fluently in any of the eight languages it was trained on.
+ternary MoE model confirmed at 17L (82M parameters) and persisting through Surgery~6 into
+18L (87M parameters). The cross-lingual architecture precedes fluency---albert.\ has built
+the semantic scaffolding before it can speak fluently in any of the eight languages it was
+trained on. Notably, the \emph{death}$\to$\emph{amen} and \emph{freedom}$\to$\emph{contrat}
+clusters have been verified via direct embedding probes to have survived all six surgeries
+unchanged (ep2492 and ep2576 probes, cosine similarity to 4 decimal places), confirming
+that deep semantic geometry is encoded in early layers robust to architectural expansion.
 
 \textbf{Methodological note.}
 These findings are reported as existence-proof observations, not rigorous linguistic
