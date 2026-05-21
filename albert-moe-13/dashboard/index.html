@@ -5462,7 +5462,13 @@
     // Restore event feed and Wald markers from previous session before first render.
     try {
         const _ae = localStorage.getItem('albert_events');
-        if (_ae) { anomalyEvents = JSON.parse(_ae); scheduleAnomalyRender(); }
+        if (_ae) {
+            const _raw = JSON.parse(_ae);
+            // Deduplicate: remove back-to-back entries with identical text (legacy doubled events).
+            anomalyEvents = _raw.filter((ev, i) => i === 0 || ev.text !== _raw[i - 1].text);
+            if (anomalyEvents.length !== _raw.length) persistEvents(); // write cleaned list back
+            scheduleAnomalyRender();
+        }
         const _we = localStorage.getItem('albert_wald_events');
         if (_we) {
             waldEvents = JSON.parse(_we);
