@@ -5537,6 +5537,15 @@
         bestEpochAvg = allTimeBestEpoch;
         if (allTimeBestBatch < Infinity)
             document.getElementById('v-best').textContent = allTimeBestBatch.toFixed(4);
+        // Pre-populate raw scatter (dataset[0]) with the last MAX_CHART_PTS points from the
+        // pre-seed so the chart has full historical coverage before the first live poll.
+        // The live poll will concat new points on top of this; no duplication because
+        // the gap-detection logic discards points already covered.
+        if (smaLog.length > 0) {
+            const seedSlice = smaLog.slice(-MAX_CHART_PTS);
+            chart.data.datasets[0].data = seedSlice.map(pt => ({ x: pt.x, y: pt.y, epoch: Math.floor(pt.x) }));
+            lastKnownEpoch = Math.floor(seedSlice[seedSlice.length - 1].x);
+        }
     }).finally(() => {
         updateGateChip(); // render gate state from preseed before first poll arrives
         poll(); // first render with real data
