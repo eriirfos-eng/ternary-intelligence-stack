@@ -1358,6 +1358,92 @@ this guarantee---if surgery required random reinitialization of the new
 layer---the wasted-compute argument would be offset by recovery cost. The
 identity property makes recovery cost zero.
 
+\paragraph{Mandelbrot-conditioned plasticity allocation.}
+\label{para:mandelbrot}
+Standard Net2Net surgery clones a layer and applies uniform Gaussian noise to
+break gradient symmetry. This implicitly assumes \emph{all weights are equally
+plastic}---that every parameter in the cloned layer is equally open to
+differentiation from its source. This assumption is inconsistent with a large
+body of evidence in modern deep learning: the Lottery Ticket
+Hypothesis~\cite{frankle2019lottery}, Elastic Weight
+Consolidation~\cite{kirkpatrick2017overcoming}, Fisher-information
+weighting~\cite{martens2015optimizing}, magnitude
+pruning~\cite{han2015learning}, and Hessian-aware
+quantization~\cite{dong2019hawq} all rest on the premise that \emph{plasticity
+is spatially heterogeneous}---some parameters are more settled, more critical,
+or more sensitive than others.
+
+Albert.\ replaces Gaussian noise with a \emph{deterministic geometry-conditioned
+perturbation} scheme. For each weight $w$ in the cloned layer, the perturbation
+magnitude is determined by:
+
+\begin{enumerate}
+  \item \textbf{Phase classification.} Map $w$ to a point in the complex plane:
+        $c_\text{re} = \tanh(w) - 0.5$, with $c_\text{im}$ assigned to the layer
+        index via a golden-ratio sequence
+        $c_\text{im}^{(l)} = -0.75 + \bigl(\lfloor l\cdot\varphi\rfloor
+        \bmod 1\bigr)\cdot 1.5$ where $\varphi = 0.618\ldots$ This places each
+        new layer at a unique latitude in the boundary-rich equatorial band of
+        Mandelbrot parameter space.
+
+  \item \textbf{Iteration depth.} Run the Mandelbrot iteration
+        $z \mapsto z^2 + c$ from $z=0$ to escape or a fixed maximum $n_\max$.
+        Interior points (orbit bounded): perturbation $\approx 0.02$---these
+        weights are in stable basins; learned structure is preserved.
+        Near-boundary points (slow escape, high iteration count): perturbation
+        $\propto (i/n_\max)^2$ approaching $1.0$---these are the plastic weights,
+        near a phase transition in parameter space.
+        Exterior points (fast escape): intermediate perturbation.
+
+  \item \textbf{Deterministic noise.} The signed perturbation is computed as
+        $\delta_i = \sin(i\varphi + c_\text{re}\pi + c_\text{im}e)
+        \cdot s_\text{base} \cdot b(i_\text{esc}, n_\max)$, where $s_\text{base}
+        = 10^{-3}$ and $b$ is the boundary weight function above. No random
+        number generator is used.
+\end{enumerate}
+
+The central hypothesis is that \emph{a weight's distance from the Mandelbrot
+boundary is a useful heuristic for its plasticity in the loss landscape}:
+weights already occupying stable basins should receive minimal perturbation to
+preserve learned structure; weights near phase boundaries are candidates for
+directed exploration. This connects to the intuition behind boundary-sensitive
+pruning and Fisher-information scaling, without requiring an explicit Hessian
+computation.
+
+\textbf{What is and is not claimed.}
+This paper does \emph{not} claim that the Mandelbrot boundary corresponds to
+actual loss-landscape curvature. That would require Hessian studies, curvature
+correlation analysis, or perturbation-response experiments not yet conducted.
+The empirically supported claims are:
+
+\begin{itemize}
+  \item The perturbation is \textbf{deterministic and reproducible}: fully
+        determined by $(w,\, \text{tensor position},\, \text{layer index})$
+        with zero RNG. Surgery events are loggable to exact floating-point
+        precision and replayable across hardware.
+  \item The perturbation is \textbf{non-destructive}: all six surgeries
+        executed under this scheme produced no measurable loss spike at the
+        expansion boundary, and descent resumed within $\leq 50$ epochs
+        post-surgery in every case.
+  \item The layer stack exhibits \textbf{geometric diversity}: golden-ratio
+        sequencing of $c_\text{im}$ ensures surgeries at different depths
+        generate structurally distinct perturbation patterns, preventing
+        identical clones from re-entering symmetry.
+\end{itemize}
+
+Whether Mandelbrot-conditioned perturbation is \emph{causally superior} to
+Gaussian noise requires a controlled ablation not yet performed. The planned
+validation protocol compares four methods across matched surgery events:
+uniform Gaussian, zero-noise clone, uniform sinusoidal, and Mandelbrot
+plasticity---measuring post-surgery loss spike magnitude, recovery epoch count,
+final loss after $N$ epochs, and run-to-run variance. The deterministic property
+implies Mandelbrot runs should exhibit zero variance by construction; the
+hypothesis predicts lower post-surgery loss variance and smoother recovery
+curves relative to stochastic baselines. This comparison is deferred to future
+work; the present contribution is the method specification, its theoretical
+grounding in heterogeneous plasticity, and the survival evidence across six
+autonomous surgeries.
+
 \paragraph{Autonomous detection removes the human bottleneck.}
 At scale, a human operator cannot reliably monitor thousands of per-layer
 routing entropy signals, SMA crossovers, and MYCELIUM stability epochs
