@@ -3,6 +3,18 @@
 
 ---
 
+**FN6 · 2026-05-22T22:53Z**
+
+ep2957 closed at **CSV 9.5592** — new CSV ATL, breaking ep2955 (9.5646) by 0.0054. Estimated epoch-close ≈ **9.479** (~0.08 offset). If the offset holds, this is a new server-side ATL (prev est. ~9.484 at ep2955, server ATL was 9.4873 at ep2938).
+
+Post-ATL bounce underway: ep2958 +0.0120 → ep2959 +0.0120 → ep2960 -0.0124 → ep2961 +0.0030 (107 batches, in progress). Oscillating, not yet decisive pull-down.
+
+Descent rate: two consecutive CSV ATLs in ~30 epochs (ep2955: 9.5646 → ep2957: 9.5592). Tightening orbit pattern continuing.
+
+WALD/routing/mycelium: unobservable locally. No batch anomalies (range 9.50–9.71).
+
+---
+
 **FN5 · 2026-05-22T22:27Z**
 
 ep2955 closed at **CSV 9.5646** — new CSV-level ATL (prev: ep2946/ep2949 shared 9.5668). Applying consistent ~0.08 offset between CSV-avg and epoch-close (calibrated on ep2938/2946/2949/2951), estimated epoch-close ≈ **9.484** — likely a new server-side ATL (previous: 9.4873 at ep2938). Cannot confirm from Modal logs (epoch_history.log not synced past ep1356).
