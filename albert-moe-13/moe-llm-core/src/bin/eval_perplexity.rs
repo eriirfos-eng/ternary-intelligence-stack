@@ -65,8 +65,9 @@ fn main() -> Result<()> {
     println!("Checkpoint loaded ({} tensors, weights ternarized).", n_tensors);
 
     // ── Tokenize corpus ──────────────────────────────────────────────────────
-    let text = fs::read_to_string(&corpus_path)
-        .unwrap_or_else(|_| panic!("Cannot read corpus: {}", corpus_path));
+    let bytes = fs::read(&corpus_path)
+        .unwrap_or_else(|e| panic!("Cannot read corpus {}: {}", corpus_path, e));
+    let text = String::from_utf8_lossy(&bytes).into_owned();
     let tokens = tokenizer.encode(&text);
     println!("Corpus     : {} chars → {} tokens", text.len(), tokens.len());
 
