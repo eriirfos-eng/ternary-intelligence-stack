@@ -13,6 +13,21 @@ Contributions are welcome across:
 
 ---
 
+## Contributing to albert. Training (no GPU needed)
+
+The simplest way to contribute is to donate CPU time to albert.'s training. No ML background, no GPU, no configuration — just two commands:
+
+```bash
+git clone https://github.com/eriirfos-eng/albert-spores ~/projects/albert-spores
+bash ~/projects/albert-spores/install.sh
+```
+
+Then run `albert-train` in a fresh terminal. Your machine trains for as long as you like and packages each epoch as a *spore* — a checkpoint fragment that gets blended into the live model. See **[github.com/eriirfos-eng/albert-spores](https://github.com/eriirfos-eng/albert-spores)** for full details.
+
+Watch albert. in real time at **[ternlang.com/talk](https://ternlang.com/talk)**.
+
+---
+
 ## Development Setup
 
 ### Requirements
