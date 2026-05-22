@@ -51,7 +51,7 @@ app = modal.App("albert-serve")
     cpu=2.0,
     memory=2048,          # checkpoint ~537MB + working memory
     volumes={"/vol": vol},
-    keep_warm=1,          # one always-on container — model stays loaded
+    min_containers=1,     # one always-on container — model stays loaded
     timeout=3600,
 )
 @modal.web_server(8000)

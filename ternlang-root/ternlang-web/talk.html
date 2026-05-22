@@ -1,135 +1,261 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Talk with albert. — ternlang.com</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg:      #0d0d14;
-      --bg2:     #13131f;
-      --bg3:     #1a1a2e;
-      --border:  #1e2030;
-      --teal:    #00f5c4;
-      --blue:    #4a9eff;
-      --muted:   #4a5568;
-      --text:    #e2e8f0;
-      --dim:     #a0aec0;
-      --warn:    #f6ad55;
+
+    /* ── themes ── */
+    :root[data-theme="dark"] {
+      --bg:        #0d0d14;
+      --surface:   #13131f;
+      --surface2:  #1a1a2e;
+      --border:    #1e2030;
+      --teal:      #00f5c4;
+      --blue:      #4a9eff;
+      --muted:     #4a5568;
+      --text:      #e2e8f0;
+      --dim:       #718096;
+      --warn-bg:   #1a1505;
+      --warn-bd:   #3d2e0a;
+      --warn:      #f6ad55;
+      --warn-hi:   #fbd38d;
+      --input-bg:  #0d0d1a;
+      --pill-bg:   #13131f;
+      --pill-bd:   #2d2d45;
     }
-    body {
+    :root[data-theme="light"] {
+      --bg:        #f5f5f7;
+      --surface:   #ffffff;
+      --surface2:  #f0f0f5;
+      --border:    #d1d5db;
+      --teal:      #008f72;
+      --blue:      #2563eb;
+      --muted:     #9ca3af;
+      --text:      #111827;
+      --dim:       #6b7280;
+      --warn-bg:   #fffbeb;
+      --warn-bd:   #fde68a;
+      --warn:      #92400e;
+      --warn-hi:   #78350f;
+      --input-bg:  #ffffff;
+      --pill-bg:   #ffffff;
+      --pill-bd:   #d1d5db;
+    }
+    :root[data-theme="hc"] {
+      --bg:        #000000;
+      --surface:   #0a0a0a;
+      --surface2:  #111111;
+      --border:    #444444;
+      --teal:      #00ffcc;
+      --blue:      #66b3ff;
+      --muted:     #666666;
+      --text:      #ffffff;
+      --dim:       #aaaaaa;
+      --warn-bg:   #1a0f00;
+      --warn-bd:   #ff8800;
+      --warn:      #ffaa00;
+      --warn-hi:   #ffcc44;
+      --input-bg:  #000000;
+      --pill-bg:   #0a0a0a;
+      --pill-bd:   #888888;
+    }
+
+    html, body {
+      height: 100%;
       background: var(--bg);
       color: var(--text);
       font-family: 'Inter', sans-serif;
-      height: 100dvh;
+      transition: background 0.2s, color 0.2s;
+    }
+    body {
       display: flex;
       flex-direction: column;
+      height: 100dvh;
       overflow: hidden;
     }
 
-    /* ── top bar ── */
+    /* ── topbar ── */
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 20px;
+      padding: 10px 20px;
       border-bottom: 1px solid var(--border);
-      background: var(--bg2);
+      background: var(--surface);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--teal);
+      font-weight: 600;
+      text-decoration: none;
       flex-shrink: 0;
     }
-    .topbar-left { display: flex; align-items: center; gap: 12px; }
-    .logo { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--teal); font-weight: 700; text-decoration: none; }
-    .model-name { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text); }
-    .badge {
+    .sep { color: var(--border); flex-shrink: 0; }
+    .model-name {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 2px 8px;
-      color: var(--dim);
+      font-size: 0.9rem;
+      color: var(--text);
+      flex-shrink: 0;
     }
-    .badge .live-dot {
-      display: inline-block;
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 10px;
+      color: var(--dim);
+      white-space: nowrap;
+    }
+    .live-dot {
       width: 6px; height: 6px;
       border-radius: 50%;
       background: var(--teal);
-      margin-right: 5px;
+      flex-shrink: 0;
       animation: pulse 2s ease-in-out infinite;
     }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    /* ── disclaimer banner ── */
-    .disclaimer {
-      background: #1a1505;
-      border-bottom: 1px solid #3d2e0a;
-      padding: 8px 20px;
-      font-size: 0.78rem;
-      color: var(--warn);
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
       flex-shrink: 0;
-      line-height: 1.4;
     }
-    .disclaimer strong { color: #fbd38d; }
+
+    /* ── theme toggle ── */
+    .theme-toggle {
+      display: flex;
+      gap: 2px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px;
+    }
+    .theme-btn {
+      background: none;
+      border: none;
+      border-radius: 16px;
+      width: 26px; height: 22px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      transition: background 0.15s, color 0.15s;
+      line-height: 1;
+    }
+    .theme-btn.active {
+      background: var(--surface);
+      color: var(--teal);
+    }
+    .theme-btn:hover:not(.active) { color: var(--dim); }
+
+    .topbar-links {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.72rem;
+      color: var(--dim);
+    }
+    .topbar-links a { color: var(--dim); text-decoration: none; }
+    .topbar-links a:hover { color: var(--teal); }
+    .feedback-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 3px 10px;
+      color: var(--dim);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .feedback-btn:hover { border-color: var(--teal); color: var(--teal); }
 
     /* ── messages ── */
     .messages {
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
+      padding: 32px 20px 16px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      align-items: center;
+      gap: 20px;
       scroll-behavior: smooth;
     }
     .messages::-webkit-scrollbar { width: 4px; }
     .messages::-webkit-scrollbar-track { background: transparent; }
-    .messages::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
     .msg {
-      max-width: 720px;
+      width: 100%;
+      max-width: 680px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 5px;
     }
-    .msg.user  { align-self: flex-end; align-items: flex-end; }
-    .msg.albert { align-self: flex-start; align-items: flex-start; }
+    .msg.user  { align-items: flex-end; }
+    .msg.albert { align-items: flex-start; }
 
     .msg-label {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: var(--muted);
       font-family: 'JetBrains Mono', monospace;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
+      padding: 0 4px;
     }
     .msg.user  .msg-label { color: var(--blue); }
     .msg.albert .msg-label { color: var(--teal); }
 
     .msg-bubble {
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      line-height: 1.6;
+      padding: 10px 16px;
+      border-radius: 16px;
+      font-size: 0.88rem;
+      line-height: 1.65;
       word-break: break-word;
       white-space: pre-wrap;
       font-family: 'JetBrains Mono', monospace;
+      max-width: 100%;
     }
-    .msg.user   .msg-bubble { background: var(--bg3); border: 1px solid var(--blue); color: var(--text); }
-    .msg.albert .msg-bubble { background: var(--bg2); border: 1px solid var(--border); color: var(--text); }
+    .msg.user .msg-bubble {
+      background: var(--blue);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .msg.albert .msg-bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
 
     .msg-meta {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       color: var(--muted);
       font-family: 'JetBrains Mono', monospace;
+      padding: 0 4px;
     }
 
     .thinking .msg-bubble {
       color: var(--muted);
-      border-color: var(--muted);
-      animation: blink 1.2s ease-in-out infinite;
+      border-color: var(--border) !important;
+      animation: blink 1.4s ease-in-out infinite;
     }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.45} }
 
     /* ── empty state ── */
     .empty-state {
@@ -138,128 +264,159 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 16px;
       color: var(--muted);
       text-align: center;
-      padding: 40px;
+      padding: 40px 20px;
       pointer-events: none;
+      max-width: 480px;
+      margin: auto;
     }
-    .empty-state .glyph {
+    .empty-glyph {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 2.5rem;
+      font-size: 2rem;
       color: var(--border);
     }
-    .empty-state p { font-size: 0.85rem; max-width: 400px; line-height: 1.6; }
-
-    /* ── input bar ── */
-    .input-bar {
-      border-top: 1px solid var(--border);
-      background: var(--bg2);
-      padding: 12px 16px;
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-      flex-shrink: 0;
+    .empty-state p {
+      font-size: 0.84rem;
+      line-height: 1.7;
+      color: var(--dim);
     }
+    .empty-state strong { color: var(--text); font-weight: 500; }
+
+    /* ── bottom area ── */
+    .bottom {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 20px 16px;
+      gap: 8px;
+      background: var(--bg);
+    }
+
+    /* ── pill input ── */
+    .pill-wrap {
+      width: 100%;
+      max-width: 680px;
+      background: var(--pill-bg);
+      border: 1.5px solid var(--pill-bd);
+      border-radius: 28px;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 10px 10px 10px 20px;
+      transition: border-color 0.15s;
+    }
+    .pill-wrap:focus-within { border-color: var(--teal); }
+
     textarea {
       flex: 1;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      background: transparent;
+      border: none;
       color: var(--text);
       font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      padding: 10px 14px;
+      font-size: 0.92rem;
+      line-height: 1.5;
       resize: none;
       outline: none;
       max-height: 140px;
-      line-height: 1.5;
-      transition: border-color 0.15s;
+      padding: 2px 0;
     }
-    textarea:focus { border-color: var(--teal); }
     textarea::placeholder { color: var(--muted); }
-    button.send {
+
+    .send-btn {
       background: var(--teal);
       color: #000;
       border: none;
-      border-radius: 8px;
+      border-radius: 20px;
       font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      font-size: 0.82rem;
-      padding: 10px 18px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      padding: 8px 18px;
       cursor: pointer;
       transition: opacity 0.15s;
       white-space: nowrap;
       flex-shrink: 0;
+      align-self: flex-end;
     }
-    button.send:hover:not(:disabled) { opacity: 0.85; }
-    button.send:disabled { opacity: 0.35; cursor: not-allowed; }
+    .send-btn:hover:not(:disabled) { opacity: 0.85; }
+    .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* ── disclaimer (below input) ── */
+    .disclaimer {
+      width: 100%;
+      max-width: 680px;
+      font-size: 0.7rem;
+      color: var(--warn);
+      text-align: center;
+      line-height: 1.5;
+      padding: 0 4px;
+    }
+    .disclaimer strong { color: var(--warn-hi); }
 
     .input-hint {
-      font-size: 0.7rem;
-      color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-      padding: 0 2px 4px;
+      width: 100%;
+      max-width: 680px;
       display: flex;
       justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0 4px;
     }
 
     /* ── feedback modal ── */
     .modal-overlay {
       display: none;
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.65);
       z-index: 100;
       align-items: center;
       justify-content: center;
     }
     .modal-overlay.open { display: flex; }
     .modal {
-      background: var(--bg2);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
+      border-radius: 16px;
+      padding: 28px;
       width: min(480px, 92vw);
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
     }
     .modal h2 {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.95rem;
       color: var(--teal);
-      margin: 0;
     }
     .modal label {
-      font-size: 0.78rem;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 0.75rem;
       color: var(--dim);
       font-family: 'JetBrains Mono', monospace;
     }
     .modal select, .modal input, .modal textarea {
-      width: 100%;
-      background: var(--bg3);
+      background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       color: var(--text);
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.82rem;
-      padding: 8px 10px;
+      padding: 8px 12px;
       outline: none;
-      margin-top: 4px;
+      width: 100%;
     }
-    .modal select:focus, .modal input:focus, .modal textarea:focus {
-      border-color: var(--teal);
-    }
+    .modal select:focus, .modal input:focus, .modal textarea:focus { border-color: var(--teal); }
     .modal textarea { resize: vertical; min-height: 90px; }
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-    }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
     .btn-cancel {
       background: transparent;
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 8px;
       color: var(--dim);
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.8rem;
@@ -267,31 +424,25 @@
       cursor: pointer;
     }
     .btn-cancel:hover { border-color: var(--muted); color: var(--text); }
-    .btn-submit {
+    .btn-send {
       background: var(--teal);
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       color: #000;
       font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
+      font-weight: 600;
       font-size: 0.8rem;
       padding: 8px 18px;
       cursor: pointer;
     }
-    .btn-submit:hover { opacity: 0.85; }
-    .btn-submit:disabled { opacity: 0.35; cursor: not-allowed; }
-    .feedback-link {
-      font-size: 0.7rem;
-      color: var(--muted);
+    .btn-send:hover { opacity: 0.85; }
+    .btn-send:disabled { opacity: 0.35; cursor: not-allowed; }
+    #fb-status {
+      font-size: 0.73rem;
+      color: var(--teal);
       font-family: 'JetBrains Mono', monospace;
-      cursor: pointer;
-      text-decoration: underline;
-      text-decoration-color: var(--border);
-      flex-shrink: 0;
-      align-self: flex-end;
-      margin-bottom: 2px;
+      min-height: 1rem;
     }
-    .feedback-link:hover { color: var(--teal); }
   </style>
 </head>
 <body>
@@ -299,74 +450,74 @@
 <div class="topbar">
   <div class="topbar-left">
     <a href="/" class="logo">ternlang.com</a>
+    <span class="sep">/</span>
     <span class="model-name">albert.</span>
-    <span class="badge" id="status-badge">
-      <span class="live-dot"></span>loading...
-    </span>
+    <div class="status-badge" id="status-badge">
+      <span class="live-dot"></span><span id="status-text">loading...</span>
+    </div>
   </div>
-  <div style="display:flex;align-items:center;gap:14px;font-size:0.75rem;color:var(--dim)">
-    <span class="feedback-link" onclick="openFeedback()">feedback</span>
-    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack"
-       style="color:var(--dim);text-decoration:none">open-source</a>
-    &nbsp;·&nbsp;
-    <a href="/pricing" style="color:var(--dim);text-decoration:none">LGPL-3.0</a>
+  <div class="topbar-right">
+    <div class="theme-toggle" title="Theme">
+      <button class="theme-btn active" id="btn-dark"  onclick="setTheme('dark')"  title="Dark">◐</button>
+      <button class="theme-btn"        id="btn-light" onclick="setTheme('light')" title="Light">○</button>
+      <button class="theme-btn"        id="btn-hc"    onclick="setTheme('hc')"    title="High contrast">●</button>
+    </div>
+    <div class="topbar-links">
+      <button class="feedback-btn" onclick="openFeedback()">feedback</button>
+      <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack">github</a>
+      <a href="/pricing">LGPL-3.0</a>
+    </div>
   </div>
-</div>
-
-<div class="disclaimer">
-  <strong>Research stage.</strong>
-  albert. is an in-training ternary MoE language model — not an assistant. Output may be
-  incoherent, repetitive, or surprising. That is expected and honest. You are watching
-  a model learn in real time. <strong>Come back as training progresses.</strong>
 </div>
 
 <div class="messages" id="messages">
   <div class="empty-state" id="empty">
-    <div class="glyph">▲</div>
-    <p>Send a prompt to albert. — a 134M-parameter ternary MoE model currently learning 8 languages from scratch. Outputs reflect genuine model state, not a fine-tuned assistant.</p>
+    <div class="empty-glyph">▲</div>
+    <p>
+      <strong>albert.</strong> is a 134M-parameter ternary MoE model currently learning 8 languages from scratch.
+      Outputs reflect genuine model state — not a fine-tuned assistant.
+    </p>
   </div>
 </div>
 
-<div class="input-bar">
-  <div style="flex:1;display:flex;flex-direction:column;gap:4px">
-    <textarea id="prompt" rows="1" placeholder="Send a prompt to albert. …"
-              maxlength="512"></textarea>
-    <div class="input-hint">
-      <span>Enter to send · Shift+Enter for newline</span>
-      <span id="char-count">0 / 512</span>
-    </div>
+<div class="bottom">
+  <div class="pill-wrap">
+    <textarea id="prompt" rows="1" placeholder="Send a prompt to albert. …" maxlength="512"></textarea>
+    <button class="send-btn" id="send-btn" onclick="sendPrompt()">Send</button>
   </div>
-  <button class="send" id="send-btn" onclick="sendPrompt()">Send</button>
+  <div class="input-hint">
+    <span>Enter to send · Shift+Enter for newline</span>
+    <span id="char-count">0 / 512</span>
+  </div>
+  <div class="disclaimer">
+    <strong>Research stage.</strong>
+    albert. is in active training — output may be incoherent or surprising.
+    That is expected and honest. <strong>Come back as training progresses.</strong>
+  </div>
 </div>
 
-<!-- ── feedback modal ── -->
+<!-- feedback modal -->
 <div class="modal-overlay" id="feedback-overlay" onclick="if(event.target===this)closeFeedback()">
   <div class="modal">
     <h2>Send feedback</h2>
-    <div>
-      <label>Type
-        <select id="fb-type">
-          <option value="observation">Observation — interesting output</option>
-          <option value="bug">Bug report — something broke</option>
-          <option value="suggestion">Suggestion — feature / UX idea</option>
-          <option value="other">Other</option>
-        </select>
-      </label>
-    </div>
-    <div>
-      <label>Your message
-        <textarea id="fb-body" placeholder="Describe what you saw, what you expected, or what you'd like to see…" maxlength="2000"></textarea>
-      </label>
-    </div>
-    <div>
-      <label>Email (optional — only if you want a reply)
-        <input type="email" id="fb-email" placeholder="you@example.com">
-      </label>
-    </div>
-    <div id="fb-status" style="font-size:0.75rem;color:var(--teal);font-family:'JetBrains Mono',monospace;min-height:1rem"></div>
+    <label>Type
+      <select id="fb-type">
+        <option value="observation">Observation — interesting output</option>
+        <option value="bug">Bug report — something broke</option>
+        <option value="suggestion">Suggestion — feature / UX idea</option>
+        <option value="other">Other</option>
+      </select>
+    </label>
+    <label>Message
+      <textarea id="fb-body" placeholder="Describe what you saw, what you expected, or what you'd like to see…" maxlength="2000"></textarea>
+    </label>
+    <label>Email (optional — only if you want a reply)
+      <input type="email" id="fb-email" placeholder="you@example.com">
+    </label>
+    <div id="fb-status"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeFeedback()">Cancel</button>
-      <button class="btn-submit" id="fb-send" onclick="submitFeedback()">Send</button>
+      <button class="btn-send" id="fb-send" onclick="submitFeedback()">Send</button>
     </div>
   </div>
 </div>
@@ -375,17 +526,29 @@
 const API = '/api/albert/chat';
 let busy = false;
 
+// ── theme ─────────────────────────────────────────────────────────────────────
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('albert-theme', t);
+  ['dark','light','hc'].forEach(id => {
+    document.getElementById('btn-' + id).classList.toggle('active', id === t);
+  });
+}
+(function() {
+  const saved = localStorage.getItem('albert-theme') || 'dark';
+  setTheme(saved);
+})();
+
 // ── status badge ──────────────────────────────────────────────────────────────
 async function loadStatus() {
   try {
     const r = await fetch('/api/albert/status');
     if (!r.ok) throw new Error();
     const d = await r.json();
-    document.getElementById('status-badge').innerHTML =
-      `<span class="live-dot"></span>ep${d.epoch} · ${d.arch}`;
+    document.getElementById('status-text').textContent = `ep${d.epoch} · ${d.arch}`;
   } catch {
-    document.getElementById('status-badge').innerHTML =
-      '<span class="live-dot" style="background:#f56565"></span>offline';
+    document.getElementById('status-text').textContent = 'offline';
+    document.querySelector('.live-dot').style.background = '#f56565';
   }
 }
 loadStatus();
@@ -396,14 +559,17 @@ const ta = document.getElementById('prompt');
 ta.addEventListener('input', () => {
   ta.style.height = 'auto';
   ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
-  document.getElementById('char-count').textContent =
-    `${ta.value.length} / 512`;
+  document.getElementById('char-count').textContent = `${ta.value.length} / 512`;
 });
 ta.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPrompt(); }
 });
 
 // ── chat ──────────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function appendMsg(role, text, meta) {
   document.getElementById('empty')?.remove();
   const feed = document.getElementById('messages');
@@ -419,10 +585,6 @@ function appendMsg(role, text, meta) {
   return div;
 }
 
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
 async function sendPrompt() {
   if (busy) return;
   const prompt = ta.value.trim();
@@ -436,7 +598,6 @@ async function sendPrompt() {
 
   appendMsg('user', prompt, null);
 
-  // thinking indicator
   const thinkDiv = document.createElement('div');
   thinkDiv.className = 'msg albert thinking';
   thinkDiv.innerHTML = `
@@ -458,12 +619,8 @@ async function sendPrompt() {
       appendMsg('albert', `[error ${resp.status}] ${err}`, null);
     } else {
       const d = await resp.json();
-      // strip prompt echo from output
-      const out = d.text.startsWith(prompt)
-        ? d.text.slice(prompt.length).trimStart()
-        : d.text;
-      appendMsg('albert', out || '(empty output)',
-        `${d.tok_s.toFixed(1)} tok/s · ep${d.epoch}`);
+      const out = d.text.startsWith(prompt) ? d.text.slice(prompt.length).trimStart() : d.text;
+      appendMsg('albert', out || '(empty output)', `${d.tok_s.toFixed(1)} tok/s · ep${d.epoch}`);
     }
   } catch (e) {
     thinkDiv.remove();
@@ -484,32 +641,25 @@ function closeFeedback() {
   document.getElementById('feedback-overlay').classList.remove('open');
   document.getElementById('fb-status').textContent = '';
 }
-
 async function submitFeedback() {
   const type  = document.getElementById('fb-type').value;
   const body  = document.getElementById('fb-body').value.trim();
   const email = document.getElementById('fb-email').value.trim();
   if (!body) { document.getElementById('fb-status').textContent = 'Please write something first.'; return; }
-
   const btn = document.getElementById('fb-send');
   btn.disabled = true;
-  document.getElementById('fb-status').textContent = 'Sending…';
-
-  // Build a mailto: link as the primary channel (no backend needed)
+  document.getElementById('fb-status').textContent = 'Opening mail client…';
   const subject = encodeURIComponent(`[albert. feedback] ${type}`);
   const emailBody = encodeURIComponent(
     `Type: ${type}\n\n${body}${email ? '\n\nReply-to: ' + email : ''}\n\n---\nSent from ternlang.com/talk`
   );
   window.open(`mailto:feedback@ternlang.com?subject=${subject}&body=${emailBody}`, '_blank');
-
-  document.getElementById('fb-status').textContent = 'Your mail client opened. Thank you.';
+  document.getElementById('fb-status').textContent = 'Mail client opened. Thank you.';
   document.getElementById('fb-body').value = '';
   document.getElementById('fb-email').value = '';
   btn.disabled = false;
   setTimeout(closeFeedback, 2000);
 }
-
-// Close modal on Escape
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFeedback(); });
 </script>
 </body>

@@ -25,7 +25,6 @@ use candle_core::{DType, Device, IndexOp, Tensor};
 use candle_nn::VarBuilder;
 use moe_llm_core::model::{Transformer, TransformerConfig};
 use moe_llm_core::tokenizer::BpeTokenizer;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{fs, sync::Arc};
@@ -89,8 +88,7 @@ fn sample_token(logits: &Tensor, temperature: f64) -> candle_core::Result<u32> {
     let probs   = exp.broadcast_div(&sum)?;
     let probs_v: Vec<f32> = probs.to_vec1()?;
 
-    let mut rng = rand::thread_rng();
-    let r: f32  = rng.gen();
+    let r: f32 = rand::random();
     let mut cum = 0.0f32;
     for (i, &p) in probs_v.iter().enumerate() {
         cum += p;
