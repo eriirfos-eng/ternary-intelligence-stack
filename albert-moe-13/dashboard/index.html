@@ -90,7 +90,7 @@
             border-radius: 10px;
             padding: 12px 16px;
             z-index: 9990;
-            min-width: 230px;
+            min-width: 260px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.7);
             font-size: 11px;
             line-height: 1.9;
@@ -924,7 +924,7 @@
         <span class="tb-val" id="v-batch">— / —</span>
     </div>
     <div class="tb-cell">
-        <span class="tb-label" title="All-time low — single batch minimum across full training history">ATL</span>
+        <span class="tb-label" title="All-time low — best batch loss across full training history. % = improvement since page load.">ATL</span>
         <span class="tb-val" id="v-best">—</span>
         <span id="v-best-pct" style="font-size:10px;color:#22c55e;margin-left:2px"></span>
     </div>
@@ -1042,13 +1042,11 @@
         <span class="gate-val" id="ov-myc-val">—</span>
         <span class="gate-sub">/ &gt;= 5</span>
     </div>
-    <div class="gate-row" style="align-items:flex-start">
-        <svg width="7" height="7" viewBox="0 0 7 7" style="margin-top:3px"><circle cx="3.5" cy="3.5" r="3.5" id="ov-dot-plateau" fill="#3f3f3f"/></svg>
-        <span class="gate-dot-lbl" style="margin-top:1px">Plateau</span>
-        <div style="display:flex;flex-direction:column;gap:1px;align-items:center">
-            <span class="gate-val" id="ov-plateau-val">—</span>
-            <span class="gate-sub" id="ov-plateau-sub">delta / win</span>
-        </div>
+    <div class="gate-row">
+        <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" id="ov-dot-plateau" fill="#3f3f3f"/></svg>
+        <span class="gate-dot-lbl">Plateau</span>
+        <span class="gate-val" id="ov-plateau-val">—</span>
+        <span class="gate-sub" id="ov-plateau-sub">/ win</span>
     </div>
     <div class="gate-footer" id="ov-footer">since_best — &middot; wald_fill —</div>
 </div>
@@ -1388,17 +1386,18 @@
 
         // Plateau gate: |oldest - newest| < plateau_threshold over Fibonacci window
         // While filling: Red (<66%) → Orange (66–99%) → Green (full + delta met)
-        let platCol = C.grey, platText = '—', platSub = 'filling window…';
+        let platCol = C.grey, platText = '—', platSub = '';
         if (gLossRing.length >= gGateFibWin) {
             const oldest = gLossRing[gLossRing.length - gGateFibWin];
             const latest = gLossRing[gLossRing.length - 1];
             const delta  = Math.abs(oldest - latest);
             platText = delta.toFixed(4);
-            platSub  = '/ < ' + gGatePlateauThresh.toFixed(3) + ' (win=' + gGateFibWin + ')';
+            platSub  = '/ <' + gGatePlateauThresh.toFixed(3) + ' w=' + gGateFibWin;
             platCol  = delta < gGatePlateauThresh ? C.green
                      : delta < gGatePlateauThresh * 3 ? C.orange : C.red;
         } else {
             platText = gLossRing.length + '/' + gGateFibWin;
+            platSub  = 'filling…';
             platCol  = (gLossRing.length / gGateFibWin) >= 0.66 ? C.orange : C.red;
         }
 
@@ -2406,6 +2405,7 @@
             scales: {
                 x: {
                     type: 'linear',
+                    min: 0,
                     title: { display: true, text: 'Global Epoch', color: '#64748b', font: { size: 11 } },
                     grid: { color: '#1e2d40' },
                     ticks: { color: '#94a3b8', font: { size: 10 } }
@@ -3114,7 +3114,6 @@
         document.getElementById('v-batch').textContent = `${latest.batch} / ${gBatchesPerEpoch}`;
         // v-tns updated separately when "Loaded X tensors" line is parsed
 
-        if (sessionStartLoss === null) sessionStartLoss = loss;
         if (loss < bestLoss)  { bestLoss  = loss; }
         if (loss < allTimeBestBatch) { allTimeBestBatch = loss; }
         if (loss > worstLoss) { worstLoss = loss; }
@@ -5535,6 +5534,9 @@
         // Seed session trackers so RUN_START / restart never shows a value above the true historical min
         bestLoss     = allTimeBestBatch;
         bestEpochAvg = allTimeBestEpoch;
+        // Pin sessionStartLoss to the pre-seed ATL so the % shows improvement since page load,
+        // not a meaningless delta from the first randomly-polled live batch.
+        sessionStartLoss = allTimeBestBatch < Infinity ? allTimeBestBatch : null;
         if (allTimeBestBatch < Infinity)
             document.getElementById('v-best').textContent = allTimeBestBatch.toFixed(4);
         // Pre-populate raw scatter (dataset[0]) with the last MAX_CHART_PTS points from the
