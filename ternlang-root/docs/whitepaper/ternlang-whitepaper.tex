@@ -1836,13 +1836,13 @@ Vocabulary & 32,000 tokens (ByteLevel BPE, 8 languages) \\
 Corpus & 177,654,147 tokens (chaos layer: 10\%) \\
 Total parameters & $\approx$\textbf{87M} (ternary) \\
 Global epochs at v3.0 launch & $\approx$55 \\
-Global epochs completed & \textbf{2915+} (Modal T4 GPU) \\
-Best epoch-average loss & \textbf{9.5015} (Ep$\approx$2913, 2026-05-22) \\
-Best single-batch loss & \textbf{9.1370} (dashboard, 2026-05-22) \\
+Global epochs completed & \textbf{2942+} (Modal T4 GPU) \\
+Best epoch-average loss & \textbf{9.4873} (Ep$\approx$2938, 2026-05-22) \\
+Best single-batch loss & \textbf{9.1254} (dashboard, 2026-05-22) \\
 Random baseline $\ln(32000)$ & 10.373 \\
-Reduction from random baseline & \textbf{8.4\%} (10.373 $\to$ 9.502) \\
+Reduction from random baseline & \textbf{8.5\%} (10.373 $\to$ 9.4873) \\
 Surgeries completed & \textbf{6} (12L $\to$ 13L $\to$ 14L $\to$ 15L $\to$ 16L $\to$ 17L $\to$ 18L) \\
-Surgery gate status (next: 18L $\to$ 21L) & Plateau gate BLOCKED; two cliff dives post-surgery-6; 9.50 resistance floor \\
+Surgery gate status (next: 18L $\to$ 21L) & Plateau gate BLOCKED (descent active); three cliff dives post-surgery-6; 9.50 floor breached --- ATL 9.4873 \\
 Expert skip rate & \textbf{75\%} (Top-3 of 12, confirmed live) \\
 Inference throughput (CPU, @sparseskip) & \textbf{83 tok/s} (4L baseline, 2026-05-07) · \textbf{24.5 avg / 37 peak tok/s} (18L CPU) \\
 Training hardware & Modal.com T4 GPU ($\approx$\$0.003/epoch) \\
@@ -1938,8 +1938,8 @@ CPU validation hardware & HP ZBook 2013 $\cdot$ Intel i7-4800MQ $\cdot$ no GPU \
 \caption{Loss trajectory for Albert MoE-13 v3.0 (ep55--143 shown). Three phases visible:
 (1) post-vocabulary-surgery plateau near $\ln(32000)$ (Ep55--82); (2) Nash equilibrium
 freeze Ep83--104; (3) sustained $-0.001$\,nats/epoch descent from Ep105 after expert seed
-bias introduction. Chart shows ep143 (best 10.3262); training has continued to \textbf{ep2915+
-with epoch-average ATL 9.5015 and single-batch ATL 9.1370} --- the extended trajectory and
+bias introduction. Chart shows ep143 (best 10.3262); training has continued to \textbf{ep2942+
+with epoch-average ATL 9.4873 and single-batch ATL 9.1254} --- the extended trajectory and
 six surgery events (ep511, 547, 611, 645, 701, 2487) are tracked in the live dashboard at
 \texttt{batch\_history.csv} in the repository.}
 \label{fig:loss_curves}
@@ -2374,21 +2374,22 @@ These patterns are structurally analogous to technical price action in financial
 the loss curve encodes structured behaviour of a complex system, and a trained observer
 can distinguish noise from signal in real time.
 
-Concretely, the post-surgery-6 training arc (ep2487--ep2915+) has produced two distinct
+Concretely, the post-surgery-6 training arc (ep2487--ep2942+) has produced three distinct
 cliff dives. The first (ep2860) descended from $\approx$9.61 to a floor of
 $\approx$9.52, with 4--5 WALD diamond markers clustering at the base. The second
 (ep2890+, following an AdamW buffer reset from a weight-pull restart) descended further
-to a floor of $\approx$9.50, producing the current best epoch-average ATL of 9.5015.
-The 9.50 level has acted as a structural resistance floor across both attempts---either
-the corpus entropy ceiling for the current 18L configuration, or a pre-plateau
-consolidation before surgery 7 becomes warranted.
+to a floor of $\approx$9.50 (ATL 9.5015). The third (ep2922+) broke through the 9.50
+resistance level: epoch-average ATL reached \textbf{9.4873} at ep2938, with a WALD cluster
+self-calibrating its dead-neuron threshold from 9.25 to 9.00 in response to the new loss
+regime. The 9.50 level --- previously a structural resistance floor --- has now been
+conclusively breached.
 
 \textbf{The observation log as a scientific artifact.} The ability to observe training at
 this resolution has motivated a structured field journal maintained in parallel with the
 training run: \texttt{albert\_observation\_log.md} in the \texttt{token-probes/} directory.
 The log contains timestamped field notes documenting routing table snapshots, WALD event
 clusters, cliff dive structure, expert death and resurrection events, surgery gate status,
-and embedding geometry probes. As of ep2915, the log contains 32 field notes covering the
+and embedding geometry probes. As of ep2942, the log contains 43 field notes covering the
 full post-surgery-6 arc.
 
 This methodology---systematic observation of a training run as a scientific process rather

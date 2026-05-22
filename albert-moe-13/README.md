@@ -85,7 +85,7 @@ The architecture combines:
 | LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-22):** Global Epoch 2802 · epoch-ATL **9.2746** · batch-ATL **9.4925** · 6 Net2Net surgeries complete (12L→18L) · training on Modal T4 GPU (~450ms/batch)
+**Training state (2026-05-22):** Global Epoch 2942 · epoch-ATL **9.4873** · chip-ATL **9.1254** · 6 Net2Net surgeries complete (12L→18L) · training on Modal T4 GPU (~450ms/batch)
 
 ---
 
@@ -218,7 +218,7 @@ albert-moe-13/
 │   ├── chaos/                      # v3.0 — 10% chaos layer (~43 MB, invariant enforced)
 │   └── vocab_v3.json               # ByteLevel BPE vocabulary (32,000 tokens)
 ├── models/
-│   ├── albert_v3.0.safetensors     # Active checkpoint (v3.0, 17L)
+│   ├── albert_v3.0.safetensors     # Active checkpoint (v3.0, 18L)
 │   ├── albert_v3.0.config.json     # Architecture config
 │   ├── albert_v3.0.meta            # Global epoch counter
 │   └── README.md                   # Checkpoint registry
@@ -267,9 +267,9 @@ Albert automatically unlocks richer training data as it grows deeper via Net2Net
 | 256H · 5L | CPU (i7-4800MQ) | ~5.5 s |
 | 256H · 12L | CPU (i7-4800MQ) | ~13 s |
 | 256H · 17L | CPU (i7-4800MQ) | ~18 s |
-| 256H · 17L (current) | Modal T4 GPU | ~450 ms |
+| 256H · 18L (current) | Modal T4 GPU | ~450 ms |
 
-T4 GPU training via Modal gives ~40× speedup over CPU for the 17L architecture. `albert-train` handles the full launch: image build with CUDA, volume-cached crate downloads, live log streaming to local dashboard.
+T4 GPU training via Modal gives ~40× speedup over CPU for the 18L architecture. `albert-train` handles the full launch: image build with CUDA, volume-cached crate downloads, live log streaming to local dashboard.
 
 ---
 
