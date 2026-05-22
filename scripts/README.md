@@ -2,7 +2,7 @@
 
 ## ⚠️ IMPORTANT: These scripts are NOT the Albert training pipeline
 
-`transmute_llama.py` and `transmute_full_llama.py` are **Phase 12 POC bridge tools**
+`transmute_llama.py` and `transmute_full_llama.py` are **cross-validation / interoperability tools**
 designed for ecosystem interoperability testing — specifically, validating that the
 ternary quantization math produces identical results whether applied to externally-sourced
 dense models (LLaMA) or natively trained checkpoints.
@@ -21,13 +21,13 @@ albert-moe-13/moe-llm-core/src/bin/inspect.rs        ← weight inspection
 
 | Script | Purpose |
 |---|---|
-| `transmute_llama.py` | POC: reads a LLaMA GGUF blob, applies BitNet-style threshold quantization to a single MLP layer, demonstrates {-1, 0, +1} output. Used to validate that the Python quantization math matches the Rust `pack_tensor` implementation. |
-| `transmute_full_llama.py` | POC: full-model variant of above, packs all layers into a `.tern.json` artifact for cross-language verification. |
+| `transmute_llama.py` | Reads a LLaMA GGUF blob, applies BitNet-style threshold quantization to a single MLP layer, demonstrates {-1, 0, +1} output. Validates that the Python quantization math matches the Rust `pack_tensor` implementation. |
+| `transmute_full_llama.py` | Full-model variant of above, packs all layers into a `.tern.json` artifact for cross-language verification. |
 
 These scripts exist because the ternary ecosystem must be able to **import** weights from
 the broader open-source landscape — not because Albert relies on that landscape.
 An ecosystem that can only consume natively trained models has no interoperability story.
-These scripts prove the interoperability layer works.
+The interoperability layer is implemented and tested here.
 
 ## The native Albert training claim
 

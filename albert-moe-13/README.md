@@ -74,7 +74,7 @@ The architecture combines:
 | Parameter | Value |
 |-----------|-------|
 | Hidden size | 256 |
-| Layers | **17** (v2.0.0: 4L→12L over 10 surgeries; v3.0: ep511 12L→13L, ep547 13L→14L, ep611 14L→15L, ep645 15L→16L, ep701 16L→17L) |
+| Layers | **18** (v2.0.0: 4L→12L over 10 surgeries; v3.0: ep511 12L→13L, ep547 13L→14L, ep611 14L→15L, ep645 15L→16L, ep701 16L→17L, ep2487 17L→18L) |
 | Attention heads | 4 |
 | Experts | 12 |
 | Context length | 256 tokens |
@@ -85,7 +85,7 @@ The architecture combines:
 | LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-17):** Global Epoch 1600+ · epoch-ATL **10.0915** (ep1584) · batch-ATL **9.9925** (ep1584, sub-10.0) · 5 Net2Net surgeries complete (12L→17L) · training on Modal T4 GPU (~450ms/batch)
+**Training state (2026-05-22):** Global Epoch 2802 · epoch-ATL **9.2746** · batch-ATL **9.4925** · 6 Net2Net surgeries complete (12L→18L) · training on Modal T4 GPU (~450ms/batch)
 
 ---
 

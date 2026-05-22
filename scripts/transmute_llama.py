@@ -17,7 +17,7 @@ def quantize(weights, threshold):
     return trits
 
 def main():
-    print("--- RFI-IRFOS TIS: Transmutation Pipeline [Phase 12 POC] ---")
+    print("--- RFI-IRFOS TIS: Transmutation Pipeline ---")
     print(f"Loading weights from: {MODEL_PATH}")
     
     reader = gguf.GGUFReader(MODEL_PATH)

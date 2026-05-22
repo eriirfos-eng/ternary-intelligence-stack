@@ -104,7 +104,7 @@ pub fn run_coherence_test(json_path: &Path, target_layer: &str) -> anyhow::Resul
         input.set(0, i, Trit::Affirm);
     }
     
-    println!("Running sparse_matmul (Forward Pass POC)...");
+    println!("Running sparse_matmul (Forward Pass)...");
     let (output, skipped) = sparse_matmul(&input, &w);
     
     println!("Done.");
