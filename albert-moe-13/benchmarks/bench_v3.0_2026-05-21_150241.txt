@@ -1,0 +1,81 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 2676 epochs | 2026-05-21 15:02
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→ م
+�������������������������������������������������� within�ãomar social IN'tsch low
+ONzm
+    18.5 tok/s  54ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+→ уON period�ferر�uth et still lowal�� around first         became
+ band called��je� airم�� began historyER between� father�
+ real sh father� part 2008EN�ES foundiredIPí� change� IN� ist fatherward� de model low� la
+    16.9 tok/s  59ms/tok
+
+[P3] the ternary number system uses three distinct
+→ � since� town� Die KingIP�al� band�ired
+ beganс�old� His North's sontу sh�-� since which INathу began��-в were�ron� & series�ores model began anotherढ�уنí* first    �ps IN� several
+    18.5 tok/s  54ms/tok
+
+[P4] once upon a time in a kingdom far
+→ Exر IN�     known yhip development�оzm children His how near ser� father became
+ �    Seر schoolhip� de�niThe /� of light anotherathا� in entreired�hip were process fewر including
+tonired'ship        -لniTheIP development
+ given
+    18.5 tok/s  54ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+→ ono became� entre 100ENION schoolLeonawardт yran main now school whoonaEN�iredition United ThereOMíOn beganOR wordt part another� took�zm United There . whoero head� INуany�ious� 28 history became schoolر� topious� part interо�-�
+    17.9 tok/s  56ms/tok
+
+[P6] the EU AI Act entered into force on
+→ ni history cityON school ist began history former� withinAT� EN� since de�رzm! 2008�va far off�رzm togetherERION began nel history��AT away�-�hip dis father band'snieitionired�у togetherifiedن ofнath    م real�-ن
+    17.2 tok/s  58ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+→  South who US large�ERо�ona His�sch town dis y bandzmorn band�
+нath     auxonaIC human�í� national Thereر�к now city� which��ITر who London His────────────────────────────────────────────────────────────────────────'s ageona� band's�ient� school�ona homesk y�ona
+    17.5 tok/s  57ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+→  fatheruth's since- popular'sION water Hisient�tain! head himselfر sh� took�лASу lowley Col$оو� sinceION effect ser Hist�و which &hipنniر water took�
+ر history populationر
+ternThe bandily�ists sh�W town
+    16.1 tok/s  62ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+→  another old�مzmр� whichEN parte�uth Sw� inistsنTit aveconaнí� nationaliousuthilyniр three رALalesuteathر givenru──────────────────────────────────────────────────────────────────────── �� young van�hip�    � began INientу near Ј� vanнble became took father
+    15.9 tok/s  63ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+→ -�ores��
+�مps IN�ona few� of� controloresر partAL band himselfEx�еists low of        eroona�) humanуired�ALona INious *р inter�� � IN homeEx�Ex offا� dezm� fatherر DieST series
+    17.9 tok/s  56ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+→ Ex�ition period since school's mais� century sont beganeroو just�و began US� beganOR capIPzm�ward controluth�� processicsн most�� cell'sऀ population fatherION c began en�
+ dell system fatherرIS town series aux�ا�uth been aux    Ex
+    14.3 tok/s  70ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+→  use inter��ath tookछuth togetherized� �í         early�ales� several� deوpsal�The young beenई)ches childrenر school    zm War�� modelsiologوzmyl several� 40ا؈alر beganni�istssk�zm War entre role
+    17.2 tok/s  58ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+→  few laلر�eleThe head school� Yorktern la South Kingition W livingو ma University deni� Die city Mayلbruth beganold�ariilyazione Ab head��istsTit Die age ont Hisر her began These�؇ cityم══ings� found la�va water head
+    17.2 tok/s  58ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+→  entre albumThe29Exر�� TرIONzm water orderر togetherzm redwardION�     which
+لuthonaious ENhipExona�iredni history Mayуоionaمвí
+!í� aux     childrenンATíiousuth dis�ASExاni
+
+    18.2 tok/s  55ms/tok
+
+[P15] the meaning of life according to
+→  within� " including someر development beganuth basedر INero ser populationرots’ system et� processEx which��
+� deر processists history de�ISality every�ired ofero _खality band de�ION�! yр research IN� periodا؂ calledم��
+    16.4 tok/s  61ms/tok
+

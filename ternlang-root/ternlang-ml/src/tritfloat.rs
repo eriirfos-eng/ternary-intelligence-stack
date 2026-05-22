@@ -418,6 +418,19 @@ impl TritFloat {
     /// layers entirely — the confidence field directly gates MoE routing.
     ///
     /// `threshold` = minimum confidence to route (suggested: 0.3–0.5)
+    ///
+    /// # Discrete gate behaviour (9-state step function)
+    ///
+    /// The 2-trit confidence field encodes exactly 9 states, uniformly spaced in
+    /// [0.0, 1.0]: 0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0.
+    /// Confidence comparisons therefore behave as a step function — the effective
+    /// routing boundary is the first discrete state at or above `threshold`, not
+    /// `threshold` itself. For example, with threshold=0.4 the actual cutoff is
+    /// between 0.375 (does not route) and 0.5 (routes). This is a property of the
+    /// 2-trit format, not a precision limitation: hardware ternary arithmetic
+    /// operates on these discrete states natively without any rounding cost.
+    /// If sub-step routing granularity is needed, increase the confidence field
+    /// width (e.g. 3 trits → 27 states) at the cost of one extra trit per element.
     pub fn should_route(self, threshold: f32) -> bool {
         !self.is_zero() && self.confidence() >= threshold
     }

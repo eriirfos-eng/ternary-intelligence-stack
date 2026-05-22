@@ -1,0 +1,108 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 2403 epochs | 2026-05-20 14:13
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→ يED ══ theيED ══ theيED ══ theيED ══ theيED ══ theيED ══ theيED ══ theيED ══ theيED ══ theيED ══ theيED ══ theيED ══ theيED ══ firstTit first givenhip�с re ist of living�nie
+    17.5 tok/s  57ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+→ ished systems within� house early    country century)�va earlyED�ko�т� ser� beganIP goodva complexation
+ily� age�    death age ══
+ support auf little�   He��
+�ments� theIT within� began�и na�ELIPر
+    16.9 tok/s  59ms/tok
+
+[P3] the ternary number system uses three distinct
+→  makehip language IN dr�hipHe� polski ).ing��ue� early   �] ' lightт reg� find
+� several� age� Ar� ══ker ══ lohip early
+� BrERо
+� 21 fatherيists Br� KingInLe que�
+� lasEN� town
+    17.9 tok/s  56ms/tok
+
+[P4] once upon a time in a kingdom far
+→  justint ).��ENA ══ bandEx first At�
+ que� ══ER�ussр development foi�� These's Br�uthatt take–�ر withinij�He� queção��Ex
+ção began� dansн air�   ن que townily Diefeation
+    17.5 tok/s  57ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+→ � far queIP early now several: first developmentED plus while �о�    àIP developmentkerIS re� together Ї since beganTit \
+ ض 18REDACTEDにED: Atо══ishily] development years
+ researchED�AR
+ the wh        �
+ED ).�
+|[[
+    13.2 tok/s  76ms/tok
+
+[P6] the EU AI Act entered into force on
+→  success�AR que�
+         (
+� early Robert que�ER early off post�EDologicalatt
+ INedright que�ED *auيists� every que�ا earlyIS:�� age van�
+� light right
+� family Cl rel IN old�� y�) 2003 father
+    16.1 tok/s  62ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+→  durch'ted less 2020���IS band INER�),ن� as ══ize HisED�?�
+� off
+� century isttain..�� development?�� lo origin
+�YAR Cl
+ا؇ developmentold� que early find
+�IS early London �: based 50
+    13.0 tok/s  77ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+→ 
+�.� cap��:ized sono� century St� steر ══е successES� � [ days��ient� little�� based origin de� une�led
+ began lasи� dans
+�)ors lowIS resuth auf IN It�� dei *�]ides�Ex
+    13.0 tok/s  77ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+→  th ══ water��ę rel theED� line She headED parteIP polityk school� eineAs 
+ IN can every Clا�hip National ══
+ began 31�ر� make� being� history� By is� �aca5 �koи�ania.) It ══ves БHetern
+    14.5 tok/s  69ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+→  é William town), uneرifiedIA the naи� within Оini� bijists� ══uth ж ist ══ withinilyix onlyious partر:    country que��
+иute� including� part began (anyEN]iniaca
+�ute�Titides partini� rel
+    15.4 tok/s  65ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+→ � que short ══ousonoizedton� las
+ WestEDiste � Hisini INiste que� à began),edES ( ist: � polskiا�x WilliamAiste National� know�
+
+�zm�cia que�hip�A ItرIT� queQ age�ingative não�
+    16.7 tok/s  60ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+→  ma]denTit early   :IP *otherues INED� processtern early control� began while
+
+ tookious�nych began beganations.”� gen historyA ══ group't Shites>� avec��� total that�iste� reghip� van que�:Titown
+    14.5 tok/s  69ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+→  Itاuk� 2020� France� earlyоES much
+ began���ternIS� while� death �Tit� West � both medر family����min National y�� auf    find──────────────────────────────────────────────────────────────────────── original reciaт :Le�
+�AT ( Br══ * less� einا�
+    18.2 tok/s  55ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+→  detern�aniaт�adasSe light que early nowTit everyAs short� |:ي� early� que William� group every�sh ══О�ATmentsativeEx States Brotherious� while earlysh
+Se * death?�tern now near
+�IT�AC ══ beganиão
+    12.7 tok/s  79ms/tok
+
+[P15] the meaning of life according to
+→ ?� long        ER
+ town say� "
+own ser IN? INER� within
+ation yearsож� be control research (�ER again began� His|[[ y ث.” poLe�ر � just long�ists 2003   ed� orderathuthalsن Westham development]
+ history
+    18.9 tok/s  53ms/tok
+

@@ -1,0 +1,68 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 2489 epochs | 2026-05-20 21:52
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→ ञ�shرous�EN��   �EN��   �EN��   �EN��   �EN��   �EN��   �EN��   �EN��   �EN��   � single�ER agele INchestain� ══�ER
+    18.5 tok/s  54ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+→ ET�tain' family C�    �ized�EDle information�le history� seeтley� English�th��
+اج med? lightرER century't effectED aux University�� la auf historyн an    ist
+══�ador who� by��ps ث
+    18.5 tok/s  54ms/tok
+
+[P3] the ternary number system uses three distinct
+→  make began development wouldに an.�iousic success became�� since languageic early��Ex�о� periodER last� every�л an�ic���ham� history school�� York�Thees wurde� along who used group� IN."══ las� place
+    18.5 tok/s  54ms/tok
+
+[P4] once upon a time in a kingdom far
+→ tain�ifiedऔle� med town�� zu        EN� history� school
+�ION. ageic��'s. town� las low town las� lasOn� Y� small.��br near.le        ized 29� las�══�AC ist� die�ality
+    17.9 tok/s  56ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+→ � 15� death/���uth's His. lasاit�leر�istsic school�iousle�ऄaca somelic�iousother base�        ي under townet since� some father�OR�──────────────────────────────────────────────────────────────────────── 1 historyرes town�� father��ExICites��
+    17.9 tok/s  56ms/tok
+
+[P6] the EU AI Act entered into force on
+→ ER death� fatherر�� light based history lessthт success't ist� father make'tExth�ED lessner� town en ist�Q�   ner� .� by�ReOn�way� know�ELami══� inछ 2008�ome�� 2008ي's early cons
+    17.5 tok/s  57ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+→ � eine�th�� during� town nel began within� history la album���IP common�� process history early�ن IN another��sonIP�orn livingEx� US� town�ic Apriltain.�EN�ional album ant�� enي�ner France deAR
+    18.5 tok/s  54ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+→ �ty living father IN� far– history� littleт became find� basedЮ�her townęタ little� przez successн�� history based 1le�وth़ER livingر firstнry�old YorkExو�On�' ant�. town became�ues sayт
+    18.5 tok/s  54ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+→ �leless town��� first town became�.� found King He� townDner� Paris� becameicтぼ <ic� airD ).� every══ality�lement �و�ous� role now� townIS�Ь para rel��ona la�Ь town
+    18.2 tok/s  55ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+→  18ي children�. a success.by� earlylenerating should a West ==ا� within��ona light schoolЮ since las by� HisED� every makeuth schoolऔY basedي�by� group � C──────────────────────────────────────────────────────────────────────── century� 29ath� several�et────────────────────────────────────────────────────────────────────────�� cap
+    18.9 tok/s  53ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+→  be town town lasake� enHe wurdeiousTitth�He success� die effect�тIt Yorkious near� mait His�He. success His�� process�e school�ic HisK med history tookرе history� within see� history�OR history� down�iste
+    18.5 tok/s  54ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+→ �ER century a success along another�th takeカCh� history .�le        wardcia� based historyカ human�� His Parises history� & townYynamenteized    eachARious� deathami� know �و took town), period�� en�ko�resт
+    18.5 tok/s  54ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+→ le� fourاص.�ient century�ر� post�leko His0� common 29� de�ヵ based���adas:م support� med��و War port══ byva area la�و� rel�leمigeesт�tern deرر istaca
+    17.2 tok/s  58ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+→  townleヰ home� las Co�� along� de══� history� father school � INath�� air�et town by QuаIP� cap� nachاض� ma�Title lo human�
+ � common lasاث if� part med� given along IN��  
+    17.2 tok/s  58ms/tok
+
+[P15] the meaning of life according to
+→  die�ton� change�le town lo along IN town� myalityron� century town success���ional IN�  townle�� postERЉ began�dو�� a aniousIP town las process� change townole�et town.zmر including� Co
+    16.7 tok/s  60ms/tok
+

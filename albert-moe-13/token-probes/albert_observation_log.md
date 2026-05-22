@@ -5,6 +5,376 @@
 
 ---
 
+## Watch Session 2 — 2026-05-22T12:49Z (ep2858)
+
+**Gap bridge:** ep2601 (FN25, 2026-05-21T07:43Z) → ep2858 (2026-05-22T12:49Z)  
+**Elapsed since last note:** ~31 hours, ~257 epochs  
+**Last known state entering gap:** Bounce phase 3, since_best=25, epoch-ATL 9.5800, embedding frozen (revised probe trigger 9.55), cov[high]=24 sub-25 again
+
+**What happened in the gap (reconstructed from batch_history.csv + dashboard screenshot ep2832):**
+
+Descent resumed and sustained. The bounce phase 3 that was beginning at ep2581 (since_best=5, ATL 9.5800) resolved into a new descent leg that produced continuous ATL breaks through at least ep2858. Batch_history.csv epoch-average ATL (from sampled batch data, partial epochs) reached **9.5753** at ep2858 — improvement of +0.0047 nats from the ep2576 ATL of 9.5800. Server-side epoch-ATL (all 300 batches, from dashboard screenshot at ep2832) was **9.2522**, indicating the model has substantially outperformed the sampled CSV estimate. The 1.17% session improvement chip visible in the screenshot implies the session started (or model arrived at a baseline) around epoch-ATL ~9.3632 before pulling to 9.2522.
+
+**Probe trigger status:** CROSSED. Revised trigger was 9.55. Dashboard epoch-ATL 9.2522 is 0.2978 nats below the trigger. Embedding probe due — current embedding freeze status unknown (last confirmed frozen at ep2576/84+ epochs). Next probe warranted this session.
+
+**ep2832 dashboard screenshot facts (2026-05-22T10:23Z):**
+- Epoch-ATL: 9.2522 · batch 125/300 · 1.17% session improvement
+- CMP=100%, PLN=91%, ABS=66%, LNG=61%, INT=100% — all specialists active
+- WALD ep2826: 6.2% fill, n=1500 — fired and passed
+- Traffic light: 0 high / 78% mid / 4% red
+- T-610 trail: 9.5849 · T-2584 trail: 9.5915 · EP AVG line: 9.5716
+- L13 gradient leading (standard upper-layer profile)
+
+**ep2858 batch_history.csv snapshot (2026-05-22T12:49Z):**
+- Latest entry: ep2859, batch loss ~9.58 (partial epoch, 135 batches logged)
+- Recent epoch-avgs (sampled): ep2851=9.5779, ep2854=9.5822, ep2857=9.5803, ep2858=9.5753
+- Trend: oscillating descent, new epoch-avg ATL at ep2858
+
+**Open observations entering Session 2:**
+1. Embedding freeze status post-probe-trigger: unknown — was frozen at 84+ epochs at ep2576. Has it thawed?
+2. cov[high] trajectory: last reading was 24 at ep2601 (sub-25 fourth touch). Current distribution unknown.
+3. Surgery gate: plateau gate was blocking (model descending). At 9.2522, descent is steep — surgery not imminent.
+4. myc_stable: was 75 at ep2601. Current value unknown but likely 200+ given ~257 epochs elapsed.
+
+---
+
+## Field Note 26 — 2026-05-22T12:49Z · ep2858 — SESSION 2 OPEN · gap bridge complete · ATL 9.5753 (sampled)
+
+**Epochs covered:** gap bridge (ep2601→ep2858)
+
+**Summary table (epoch-avg ATL from batch_history.csv, partial epoch samples):**
+| Epoch | epoch-avg | delta | notes |
+|-------|-----------|-------|-------|
+| 2601 | 9.5905 | +0.0105 | last FN25 reading, since_best=25 |
+| 2626 | 9.6025 | — | new epoch-avg ATL after bounce resolved |
+| 2627 | 9.5983 | -0.0042 | |
+| 2661 | 9.5955 | -0.0028 | |
+| 2662 | 9.5937 | -0.0018 | |
+| 2698 | 9.5930 | -0.0007 | slow grind |
+| 2739 | 9.5915 | -0.0015 | |
+| 2765 | 9.5881 | -0.0034 | |
+| 2779 | 9.5856 | -0.0025 | |
+| 2781 | 9.5835 | -0.0021 | |
+| 2783 | 9.5813 | -0.0022 | |
+| 2832 | ~9.2522 | — | dashboard epoch-ATL (server-side, all batches) |
+| 2851 | 9.5779 | -0.0034 | sampled |
+| 2858 | **9.5753** | -0.0026 | new epoch-avg ATL (sampled) |
+
+Note: "sampled" = batch_history.csv partial capture (135-200 of 300 batches per epoch). Server-side epoch-ATL at ep2832 was 9.2522 — substantially better, suggesting the sampling is losing the best-performing batch windows.
+
+**Interpretation:** The ~257-epoch unobserved window produced steady grinding descent. No surgery (model actively descending, plateau gate blocking). WALD ep2826 fired and passed without escalation. All specialists (CMP/PLN/ABS/LNG/INT) saturated. The model is in a deep descent phase: 9.5800 (ep2576) → 9.2522 (ep2832) = **0.3278 nats** in ~256 epochs, or ~1.28 mnat/epoch average descent rate. This is faster than the pre-surgery-6 descent rate.
+
+**Probe plan for Session 2:** Run token probe at first opportunity with live checkpoint. Compare to ep2576 snapshot in `token-probes/snapshots/ep2576_18L/`. Expected: embedding may have thawed (loss is now ~0.33 nats below the 9.55 trigger; myc_stable presumably high).
+
+**Status: SESSION 2 OPEN. ep2858 live. Descent ongoing. Probe trigger 9.55 long passed. Next ATL watch and embedding probe this session.**
+
+---
+
+## Field Note 27 — 2026-05-22T13:14Z · ep2860 — CLIFF DIVE · ATL chip 9.2092 · session +1.83%
+
+**Observed via dashboard screenshot.**
+
+**ATL chip: 9.2092** (prev reading: 9.2522 at ep2832 · delta: **-0.0430** nats · session improvement 1.17% → **1.83%**)
+
+| Metric | Value |
+|--------|-------|
+| EP chip | 2860 (18L) · batch 298/300 |
+| ATL chip | **9.2092** · 1.83% session |
+| EP Avg line | 9.5308 (right-edge label) |
+| Recent epoch avgs (events bar) | 9.5288 · 9.5217 · 9.5273 · 9.5312 |
+| CMP / PLN / ABS / LNG / INT | 100% / 94% / 80% / 74% / 100% |
+| Traffic light | G 0.14% / O 84% / R 2% |
+| Gradient leading layer | L13 (yellow) · L6 red spike |
+| WALD visible | diamond at ~ep2803.58 (historical, already passed) |
+
+**Chart event:** sharp cliff dive at ep2860 — loss descends steeply from ~9.61 to ~9.52 region in a compressed vertical move. All SMAs (987/1597/2584) converging downward at the cliff base. EP Avg line 9.5308 visible as horizontal dotted line. The drop is the sharpest single-epoch move observed this session.
+
+**Epoch avgs (server-side from events bar):** 9.5288, 9.5217, 9.5273, 9.5312 — these are ~0.05 nats better than the batch_history.csv partial-epoch estimates (~9.57). CSV sampling is consistently losing the low-loss batches; server-side avgs are the ground truth.
+
+**ATL chip note:** The chip tracks the all-time best single-batch (or intra-epoch smoothed) loss. At 9.2092, it has improved -0.0430 from the ep2832 reading (9.2522). The 1.83% session improvement is rising — model actively setting new micro-batch records during this descent.
+
+**Status: ACTIVE DESCENT. ep2860 cliff dive confirmed. ATL 9.2092 new record. EP Avg converging toward 9.53. No WALD escalation visible. Next watch: ep2875 area.**
+
+---
+
+## Field Note 28 — 2026-05-22T13:45Z · ep2866 — CLIFF BASE CONSOLIDATION · WALD CLUSTER · ROUTING SHIFT
+
+**Dashboard screenshot. ep2866 batch 102/300.**
+
+| Metric | FN27 (ep2860) | FN28 (ep2866) | delta |
+|--------|--------------|--------------|-------|
+| ATL chip | 9.2092 | 9.2092 | 0 |
+| EP Avg | 9.5308 | 9.5321 | +0.0013 |
+| Server epoch avgs | 9.52–9.53 | 9.5218–9.5325 | stable |
+| CMP | 100% | 100% | — |
+| PLN | 94% | 90% | -4% |
+| ABS | 80% | **51%** | **-29%** |
+| LNG | 74% | **54%** | **-20%** |
+| INT | 100% | 95% | -5% |
+| MEM | 5% | **23%** | **+18%** |
+| SYN | 5% | **13%** | **+8%** |
+| Traffic R | 2% | 4% | +2% |
+
+**Routing shift:** ABS and LNG shedding share dramatically during cliff-base consolidation. MEM jumping from 5%→23% and SYN from 5%→13% suggests the model is reorganizing expert specialization at the new loss level. CMP and INT remain dominant anchors.
+
+**WALD cluster at cliff base:** 4–5 diamond markers visible on chart clustered around ep2858–2866 at ~9.52–9.54 loss. Multiple WALD events firing in rapid succession — consistent with high routing volatility at the bottom of a sharp descent (large loss variance triggers fill threshold repeatedly).
+
+**Chart:** Full cliff dive now visible — flat at 9.60 through ep2800, then steep descent ep2800→ep2866 reaching ~9.52 base. SMAs (SMA-21 orange, SMA-55) leading down. EP Avg dotted line at 9.5321. Post-cliff oscillation tight range 9.52–9.55.
+
+**Status: CLIFF BASE. ATL chip stable at 9.2092. Routing reorganization in progress — ABS/LNG giving way to MEM/SYN. WALD cluster active. EP Avg ~9.532. Model likely consolidating before next pull or bounce.**
+
+---
+
+## Field Note 29 — 2026-05-22T15:28Z · ep2883 — NEW EPOCH-AVG ATL · 9.5302 → 9.5236
+
+**Source:** dashboard notification screenshot. EP 2883 · batch 299/300.
+
+**ATL BREAK:** Epoch avg **9.5236** beats 9.5302 · delta **-0.0066 nats**
+
+| Metric | FN28 (ep2866) | FN29 (ep2883) | delta |
+|--------|--------------|--------------|-------|
+| Epoch-avg ATL (server-side) | ~9.532 | **9.5236** | -0.0066 |
+| T-610 trail | 9.5297 | 9.5297 | stable |
+| EP AVG line | 9.5321 | 9.5236 | -0.0085 |
+| CMP | 100% | 100% | — |
+| PLN | 90% | 94% | +4% |
+| ABS | 51% | **71%** | **+20%** |
+| LNG | 54% | 48% | -6% |
+| INT | 95% | 84% | -11% |
+| MEM | 23% | **12%** | **-11%** |
+| SYN | 13% | 2% | -11% |
+| Traffic high | 4% | 6.16% | +2% |
+
+**Routing recovery:** The cliff-base routing shift (FN28: ABS 51%, MEM 23%) is partially resolving. ABS has rebounded +20pp to 71%. MEM compressed back to 12%. SYN collapsed to 2%. Model returning toward the pre-cliff specialist profile with CMP/PLN/INT anchors, though LNG and INT are still below pre-cliff levels (LNG was 74% at FN27, now 48%).
+
+**Events bar (server-side epoch avgs recent):** 9.5363, 9.5443, 9.5427, 9.5337 — confirming steady descent since cliff. The best of those (9.5236) is now the new epoch-avg ATL. The T-610 trail at 9.5297 will be surpassed within ~2 epochs if descent continues at this pace.
+
+**Chart:** Full cliff dive arc visible ep2800→ep2866. Post-cliff range tight ~9.52–9.54. EP AVG dotted line now marking 9.5236 as new floor.
+
+**Status: NEW EPOCH-AVG ATL 9.5236. Routing recovering post-cliff. Descent sustained. T-610 trail (9.5297) about to fall. Next watch: T-610 break and whether ABS continues recovering.**
+
+---
+
+## Field Note 30 — 2026-05-22T16:01Z · ep2887 — PROVISIONAL SAMPLED ATL · 9.5734 → 9.5699
+
+**Source:** batch_history.csv. ep2887 partial (74/~200 batches).
+
+**Provisional sampled ATL:** ep2887 avg **9.5699** (n=74) · prev sampled ATL ep2867 at 9.5734 · delta **-0.0035** · flagged provisional until epoch completes.
+
+Recent sampled epoch-avgs (all ~180-217 batches except ep2887):
+ep2882=9.5814 · ep2883=9.5842 · ep2884=9.5806 · ep2885=9.5783 · ep2886=9.5796 · ep2887=**9.5699** (partial)
+
+Trend: slow grinding descent in the 9.578–9.596 range post-cliff. No new WALD or routing data in CSV. Server-side epoch-avg ATL remains 9.5236 (FN29, ep2883).
+
+**UPDATE 2026-05-22T16:06Z:** ep2887 now n=130. Sampled ATL **confirmed 9.5696** (d-0.0038 from ep2867 9.5734). Training paused mid-ep2887 for weight pull — expect restart acceleration on resume.
+
+**Status: SAMPLED ATL CONFIRMED 9.5696. Training paused for weight pull. Awaiting restart.**
+
+---
+
+## Field Note 31 — 2026-05-22T18:06Z · ep2910 — ATL TIE · four-step descent · 9.5696
+
+**Source:** batch_history.csv. ep2910 partial (142/~170 batches).
+
+**Four consecutive descent steps post-restart:**
+ep2907=9.5750 → ep2908=9.5738 → ep2909=9.5731 → ep2910=**9.5696** (tie)
+
+ep2910 matches sampled ATL (ep2887, 9.5696) to 4 decimal places with 142 batches. ep2887 ATL set at n=130 — ep2910 has more batches and is still partial. If it completes below 9.5696 it will be a confirmed new sampled ATL.
+
+Context: post-restart oscillation (ep2890–2906) appears to have resolved into a new descent leg. The step-down began ep2907 and has delivered four straight improvements. Restart acceleration arriving ~15 epochs later than typical.
+
+**UPDATE 2026-05-22T18:21Z:** ep2910 completed at 9.5722 (n=162) — the partial tie was a sampling artifact, final avg came in higher. Descent continued choppily through ep2911=9.5725, ep2912=9.5840 (bounce), ep2913=9.5716, ep2914=9.5837 (bounce), then ep2915 partial (61 batches) delivered **new provisional sampled ATL 9.5694** (raw 9.569428, d-0.0002 from ep2887).
+
+**Status: SUPERSEDED — second cliff dive confirmed on dashboard. See FN32.**
+
+---
+
+## Field Note 32 — 2026-05-22T18:31Z · ep2915 — SECOND CLIFF DIVE · ATL chip 9.1370 · epoch-avg ATL 9.5015
+
+**Source:** dashboard screenshot. EP 2915 · batch 192/300.
+
+**ATL chip: 9.1370** — new all-time record · prev 9.2465 · delta **-0.1095 nats**
+
+| Metric | FN29 (ep2883) | FN32 (ep2915) | delta |
+|--------|--------------|--------------|-------|
+| ATL chip | 9.2465 | **9.1370** | -0.1095 |
+| EP AVG (server-side) | 9.5236 | **9.5162** | -0.0074 |
+| T-610 trail | 9.5297 | 9.5114 | -0.0183 |
+| Best epoch avg (events bar) | 9.5236 | **9.5015** | -0.0221 |
+| CMP | 100% | 100% | — |
+| INT | 84% | 90% | +6% |
+| PLN | 94% | 77% | -17% |
+| LNG | 48% | 58% | +10% |
+| ABS | 71% | 61% | -10% |
+| SYN | 2% | 16% | +14% |
+| CTX | 7% | 0% | -7% |
+| Traffic high | 6.16% | 6.26% | stable |
+| Traffic red | 3% | 5% | +2% |
+
+**Chart:** Second cliff dive visible starting ~ep2887 restart — loss dropped from ~9.579 to ~9.495-9.500 base, steeper and deeper than the first cliff (ep2860, which reached ~9.52). Tight oscillation cluster at cliff base with multiple WALD diamonds. The AdamW restart acceleration arrived ~15–25 epochs post-restart and produced a dive larger than the pre-restart cliff.
+
+**Server-side epoch-avg ATL:** Events bar shows 9.5015 — beats previous server-side ATL of 9.5236 by **-0.0221 nats**. EP AVG line at 9.5162.
+
+**Routing shift:** SYN surging to 16% (was ~2%), CTX collapsing to 0%, PLN dropping -17%. LNG and INT gaining. Similar cliff-base reorganization pattern to FN28 but different expert mix — SYN leading this time instead of MEM.
+
+**WALD cluster:** Multiple diamonds at cliff base visible on chart (~ep2900–2915 range).
+
+**Gradient:** Upper layers (L17, L15, L14) leading with yellow bars. L8 red spike visible.
+
+**Status: SECOND CLIFF DIVE. ATL chip 9.1370 (-0.1095). Server-side epoch-avg ATL 9.5015. Restart acceleration delivered late but massive. Routing reorganizing at new cliff base. Monitor for consolidation pattern matching FN28.**
+
+---
+
+## Field Note 25 — 2026-05-21T07:43Z · ep2601 — cov[high]=24 SUB-25 AGAIN · triple death ep2596 · since_best=25
+
+**Epochs covered:** ep2596–ep2601
+
+**Epoch summaries:**
+| Epoch | loss_avg | delta_ATL | since_best | wald_sev | cov[high] | dead | blooming | myc_stable |
+|-------|----------|-----------|------------|----------|-----------|------|----------|------------|
+| 2596 | 9.5995 | +0.0195 | 20 | 0.947 | 29 | **3** | 3 | 70 |
+| 2597 | 9.5883 | +0.0083 | 21 | 0.947 | 30 | 0 | 2 | 71 |
+| 2598 | 9.5982 | +0.0182 | 22 | 0.947 | 29 | 0 | 2 | 72 |
+| 2599 | 9.5942 | +0.0142 | 23 | 0.947 | 28 | 0 | 3 | 73 |
+| 2600 | 9.5994 | +0.0194 | 24 | 0.947 | 28 | 0 | 2 | 74 |
+| 2601 | 9.5905 | +0.0105 | 25 | 0.947 | **24** | 1 | 2 | 75 |
+
+**TRIPLE DEATH at ep2596:** dead=3 is the highest single-epoch death count since surgery-6. Three experts lost in one epoch: L10E10, L13E11, L17E11 all resurrected from their layer-0 neighbors (σ=0.050). 1246 tensors reloaded. The triple event occurred at the beginning of the epoch (07:15:58Z) coinciding with step=21000 and cov[high]=29 — still above 25 at that point. Recovery was complete by ep2597: dead=0, no further mass casualties through ep2600.
+
+**cov[high]=24 at ep2601 — FOURTH SUB-25 PENETRATION:** coverage=[184,1292,24]. The descent from FN24's bounce (27→27) tracked: 29→30→29→28→28→24. The 30 at ep2597 is notable — highest reading since the ep2582-2586 storm peak — before a steady 6-epoch descent to sub-25 again. Same structural pattern as prior touches: gradual descent followed by single-epoch penetration.
+
+**dead=1 + resurrection at ep2601:** L2E11 resurrected from L2E1 (σ=0.050). The death occurred in the same epoch that cov[high] broke below 25. Same coupling seen in FN24: an expert dies when routing compression arrives. L2 (layer 2) is deeper in the network than the prior dead-3 event which hit L10/L13/L17 (mid-to-late layers). Layer variety is widening.
+
+**since_best=25 — new high:** Longest gap since ATL (9.5800 at ep2576) ever recorded post-surgery-6. The model has not found a new ATL in 25 consecutive epochs. Loss oscillation range: 9.5883–9.5995 across this window, converging back toward ATL rather than moving away. ep2597 at 9.5883 (d+0.0083) is the second-closest approach to ATL this run.
+
+**Loss trajectory note:** ep2597 briefly dipped to 9.5883 — closest since ep2581 (which SET the ATL). This was one epoch after the triple resurrection. Post-resurrection acceleration continuing the pattern seen at previous restarts (free gradient improvement from AdamW buffer reset on fresh weight landscape).
+
+**TELE:** L17=0.055 (at threshold, not above). All 18 layers frozen. myc_L0-L3=[1.49/1.54/1.52/1.58]e-9 unchanged throughout — GRAD frozen.
+
+**Probe status:** loss_avg=9.5905 at ep2601, threshold=9.55. Delta to probe trigger: 0.0405. No probe.
+
+**WALD:** sev=0.947, fill=6.2%, mass=9.598–9.600 stable. Plateau counter: 75 stable epochs by ep2601. Amp OFF throughout.
+
+**ep2602 status:** in progress at batch ~90/300, LR≈2.78e-4. Loss at batch 80: 9.4873 (batch-level noise, not epoch avg).
+
+**Interpretation:** The fourth sub-25 cov[high] penetration follows the established pattern: gradual descent, single-epoch breach, likely bounce ahead. The triple-death event at ep2596 was an unusual disruption — three simultaneous expert collapses followed by immediate resurrection — yet the model recovered cleanly within one epoch. The post-resurrection delta improvement at ep2597 (9.5883) is consistent with the restart acceleration hypothesis. If the current cov[high] descent sustains past ep2601, this would be the second multi-epoch sub-25 window. Combined with since_best=25 pressure and the approaching 300-batch WALD re-evaluation, the next 3–5 epochs are structurally interesting.
+
+---
+
+## Field Note 24 — 2026-05-21T07:16Z · ep2595 — cov[high] window closed · blooming collapsed 9→1 · no new ATL
+
+**Epochs covered:** ep2592–ep2595
+
+**Epoch summaries:**
+| Epoch | loss_avg | delta_ATL | since_best | wald_sev | cov[high] | dead | blooming | myc_stable |
+|-------|----------|-----------|------------|----------|-----------|------|----------|------------|
+| 2592 | 9.5906 | +0.0106 | 16 | 0.947 | **18** | 1 | 4 | 66 |
+| 2593 | 9.5948 | +0.0148 | 17 | 0.947 | **21** | 1 | 2 | 67 |
+| 2594 | 9.5992 | +0.0192 | 18 | 0.947 | 27 | **2** | 1 | 68 |
+| 2595 | 9.5947 | +0.0147 | 19 | 0.947 | 27 | 1 | 1 | 69 |
+
+**cov[high] NEW MINIMUM — 18 at ep2592:** coverage=[190,1292,18]. One epoch below FN23's 19. The three-epoch sub-25 window: ep2591=19, ep2592=18, ep2593=21 — then hard bounce to 27 (ep2594) and hold (ep2595). This is the deepest penetration below 25 in the entire post-surgery-6 run. Prior touches bounced immediately; this window sustained for 3 consecutive epochs before rebound.
+
+**blooming COLLAPSE — 9→4→2→1:** The inverse coupling to cov[high] is unambiguous. blooming peaked at 9 when cov[high]=19 (ep2591), then dropped each epoch as cov rose: 4 at ep2592, 2 at ep2593, 1 at ep2594-2595. The routing compression that drove cov[high] below 25 required experts to occupy new niches (blooming); as coverage dispersed back out, those niches closed and blooms couldn't sustain. Zero new net growth from this cycle.
+
+**dead=2 spike at ep2594:** First time since surgery-6 that two experts died in one epoch. Coincides exactly with cov[high] rebounding from 21→27. Interpretation: two experts that had bloomed into the newly-compressed routing topology lost their niche once the compression reversed. Rapid death rather than fade — consistent with niche collapse rather than starvation.
+
+**Loss did not track cov compression:** Best epoch in this window is ep2592 at 9.5906 (d+0.0106), still +0.0106 above ATL 9.5800. The routing geometry reorganised — three sub-25 epochs, maximum bloom count, two expert deaths on rebound — but the loss surface did not capture a new low. The lag hypothesis (loss drop 1–3 epochs after geometry shift) was not confirmed this cycle. Either the geometry change was not productive, or the rebound erased any accumulated gain.
+
+**myc_stable steady:** 66→67→68→69, one increment per epoch. No disruption from the bloom/death activity above.
+
+**GRAD frozen throughout:** n=0.0000 at epoch boundaries, n=0.0019–0.0021 mid-epoch. myc_L0-L3=[1.49/1.54/1.52/1.58]e-9 unchanged. TELE L17=0.055, all 18 layers stable.
+
+**since_best=19 at ep2595:** Longest gap since ATL. No new ATL in this note window.
+
+**Interpretation:** The cov[high] sub-25 window was real and sustained, but produced no loss dividend. The bloom-death cycle confirms expert ecosystem is responsive to routing pressure. The failure to translate geometry improvement into ATL suggests the 18L layer added by surgery-6 is still being integrated — routing adapts but has not yet found the loss minimum accessible from the new topology. Watch for next cov[high] descent; if it coincides with a loss response this time, the integration lag is resolving.
+
+**ep2596 status:** in progress at batch 52/300, LR=1.59e-4 at last check.
+
+---
+
+## Field Note 23 — 2026-05-21T06:57Z · ep2591 — cov[high]=19 · THIRD TOUCH BREAKS THROUGH · blooming=9 NEW MAX
+
+**Epochs covered:** ep2590–ep2591
+
+**Epoch summaries:**
+| Epoch | loss_avg | delta_ATL | since_best | wald_sev | cov[high] | dead | blooming | myc_stable |
+|-------|----------|-----------|------------|----------|-----------|------|----------|------------|
+| 2590 | 9.5904 | +0.0104 | 14 | 0.947 | 26 | 1 | 5 | 64 |
+| 2591 | 9.5975 | +0.0175 | 15 | **0.948** | **19** | 1 | **9** | 65 |
+
+**cov[high] BREAKS BELOW 25:** ep2591 coverage=[194,1287,19] — cov[high] dropped from 26→19 in one epoch. This is the first confirmed sub-25 penetration in the third approach. Prior touches: ep2573=25 (FN17, bounce), ep2581=25 (FN18, ATL set), ep2591=19 (this note, new minimum). The 19 represents only 1.3% of the 1500-token WALD window in the high zone — routing is compressing significantly.
+
+**blooming=9 — NEW MAXIMUM:** Previous record was 6 (ep2589). The jump from 5→9 in one epoch, coinciding exactly with the cov[high] collapse from 26→19, is the strongest signal yet of the geometry-routing coupling hypothesis: as coverage concentrates, experts find new routing niches and bloom. myc_stable=65 (steady increment, no disruption).
+
+**WALD sev ticked to 0.948:** Slight uptick from 0.947. mass=9.596 at ep2591. fill holds at 6.2%. The severity increase may reflect the routing concentration (high-zone tokens being processed more intensively by fewer experts).
+
+**Loss oscillation:** ep2590 pulled slightly closer to ATL (d+0.0104), ep2591 retreated (d+0.0175). The loss is not tracking the cov[high] drop in this cycle — model is reorganising routing geometry without an immediate loss benefit. If the geometry-coupling holds, the loss drop should lag by 1–3 epochs.
+
+**ep2592 in progress:** batch 62/300 at 06:50Z, LR=2.90e-4 (early epoch).
+
+**TELE:** L17=0.055, all 18 layers frozen. myc_L0-L3=[1.49/1.54/1.52/1.58]e-9 unchanged.
+
+**Probe status:** loss_avg=9.5975, threshold=9.55. Delta to probe trigger: 0.0475. No probe this cycle.
+
+**Interpretation:** The cov[high]=19 break is the most structurally significant event since the ATL at ep2576. The question is whether ep2592+ will sustain sub-25 or bounce back as in the prior two touches. If sustained alongside continued blooming, the routing compression is genuine adaptation rather than transient fluctuation. Loss response expected within 1–3 epochs if the adaptation is productive.
+
+---
+
+## Field Note 22 — 2026-05-21T06:42Z · ep2589 — cov[high]=26 · THIRD APPROACH TO 25 · NEW RESURRECTION
+
+**Epochs covered:** ep2588–ep2589
+
+**Epoch summaries:**
+| Epoch | loss_avg | delta | since_best | wald_sev | cov[high] | dead | blooming | myc_stable |
+|-------|----------|-------|------------|----------|-----------|------|----------|------------|
+| 2588 | 9.5964 | +0.0164 | 12 | 0.947 | 30 | 0 | 5 | 62 |
+| 2589 | 9.5956 | +0.0156 | 13 | 0.947 | **26** | 1 | 6 | 63 |
+
+**cov[high] THIRD APPROACH:** 37 → 35 → 30 → 26 across ep2586–ep2589. The descent from storm-peak high back toward the 25 threshold is accelerating. Prior touches: ep2573 (cov[high]=25, FN17) and ep2581 (cov[high]=25, FN18, which coincided with ATL 9.5800). Each 25-touch has been followed by a bounce with subsequent loss descent. Third touch may confirm this as structural cycling.
+
+**WALD sev UPTICK:** ep2588 sev=0.947 (up from 0.946 at ep2587). Slight regression but fill stable at 6.2%. coverage=[162,1308,30] → [173,1301,26] across ep2588–ep2589. The cov[high] drop from 30 to 26 is the largest single-epoch drop in this bounce window — routing concentration shifting away from the high end.
+
+**NEW RESURRECTION ep2589:** dead=1, blooming=6. After ep2587's clean slate (dead=0), one expert died in ep2589. blooming=6 is the highest recorded post-surgery-6. The combination of a new death + rising bloom count is consistent with continued ecosystem turnover, not quiescence.
+
+**LOSS near-flat:** delta flipped from -0.0299 (ep2587) to +0.0164 / +0.0156 (ep2588/ep2589). The bounce is holding — model is 0.0156 above ATL but not retreating fast. Closest approach since ep2587 (9.5830) remains at ATL-delta=0.0030 from ep2587; ep2590 in progress (batch 83/300 at 06:40Z, LR=2.09e-5).
+
+**TELE:** L17=0.055, all 18 layers frozen. myc_L0-L3=[1.49/1.54/1.52/1.58]e-9 unchanged.
+
+**Probe status:** loss_avg=9.5956, threshold=9.55. Delta to probe trigger: 0.0456. No probe this cycle.
+
+**Interpretation:** The post-storm clearing (ep2587) did not immediately produce a new ATL — instead the model entered a tight oscillation 0.015–0.020 above ATL. cov[high] descent (30→26) with rising bloom count (5→6) and persistent single-expert deaths suggest the ecosystem is still reorganising. If the cov[high]=25 third touch arrives, watch for whether loss_avg is at or below 9.5800 at that moment — that would confirm the geometry-routing coupling hypothesis (coverage compression → route efficiency gain → ATL).
+
+---
+
+## Field Note 21 — 2026-05-21T06:33Z · ep2587 — 9.5830 · CLOSEST APPROACH TO ATL · RESURRECTION STORM CLEARS
+
+**Epochs covered:** ep2586–ep2587
+
+**Epoch summaries:**
+| Epoch | loss_avg | delta | since_best | wald_sev | cov[high] | dead | blooming | myc_stable |
+|-------|----------|-------|------------|----------|-----------|------|----------|------------|
+| 2586 | 9.6129 | +0.0119 | 10 | 0.946 | 37 | 3 | 4 | 60 |
+| 2587 | 9.5830 | **-0.0299** | 11 | 0.946 | 35 | **0** | **5** | 61 |
+
+**RESURRECTION STORM — ep2586:** dead=3 — triple simultaneous resurrection: L4E11 from L4E0, L6E11 from L6E0, L14E11 from L14E1. All fired at 06:23:31 (same second). This is the peak of the escalating dead-expert series: 1(ep2583) → 1(ep2584) → 2(ep2585) → 3(ep2586). Three different layers, three different experts, same σ=0.050. cov[high]=37 (highest in this bounce window).
+
+**STORM CLEARS — ep2587:** dead=0. After four consecutive epochs of expert death, the ecosystem returns to stability in one step. blooming=5 (highest recorded in post-surgery-6 watch). myc_stable=61 (consistent increment). The clearing coincides with the sharpest loss descent of the bounce phase: -0.0299.
+
+**CLOSEST APPROACH TO ATL:** ep2587 loss_avg=9.5830 is 0.0030 above the ATL of 9.5800 (ep2576). This is the nearest miss since the ATL was set 11 epochs ago. Since_best counter at 11 — the model is inching back toward it. If the descent rate from ep2587 continues even half as fast, a new ATL is within 1–3 epochs.
+
+**GRAD step=18560 (ep2588 in progress):** myc_L0-L3=[1.49/1.54/1.52/1.58]e-9 unchanged. Embedding gradient starvation persists. Loss threshold for probe: 9.55 (0.028 below current).
+
+**TELE:** L17=0.055, all layers frozen. No differentiation signal.
+
+**WALD ep2587:** fill=6.2%, sev=0.946, cov[high]=35. No threshold triggers.
+
+**Interpretation:** The resurrection storm (ep2583–2586) appears to have been a productive ecosystem purge — collapsing and re-seeding low-utility experts in preparation for continued descent. ep2587's 0-dead / 5-blooming / 9.5830 result is consistent with this hypothesis: the fresh experts are routing differently and the loss dropped -0.030 as a result. This is the clearest signal yet that a new ATL is imminent.
+
+**Thresholds:** No triggers. since_best=11. Watch closely — next epoch may break ATL.
+
+---
+
 ## Field Note 20 — 2026-05-21T06:20Z · ep2585 — DOUBLE RESURRECTION L6 · LOCAL LOG STREAM CUT
 
 **Epochs covered:** ep2585 · ep2586 partial (log stream cut at batch 11/300)

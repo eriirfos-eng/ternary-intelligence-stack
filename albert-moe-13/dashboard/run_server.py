@@ -165,11 +165,11 @@ _mycelium = MyceliumEngine(_BEST_MODEL, _VOCAB_FILE)
 # Tuple: (csv_mtime, log_size, combined_bytes) — invalidated when either file changes.
 _batch_csv_cache = None
 
-# --cpu: redirect bare /dashboard/ to CPU-safe thresholds (5-min stale, 30-min panel).
+# --cpu: redirect bare /dashboard/ to CPU-safe thresholds (10-min stale, 30-min panel).
 # Passed by albert-train on contributor machines so any manual navigation still
 # gets the right params even if the auto-opened browser tab is closed.
 CPU_MODE = '--cpu' in sys.argv
-CPU_PARAMS = 'poll_ms=2000&stale_s=300&panel_stale_s=1800'
+CPU_PARAMS = 'poll_ms=2000&stale_s=600&panel_stale_s=1800'
 
 class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
     """

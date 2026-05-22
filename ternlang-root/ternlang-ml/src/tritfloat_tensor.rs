@@ -575,4 +575,47 @@ mod tests {
             assert!(approx(*x, *y, 0.001), "sparse and dense matmul disagree: {x} vs {y}");
         }
     }
+
+    /// Core patent regression: combined sparseskip = total × (ws + as × (1 − ws)).
+    ///
+    /// This test locks the exact skip count for a hand-crafted matrix with known
+    /// weight sparsity (ws=0.25) and activation sparsity (as=0.25). The formula
+    /// predicts 32 × (0.25 + 0.25 × 0.75) = 14 skips. Any implementation drift
+    /// that changes how zeros are detected or counted will break this test.
+    ///
+    /// Patent reference: @sparseskip combined activation+weight variant, A50296/2026.
+    #[test]
+    fn sparseskip_formula_invariant() {
+        use crate::{TritMatrix, Trit};
+        // k=4 in_features, n=4 out_features, m=2 batch → total = 32 ops
+        let (k, n, m) = (4usize, 4usize, 2usize);
+        let total = m * k * n;
+
+        // Weight: 16 elements, exactly 4 zeros (ws = 0.25).
+        // Zero positions: (row=0,col=2), (row=1,col=1), (row=2,col=0), (row=3,col=3).
+        let mut w = TritMatrix::new(k, n);
+        for i in 0..k { for j in 0..n { w.set(i, j, Trit::Affirm); } }
+        w.set(0, 2, Trit::Tend);
+        w.set(1, 1, Trit::Tend);
+        w.set(2, 0, Trit::Tend);
+        w.set(3, 3, Trit::Tend);
+        let ws = 4.0f64 / (k * n) as f64;
+
+        // Activations: 8 elements, exactly 2 zeros (as = 0.25).
+        // Zero positions: [batch=0, i=1] and [batch=1, i=0].
+        let act_vals = [1.0f32, 0.0, 1.0, 1.0,
+                        0.0,    1.0, 1.0, 1.0];
+        let acts = TritFloatTensor::from_f32_slice(&act_vals, &[m, k]);
+        let act_sparsity = 2.0f64 / (m * k) as f64;
+
+        let (_, skips) = TritFloatTensor::matmul_trit(&acts, &w);
+
+        let expected = (total as f64 * (ws + act_sparsity * (1.0 - ws))).round() as usize;
+        assert_eq!(
+            skips, expected,
+            "combined sparseskip formula broken: got {skips}, expected {expected} \
+             (formula: total×(ws + as×(1-ws)) = {total}×({ws:.2} + {act_sparsity:.2}×{:.2}))",
+            1.0 - ws
+        );
+    }
 }

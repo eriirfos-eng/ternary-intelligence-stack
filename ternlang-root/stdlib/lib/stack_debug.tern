@@ -1,0 +1,13 @@
+fn push(s: int[], top: int, val: int) -> int {
+    s[top] = val;
+    return top + 1;
+}
+fn main() -> trit {
+    let s: int[5] = 0;
+    push(s, 0, 42);
+    // Is s[0] still 42?
+    if (s[0] == 42) {
+       return affirm;
+    }
+    return reject;
+}

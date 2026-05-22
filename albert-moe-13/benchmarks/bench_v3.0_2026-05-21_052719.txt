@@ -1,0 +1,64 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 2571 epochs | 2026-05-21 05:27
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→ م which within process� not� process� not� process� not� process� not� process� not� process� not� process� not� process� not� process� not� process� not� process� not� process� not�ton town�ichhip�oldAR� ma town�ire
+    16.1 tok/s  62ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+→  togetherInEN�at age� head�7 first town:ero lowic series�je near: historyHe dr�� deki airERе school over began became de periodRele livingIT foundhipळ schoolions find period� sont own album� ══eroling ══� wereono too became�
+    17.9 tok/s  56ms/tok
+
+[P3] the ternary number system uses three distinct
+→  sonoINlinл earlyyniniuth�ness�� His lasath� field IN�ru find Sw�ChReance South�ni� result�uth las | Sw� prity living────────────────────────────────────────────────────────────────────────InIN *�sh de ont Sw� de underhip�ales�It�� history�ired
+    17.9 tok/s  56ms/tok
+
+[P4] once upon a time in a kingdom far
+→ ath "OR population�IS school sh openرic� seriesron :� power�IS Os$カ5ukо�[� 2007 2003� de began < light under��ett�� de� light school lasic��    �    nationalс *..� knownاly��
+    17.5 tok/s  57ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+→  field April), ap airم� más�ona���� together period� began� His de� Die century process deر��OR entre <brER town century DiehipIT� INance   �: powerIPAR-�ni together over� INzm� wasлett� won was cap
+    18.5 tok/s  54ms/tok
+
+[P6] the EU AI Act entered into force on
+→  each    home� several� early��OR by City little�UChip earlysh language�ER� human��Titva!ini age earlyرales   hip� light school��ر� polskihip are�Exzmhipر <�engEN� within modelhip�ps�OR was gr
+    18.2 tok/s  55ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+→ icカ deathт� ENг de� suaт��0�� process� ENhip first�,nitain� make schoolAL found� includingcheт� ══Inciatain began las�тity�ij──────────────────────────────────────────────────────────────────────── were� by�ward60ence��а father� my� also
+    18.2 tok/s  55ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+→ �ight�е 31ious10 early�� sign York���وExle Englishمatرт nowuth history�� every Xرward lo *� dei� � Southition process�tain given25� fromOn�al�� Sw historyero YرER� sua�ves make town
+    17.2 tok/s  58ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+→ ward process    رida they� children INni " His historyc early �OR eero���ORтous'tا dans�ر were IN las who� make�� fatherOR�che� including� deر three His capic�� His not e sinceeng� г..び
+    17.9 tok/s  56ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+→ �   �hed�The� His muchرThe� ��shzm��AT sh�Se� IN���OR� parte IN�مalestainEN� effect < beentain developmentIn   �� These“�EN� maward not field schoolic�),uth de���
+    18.5 tok/s  54ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+→  III�   TheuthERic� been���� ontwardera early was�   �Re for�� EN findم successniited las� head� few Man�� be�!AT lighthipced for several�The,�──────────────────────────────────────────────────────────────────────── fewath � She�у notIS school YorkThe
+    16.4 tok/s  61ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+→  age:� schoolIn began lasл�ona She� called� Gzmل�ER�cent────────────────────────────────────────────────────────────────────────�zm air pr    found die�────────────────────────────────────────────────────────────────────────ary sont� EN history las great� ══Theonaа��zmر�л &),ists��azionereg�: history early�ORл
+    18.5 tok/s  54ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+→  Die lasmentsلER real deuthл dei� into──────────────────────────────────────────────────────────────────────── e real�As────────────────────────────────────────────────────────────────────────�odeIn� within history�────────────────────────────────────────────────────────────────────────� history United��тOnاؼEDton *� human� light each��Inva line�� history� severalт� few century�� las    linereg�
+    18.5 tok/s  54ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+→  history�ni�- history century been includingOM� centuryient    Londonoverleden firstرic� death� became�’ón find�ired began was 2008� lo several age his�or zuرY Yorkake IN�مton His language wasر’idaic�att,zm became� found However parte
+    18.5 tok/s  54ms/tok
+
+[P15] the meaning of life according to
+→ � | These�ake� dr model   �Tit de began sinceitionر history was�� Yorkا� became�л..Ex�� find en foundر�.. historyATт living foundanceAR�� century� die    Die historyу� � e beganily�тQ� period�att 2003
+    17.9 tok/s  56ms/tok
+
