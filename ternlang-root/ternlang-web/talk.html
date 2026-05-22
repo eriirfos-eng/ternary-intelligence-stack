@@ -203,6 +203,95 @@
       display: flex;
       justify-content: space-between;
     }
+
+    /* ── feedback modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      width: min(480px, 92vw);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .modal h2 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--teal);
+      margin: 0;
+    }
+    .modal label {
+      font-size: 0.78rem;
+      color: var(--dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .modal select, .modal input, .modal textarea {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      padding: 8px 10px;
+      outline: none;
+      margin-top: 4px;
+    }
+    .modal select:focus, .modal input:focus, .modal textarea:focus {
+      border-color: var(--teal);
+    }
+    .modal textarea { resize: vertical; min-height: 90px; }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--dim);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { border-color: var(--muted); color: var(--text); }
+    .btn-submit {
+      background: var(--teal);
+      border: none;
+      border-radius: 6px;
+      color: #000;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 8px 18px;
+      cursor: pointer;
+    }
+    .btn-submit:hover { opacity: 0.85; }
+    .btn-submit:disabled { opacity: 0.35; cursor: not-allowed; }
+    .feedback-link {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: var(--border);
+      flex-shrink: 0;
+      align-self: flex-end;
+      margin-bottom: 2px;
+    }
+    .feedback-link:hover { color: var(--teal); }
   </style>
 </head>
 <body>
@@ -215,7 +304,8 @@
       <span class="live-dot"></span>loading...
     </span>
   </div>
-  <div style="font-size:0.75rem;color:var(--dim)">
+  <div style="display:flex;align-items:center;gap:14px;font-size:0.75rem;color:var(--dim)">
+    <span class="feedback-link" onclick="openFeedback()">feedback</span>
     <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack"
        style="color:var(--dim);text-decoration:none">open-source</a>
     &nbsp;·&nbsp;
@@ -247,6 +337,38 @@
     </div>
   </div>
   <button class="send" id="send-btn" onclick="sendPrompt()">Send</button>
+</div>
+
+<!-- ── feedback modal ── -->
+<div class="modal-overlay" id="feedback-overlay" onclick="if(event.target===this)closeFeedback()">
+  <div class="modal">
+    <h2>Send feedback</h2>
+    <div>
+      <label>Type
+        <select id="fb-type">
+          <option value="observation">Observation — interesting output</option>
+          <option value="bug">Bug report — something broke</option>
+          <option value="suggestion">Suggestion — feature / UX idea</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <label>Your message
+        <textarea id="fb-body" placeholder="Describe what you saw, what you expected, or what you'd like to see…" maxlength="2000"></textarea>
+      </label>
+    </div>
+    <div>
+      <label>Email (optional — only if you want a reply)
+        <input type="email" id="fb-email" placeholder="you@example.com">
+      </label>
+    </div>
+    <div id="fb-status" style="font-size:0.75rem;color:var(--teal);font-family:'JetBrains Mono',monospace;min-height:1rem"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeFeedback()">Cancel</button>
+      <button class="btn-submit" id="fb-send" onclick="submitFeedback()">Send</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -352,6 +474,43 @@ async function sendPrompt() {
   document.getElementById('send-btn').disabled = false;
   ta.focus();
 }
+
+// ── feedback modal ────────────────────────────────────────────────────────────
+function openFeedback() {
+  document.getElementById('feedback-overlay').classList.add('open');
+  document.getElementById('fb-body').focus();
+}
+function closeFeedback() {
+  document.getElementById('feedback-overlay').classList.remove('open');
+  document.getElementById('fb-status').textContent = '';
+}
+
+async function submitFeedback() {
+  const type  = document.getElementById('fb-type').value;
+  const body  = document.getElementById('fb-body').value.trim();
+  const email = document.getElementById('fb-email').value.trim();
+  if (!body) { document.getElementById('fb-status').textContent = 'Please write something first.'; return; }
+
+  const btn = document.getElementById('fb-send');
+  btn.disabled = true;
+  document.getElementById('fb-status').textContent = 'Sending…';
+
+  // Build a mailto: link as the primary channel (no backend needed)
+  const subject = encodeURIComponent(`[albert. feedback] ${type}`);
+  const emailBody = encodeURIComponent(
+    `Type: ${type}\n\n${body}${email ? '\n\nReply-to: ' + email : ''}\n\n---\nSent from ternlang.com/talk`
+  );
+  window.open(`mailto:feedback@ternlang.com?subject=${subject}&body=${emailBody}`, '_blank');
+
+  document.getElementById('fb-status').textContent = 'Your mail client opened. Thank you.';
+  document.getElementById('fb-body').value = '';
+  document.getElementById('fb-email').value = '';
+  btn.disabled = false;
+  setTimeout(closeFeedback, 2000);
+}
+
+// Close modal on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFeedback(); });
 </script>
 </body>
 </html>
