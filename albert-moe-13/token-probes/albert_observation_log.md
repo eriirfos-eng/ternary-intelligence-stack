@@ -189,6 +189,109 @@ Context: post-restart oscillation (ep2890–2906) appears to have resolved into 
 
 ---
 
+## Field Note 41 — 2026-05-22T20:44Z · ep2938 — RETURN TO ATL ZONE · CORE CONSOLIDATION · ep2938 COMPLETE
+
+**Source:** dashboard screenshot (20:44Z) + batch_history.csv (post-tick verification).
+
+**ep2938 complete.** CSV avg: **9.5717** (n=139). Server-side est: ~9.495. No new ATL — ep2938 closes above ATL 9.4891, but within striking range.
+
+**Server-side sequence since ATL (oldest→newest):**
+```
+ep2927   9.4891  ← ATL
+ep2928   9.4975  +0.0084  bounce open
+ep2929   9.5082  +0.0107  ← BOUNCE PEAK (+0.019 nats, tightest in post-s6)
+ep2930   9.5040  -0.0042  returning
+ep2931   9.4983  -0.0057  ← FN39
+ep2932   9.5040  +0.0057  slight up
+ep2933   9.4994  -0.0046
+ep2934   9.4994  ±0
+ep2935   9.4983  -0.0011
+ep2936   9.4928  -0.0055  ← CLOSEST APPROACH · 0.0037 from ATL
+ep2937   9.4994  +0.0066  slight pullback
+ep2938   ~9.495  est.     complete · no new ATL
+```
+
+Model has returned to the ATL zone. ep2936 touched 9.4928 — within 0.0037 of all-time best. T-610 trail reading 9.4918 at image time (below EP AVG 9.4942) — downward pull confirmed.
+
+**Routing consolidation (image #6, ep2938 batch 214/300):**
+| Expert | FN39 | FN41 | delta |
+|--------|------|------|-------|
+| ABS | 67% | **84%** | **+17pp** |
+| INT | 90% | **100%** | **+10pp** |
+| CMP | — | **90%** | — |
+| PLN | 78% | **77%** | stable |
+| LNG | 67% | **35%** | **-32pp** |
+| GEN | 21% | **5%** | **-16pp** |
+| LOG | 19% | **17%** | -2pp |
+
+GEN collapsed 21% → 5% (generative surge ended). ABS erupted to 84%. INT locked at 100%. This is the "core specialist lockdown" pattern — INT+CMP+ABS+PLN concentrated, GEN+LNG retreating. Consistent with the model narrowing focus ahead of a new ATL push.
+
+**TTL:** 6% high / 82% mid / 3% red — healthy.
+
+**ep2939 status (at note time):** 30 CSV entries, avg 9.5861 — too early (normal high opening batches).
+
+**Status: RETURN TO ATL ZONE CONFIRMED. ep2936 within 0.0037. ep2938 closes ~9.495. Core consolidating (INT/ABS/CMP dominant). T-610 at 9.4918 pulling below EP AVG. New server-side ATL below 9.4891 expected within next 2–5 epochs.**
+
+---
+
+## Field Note 40 — 2026-05-22T20:31Z · ep2935 — ATL PROBE · 0.0014 FROM CSV ATL
+
+**Source:** batch_history.csv. ep2935 n=148 (complete), ep2936 n=66 (partial).
+
+**Descent accelerating.** Bounce fully resolved, new low reached:
+
+| Epoch | n | Avg | vs CSV ATL (9.5671) |
+|-------|---|-----|---------------------|
+| ep2932 | 171 | 9.5740 | +0.0069 |
+| ep2933 | 166 | 9.5756 | +0.0085 |
+| ep2934 | 155 | 9.5732 | +0.0061 |
+| ep2935 | 148 | **9.5685** | **+0.0014** |
+| ep2936 | 66 (partial) | 9.5793 | — |
+
+ep2935 at **9.5685** is the closest the CSV sampled avg has come to the ATL (9.5671) since the post-ATL bounce began. Not broken yet — 0.0014 gap. ep2936 partial shows a mini-bounce (9.5793), consistent with prior pattern (dip → bounce → lower dip). Next descent leg should challenge and likely break 9.5671.
+
+**Status: ATL PROBE. 0.0014 from CSV sampled ATL. Mini-bounce at ep2936. Next leg targets new CSV ATL and continuation toward server-side 9.4891.**
+
+---
+
+## Field Note 39 — 2026-05-22T20:02Z · ep2931 — NEW ATL CHIP 9.1254 · TIGHT BOUNCE · GEN SURGE
+
+**Source:** dashboard screenshot. EP 2931 · batch 226/300.
+
+**NEW ATL CHIP: 9.1254** — prev 9.1370 · delta **-0.0116** · a single batch dipped deeper than any prior batch in the run.
+
+**Server-side bounce fully readable from events bar** (oldest→newest):
+```
+BEST avg 9.4891  (ep2927, FN37)
+EPOCH avg 9.4975  (+0.0084)
+EPOCH avg 9.5082  (+0.0107)  ← BOUNCE PEAK
+EPOCH avg 9.5040  (-0.0042)  ← ep2930, returning
+EP AVG   9.5040  (ep2931 partial, batch 226/300)
+```
+Bounce peak **9.5082** — only +0.019 nats from ATL. Tightest bounce in the post-surgery-6 record. Every prior ATL had a larger bounce. Descent momentum very strong.
+
+**Routing shift (vs FN37):**
+| Expert | FN37 | FN39 | delta |
+|--------|------|------|-------|
+| GEN | 13% | **21%** | **+8pp** |
+| INT | 82% | **90%** | +8pp |
+| PLN | 73% | **78%** | +5pp |
+| ABS | 60% | **67%** | +7pp |
+| LNG | 78% | 67% | -11pp |
+| CTX | 15% | 8% | -7pp |
+| SEM | 10% | 3% | -7pp |
+| LOG | 16% | 19% | +3pp |
+
+GEN surging to 21% (highest since post-floor-breach). Core (INT/PLN/ABS) recovering. LNG/CTX/SEM pulling back from the FN37 diversification peak. Model shifting from "broad exploration" toward "generative consolidation."
+
+**TTL:** 6% high / 81% mid / 4% red — stable. L10 gradient holding orange.
+
+**Simeon's note:** "even if the error rate rises, the routing and expert activity changes a lot" — the bounce is not dead time; internals are actively restructuring.
+
+**Status: NEW ATL CHIP 9.1254. Bounce peak confirmed ep2929=9.5082, tightest in post-s6 record. GEN surging. Core recovering. ep2931 running avg 9.5040 at batch 226/300 — watching for completion and whether next descent opens below 9.50.**
+
+---
+
 ## Field Note 38 — 2026-05-22T19:54Z · ep2929–2930 — POST-ATL CONSOLIDATION · BOUNCE ROUNDING OFF
 
 **Source:** batch_history.csv. ep2929 complete (n=166), ep2930 partial (n=75).
