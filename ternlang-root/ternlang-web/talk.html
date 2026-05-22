@@ -343,6 +343,30 @@
     .send-btn:hover:not(:disabled) { opacity: 0.85; }
     .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
+    /* ── mic button ── */
+    .mic-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 50%;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      align-self: flex-end;
+      transition: color 0.15s, background 0.15s;
+    }
+    .mic-btn:hover { color: var(--text); background: var(--surface2); }
+    .mic-btn.recording {
+      color: #f56565;
+      background: rgba(245,101,101,0.12);
+      animation: mic-pulse 1s ease-in-out infinite;
+    }
+    @keyframes mic-pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    .mic-btn svg { display: block; }
+
     /* ── disclaimer (below input) ── */
     .disclaimer {
       width: 100%;
@@ -483,6 +507,11 @@
 <div class="bottom">
   <div class="pill-wrap">
     <textarea id="prompt" rows="1" placeholder="Send a prompt to albert. …" maxlength="512"></textarea>
+    <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Voice input">
+      <svg id="mic-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v7a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm-7 8a1 1 0 0 1 1 1 6 6 0 0 0 12 0 1 1 0 0 1 2 0 8 8 0 0 1-7 7.93V22h3a1 1 0 0 1 0 2H8a1 1 0 0 1 0-2h3v-2.07A8 8 0 0 1 4 12a1 1 0 0 1 1-1z"/>
+      </svg>
+    </button>
     <button class="send-btn" id="send-btn" onclick="sendPrompt()">Send</button>
   </div>
   <div class="input-hint">
@@ -630,6 +659,62 @@ async function sendPrompt() {
   busy = false;
   document.getElementById('send-btn').disabled = false;
   ta.focus();
+}
+
+// ── speech to text ───────────────────────────────────────────────────────────
+let recognition = null;
+let recognizing  = false;
+
+(function initSpeech() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    document.getElementById('mic-btn').style.display = 'none';
+    return;
+  }
+  recognition = new SR();
+  recognition.continuous     = false;
+  recognition.interimResults = true;
+  recognition.lang           = 'en-US';
+
+  let interim = '';
+  let baseText = '';
+
+  recognition.onstart = () => {
+    recognizing = true;
+    baseText = ta.value;
+    document.getElementById('mic-btn').classList.add('recording');
+  };
+  recognition.onend = () => {
+    recognizing = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    interim = '';
+  };
+  recognition.onerror = () => {
+    recognizing = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+  };
+  recognition.onresult = (e) => {
+    interim = '';
+    let final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    if (final) {
+      baseText = (baseText + ' ' + final).trim();
+      interim  = '';
+    }
+    ta.value = interim ? (baseText + ' ' + interim).trim() : baseText;
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
+    document.getElementById('char-count').textContent = `${ta.value.length} / 512`;
+  };
+})();
+
+function toggleMic() {
+  if (!recognition) return;
+  if (recognizing) { recognition.stop(); return; }
+  recognition.start();
 }
 
 // ── feedback modal ────────────────────────────────────────────────────────────
