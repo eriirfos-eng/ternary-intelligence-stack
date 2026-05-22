@@ -71,8 +71,8 @@
             transition: border-color 0.2s;
         }
         .tb-cell:hover { border-color: var(--border2); }
-        .tb-cell.arch { flex: 0 0 auto; max-width: 240px; min-width: 0; overflow: hidden; }
-        .tb-cell.arch .tb-val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+        .tb-cell.arch { flex: 0 0 auto; min-width: 0; }
+        .tb-cell.arch .tb-val { white-space: nowrap; }
         .tb-cell.controls { background: transparent; border: none; margin-left: auto; gap: 4px; padding-right: 4px; }
         #help-btn { width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);background:var(--bg2);color:var(--muted);font-size:11px;font-family:inherit;cursor:pointer;line-height:1;padding:0;flex-shrink:0; }
         .tb-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -987,6 +987,18 @@
                     <label class="dd-item"><input type="checkbox" id="cbSMA610"> ~ SMA-610 <small>F15 cycle</small></label>
                     <label class="dd-trail" title="Trail SMA-610 minimum"><input type="checkbox" id="cbTrail610"> T</label>
                 </div>
+                <div class="dd-row">
+                    <label class="dd-item"><input type="checkbox" id="cbSMA987"> ~ SMA-987 <small>F16 epoch</small></label>
+                    <label class="dd-trail" title="Trail SMA-987 minimum"><input type="checkbox" id="cbTrail987"> T</label>
+                </div>
+                <div class="dd-row">
+                    <label class="dd-item"><input type="checkbox" id="cbSMA1597"> ~ SMA-1597 <small>F17 grand</small></label>
+                    <label class="dd-trail" title="Trail SMA-1597 minimum"><input type="checkbox" id="cbTrail1597"> T</label>
+                </div>
+                <div class="dd-row">
+                    <label class="dd-item"><input type="checkbox" id="cbSMA2584"> ~ SMA-2584 <small>F18 arc</small></label>
+                    <label class="dd-trail" title="Trail SMA-2584 minimum"><input type="checkbox" id="cbTrail2584"> T</label>
+                </div>
                 <div class="dd-sep"></div>
                 <label class="dd-item"><input type="checkbox" id="cbTMA"> ≡ TMA <small>ternary</small></label>
             </div>
@@ -1274,8 +1286,8 @@
     let batchLog         = [];   // [{step,global_epoch,batch,layers,loss,grad_norm,layer_norms,route_weights,entropy,tele_sparsity,tele_activity}]
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
     let smaLog           = [];   // [{x,y}] — full batch point history; source of truth for SMA computation
-    let smaCacheFull     = [[], [], [], [], []]; // pre-computed SMA values: [21, 55, 144, 377, 610] — full history, never passed directly to Chart.js
-    const SMA_SIZES      = [21, 55, 144, 377, 610]; // Fibonacci SMA periods matching ds indices 1-5
+    let smaCacheFull     = [[], [], [], [], [], [], [], []]; // pre-computed SMA values: [21,55,144,377,610,987,1597,2584]
+    const SMA_SIZES      = [21, 55, 144, 377, 610, 987, 1597, 2584]; // Fibonacci SMA periods; ds indices 1-5,7-9
     let totalPts         = 0;
     let newPointStartIdx = Infinity; // index of first "new" pt — only those get drop animation
     let pulseActive      = false;
@@ -1319,8 +1331,8 @@
     let rsiVisible     = false;
     let macdChart      = null;
     let rsiChart       = null;
-    const trailActive     = [false, false, false, false, false]; // [21, 55, 144, 377, 610]
-    const trailCurrentMin = [Infinity, Infinity, Infinity, Infinity, Infinity];
+    const trailActive     = [false, false, false, false, false, false, false, false]; // [21,55,144,377,610,987,1597,2584]
+    const trailCurrentMin = [Infinity, Infinity, Infinity, Infinity, Infinity, Infinity, Infinity, Infinity];
     let crosshairPos   = null;
     let crosshairRafId = null;
     let drawMode        = false;
@@ -1478,14 +1490,17 @@
 
             // Trail floor lines — one horizontal per active SMA trail
             const TRAIL_LINE_COLORS = [
-                'rgba(255,215,0,0.70)',   // T21  — gold
-                'rgba(245,158,11,0.70)',  // T55  — amber
-                'rgba(136,153,255,0.70)', // T144 — blue-purple
-                'rgba(167,139,250,0.70)', // T377 — violet
-                'rgba(124,58,237,0.70)',  // T610 — deep purple
+                'rgba(255,215,0,0.70)',   // T21   — gold
+                'rgba(245,158,11,0.70)',  // T55   — amber
+                'rgba(136,153,255,0.70)', // T144  — blue-purple
+                'rgba(167,139,250,0.70)', // T377  — violet
+                'rgba(124,58,237,0.70)',  // T610  — deep purple
+                'rgba(192,38,211,0.70)',  // T987  — fuchsia
+                'rgba(219,39,119,0.70)',  // T1597 — pink
+                'rgba(225,29,72,0.70)',   // T2584 — rose
             ];
-            const TRAIL_NAMES = ['T-21','T-55','T-144','T-377','T-610'];
-            for (let ti = 0; ti < 5; ti++) {
+            const TRAIL_NAMES = ['T-21','T-55','T-144','T-377','T-610','T-987','T-1597','T-2584'];
+            for (let ti = 0; ti < 8; ti++) {
                 if (!trailActive[ti] || !isFinite(trailCurrentMin[ti])) continue;
                 const col  = TRAIL_LINE_COLORS[ti];
                 const colF = col.replace(/[\d.]+\)$/, '0.30)');
@@ -1780,8 +1795,8 @@
         id: 'bbBand',
         beforeDatasetsDraw(chart) {
             if (!bbVisible) return;
-            const upper = chart.data.datasets[7].data;
-            const lower = chart.data.datasets[8].data;
+            const upper = chart.data.datasets[10].data;
+            const lower = chart.data.datasets[11].data;
             if (!upper.length || !lower.length) return;
             const { ctx: c2, chartArea: a, scales } = chart;
             c2.save();
@@ -2294,6 +2309,45 @@
                     order: 1,
                     animation: false,
                     hidden: true,        // off by default, user enables it
+                },
+                {
+                    type: 'line',
+                    label: 'SMA-987',
+                    data: [],
+                    borderColor: '#c026d3',
+                    borderWidth: 3,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0,
+                    order: 1,
+                    animation: false,
+                    hidden: true,
+                },
+                {
+                    type: 'line',
+                    label: 'SMA-1597',
+                    data: [],
+                    borderColor: '#db2777',
+                    borderWidth: 3.5,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0,
+                    order: 1,
+                    animation: false,
+                    hidden: true,
+                },
+                {
+                    type: 'line',
+                    label: 'SMA-2584',
+                    data: [],
+                    borderColor: '#e11d48',
+                    borderWidth: 4,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0,
+                    order: 1,
+                    animation: false,
+                    hidden: true,
                 },
                 {
                     type: 'line',
@@ -2827,13 +2881,13 @@
         return slice.length <= MAX_CHART_PTS ? slice : smaPreseedData(slice);
     }
     // Re-apply render distance to all visible SMA datasets (call after zoom/pan/reset).
+    // ds 1-5 → ci 0-4 (SMA 21-610); ds 7-9 → ci 5-7 (SMA 987-2584); ds 6 = TMA (skip).
     function applyRenderDistance() {
         const ds = chart.data.datasets;
-        for (let i = 0; i < 5; i++) {
-            if (!ds[i + 1].hidden && smaCacheFull[i].length) {
-                ds[i + 1].data = smaVisibleSlice(smaCacheFull[i]);
-            }
-        }
+        [[1,0],[2,1],[3,2],[4,3],[5,4],[7,5],[8,6],[9,7]].forEach(([dsIdx, ci]) => {
+            if (!ds[dsIdx].hidden && smaCacheFull[ci].length)
+                ds[dsIdx].data = smaVisibleSlice(smaCacheFull[ci]);
+        });
     }
 
     // ── TMA — Ternary Moving Average ───────────────────────────────────
@@ -3237,7 +3291,7 @@
                     trailCurrentMin.fill(Infinity);
                     userHasZoomed = false; newPointStartIdx = Infinity;
                     batchLog = []; smaLog.length = smaPreSeedLen; // epochLog preserved; smaPreSeedLen preserves historical pre-seed
-                    smaCacheFull = [[], [], [], [], []]; // clear SMA caches — will recompute from pre-seed on next poll
+                    smaCacheFull = [[], [], [], [], [], [], [], []]; // clear SMA caches — will recompute from pre-seed on next poll
                     document.getElementById('v-loss').textContent  = '—';
                     document.getElementById('v-epoch').textContent = '—';
                     document.getElementById('v-best').textContent  = allTimeBestBatch === Infinity ? '—' : allTimeBestBatch.toFixed(4);
@@ -3536,10 +3590,10 @@
                 chart.data.datasets[2].data = [];
                 chart.data.datasets[3].data = [];
                 chart.data.datasets[4].data = [];
-                chart.data.datasets[7].data = [];
-                chart.data.datasets[8].data = [];
-                chart.data.datasets[9].data = [];   // MACD placeholder — data in macdChart
-                chart.data.datasets[10].data = [];  // RSI placeholder — data in rsiChart
+                chart.data.datasets[10].data = [];
+                chart.data.datasets[11].data = [];
+                chart.data.datasets[12].data = [];  // MACD placeholder — data in macdChart
+                chart.data.datasets[13].data = [];  // RSI placeholder — data in rsiChart
                 if (macdChart) { macdChart.data.datasets[0].data = []; macdChart.update('none'); }
                 if (rsiChart)  { rsiChart.data.datasets[0].data  = []; rsiChart.update('none'); }
                 for (let i = 11; i <= 15; i++) chart.data.datasets[i].data = [];
@@ -3624,11 +3678,14 @@
                 }
                 if (!ds[dsIdx].hidden) ds[dsIdx].data = smaVisibleSlice(smaCacheFull[ci]);
             }
-            updateSma(1, 21,  0);
-            updateSma(2, 55,  1);
-            updateSma(3, 144, 2);
-            updateSma(4, 377, 3);
-            updateSma(5, 610, 4);
+            updateSma(1, 21,   0);
+            updateSma(2, 55,   1);
+            updateSma(3, 144,  2);
+            updateSma(4, 377,  3);
+            updateSma(5, 610,  4);
+            updateSma(7, 987,  5);
+            updateSma(8, 1597, 6);
+            updateSma(9, 2584, 7);
             if (!ds[6].hidden) ds[6].data = tma(merged, 30);
             // Bollinger Bands on SMA-144 window
             if (bbVisible) {
@@ -3642,8 +3699,8 @@
                 updateSubCharts(epD);
             }
             // SMA trail — track live tip (last point) of each active SMA
-            const trailSrc = [ds[1], ds[2], ds[3], ds[4], ds[5]];
-            for (let ti = 0; ti < 5; ti++) {
+            const trailSrc = [ds[1], ds[2], ds[3], ds[4], ds[5], ds[7], ds[8], ds[9]];
+            for (let ti = 0; ti < 8; ti++) {
                 if (!trailActive[ti]) continue;
                 const src = trailSrc[ti].data;
                 if (!src.length) continue;
@@ -3839,14 +3896,16 @@
     // ── Controls ───────────────────────────────────────────────────────
     // ── Curves dropdown ──────────────────────────────────────────────
     function updateSmaBtnLabel() {
-        const total = ['cbDots','cbSMA21','cbSMA55','cbSMA144','cbSMA377','cbSMA610','cbTMA']
+        const total = ['cbDots','cbSMA21','cbSMA55','cbSMA144','cbSMA377','cbSMA610',
+                       'cbSMA987','cbSMA1597','cbSMA2584','cbTMA']
             .filter(id => document.getElementById(id).checked).length;
         document.getElementById('curves-count').textContent = total;
     }
     function toggleDataset(idx, checked) {
         chart.data.datasets[idx].hidden = !checked;
-        if (checked && idx >= 1 && idx <= 5) {
-            const ci = idx - 1;
+        // SMA datasets: ds 1-5 → ci 0-4; ds 7-9 → ci 5-7
+        if (checked && (idx >= 1 && idx <= 5 || idx >= 7 && idx <= 9)) {
+            const ci = idx <= 5 ? idx - 1 : idx - 2;
             if (!smaCacheFull[ci].length) smaCacheFull[ci] = sma(smaLog, SMA_SIZES[ci]);
             chart.data.datasets[idx].data = smaVisibleSlice(smaCacheFull[ci]);
         }
@@ -3864,8 +3923,11 @@
     document.getElementById('cbSMA55').addEventListener('change',  function() { toggleDataset(2, this.checked); });
     document.getElementById('cbSMA144').addEventListener('change', function() { toggleDataset(3, this.checked); });
     document.getElementById('cbSMA377').addEventListener('change', function() { toggleDataset(4, this.checked); });
-    document.getElementById('cbSMA610').addEventListener('change', function() { toggleDataset(5, this.checked); });
-    document.getElementById('cbTMA').addEventListener('change',    function() { toggleDataset(6, this.checked); });
+    document.getElementById('cbSMA610').addEventListener('change',  function() { toggleDataset(5, this.checked); });
+    document.getElementById('cbSMA987').addEventListener('change',  function() { toggleDataset(7, this.checked); });
+    document.getElementById('cbSMA1597').addEventListener('change', function() { toggleDataset(8, this.checked); });
+    document.getElementById('cbSMA2584').addEventListener('change', function() { toggleDataset(9, this.checked); });
+    document.getElementById('cbTMA').addEventListener('change',     function() { toggleDataset(6, this.checked); });
     // TMA starts hidden
     chart.data.datasets[6].hidden = true;
     updateSmaBtnLabel();
@@ -4953,14 +5015,14 @@
     // Bollinger Bands
     document.getElementById('cbBB').addEventListener('change', function() {
         bbVisible = this.checked;
-        chart.data.datasets[7].hidden = !bbVisible;
-        chart.data.datasets[8].hidden = !bbVisible;
+        chart.data.datasets[10].hidden = !bbVisible;
+        chart.data.datasets[11].hidden = !bbVisible;
         if (bbVisible) {
             const merged = chart.data.datasets[0].data;
             if (merged.length) {
                 const bb = bollinger(merged, 144, 2);
-                chart.data.datasets[7].data = bb.upper;
-                chart.data.datasets[8].data = bb.lower;
+                chart.data.datasets[10].data = bb.upper;
+                chart.data.datasets[11].data = bb.lower;
             }
         }
         chart.update('none');
@@ -5006,20 +5068,19 @@
     });
 
     // SMA trail toggles — running minimum of the corresponding SMA curve
-    [['cbTrail21',0,1], ['cbTrail55',1,2], ['cbTrail144',2,3], ['cbTrail377',3,4], ['cbTrail610',4,5]]
+    // [cbId, trailIndex, smaDatasetIndex]
+    [['cbTrail21',0,1], ['cbTrail55',1,2], ['cbTrail144',2,3], ['cbTrail377',3,4], ['cbTrail610',4,5],
+     ['cbTrail987',5,7], ['cbTrail1597',6,8], ['cbTrail2584',7,9]]
     .forEach(([id, ti, smaIdx]) => {
         document.getElementById(id).addEventListener('change', function() {
             trailActive[ti] = this.checked;
             if (!this.checked) {
                 trailCurrentMin[ti] = Infinity;
             } else {
-                // Ensure SMA has data (enable + compute if hidden)
-                const smaSizes = [21, 55, 144, 377, 610];
                 if (!chart.data.datasets[smaIdx].data.length) {
                     chart.data.datasets[smaIdx].hidden = false;
-                    chart.data.datasets[smaIdx].data = sma(chart.data.datasets[0].data, smaSizes[ti]);
+                    chart.data.datasets[smaIdx].data = sma(chart.data.datasets[0].data, SMA_SIZES[ti]);
                 }
-                // Anchor to current live tip
                 const d = chart.data.datasets[smaIdx].data;
                 trailCurrentMin[ti] = d.length ? d[d.length - 1].y : Infinity;
             }
@@ -5386,10 +5447,12 @@
         .catch(() => {}); // graceful fallback — log-based ARCH line still works
 
     // ── Settings persistence ───────────────────────────────────────────
-    const PREFS_KEY = 'albert-v3-dashboard-prefs-v2'; // bump version to clear old SMA defaults
+    const PREFS_KEY = 'albert-v3-dashboard-prefs-v3'; // bumped — added SMA 987/1597/2584
     const PREF_CBS  = [
-        'cbDots','cbSMA21','cbSMA55','cbSMA144','cbSMA377','cbSMA610','cbTMA',
+        'cbDots','cbSMA21','cbSMA55','cbSMA144','cbSMA377','cbSMA610',
+        'cbSMA987','cbSMA1597','cbSMA2584','cbTMA',
         'cbTrail21','cbTrail55','cbTrail144','cbTrail377','cbTrail610',
+        'cbTrail987','cbTrail1597','cbTrail2584',
         'cbFib','cbBB','cbHA','cbMACD','cbRSI',
     ];
 
@@ -5571,7 +5634,8 @@
             // the chart viewport at this point only covers the narrow scatter seedSlice
             // range (last ~16 epochs); smaVisibleSlice would return [] for the full
             // history and the lines would be invisible across the wider epoch-avg range.
-            [[1,21,0],[2,55,1],[3,144,2],[4,377,3],[5,610,4]].forEach(([dsIdx, w, ci]) => {
+            [[1,21,0],[2,55,1],[3,144,2],[4,377,3],[5,610,4],
+             [7,987,5],[8,1597,6],[9,2584,7]].forEach(([dsIdx, w, ci]) => {
                 smaCacheFull[ci] = sma(smaLog, w);
                 if (!chart.data.datasets[dsIdx].hidden)
                     chart.data.datasets[dsIdx].data = smaPreseedData(smaCacheFull[ci]);
