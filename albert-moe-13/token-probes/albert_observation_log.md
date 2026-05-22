@@ -189,6 +189,47 @@ Context: post-restart oscillation (ep2890–2906) appears to have resolved into 
 
 ---
 
+## Field Note 43 — 2026-05-22T21:02Z · ep2941→2942 — ep2941 CONFIRMED 9.4941 · CMP TAKEOVER · LNG RECOVERY
+
+**Source:** dashboard screenshot 21:02:42Z. EP 2942 · batch 2/300 (just started).
+
+**ep2941 completed: 9.4941** — confirmed from EP AVG label. Delta from ep2940 (9.4980): **-0.0039**. Descent resumed after the post-ATL bounce. Gap to ATL 9.4873: **0.0068 nats**.
+
+Server-side staircase (training log + this image):
+```
+ep2938  9.4873  ← ATL
+ep2939  9.5026  bounce +0.0153
+ep2940  9.4980  returning -0.0046
+ep2941  9.4941  descending -0.0039  ← confirmed here
+ep2942  batch 2/300  running
+```
+
+T-610 trail: **9.4971** — above EP AVG 9.4941. EP AVG pulling below the trail; descent momentum confirmed.
+
+**Routing shift (vs FN41):**
+| Expert | FN41 | FN43 | delta |
+|--------|------|------|-------|
+| CMP | 90% | **100%** | **+10pp** |
+| PLN | 77% | **87%** | +10pp |
+| LNG | 35% | **58%** | **+23pp** |
+| GEN | 5% | **12%** | +7pp |
+| INT | 100% | **68%** | **-32pp** |
+| ABS | 84% | **61%** | **-23pp** |
+| LOG | 17% | **24%** | +7pp |
+| SEM | — | 12% | — |
+| INF | — | 10% | — |
+| SYN | — | 0% | — |
+
+CMP has taken over the dominant slot (100%) from INT (now 68%). LNG surged back from 35%→58%. PLN lifted to 87%. ABS and INT both retreated. Post-ATL routing diffusion pattern: after a new floor the model broadens routing before reconsolidating for the next push. SYN 0%, CTX/MEM 2% — abstract/semantic layer still quiet.
+
+**Events bar confirms:** WALD ep2939 6.2% n=1500 visible — structural WALD fired during the bounce epoch (consistent with training log). Gold ATL marker at ep2938 visible on chart.
+
+**TTL:** 6% high / 80% mid / 4% red — stable.
+
+**Status: ep2941=9.4941 confirmed. Descent resumed. CMP leading, LNG recovered. T-610 above EP AVG. ep2942 opening — watching for continuation toward new ATL challenge below 9.4873.**
+
+---
+
 ## Field Note 42 — 2026-05-22T21:10Z · ep2938–2941 — NEW ATL 9.4873 · WALD CLUSTER · ep2940 RETURNING
 
 **Source:** training.log (EPOCH_SUMMARY ground truth — all 300 batches per epoch).
