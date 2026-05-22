@@ -2530,7 +2530,7 @@
                             c.canvas.style.cursor = 'grabbing';
                             document.body.style.cursor = 'grabbing';
                         },
-                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); applyRenderDistance(); chart.update('none'); syncSubChartX(); }
+                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); chart.update('none'); syncSubChartX(); }
                     },
                     zoom: {
                         wheel: { enabled: true, speed: 0.20 }, pinch: { enabled: true }, mode: 'xy',
@@ -2546,7 +2546,6 @@
                                 _t = setTimeout(() => {
                                     isInteracting = false;
                                     chart.stop();
-                                    applyRenderDistance();
                                     chart.update('none');
                                     syncSubChartX();
                                 }, 120);
