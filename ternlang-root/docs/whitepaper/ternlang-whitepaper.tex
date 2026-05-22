@@ -1170,7 +1170,7 @@ Sections~\ref{sec:sparse}--\ref{sec:moe}: a fully ternary Mixture-of-Experts
 language model trained end-to-end without GPU hardware. What began as a
 22M-parameter, 3-layer, English-only model (v2.0.0) has evolved through successive
 autonomous surgeries into an 18-layer, 87M-parameter multilingual system (v3.0)
-trained on eight languages across a 177M-token corpus (2576+ global epochs as of 2026-05-21). It serves as an empirical
+trained on eight languages across a 177M-token corpus (2915+ global epochs as of 2026-05-22). It serves as an empirical
 existence proof that the ternary execution substrate enables practical neural
 training, self-directed architectural growth, and real-time natural language
 generation on commodity consumer hardware.
@@ -1836,15 +1836,15 @@ Vocabulary & 32,000 tokens (ByteLevel BPE, 8 languages) \\
 Corpus & 177,654,147 tokens (chaos layer: 10\%) \\
 Total parameters & $\approx$\textbf{87M} (ternary) \\
 Global epochs at v3.0 launch & $\approx$55 \\
-Global epochs completed & \textbf{2576+} (Modal T4 GPU) \\
-Best epoch-average loss & \textbf{9.5800} (Ep2576, 2026-05-21) \\
-Best single-batch loss & \textbf{9.2961} (dashboard, 2026-05-21) \\
+Global epochs completed & \textbf{2915+} (Modal T4 GPU) \\
+Best epoch-average loss & \textbf{9.5015} (Ep$\approx$2913, 2026-05-22) \\
+Best single-batch loss & \textbf{9.1370} (dashboard, 2026-05-22) \\
 Random baseline $\ln(32000)$ & 10.373 \\
-Reduction from random baseline & \textbf{7.5\%} (10.373 $\to$ 9.580) \\
+Reduction from random baseline & \textbf{8.4\%} (10.373 $\to$ 9.502) \\
 Surgeries completed & \textbf{6} (12L $\to$ 13L $\to$ 14L $\to$ 15L $\to$ 16L $\to$ 17L $\to$ 18L) \\
-Surgery gate status (next: 18L $\to$ 21L) & Plateau gate filling (window F8=233); actively descending \\
+Surgery gate status (next: 18L $\to$ 21L) & Plateau gate BLOCKED; two cliff dives post-surgery-6; 9.50 resistance floor \\
 Expert skip rate & \textbf{75\%} (Top-3 of 12, confirmed live) \\
-Inference throughput (CPU, @sparseskip) & \textbf{83 tok/s} (5L demo) · \textbf{13--18 tok/s} (18L, ep1549 ckpt) \\
+Inference throughput (CPU, @sparseskip) & \textbf{83 tok/s} (4L baseline, 2026-05-07) · \textbf{24.5 avg / 37 peak tok/s} (18L CPU) \\
 Training hardware & Modal.com T4 GPU ($\approx$\$0.003/epoch) \\
 CPU validation hardware & HP ZBook 2013 $\cdot$ Intel i7-4800MQ $\cdot$ no GPU \\
 \bottomrule
@@ -1938,9 +1938,9 @@ CPU validation hardware & HP ZBook 2013 $\cdot$ Intel i7-4800MQ $\cdot$ no GPU \
 \caption{Loss trajectory for Albert MoE-13 v3.0 (ep55--143 shown). Three phases visible:
 (1) post-vocabulary-surgery plateau near $\ln(32000)$ (Ep55--82); (2) Nash equilibrium
 freeze Ep83--104; (3) sustained $-0.001$\,nats/epoch descent from Ep105 after expert seed
-bias introduction. Chart shows ep143 (best 10.3262); training has continued to \textbf{ep2045+
-with epoch-average ATL 9.8172 and single-batch ATL 9.6791} --- the extended trajectory and
-five surgery events (ep511, 547, 611, 645, 701) are tracked in the live dashboard at
+bias introduction. Chart shows ep143 (best 10.3262); training has continued to \textbf{ep2915+
+with epoch-average ATL 9.5015 and single-batch ATL 9.1370} --- the extended trajectory and
+six surgery events (ep511, 547, 611, 645, 701, 2487) are tracked in the live dashboard at
 \texttt{batch\_history.csv} in the repository.}
 \label{fig:loss_curves}
 \end{figure}
@@ -2321,10 +2321,10 @@ exists; its generality and robustness remain to be characterised.
 \label{subsec:mycelium_inspector}
 
 The live training dashboard exposes a \emph{Mycelium Inspector} tab---a real-time
-visualisation of gradient flow and expert routing across all 17 layers. Two view modes
+visualisation of gradient flow and expert routing across all 18 layers. Two view modes
 are available:
 
-\textbf{BRAIN mode}: Renders the model as a directed graph---INPUT at L0, OUTPUT at L16---with
+\textbf{BRAIN mode}: Renders the model as a directed graph---INPUT at L0, OUTPUT at L17---with
 per-expert connections colour-coded by routing weight and gradient magnitude. Cross-layer
 connections reveal which layers are actively reorganising (dense, bright connections) versus
 structurally stable (sparse, dim). The cursor-hover tooltip reports the cosine similarity
@@ -2342,6 +2342,78 @@ behaviour is analogous to fungal mycelium---invisible infrastructure that routes
 to where growth is occurring, with no centralised director. The inspector makes this
 infrastructure visible, turning a black-box training run into a directly observable
 biological process.
+
+\subsection{Sovereign Observability: The Pause-Investigate-Resume Protocol}
+\label{subsec:pause_investigate_resume}
+
+Full-stack ownership of the training infrastructure enables an operational capability
+that managed training services cannot provide: the ability to pause the training run
+at any moment, investigate internal state at arbitrary resolution, and resume without
+loss of accumulated gradient history or routing structure.
+
+\textbf{The pause button as a research instrument.} Albert.'s training loop runs on
+Modal.com T4 GPU instances with per-second billing. At any point during a training run,
+an operator can halt execution, pull the current checkpoint, run diagnostic probes---
+token space geometry, expert routing distribution, gradient norm profiles, embedding
+similarity matrices---and resume from the exact halted state. The investigation window
+costs precisely what the paused time costs, visible on the per-second counter, with no
+minimum run time, no re-queuing penalty, and no loss of training state.
+
+This capability is not available when the training loop is a black box. It requires
+owning the checkpoint format, the volume (in our case \texttt{albert-vol} on Modal),
+and the training entry point. Sovereignty over the stack is the precondition for
+sovereignty over the investigation.
+
+\textbf{Reading the loss curve as a structured signal.} The training dashboard renders
+albert.'s loss trajectory as a live chart updated at 500ms poll intervals. Over 2,915+
+training epochs, a recurring phenomenology has emerged: sharp \emph{cliff dives}
+(compressed vertical loss descents), \emph{cliff-base consolidation} (tight oscillation
+at the new floor with WALD cluster activity), and \emph{expert routing reorganisation}
+at the base (specialist shares shift as the model integrates the new loss landscape).
+These patterns are structurally analogous to technical price action in financial charts:
+the loss curve encodes structured behaviour of a complex system, and a trained observer
+can distinguish noise from signal in real time.
+
+Concretely, the post-surgery-6 training arc (ep2487--ep2915+) has produced two distinct
+cliff dives. The first (ep2860) descended from $\approx$9.61 to a floor of
+$\approx$9.52, with 4--5 WALD diamond markers clustering at the base. The second
+(ep2890+, following an AdamW buffer reset from a weight-pull restart) descended further
+to a floor of $\approx$9.50, producing the current best epoch-average ATL of 9.5015.
+The 9.50 level has acted as a structural resistance floor across both attempts---either
+the corpus entropy ceiling for the current 18L configuration, or a pre-plateau
+consolidation before surgery 7 becomes warranted.
+
+\textbf{The observation log as a scientific artifact.} The ability to observe training at
+this resolution has motivated a structured field journal maintained in parallel with the
+training run: \texttt{albert\_observation\_log.md} in the \texttt{token-probes/} directory.
+The log contains timestamped field notes documenting routing table snapshots, WALD event
+clusters, cliff dive structure, expert death and resurrection events, surgery gate status,
+and embedding geometry probes. As of ep2915, the log contains 32 field notes covering the
+full post-surgery-6 arc.
+
+This methodology---systematic observation of a training run as a scientific process rather
+than a computational job---is enabled entirely by the pause-investigate-resume capability.
+Without the ability to stop, probe, and resume, the internal dynamics of training remain
+a post-hoc inference from the loss curve. With it, they become directly observable in real
+time.
+
+\textbf{The intervention calculus.} The pause-investigate-resume protocol changes the
+cost structure of training-time investigation. At any moment, the operator faces a choice:
+observe passively, intervene, or do nothing. The per-second cost counter makes this
+decision transparent:
+
+\begin{equation}
+  C_{\text{investigate}}(t) = c_{\text{T4}} \cdot t_{\text{paused}}
+  \approx \$0.021 \cdot \frac{t_{\text{paused}}}{60 \cdot \text{min/epoch}}
+\end{equation}
+
+A 20-minute investigation costs approximately \$0.007. This cost is bounded, visible,
+and independent of what is discovered. The alternative---allowing a misdiagnosed routing
+event to persist for dozens of epochs while the operator waits for the next checkpoint---
+has an unbounded cost in wasted training budget and potentially irreversible model state.
+
+The sovereign training stack converts investigation from a disruption into a routine
+research operation.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Qutrit Neural Networks and Ternlang}
