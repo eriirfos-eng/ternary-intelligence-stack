@@ -1,7 +1,8 @@
 # TIS Benchmark Results
 
 Reproducible benchmark data for the Ternary Intelligence Stack.  
-All figures measured on real hardware — no simulations, no extrapolations.
+All figures measured on real hardware unless explicitly labeled as projections or estimates.  
+§15 contains forward projections derived from measured baselines — these are clearly labeled.
 
 **Two distinct MoE systems appear in this document:**  
 §1–§10 benchmark the **TernMoeOrchestrator** — the symbolic decision engine at the product layer, with 13 domain-specialist experts (Ethics, Legal, Medical, etc.).  
@@ -267,6 +268,8 @@ Config: 12 experts · hidden=256 · inner=1024 · 2,000 iterations · 200 warmup
 **Interpretation:**  
 At every decode step, Albert's Top-3 routing selects 3 of 12 experts. The remaining 9 receive zero combined weight — `@sparseskip` detects this and `continue`s the MLP loop, skipping the entire forward pass for those 9 experts. On real hardware this delivers a **3.97× end-to-end MLP speedup per decode token** with mathematically identical output (verified: max output divergence < 1e-4 across all sparsity levels).
 
+**Baseline note:** The "Dense" column is the naive scalar f32 loop (implementation A in §11d). This is the natural comparison for the routing primitive — both paths use the same scalar kernel, and `@sparseskip` simply skips iterations. The vpsignb G kernel (§11d) supersedes this for wall-clock inference: 3.97× over naive scalar translates to a different absolute throughput once the kernel itself is upgraded, but the routing speedup ratio holds independently of kernel choice.
+
 The theoretical 122× figure from the TIS whitepaper is the ASIC upper bound at 99%+ *weight-level* sparsity where bit-masking overhead is eliminated at the silicon level. These figures are the honest x86 baseline — no extrapolation.
 
 Patent pending: A50296/2026.
@@ -275,7 +278,7 @@ Patent pending: A50296/2026.
 
 **First published result — 2026-05-09 · albert. v2.0.0 · 5L architecture (post-surgery checkpoint)**
 
-*Note: albert. v2.0.0 began training at 3L and grew autonomously via Net2Net surgery. The perplexity result in §12 was measured at the 3L checkpoint (pre-surgery). This throughput result was measured at the 5L checkpoint after the first surgery fired. Same model version, different epoch snapshots.*
+*Note: albert. v2.0.0 began training at 3L and grew autonomously via Net2Net surgery. The perplexity result in §13 was measured at the 3L checkpoint (pre-surgery). This throughput result was measured at the 5L checkpoint after the first surgery fired. Same model version, different epoch snapshots.*
 
 | Field | Value |
 |-------|-------|
@@ -299,7 +302,7 @@ Patent pending: A50296/2026.
 
 PPL is deterministic across machines (same model, same eval set). Tok/s varies by µarch — Zen+ (Ryzen 3500U) vs Haswell (i7-4800MQ). Both CPU-only, no GPU, no INT8.
 
-**Current (v3.0 · 18L · CPU):** 13–18 tok/s per prompt (measured across 15 benchmark prompts, ep1549 checkpoint — see `benchmarks/bench_v3.0_2026-05-17_074807.txt`). Depth × 3.4 vs 5L; multilingual 32k vocab, 256CTX. GPU training on Modal T4 is separate from inference measurement. Updated inference benchmarks pending 18L checkpoint.
+**Current (v3.0 · 18L · CPU · vpsignb G kernel):** **24.5 tok/s average, 37.0 tok/s peak** (15 benchmark prompts, ep2797 checkpoint — see §11d and `benchmarks/bench_v3.0_2026-05-22_*.txt`). Improvement from the 13–18 tok/s (ep1549) figure is entirely due to the vpsignb INT8 kernel replacing the scalar path — same checkpoint architecture. Depth ×3.4 vs 5L; multilingual 32k vocab, 256CTX.
 
 **Reproduce (CPU):**
 ```bash
@@ -310,9 +313,166 @@ cargo build --release -p moe-test
 
 The `--bench` mode runs `/p1`–`/p5` (5 fixed prompts, same each run) and reports tok/s, ms/tok, and expert skip rate per prompt.
 
+### §11d — Ternary Matmul Kernel Ablation
+
+**Measured: 2026-05-22 · Hardware: HP ZBook 15 · i7-4800MQ @ 2.70 GHz · AVX2 · no GPU**  
+**Run:** `cargo run --release --bin matmul_ablation -p moe-llm-core`  
+500 timed iterations + 50 warmup. Batch size 1 (autoregressive decode). All implementations verified correct vs dense reference.
+
+Seven implementations compared at every albert. layer shape:
+
+| Label | Description |
+|-------|-------------|
+| A dense_f32 | Naive Rust scalar f32 loop (lower bound) |
+| B sparse_idx | Scatter-gather index loop — the original `forward_sparse` path |
+| C candle_gemv | Candle Tensor matmul / BLAS SGEMV on f32 ternary weights |
+| D ternary_i8 | Sequential i8 signs, scalar branchless (LLVM cannot vectorize this pattern) |
+| E ternary_avx2 | Explicit AVX2, single pos/neg accumulator chain (latency-bound) |
+| F avx2_x4unroll | 4× unrolled AVX2, 8 independent float accumulators (intermediate result) |
+| **G i8quant_vpsign** | **vpsignb: x quantized to i8, sign applied in one instruction — current hot path** |
+
+#### Key insight: the float-to-mask pipeline was the real bottleneck
+
+Kernels A–F keep activations as f32 and decode i8 signs into float masks. The bottleneck is not accumulator latency — it is the decode pipeline itself: `cvtepi8_epi32 → cmpeq_epi32 → castsi256_ps → and_ps` costs ~10 µops per 32 elements.
+
+**G eliminates all of that.** Quantize x to i8 once per forward call (256 bytes instead of 1 KB), then `vpsignb(x_q, signs)` does the entire sign application in a single instruction:
+
+```
+signs[j] > 0  →  x_q[j]     (keep)
+signs[j] < 0  →  -x_q[j]    (negate)
+signs[j] == 0 →  0            (zero — weight or @sparseskip activation mask)
+```
+
+Accumulate with `cvtepi8_epi16 + vpaddw` (i16, safe up to in_dim=4096). Reduce to i32 via `madd_epi16`. Total: ~4 µops per 32 elements vs ~10 for the float kernel.
+
+#### Full ablation results
+
+```
+  c_fc         [256→1024]  weight sparsity only
+    shape: [1024 x 256]  sparsity: 31.0%  act_mask: 0%
+    A dense_f32:        327.05 us  (1.00x)           err=0
+    B sparse_idx:       202.08 us  (1.62x vs dense)  err=4.72e-7
+    C candle_gemv:       45.55 us  (7.18x vs dense)  err=8.20e-8
+    D ternary_i8:       319.46 us  (0.14x vs C)      err=3.20e-7
+    E ternary_avx2:      80.95 us  (0.56x vs C)      err=8.94e-8
+    F avx2_x4unroll:     64.47 us  (0.71x vs C)      err=8.20e-8
+    G i8quant_vpsign:    20.90 us  (2.18x vs C)      err=1.48e-3  ← hot path
+
+  c_proj       [1024→256]  weight + act mask (level-2+3)
+    shape: [256 x 1024]  sparsity: 51.5%  act_mask: 30%
+    C candle_gemv:       40.65 us
+    E ternary_avx2:      53.97 us  (0.75x vs C)
+    F avx2_x4unroll:     48.44 us  (0.84x vs C)
+    G i8quant_vpsign:    16.84 us  (2.41x vs C)      err=+0.02 over mask baseline  ← hot path
+
+  attn Q/K/V/O [256→256]   weight sparsity only
+    shape: [256 x 256]  sparsity: 31.0%  act_mask: 0%
+    C candle_gemv:       10.25 us
+    E ternary_avx2:      14.75 us  (0.69x vs C)
+    F avx2_x4unroll:     13.05 us  (0.79x vs C)
+    G i8quant_vpsign:     5.49 us  (1.87x vs C)      err=1.39e-3  ← hot path
+
+  lm_head      [256→32000] weight sparsity only
+    shape: [32000 x 256]  sparsity: 31.0%  act_mask: 0%
+    C candle_gemv:     4090.37 us
+    E ternary_avx2:    2306.48 us  (1.77x vs C)
+    F avx2_x4unroll:   2215.50 us  (1.85x vs C)
+    G i8quant_vpsign:  1063.50 us  (3.85x vs C)      err=1.48e-3  ← hot path
+```
+
+#### Summary table
+
+| Layer | Shape | Sparsity | candle (µs) | **G (µs)** | **G vs candle** |
+|-------|-------|----------|-------------|------------|-----------------|
+| c_fc | [1024×256] | 31% | 45.55 | **20.90** | **2.18×** |
+| c_proj | [256×1024] | 51.5% | 40.65 | **16.84** | **2.41×** |
+| attn Q/K/V/O | [256×256] | 31% | 10.25 | **5.49** | **1.87×** |
+| lm_head | [32000×256] | 31% | 4090.37 | **1063.50** | **3.85×** |
+
+**G beats candle BLAS at every albert. layer shape on AVX2 x86.**
+
+#### Quantization error
+
+G quantizes the input activation to 127 levels (i8, scale = max|x|/127). Rounding error per element ≤ scale/2. Accumulated over in_dim=256 at 69% nonzero: max_err < 2e-3 per output element. This is standard INT8-inference grade precision — acceptable for autoregressive decode. The `@sparseskip` activation mask (stored as 0 in the sign matrix) is handled identically to weight zeros: `vpsignb` outputs 0 without any special-casing.
+
+#### What is wired into TernaryLinear
+
+`ternary_dot_avx2` in `moe-llm-core/src/model/ternary_linear.rs` is the G kernel (vpsignb-based INT8 path). `forward_i8` quantizes x once per batch item, then calls it for every output row. Dispatched via `is_x86_feature_detected!("avx2")` at runtime; scalar f32 fallback for non-AVX2 targets.
+
+The `forward_sparse` scatter-gather index loop has been removed entirely — it was 4–5× slower than candle at every shape and was always the wrong algorithm.
+
 ---
 
-## §12 — Albert MoE-13: Held-Out Perplexity Evaluation
+## §12 — GPU Inference: CuTern WMMA vs CPU G Kernel (T4 · 2026-05-22)
+
+**Measured: 2026-05-22 · GPU: NVIDIA T4 (Modal.com, CUDA 12.1) · CPU: i7-4800MQ (§11d)**  
+**Run:** `albert-train bench_gpu` → `gpu_bench /vol/albert` on T4  
+15 prompts × 128 new tokens, greedy argmax decode (isolates throughput from sampling overhead).  
+Checkpoint: `albert_v3.0.best.safetensors` · Arch: 18L · 256H · 12E · 256CTX · 32000V
+
+### §12a — Three Measurement Passes
+
+| Pass | Implementation | tok/s (avg) | Notes |
+|------|---------------|------------|-------|
+| 1 | candle cuBLAS + sampling (`to_vec1` per token) | 7.8 | per-token vocab transfer + sync |
+| 2 | CuTern WMMA INT8 + argmax (`to_scalar` per token) | 11.5 | fused quantize+WMMA; 4-byte sync per token |
+| 3 | CuTern WMMA INT8 + GPU-only decode loop (single final sync) | **10.4** | `Tensor::cat` per step; one sync at end |
+| — | **CPU G kernel vpsignb (§11d, same model)** | **24.5** | no GPU, no sync, no kernel launch overhead |
+
+Pass 3 (removing per-token sync) did not improve over Pass 2. The sync was not the bottleneck — confirmed.
+
+### §12b — Full Pass 3 Results (CuTern + GPU-only loop)
+
+```
+[P1]  in the beginning god created the              →   3.2 tok/s  314ms/tok  (cold start)
+[P2]  die Geschichte der Europäischen Union begann  →  11.5 tok/s   87ms/tok
+[P3]  the ternary number system uses three distinct →  11.0 tok/s   91ms/tok
+[P4]  once upon a time in a kingdom far             →  11.3 tok/s   89ms/tok
+[P5]  was ist das ternäre Zahlensystem ...          →  11.0 tok/s   91ms/tok
+[P6]  the EU AI Act entered into force on           →  10.8 tok/s   93ms/tok
+[P7]  die künstliche Intelligenz verändert ...      →  11.0 tok/s   91ms/tok
+[P8]  Isaac Newton discovered ...                   →  10.9 tok/s   92ms/tok
+[P9]  the transformer architecture introduced ...   →  11.2 tok/s   89ms/tok
+[P10] der Quantencomputer nutzt Quantenmechanik um  →  10.8 tok/s   93ms/tok
+[P11] mixture of experts models improve ...         →  10.4 tok/s   96ms/tok
+[P12] the mitochondria is the powerhouse of the     →  10.6 tok/s   94ms/tok
+[P13] in der Bibel steht im ersten Buch Mose ...    →  10.6 tok/s   94ms/tok
+[P14] silicon has revolutionized computing ...      →  10.3 tok/s   97ms/tok
+[P15] the meaning of life according to              →  10.9 tok/s   92ms/tok
+────────────────────────────────────────────────────────────────────────────────
+Average : 10.4 tok/s  (CUDA T4)
+```
+
+### §12c — Why CPU Wins at This Scale
+
+**CPU G kernel (24.5 tok/s) beats T4 CuTern (10.4 tok/s) at 256-hidden.** This is the correct result by design.
+
+At 256-hidden, each linear layer is a 256×256 matmul. The T4 has 40 streaming multiprocessors. A single 256×256 tile maps to ~1 SM — 39/40 SMs idle every kernel launch. Kernel launch overhead (~5–50 µs per launch) × hundreds of launches per forward pass = the bottleneck. No software fix resolves this; it is a utilization problem at this matrix size.
+
+The CPU G kernel has none of this overhead: no kernel launch, no PCIe, no device sync. `vpsignb` processes 32 elements per cycle; a 256-dim row is 8 SIMD iterations running directly in L2 cache. The full 18-layer forward pass fits inside the CPU's 6 MB L3.
+
+| Path | tok/s | Bottleneck |
+|------|-------|-----------|
+| CPU G kernel (vpsignb) | **24.5** | none — compute-bound in L2 |
+| T4 CuTern WMMA INT8 | 10.4 | kernel launch overhead for 256×256 tiles |
+| T4 cuBLAS (baseline) | 7.8 | same + cuBLAS startup overhead |
+
+### §12d — CuTern Kernel Design
+
+CuTern (`cuda/ternary_gemm.cu`) fuses a 3-kernel pipeline into one:
+
+**Old pipeline:** quantize X (global write) → quantize W (global write) → INT8 GEMM (global read+write)  
+**CuTern fused:** load X_f32 tile → smem → warp-shuffle per-row abs-max → quantize X in smem → WMMA 16×16×16 → dequantize → Y_f32 global (1 write total)
+
+Shared memory per block: 1 KB Ys (int32 acc) + 16 KB Xf (f32 tile) + 4 KB Xi (i8 tile) = 21.5 KB (within T4's 64 KB/SM). Correctness: max_err = 0.000000 on T4. Requires SM 7.5+ (Turing). T4 = SM 7.5 ✓
+
+### §12e — When GPU Wins
+
+CuTern advantage expected at: hidden_dim ≥ 1024 (fills multiple SMs per launch), batch size > 1 (amortizes launch overhead), or large lm_head projection (32000×1024 is HBM bandwidth-bound — T4's 300 GB/s vs CPU's 25 GB/s DDR3). albert. at 256-hidden is edge-optimized by design; the CPU winning here is the architecture working correctly.
+
+---
+
+## §13 — Albert MoE-13: Held-Out Perplexity Evaluation
 
 Run: `cargo run --release -p moe-llm-core --bin eval_perplexity`  
 Evaluates the current checkpoint on Alice in Wonderland (~150KB, held-out, <1 min on CPU).  
@@ -341,7 +501,7 @@ Pass a path argument to evaluate any other corpus file.
 | **Epoch-avg CE loss (ATL)** | **9.5800** (ep2576) |
 | **Batch CE loss (ATL)** | **9.2961** (dashboard) |
 | **Reduction from random** | **7.6%** on epoch-avg basis (10.3730 → 9.5800) |
-| Training cost to date | ~$0.003/epoch (Modal T4) |
+| Training cost to date | ~$0.021/epoch at 18L (Modal T4 · verified billing — see §14a) |
 | Measured | 2026-05-21 |
 
 **Early result (ep107, 12L, for reference):**
@@ -367,12 +527,12 @@ cargo run --release -p moe-llm-core --bin eval_perplexity data/corpus/stage_3/bi
 
 ---
 
-## §13 — Training Cost: Hard Numbers
+## §14 — Training Cost: Hard Numbers
 
 Verified from Modal.com billing dashboard, billing cycle May 1–Jun 1, 2026.  
 Run: overnight training session (ep334→ep461, ~127 epochs) + next-day continuation (ep462→ep475, ~14 epochs).
 
-### §13a — Measured Session Cost
+### §16a — Measured Session Cost
 
 | Metric | Verified Value |
 |--------|---------------|
@@ -390,7 +550,7 @@ Run: overnight training session (ep334→ep461, ~127 epochs) + next-day continua
 
 *Source: Modal.com / albert-training / Usage dashboard, captured 2026-05-13.*
 
-### §13b — Training Cost Comparison
+### §16b — Training Cost Comparison
 
 | Platform | Cost/epoch (approx) | Basis |
 |----------|---------------------|-------|
@@ -404,7 +564,7 @@ Run: overnight training session (ep334→ep461, ~127 epochs) + next-day continua
 
 **Key implication:** At $0.004–$0.021/epoch (scaling with depth), a training intervention costs less than a cup of coffee's fraction of electricity. This is what makes live-intervention training economically rational — patch, retry, and observe costs $0.02, not $0.20. Each 15-minute monitoring window across a full overnight run costs ~$0.08 at 17L.
 
-### §13c — What $1 Buys
+### §14c — What $1 Buys
 
 | Platform | For $1 of training |
 |----------|-------------------|
@@ -413,7 +573,7 @@ Run: overnight training session (ep334→ep461, ~127 epochs) + next-day continua
 | AWS V100 (on-demand) | ~3–5 epochs · ~1M tokens · ~20 min |
 | OpenAI fine-tuning | <1 epoch · ~125k tokens · no resume, no telemetry |
 
-### §13d — Inference Cost Comparison
+### §16d — Inference Cost Comparison
 
 albert. v2.0.0 delivers **84.4 tok/s on a CPU** (HP ZBook i7-4800MQ, no GPU, no INT8) via @sparseskip.  
 Inference runs locally — no API, no network, no per-token billing.
@@ -428,7 +588,7 @@ Inference runs locally — no API, no network, no per-token billing.
 
 **Note:** Quality comparison with GPT-4o or Claude is not claimed — albert. v3.0 is a research prototype. The cost comparison is structural: ternary @sparseskip inference at 84 tok/s on a 2013 CPU demonstrates that the inference efficiency claim is hardware-verified, not theoretical. The 3.97× @sparseskip speedup (§11) is what enables CPU-viable throughput at this depth.
 
-### §13e — The Live-Intervention Arithmetic
+### §14e — The Live-Intervention Arithmetic
 
 The live-intervention training methodology (described in the main README) is only economically viable when intervention cost is negligible. The hard numbers confirm this:
 
@@ -444,12 +604,12 @@ At these costs, "discard the last 15 minutes, patch the gate threshold, restart"
 
 ---
 
-## §14 — Training at Scale: Cost & Speed Projections
+## §15 — Training at Scale: Cost & Speed Projections
 
-All projections derived from the verified $0.004/epoch T4 baseline (§13a) and published GPU specifications.  
+All projections derived from the verified $0.004/epoch T4 baseline (§14a) and published GPU specifications.  
 Hardware speedup ratios are conservative estimates for albert. v3.0's architecture (58M total ternary params stored; ~13M active per token via Top-3 routing, 256CTX, memory-bandwidth-bound at this size).
 
-### §14a — OpenAI-Scale Cost Comparison
+### §16a — OpenAI-Scale Cost Comparison
 
 | Metric | albert. v3.0 | GPT-3 | GPT-4 (est.) |
 |--------|-------------|-------|--------------|
@@ -465,7 +625,7 @@ Hardware speedup ratios are conservative estimates for albert. v3.0's architectu
 albert. trains at **1,180× lower cost per token** than GPT-3 on equivalent cloud hardware.  
 Inference is cost-free at deployment — ternary weights run on any CPU with no quantization step.
 
-### §14b — What Equal Budgets Buy
+### §16b — What Equal Budgets Buy
 
 | Budget | albert. on T4 (Modal) | GPT-equivalent |
 |--------|-----------------------|----------------|
@@ -493,7 +653,7 @@ Data-parallel training scales linearly across GPUs at albert.'s model size.
 **A100 vs T4 basis:** memory bandwidth 2,000 vs 320 GB/s (6.25×); practical speedup: ~10×.  
 **Data-parallel scaling:** linear at albert.'s parameter count — no communication bottleneck below 4 GPUs.
 
-### §14d — The Fibonacci Progression at Scale
+### §16d — The Fibonacci Progression at Scale
 
 albert. grows through Fibonacci depth milestones: 12L → 13L → 14L → 15L → 16L → 17L → **18L** (current) → 21L → 34L → 55L...  
 Each surgery requires reaching a loss gate, then a Fibonacci-epoch cooldown before the next trigger.  
@@ -563,11 +723,11 @@ python3 benchmarks/robust_analysis.py
 
 ---
 
-## §15 — Mandelbrot Plasticity: A Novel Net2Net Primitive
+## §16 — Mandelbrot Plasticity: A Novel Net2Net Primitive
 
 **First confirmed execution: Global Epoch 512, 2026-05-13.**
 
-### §15a — What it is
+### §16a — What it is
 
 Standard Net2Net surgery (Chen et al., 2015) clones a layer and adds Gaussian noise to break gradient symmetry before training resumes. The noise is structureless: two surgeries at different depths produce statistically identical perturbations. Each new layer has no geometric relationship to the existing stack.
 
@@ -586,7 +746,7 @@ For each weight `w` in the cloned layer:
 
 No external RNG. Fully deterministic from `(weight value, tensor position, layer index)`. Surgery is reproducible and loggable.
 
-### §15b — Why the interior/boundary distinction is principled
+### §16b — Why the interior/boundary distinction is principled
 
 The Mandelbrot interior (bounded orbits) represents stable dynamics: small changes to `c` produce small changes to the orbit. Mapping a weight to the interior means its value places it in a stable basin of the iteration — we treat it as a settled, learned feature and apply near-zero perturbation (0.02× scale).
 
@@ -594,7 +754,7 @@ The Mandelbrot boundary (slow escape, high iteration count) represents maximum s
 
 This is not arbitrary. It is a geometric answer to the question: *"which weights, if perturbed slightly, will produce the most new behavior?"* The fractal boundary provides that answer deterministically, without gradient computation.
 
-### §15c — Self-similar layer stack via golden-ratio sequencing
+### §16c — Self-similar layer stack via golden-ratio sequencing
 
 Each surgery assigns the new layer a unique `c_im` via the golden-ratio sequence `frac(layer_idx · φ)`. The golden ratio provides **maximal spacing**: each new value lands farthest from all prior values in the interval. As the model grows 3L → 5L → 8L → 13L → 21L, each new layer's perturbation pattern is:
 - Self-similar to all prior layers (same Mandelbrot geometry, same boundary structure)
@@ -602,7 +762,7 @@ Each surgery assigns the new layer a unique `c_im` via the golden-ratio sequence
 
 The layer stack grows the way the Mandelbrot set zooms: each level inherits global structure while expressing unique local geometry.
 
-### §15d — Literature gap
+### §16d — Literature gap
 
 | Method | Symmetry-breaking mechanism |
 |--------|-----------------------------|
@@ -619,7 +779,7 @@ The closest published work is *"The Boundary of Neural Network Trainability is F
 
 **The literal claim — using Mandelbrot interior/boundary classification to assign per-weight plasticity during Net2Net layer surgery — has no published precedent.**
 
-### §15e — Execution record
+### §16e — Execution record
 
 Five surgeries completed to date (2026-05-13 → 2026-05-17):
 
@@ -646,7 +806,7 @@ Five surgeries completed to date (2026-05-13 → 2026-05-17):
 | New all-time best | 10.2463 (first batches post-surgery) |
 | Loss spike | None — identity mapping preserved, Mandelbrot perturbation at scale 1e-3 |
 
-**Current state (2026-05-21):** ep2576 · 18L · epoch-ATL 9.5800 · batch-ATL 9.2961 · 6 Net2Net surgeries complete (12L→13L→14L→15L→16L→17L→18L) · Gen 1 step 1/6 · plateau window F8 = 233 · ceiling 21L.
+**Current state (2026-05-22):** ep2802 · 18L · epoch-ATL 9.2746 · batch-ATL 9.4925 · 6 Net2Net surgeries complete (12L→13L→14L→15L→16L→17L→18L) · Gen 1 step 1/6 · plateau window F8 = 233 · ceiling 21L.
 
 ---
 

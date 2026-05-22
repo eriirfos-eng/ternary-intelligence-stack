@@ -6,6 +6,7 @@ train_modal.py — albert. GPU training on Modal
   modal run train_modal.py             # launch GPU training (streams logs live)
   modal run --detach train_modal.py    # same but survives terminal close
   python train_modal.py pull           # pull latest checkpoint back to local models/
+  python train_modal.py bench_gpu      # build + run gpu_bench on T4, stream results
 
 Run all commands from the albert-moe-13/ directory.
 """
@@ -95,11 +96,22 @@ def _du(path: str) -> str:
         return "?"
 
 
+def cmd_bench_gpu():
+    print("[bench_gpu] launching on Modal T4 ...")
+    env = {**os.environ, "ALBERT_BENCH_GPU": "1"}
+    rc = subprocess.run(
+        ["modal", "run", os.path.abspath(__file__)],
+        cwd=_HERE,
+        env=env,
+    ).returncode
+    sys.exit(rc)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2 or sys.argv[1] not in ("setup", "pull"):
+    if len(sys.argv) < 2 or sys.argv[1] not in ("setup", "pull", "bench_gpu"):
         print(__doc__)
         sys.exit(0)
-    {"setup": cmd_setup, "pull": cmd_pull}[sys.argv[1]]()
+    {"setup": cmd_setup, "pull": cmd_pull, "bench_gpu": cmd_bench_gpu}[sys.argv[1]]()
     sys.exit(0)
 
 
@@ -268,8 +280,93 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: i
     print("[modal] run complete — pull checkpoint:  python train_modal.py pull")
 
 
+@app.function(
+    image=image,
+    gpu="T4",
+    timeout=900,          # 15 min ceiling — 15 prompts × 128 tokens is well under
+    volumes={"/vol": vol},
+    memory=16384,
+    cpu=4.0,
+)
+def bench_gpu():
+    rust_bin = "/root/.cargo/bin"
+    cuda_bin = "/usr/local/cuda/bin"
+    env = {
+        **os.environ,
+        "PATH": f"{rust_bin}:{cuda_bin}:{os.environ.get('PATH', '')}",
+        "CARGO_HOME":       "/vol/cargo-home",
+        "CARGO_TARGET_DIR": "/tmp/cargo-target",
+        "CARGO_TERM_COLOR": "never",
+    }
+    env.pop("HOME", None)
+
+    with open("/src/Cargo.toml", "w") as f:
+        f.write(
+            '[workspace]\n'
+            'members = ["moe-llm-core"]\n'
+            'resolver = "2"\n'
+            '\n'
+            '[workspace.package]\n'
+            'version    = "1.3.6"\n'
+            'edition    = "2024"\n'
+            'license    = "LGPL-3.0-or-later"\n'
+            'repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"\n'
+            'homepage   = "https://ternlang.com"\n'
+        )
+
+    print("[modal] cargo build --release --features cuda --bin gpu_bench ...")
+    sys.stdout.flush()
+
+    result = subprocess.run(
+        [f"{rust_bin}/cargo", "build", "--release",
+         "--features", "cuda", "--bin", "gpu_bench"],
+        cwd="/src",
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    if result.stdout:
+        print(result.stdout[-4000:])
+    if result.stderr:
+        print(result.stderr[-4000:])
+    sys.stdout.flush()
+
+    if result.returncode != 0:
+        raise RuntimeError("cargo build failed")
+
+    binary = "/tmp/cargo-target/release/gpu_bench"
+    print(f"[modal] build OK — running benchmark ...")
+    sys.stdout.flush()
+
+    import threading
+    proc = subprocess.Popen(
+        [binary, "/vol/albert"],
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+
+    def stream(p):
+        for line in p.stdout:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+
+    t = threading.Thread(target=stream, args=(proc,), daemon=True)
+    t.start()
+    proc.wait()
+    t.join(timeout=5)
+
+    if proc.returncode != 0:
+        raise RuntimeError(f"gpu_bench exited {proc.returncode}")
+
+
 @app.local_entrypoint()
 def main():
+    if os.environ.get("ALBERT_BENCH_GPU"):
+        bench_gpu.remote()
+        return
+
     # Always push the local config to the volume before launching — prevents
     # silent CTX/arch drift when config.json changes after initial setup.
     print("[main] syncing config.json to volume ...")
