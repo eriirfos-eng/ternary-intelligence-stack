@@ -1019,8 +1019,6 @@
                 <div class="dd-section-hdr">Technical Analysis</div>
                 <label class="dd-item" style="--item-col:#ffd700"><input type="checkbox" id="cbFib"> ◇ FIB <small>Fibonacci zones</small></label>
                 <label class="dd-item" style="--item-col:#22d3ee"><input type="checkbox" id="cbBB"> ~ BB <small>Bollinger ±2σ</small></label>
-                <label class="dd-item" style="--item-col:#f59e0b"><input type="checkbox" id="cbOHLC"> ▮ OHLC <small>candlesticks</small></label>
-                <label class="dd-item" style="--item-col:#fb923c"><input type="checkbox" id="cbHA"> ▮ HA <small>Heikin-Ashi</small></label>
                 <label class="dd-item" style="--item-col:#a78bfa"><input type="checkbox" id="cbMACD"> ~ MACD <small>ep 3/13 divergence</small></label>
                 <label class="dd-item" style="--item-col:#34d399"><input type="checkbox" id="cbRSI"> ~ RSI <small>momentum 0–100</small></label>
                 <div class="dd-sep"></div>
@@ -1221,8 +1219,7 @@
         ttl_nash:   `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="#f59e0b" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/></svg>`,
         ttl_green:  `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="#22c55e" stroke="none"/></svg>`,
         ttl_stress: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="#ef4444" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/></svg>`,
-        doji: `<svg viewBox="0 0 12 12" fill="none" stroke="#ffd700" stroke-width="1.3" width="12" height="12"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor"/><rect x="2.5" y="4.5" width="7" height="3" rx="0.5" fill="rgba(255,215,0,0.2)"/></svg>`,
-        wald: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="12" height="12"><circle cx="6" cy="5.5" r="3.8"/><line x1="6" y1="3.5" x2="6" y2="5.8"/><circle cx="6" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg>`,
+        wald:`<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="12" height="12"><circle cx="6" cy="5.5" r="3.8"/><line x1="6" y1="3.5" x2="6" y2="5.8"/><circle cx="6" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg>`,
     };
 
     // URL params: ?poll_ms=2000 for CPU (default 500 for T4), ?stale_s=120 for CPU (default 30)
@@ -1318,14 +1315,7 @@
     let lastWaldDeadHigh = '';   // dead_high string of last fired Wald event
     let sporeEvents      = [];   // permanent spore ingestion markers
 
-    // ── Candle / HA / BB / MACD / draw-tool state ─────────────────────
-    // Candles are built from epoch-averages in CANDLE_WINDOW-epoch buckets, then
-    // smoothed with Heikin-Ashi.  OHLC mode removed — batch-loss wicks were 20x
-    // the actual trend range and meaningless.
-    const epochAvgLog  = []; // {epoch, avgLoss} from EPOCH_SUMMARY, sorted asc
-    const CANDLE_WINDOW = 10; // epochs per HA candle
-    let haCache        = [];
-    let haMode         = false;
+    // ── BB / MACD / draw-tool state ───────────────────────────────────
     let bbVisible      = false;
     let macdVisible    = false;
     let rsiVisible     = false;
@@ -1358,8 +1348,6 @@
     let undoStack       = [];         // in-memory undo snapshots [{trendlines,hlines,vlines,tnotes}], max 50
     let smaPreSeedLen   = 0;          // smaLog length after batch_history.csv pre-seed; preserved across restarts
     let smaPreseedMaxX  = -Infinity;  // last x value in pre-seed; tail-fetch pts ≤ this are already in smaLog
-    let lastDojiEp      = -999;
-
     // ── Surgery Gate state ───────────────────────────────────────────
     let gGateSinceBest  = null;
     let gGateMycStable  = null;
@@ -1819,68 +1807,6 @@
         }
     };
     Chart.register(bbPlugin);
-
-    // ── OHLC / Heikin-Ashi candle plugin ──────────────────────────────
-    const candlePlugin = {
-        id: 'candleDraw',
-        afterDraw(chart) {
-            if (!haMode) return;
-            const { ctx: c2, chartArea: a, scales } = chart;
-            const candles = haCache;
-            if (!candles.length) return;
-            const unitPx = Math.abs(scales.x.getPixelForValue(1) - scales.x.getPixelForValue(0));
-            const halfW  = Math.max(1.5, unitPx * 0.28);
-            c2.save();
-            c2.beginPath();
-            c2.rect(a.left, a.top, a.width, a.height);
-            c2.clip();
-            for (const cn of candles) {
-                const cx = scales.x.getPixelForValue(cn.epoch + 0.5);
-                if (cx < a.left - halfW * 2 || cx > a.right + halfW * 2) continue;
-                const pyO = scales.y.getPixelForValue(cn.open);
-                const pyC = scales.y.getPixelForValue(cn.close);
-                const pyH = scales.y.getPixelForValue(cn.high);
-                const pyL = scales.y.getPixelForValue(cn.low);
-                // Loss-domain semantics: green = loss fell (close < open = descent = good).
-                // Inverted from standard market convention. "Bullish" = model improved.
-                if (cn.bootstrap) continue;
-                const bull    = cn.close <= cn.open;
-                const bodyTop = Math.min(pyO, pyC);
-                const bodyH   = Math.max(1, Math.abs(pyC - pyO));
-                const fillC   = bull ? 'rgba(34,197,94,0.65)' : 'rgba(239,68,68,0.55)';
-                const strokeC = bull ? '#22c55e'               : '#ef4444';
-                // Wick
-                c2.beginPath();
-                c2.moveTo(cx, pyH);
-                c2.lineTo(cx, pyL);
-                c2.strokeStyle = bull ? 'rgba(34,197,94,0.55)' : 'rgba(239,68,68,0.55)';
-                c2.lineWidth = 1;
-                c2.stroke();
-                // Body
-                c2.beginPath();
-                c2.rect(cx - halfW, bodyTop, halfW * 2, bodyH);
-                c2.fillStyle   = fillC;
-                c2.strokeStyle = strokeC;
-                c2.lineWidth   = 0.8;
-                c2.fill();
-                c2.stroke();
-                // Doji diamond marker
-                if (cn.doji) {
-                    const dy = bodyTop + bodyH / 2;
-                    c2.beginPath();
-                    c2.moveTo(cx,     dy - 3.5);
-                    c2.lineTo(cx + 3.5, dy);
-                    c2.lineTo(cx,     dy + 3.5);
-                    c2.lineTo(cx - 3.5, dy);
-                    c2.closePath();
-                    c2.fillStyle = '#ffd700';
-                    c2.fill();
-                }
-            }
-            c2.restore();
-        }
-    };
-    Chart.register(candlePlugin);
 
     // ── Crosshair plugin ───────────────────────────────────────────────
     const crosshairPlugin = {
@@ -2470,25 +2396,6 @@
                 y: {
                     afterDataLimits: (axis) => {
                         if (isInteracting) return; // skip during pan/zoom — avoids lag
-                        if (!haMode) return;
-                        const xScale = axis.chart.scales.x;
-                        if (!xScale) return;
-                        const xMin = xScale.min, xMax = xScale.max;
-                        const src = haCache;
-                        let lo = Infinity, hi = -Infinity;
-                        for (const c of src) {
-                            if (c.epoch < xMin || c.epoch > xMax) continue;
-                            // Body (open/close) drives the scale — extreme wicks don't control it
-                            const bodyLo = Math.min(c.open, c.close);
-                            const bodyHi = Math.max(c.open, c.close);
-                            if (bodyLo < lo) lo = bodyLo;
-                            if (bodyHi > hi) hi = bodyHi;
-                        }
-                        if (!isFinite(lo)) return;
-                        // 50% padding gives wicks room without letting a single spike blow the scale
-                        const pad = Math.max((hi - lo) * 0.5, 0.05);
-                        axis.min = lo - pad;
-                        axis.max = hi + pad;
                     },
                     title: { display: true, text: 'Loss', color: '#64748b', font: { size: 11 } },
                     grid: { color: '#1e2d40' },
@@ -3119,64 +3026,6 @@
         });
     }
 
-    // ── Heikin-Ashi from regular OHLC candles ─────────────────────────
-    function computeHACandles(candles) {
-        const ha = [];
-        let prevOpen = null, prevClose = null;
-        for (const c of candles) {
-            const haClose = (c.open + c.high + c.low + c.close) / 4;
-            const haOpen  = prevOpen === null ? (c.open + c.close) / 2 : (prevOpen + prevClose) / 2;
-            const haHigh  = Math.max(c.high, haOpen, haClose);
-            const haLow   = Math.min(c.low,  haOpen, haClose);
-            ha.push({ epoch: c.epoch, open: haOpen, high: haHigh, low: haLow, close: haClose, doji: c.doji, bootstrap: prevOpen === null });
-            prevOpen  = haOpen;
-            prevClose = haClose;
-        }
-        return ha;
-    }
-
-    // ── Build HA candles from epoch-average windows ────────────────────
-    // Each raw candle = CANDLE_WINDOW consecutive epoch-avg losses.
-    // O/H/L/C are epoch-avg values (not batch losses), so wicks match the
-    // actual trend range.  HA smoothing is applied on top.
-    function rebuildHACandles() {
-        if (epochAvgLog.length < 2) { haCache = []; return; }
-        const sorted = [...epochAvgLog].sort((a, b) => a.epoch - b.epoch);
-        const minEp  = sorted[0].epoch;
-        // Group into buckets of CANDLE_WINDOW epochs
-        const buckets = new Map();
-        for (const { epoch, avgLoss } of sorted) {
-            const bi = Math.floor((epoch - minEp) / CANDLE_WINDOW);
-            if (!buckets.has(bi)) buckets.set(bi, { startEp: minEp + bi * CANDLE_WINDOW, losses: [], lastEp: epoch });
-            const b = buckets.get(bi);
-            b.losses.push(avgLoss);
-            b.lastEp = epoch;
-        }
-        const maxBi = Math.max(...buckets.keys());
-        const rawCandles = [];
-        for (const [bi, b] of [...buckets.entries()].sort((a, b) => a[0] - b[0])) {
-            const finalized = bi < maxBi;
-            const open  = b.losses[0];
-            const close = b.losses[b.losses.length - 1];
-            const high  = Math.max(...b.losses);
-            const low   = Math.min(...b.losses);
-            // Doji: body < 10% of wick on finalized candles
-            const body  = Math.abs(close - open);
-            const wick  = high - low;
-            const doji  = finalized && wick > 0.0001 && body / wick < 0.10 && b.lastEp !== lastDojiEp;
-            if (doji) {
-                lastDojiEp = b.lastEp;
-                if (!initialLoad) {
-                    addEvent('doji', `DOJI ep${b.lastEp}`, 'warn',
-                        `Doji candle at ep${b.lastEp} — body ${(body / wick * 100).toFixed(1)}% of window range (indecision).<br>` +
-                        `O:${open.toFixed(4)}  H:${high.toFixed(4)}  L:${low.toFixed(4)}  C:${close.toFixed(4)}`);
-                }
-            }
-            rawCandles.push({ epoch: b.lastEp, open, high, low, close, finalized, doji });
-        }
-        haCache = computeHACandles(rawCandles);
-    }
-
     // ── Status bar helpers ─────────────────────────────────────────────
     function updateTopbar(latest) {
         const loss = latest.y;
@@ -3284,7 +3133,7 @@
                 if (line.startsWith('RUN_START ')) {
                     newPts.length = 0;
                     chart.data.datasets.forEach(ds => ds.data = []);
-                    epochAvgLog.length = 0; haCache = [];
+                    epochAvgLog.length = 0;
                     bestLoss = allTimeBestBatch; worstLoss = -Infinity;
                     sessionStartLoss = null; totalPts = 0;
                     lastLossVal = null; lastKnownEpoch = -1;
@@ -3599,7 +3448,6 @@
                 for (let i = 11; i <= 15; i++) chart.data.datasets[i].data = [];
                 trailCurrentMin.fill(Infinity);
                 epochAvgLog.length = 0;
-                haCache = [];
                 lastSmaY       = null;
                 bestLoss       = allTimeBestBatch;
                 worstLoss      = -Infinity;
@@ -3764,14 +3612,11 @@
                         document.getElementById('v-tns').textContent = _tv.toLocaleString();
                         localStorage.setItem('albert_tns', _tv);
                     }
-                    // Accumulate epoch average and rebuild HA candle windows
                     const ep = parseInt(epsm[1]);
                     const avgLoss = parseFloat(epsm[2]);
-                    // Upsert: replace if epoch already logged (replay idempotency)
                     const existIdx = epochAvgLog.findIndex(e => e.epoch === ep);
                     if (existIdx >= 0) epochAvgLog[existIdx].avgLoss = avgLoss;
                     else epochAvgLog.push({ epoch: ep, avgLoss });
-                    if (haMode) rebuildHACandles();
                 }
 
                 // MYCELIUM — update myc_stable for surgery gate
@@ -3803,9 +3648,9 @@
                 }
 
                 // WALD dead-zone event — fires only when the dead signature changes
-                const wm = line.match(/^WALD epoch=(\d+) step=\d+ fill=([\d.]+)% mass=[\d.]+ dead_low=(\S+) dead_high=(\S+) severity=[\d.]+ n=(\d+)/);
+                const wm = line.match(/^WALD epoch=(\d+) step=\d+ fill=([\d.]+)% mass=([\d.]+) dead_low=(\S+) dead_high=(\S+) severity=[\d.]+ n=(\d+)/);
                 if (wm) {
-                    const wEp = parseInt(wm[1]), wFill = wm[2], wDL = wm[3], wDH = wm[4], wN = wm[5];
+                    const wEp = parseInt(wm[1]), wFill = wm[2], wMass = parseFloat(wm[3]), wDL = wm[4], wDH = wm[5], wN = wm[6];
                     const active  = wDL !== 'none' || wDH !== 'none';
                     const changed = wDL !== lastWaldDeadLow || wDH !== lastWaldDeadHigh;
                     if (active && changed && !isReplay) {
@@ -3816,8 +3661,8 @@
                         if (wDL !== 'none') parts.push(`dead_low=${wDL}`);
                         if (wDH !== 'none') parts.push(`dead_high=${wDH}`);
                         addEvent('wald', `WALD ep${wEp} ${wFill}% n=${wN}`, 'crit',
-                            `Dead zone shift at ep${wEp}:<br>${parts.join(', ')}<br>fill=${wFill}%, n=${wN} dead experts`,
-                            wEp, lastBatchY, /*permanent*/ true);
+                            `Dead zone shift at ep${wEp}:<br>${parts.join(', ')}<br>fill=${wFill}%, n=${wN} dead experts · mass=${wMass.toFixed(4)}`,
+                            wEp, wMass, /*permanent*/ true);
                         notify('albert. — WALD', `Dead zone ep${wEp} · fill=${wFill}% · n=${wN} dead experts`);
                     } else if (!active && (lastWaldDeadLow !== '' || lastWaldDeadHigh !== '')) {
                         // Dead zone cleared — reset so next re-activation fires fresh
@@ -5028,18 +4873,6 @@
         chart.update('none');
     });
 
-    // OHLC removed — batch-loss wicks were meaningless vs actual trend range.
-    // Checkbox kept in DOM but disabled so saved prefs don't error.
-    document.getElementById('cbOHLC').disabled = true;
-    document.getElementById('cbOHLC').checked  = false;
-
-    // Heikin-Ashi — epoch-avg window candles with HA smoothing
-    document.getElementById('cbHA').addEventListener('change', function() {
-        haMode = this.checked;
-        if (haMode) rebuildHACandles();
-        chart.data.datasets[0].hidden = haMode || !document.getElementById('cbDots').checked;
-        chart.update('none');
-    });
 
     // MACD — renders in dedicated sub-panel below chart
     document.getElementById('cbMACD').addEventListener('change', function() {
@@ -5453,7 +5286,7 @@
         'cbSMA987','cbSMA1597','cbSMA2584','cbTMA',
         'cbTrail21','cbTrail55','cbTrail144','cbTrail377','cbTrail610',
         'cbTrail987','cbTrail1597','cbTrail2584',
-        'cbFib','cbBB','cbHA','cbMACD','cbRSI',
+        'cbFib','cbBB','cbMACD','cbRSI',
     ];
 
     // ── Drawing persistence + undo ─────────────────────────────────────

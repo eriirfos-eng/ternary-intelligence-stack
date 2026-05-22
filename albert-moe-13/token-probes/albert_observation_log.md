@@ -189,6 +189,153 @@ Context: post-restart oscillation (ep2890–2906) appears to have resolved into 
 
 ---
 
+## Field Note 37 — 2026-05-22T19:41Z · ep2927 — NEW BEST 9.4891 · ROUTING DIVERSIFICATION · -0.0080
+
+**Source:** dashboard screenshot + browser notification. EP 2927 · batch 299/300 (nearly complete).
+
+**NEW SERVER-SIDE ATL: 9.4891** — notification: "Epoch avg 9.4891 beats 9.4971" · delta **-0.0080 nats** · largest single ATL break observed post-surgery-6.
+
+| Metric | FN35 (ep2925) | FN37 (ep2927) | delta |
+|--------|--------------|--------------|-------|
+| ATL chip | 9.1370 | 9.1370 | 0 |
+| Server-side ATL | 9.4971 | **9.4891** | **-0.0080** |
+| T-610 trail | — | 9.4929 | — |
+| CMP | 97–100% | 100% | stable |
+| INT | 100% | 82% | -18pp |
+| PLN | 91–99% | 73% | -18–26pp |
+| LNG | 80–83% | 78% | -2–5pp |
+| LOG | 27% | 16% | -11pp |
+| ABS | 65–69% | 60% | -5–9pp |
+| SYN | 0% | **10%** | **+10pp** |
+| CTX | 3–7% | **15%** | **+8–12pp** |
+| INF | 5% | **10%** | **+5pp** |
+| GEN | 0–5% | **13%** | **+8–13pp** |
+| SEM | 8% | **10%** | **+2pp** |
+
+**Routing diversification:** the saturation pattern from FN35 (INT/PLN/CMP dominant, secondary experts collapsed) is unwinding. SYN, CTX, INF, GEN, SEM all returning to significant share. LOG dropping from 27%→16%. This is a routing BROADENING — the model is distributing computation more evenly as it descends into new loss territory.
+
+**Events bar chain:** BEST avg 9.4971 (prev) → EPOCH avg 9.4992 → EPOCH avg 9.4954 → EPOCH avg 9.4981 → **BEST avg 9.4891** (current). Multiple epoch completions between the two BEST events, model stairstepping down.
+
+**WALD:** "W·W" visible at top of chart — two WALD fires near ep2918–2920. Red vertical lines visible.
+
+**CSV (ep2927 partial, n=139):** avg 9.5709 — too early. ep2926 updated to 9.5671 (n=153, new sampled ATL, prev 9.5676).
+
+**Chart:** Gold diamond (BEST avg event) clearly visible below the previous dashed ATL line at 9.4891. T-610 trail at 9.4929, now below 9.50.
+
+**Status: NEW ALL-TIME BEST 9.4891. Routing diversifying broadly. Descent accelerating. T-610 trail below 9.50. This is the sharpest single-epoch ATL break in the post-surgery-6 record.**
+
+---
+
+## Field Note 36 — 2026-05-22T19:35Z · ep2926 — NEW SAMPLED ATL 9.5676 · descent resuming
+
+**Source:** batch_history.csv. EP 2926 · n=142 (complete).
+
+**New sampled CSV ATL: 9.5676** — prev ep2921 at 9.5685, delta **-0.0009**.
+
+Trend since FN35: ep2924=9.5689 → ep2925=9.5762 (bounce) → ep2926=**9.5676** (new low). Bounce at ep2925 resolved, descent resumed and broke below the prior sampled floor in one epoch.
+
+Batch min ep2926: 9.5007 — still probing 9.50 on individual batches.
+
+Server-side ATL 9.4971 (FN35) unchanged. No dashboard data this tick.
+
+**Status: SAMPLED ATL 9.5676. Post-bounce descent confirmed. Grinding toward server-side floor.**
+
+---
+
+## Field Note 35 — 2026-05-22T19:28Z · ep2925 — NEW ATL 9.4971 · LNG SURGE 57%→83% · FULL ARC VIEW
+
+**Source:** three dashboard screenshots (19:27:08–19:27:50). EP 2925 · batch 170–207/300.
+
+**NEW SERVER-SIDE ATL: 9.4971** — gold star "BEST avg" event in events bar. Prev 9.4992 (FN34). Delta **-0.0021**.
+
+Events bar chain (left=newest): BEST avg **9.4971** ★ · EPOCH avg 9.5008 · EPOCH avg 9.5072 · EPOCH avg 9.4992 · ...
+
+| Metric | FN34 (ep2922) | FN35 (ep2925) | delta |
+|--------|--------------|--------------|-------|
+| ATL chip | 9.1370 | 9.1370 | 0 |
+| Server-side ATL | 9.4992 | **9.4971** | **-0.0021** |
+| LNG | 57% | **80–83%** | **+23–26pp** |
+| LOG | 28% | 27% | stable |
+| PLN | 73% | 91–99% | +18–26pp |
+| CMP | 100% | 97–100% | stable |
+| INT | 71% | 100% | +29pp |
+| ABS | 66% | 65–69% | stable |
+| SYN | 2% | 0% | -2pp |
+| MEM | 7% | 0–3% | collapsing |
+
+**LNG surge:** the most dramatic routing shift since the floor breach. LNG from 57% (FN34) to 80-83% — linguistic expert class is now the second dominant router after CMP/INT. This coincides with PLN also approaching saturation (99%) and INT recovering to 100%. The cliff-base SYN/MEM pattern has fully unwound.
+
+**CSV sampled trend (ep2923–2924):** 9.5693 → 9.5689 (both complete, n~158). Grinding back toward sampled ATL of 9.5685 (ep2921) but not yet breaking it. ep2925 too early (n=92) to judge.
+
+**Full arc view:** wide-zoom screenshots show complete training history ep0→ep2925. Surgery annotations all visible: 12>13L (ep511), 13>14L (ep547), 14>15L (ep611), 15>16L (ep645), 16>17L (ep702), 17>18L (ep2488, labelled "20.05.2026"). Classic staircase pattern in early surgeries (ep511–702) clearly visible: each surgery followed by brief perturbation then resumed descent. The ep701→ep2487 gap (1786 epochs, plateau gate withheld) is the dominant visual feature of the chart.
+
+**Missing SMA data:** pre-ep~500 SMA curves absent — early batch_history.csv data lost; SMA windows (987/1597/2584) require lookback that no longer exists. Permanent gap in chart record.
+
+**Gradient (ep2925):** L9 still dominant orange, L10 yellow-orange holding. Upper layers (L11–L17) yellow. L8 red. Mid-network leadership pattern from FN34 addendum persisting.
+
+**Traffic light:** 6.17–6.18% high / 78–80% mid / 3–4% red — healthy.
+
+**Status: NEW ATL 9.4971. LNG surging (83%). PLN near-saturated. INT recovered. Post-floor-breach routing has fully normalized away from cliff-base pattern toward CMP+INT+PLN+LNG dominance. Descent continuing.**
+
+**ADDENDUM 2026-05-22T19:29Z:** Zoomed chart — two red dotted vertical lines ("W·W") = WALD events, firing consecutively at the descent base. Cyan diamonds = epoch-end average markers clustering tightly at the new floor (multiple completed epochs printing in a narrow loss band). Gold diamond = BEST avg 9.4971 event, visible below the dashed ATL line — new record stamped live. Classic cliff-base signature: steep descent → consecutive WALD fires → epoch markers clustering → ATL event. Descent still active below the cluster.
+
+---
+
+## Field Note 34 — 2026-05-22T19:11Z · ep2922 — 9.50 FLOOR BREACHED · EP AVG 9.4992 · WALD ep2918
+
+**Source:** dashboard screenshot. EP 2922 · batch 102/300.
+
+**9.50 FLOOR BROKEN — first server-side epoch-avg below 9.50 in this run.**
+
+| Metric | FN32 (ep2915) | FN34 (ep2922) | delta |
+|--------|--------------|--------------|-------|
+| ATL chip | 9.1370 | 9.1370 | 0 |
+| EP AVG (server-side ATL) | 9.5015 | **9.4992** | **-0.0023** |
+| T-610 trail | 9.5114 | 9.5611 | +0.0497 |
+| CMP | 100% | 100% | — |
+| INT | 90% | 71% | -19% |
+| PLN | 77% | 73% | -4% |
+| ABS | 61% | 66% | +5% |
+| LNG | 58% | 57% | -1% |
+| LOG | ~0% | **28%** | **+28%** |
+| SYN | 16% | 2% | -14% |
+| CTX | 0% | 7% | +7% |
+
+**Events bar (left=newest):** EPOCH avg 9.4992 · EPOCH avg 9.4974 · EPOCH avg 9.5091 · WALD ep2918 4.2% n=1508 · EPOCH avg 9.5135
+
+Chain: 9.5135 → 9.5091 → 9.4974 → 9.4992 (ep2922 partial)
+
+Note: 9.4974 appears in events bar as a prior epoch completion — if this is a completed epoch avg, it is the true server-side ATL at -0.0041 from 9.5015. EP AVG line shows 9.4992 (possibly ep2922 running avg at 102/300 batches).
+
+**WALD ep2918 4.2% n=1508:** WALD fired at ep2918, 4.2% fill, n=1508 (threshold). Preceded the floor breach.
+
+**Chart:** Sharp dip visible to ~9.496 then bounce back to ~9.508 — user description: "tiny attempt of pinching the floor but pushback." The intra-epoch chart shows the dip-and-bounce pattern, but the epoch-avg ATL line at 9.4992 confirms the average has crossed below 9.50.
+
+**Routing shift:** LOG surging to 28% (was negligible in FN32) — first significant LOG activation observed. SYN collapsed from 16% (cliff-base spike in FN32) back to 2%. CTX returning to 7% (was 0% at cliff base). Model transitioning away from cliff-base SYN-dominant routing toward a LOG+LNG+ABS pattern.
+
+**Traffic light:** 6.14% high / 81% mid / 4% red — healthy.
+
+**Status: 9.50 FLOOR BROKEN. EP AVG 9.4992 new ATL. Possible 9.4974 completed epoch (events bar). WALD ep2918 cleared. LOG expert activation surge. ATL chip 9.1370 unchanged. Chart showing dip-and-bounce at floor — consolidation or prelude to sustained sub-9.50 descent.**
+
+---
+
+## Field Note 33 — 2026-05-22T19:08Z · ep2921 — POST-CLIFF-2 CONSOLIDATION · 9.50 floor holding
+
+**Source:** batch_history.csv. EP 2921 · 160/300 batches.
+
+**Epoch-avg trend since FN32 (CSV sampled, ~0.05 nats above server-side):**
+ep2916=9.5807 · ep2917=9.5723 · ep2918=9.5730 · ep2919=9.5816 · ep2920=9.5755 · ep2921=**9.5685** (partial)
+
+No new server-side epoch-avg ATL detected. CSV oscillating 9.573–9.582, consistent with server-side ~9.52–9.53 range — above ATL of 9.5015.
+
+**Batch lows:** 9.5001–9.5007 visible in ep2916–2920. Model is probing the 9.50 floor on individual batches but not breaking it on epoch average.
+
+**Pattern:** Post-cliff-2 consolidation mirroring FN28 (post-cliff-1). Loss stabilising in tight range at cliff base. No new WALD or routing data visible in CSV. Dashboard not checked this tick — no screenshot available.
+
+**Status: CONSOLIDATION. 9.50 floor holding. No ATL break. ep2921 partial (9.5685, n=160). Monitor for renewed descent or bounce.**
+
+---
+
 ## Field Note 32 — 2026-05-22T18:31Z · ep2915 — SECOND CLIFF DIVE · ATL chip 9.1370 · epoch-avg ATL 9.5015
 
 **Source:** dashboard screenshot. EP 2915 · batch 192/300.
@@ -222,6 +369,30 @@ Context: post-restart oscillation (ep2890–2906) appears to have resolved into 
 **Gradient:** Upper layers (L17, L15, L14) leading with yellow bars. L8 red spike visible.
 
 **Status: SECOND CLIFF DIVE. ATL chip 9.1370 (-0.1095). Server-side epoch-avg ATL 9.5015. Restart acceleration delivered late but massive. Routing reorganizing at new cliff base. Monitor for consolidation pattern matching FN28.**
+
+---
+
+### FN34 ADDENDUM — 2026-05-22T19:14Z · ep2922 — L10 WAKING UP · BRAIN MODE CONFIRMS
+
+**Gradient norm panel (ep2922, ~19:11–19:14Z):**
+- L17–L11: yellow bars, ~1.45–1.55e-9, upper-layer profile holding
+- **L10: ORANGE, 1.61e-9** — first orange reading in many epochs; previously solid red/frozen
+- **L9: dominant bar, 1.63e-9 orange** — leading gradient layer has shifted DOWN from upper layers
+- L8: orange, 1.54e-9
+- FFT: small red stub + tiny bar
+
+Gradient leadership has shifted from upper layers (L17 leading at FN32) to **mid-network L9–L10**. This is the first time L10 has shown healthy gradient flow (orange) after being frozen (near-zero, showing as flat/red) for many epochs.
+
+**BRAIN mode (directed graph visualization, ep2922):**
+- All 18 layers visible as horizontal traces (L17 pink top → L0 red bottom)
+- Upper layers (L11–L17): tight, well-formed arcs — stable contributors
+- **Mid layers L8–L10 (yellow-orange band): noticeably wider, more energetic arcs** — increased activity consistent with gradient norm reading
+- OUTPUT fan (right): L8–L10 connections appear strongest/brightest in the fan
+- INPUT connections (left): firing into lower-middle layers
+
+**Interpretation:** L10 thawing coincides exactly with the 9.50 floor breach and LOG surge (28%). This is likely not coincidental — the new routing pattern (LOG-dominant) is routing computation through L10 in ways that previously weren't occurring, generating gradient signal that was previously absent. The BRAIN mode confirms L10 is now actively contributing to output paths. This is a gradient flow restructuring event: the model is physically reorganizing which layers carry the signal as it crosses below 9.50.
+
+**Status: L10 WAKING UP. Gradient leadership shifted to L9–L10. BRAIN mode confirms mid-network restructuring. Coincides with 9.50 floor breach + LOG surge. Something is genuinely reorganizing.**
 
 ---
 
