@@ -1260,7 +1260,10 @@
     function scheduleChartUpdate() {
         if (_chartUpdatePending) return;
         _chartUpdatePending = true;
-        requestAnimationFrame(() => { _chartUpdatePending = false; if (!isInteracting) chart.update('none'); });
+        requestAnimationFrame(() => {
+            _chartUpdatePending = false;
+            if (!isInteracting) { applyRenderDistance(); chart.update('none'); }
+        });
     }
     function scheduleAnomalyRender() {
         if (_anomalyRenderPending) return;
@@ -2776,6 +2779,19 @@
     });
 
     // ── SMA — O(n) sliding window sum, not O(n²) slice+reduce ──────────
+    // Even-stride downsample of a full SMA cache for the initial preseed render.
+    // smaVisibleSlice() can't be used at preseed time because the chart viewport
+    // only covers the narrow scatter seedSlice range — the wider epoch-avg range
+    // isn't known yet. Downsampling to MAX_CHART_PTS covers the full history at
+    // adequate density (one point per ~0.5 epochs at 761k-point history).
+    function smaPreseedData(fullArr) {
+        if (fullArr.length <= MAX_CHART_PTS) return fullArr;
+        const step = Math.floor(fullArr.length / MAX_CHART_PTS);
+        const out = [];
+        for (let i = 0; i < fullArr.length; i += step) out.push(fullArr[i]);
+        if (out[out.length - 1] !== fullArr[fullArr.length - 1]) out.push(fullArr[fullArr.length - 1]);
+        return out;
+    }
     function sma(data, w) {
         if (data.length < w) return [];
         const result = [];
@@ -5547,17 +5563,15 @@
             const seedSlice = smaLog.slice(-MAX_CHART_PTS);
             chart.data.datasets[0].data = seedSlice.map(pt => ({ x: pt.x, y: pt.y, epoch: Math.floor(pt.x) }));
             lastKnownEpoch = Math.floor(seedSlice[seedSlice.length - 1].x);
-            // Update chart NOW so chart.scales.x reflects the preseed range before
-            // PREF_CBS.forEach fires. Without this, smaVisibleSlice sees a stale 0→1
-            // scale and returns [] for every SMA, making all lines disappear on refresh.
-            chart.update('none');
-            // Pre-compute all 5 SMA caches from the full preseed history so they are
-            // ready before the first poll arrives. PREF_CBS.forEach will skip recompute
-            // (cache already populated) and just call smaVisibleSlice with correct scales.
+            // Pre-compute all 5 SMA caches from the full preseed history.
+            // Use smaPreseedData (evenly downsampled) instead of smaVisibleSlice —
+            // the chart viewport at this point only covers the narrow scatter seedSlice
+            // range (last ~16 epochs); smaVisibleSlice would return [] for the full
+            // history and the lines would be invisible across the wider epoch-avg range.
             [[1,21,0],[2,55,1],[3,144,2],[4,377,3],[5,610,4]].forEach(([dsIdx, w, ci]) => {
                 smaCacheFull[ci] = sma(smaLog, w);
                 if (!chart.data.datasets[dsIdx].hidden)
-                    chart.data.datasets[dsIdx].data = smaVisibleSlice(smaCacheFull[ci]);
+                    chart.data.datasets[dsIdx].data = smaPreseedData(smaCacheFull[ci]);
             });
             chart.update('none');
         }
