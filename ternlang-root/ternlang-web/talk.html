@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Talk with albert. — ternlang.com</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #0d0d14;
+      --bg2:     #13131f;
+      --bg3:     #1a1a2e;
+      --border:  #1e2030;
+      --teal:    #00f5c4;
+      --blue:    #4a9eff;
+      --muted:   #4a5568;
+      --text:    #e2e8f0;
+      --dim:     #a0aec0;
+      --warn:    #f6ad55;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── top bar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      flex-shrink: 0;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .logo { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--teal); font-weight: 700; text-decoration: none; }
+    .model-name { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text); }
+    .badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 8px;
+      color: var(--dim);
+    }
+    .badge .live-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--teal);
+      margin-right: 5px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ── disclaimer banner ── */
+    .disclaimer {
+      background: #1a1505;
+      border-bottom: 1px solid #3d2e0a;
+      padding: 8px 20px;
+      font-size: 0.78rem;
+      color: var(--warn);
+      flex-shrink: 0;
+      line-height: 1.4;
+    }
+    .disclaimer strong { color: #fbd38d; }
+
+    /* ── messages ── */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scroll-behavior: smooth;
+    }
+    .messages::-webkit-scrollbar { width: 4px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 2px; }
+
+    .msg {
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .msg.user  { align-self: flex-end; align-items: flex-end; }
+    .msg.albert { align-self: flex-start; align-items: flex-start; }
+
+    .msg-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .msg.user  .msg-label { color: var(--blue); }
+    .msg.albert .msg-label { color: var(--teal); }
+
+    .msg-bubble {
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      word-break: break-word;
+      white-space: pre-wrap;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .msg.user   .msg-bubble { background: var(--bg3); border: 1px solid var(--blue); color: var(--text); }
+    .msg.albert .msg-bubble { background: var(--bg2); border: 1px solid var(--border); color: var(--text); }
+
+    .msg-meta {
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .thinking .msg-bubble {
+      color: var(--muted);
+      border-color: var(--muted);
+      animation: blink 1.2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── empty state ── */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--muted);
+      text-align: center;
+      padding: 40px;
+      pointer-events: none;
+    }
+    .empty-state .glyph {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.5rem;
+      color: var(--border);
+    }
+    .empty-state p { font-size: 0.85rem; max-width: 400px; line-height: 1.6; }
+
+    /* ── input bar ── */
+    .input-bar {
+      border-top: 1px solid var(--border);
+      background: var(--bg2);
+      padding: 12px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+    textarea {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      padding: 10px 14px;
+      resize: none;
+      outline: none;
+      max-height: 140px;
+      line-height: 1.5;
+      transition: border-color 0.15s;
+    }
+    textarea:focus { border-color: var(--teal); }
+    textarea::placeholder { color: var(--muted); }
+    button.send {
+      background: var(--teal);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 10px 18px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    button.send:hover:not(:disabled) { opacity: 0.85; }
+    button.send:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .input-hint {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0 2px 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="/" class="logo">ternlang.com</a>
+    <span class="model-name">albert.</span>
+    <span class="badge" id="status-badge">
+      <span class="live-dot"></span>loading...
+    </span>
+  </div>
+  <div style="font-size:0.75rem;color:var(--dim)">
+    <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack"
+       style="color:var(--dim);text-decoration:none">open-source</a>
+    &nbsp;·&nbsp;
+    <a href="/pricing" style="color:var(--dim);text-decoration:none">LGPL-3.0</a>
+  </div>
+</div>
+
+<div class="disclaimer">
+  <strong>Research stage.</strong>
+  albert. is an in-training ternary MoE language model — not an assistant. Output may be
+  incoherent, repetitive, or surprising. That is expected and honest. You are watching
+  a model learn in real time. <strong>Come back as training progresses.</strong>
+</div>
+
+<div class="messages" id="messages">
+  <div class="empty-state" id="empty">
+    <div class="glyph">▲</div>
+    <p>Send a prompt to albert. — a 134M-parameter ternary MoE model currently learning 8 languages from scratch. Outputs reflect genuine model state, not a fine-tuned assistant.</p>
+  </div>
+</div>
+
+<div class="input-bar">
+  <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+    <textarea id="prompt" rows="1" placeholder="Send a prompt to albert. …"
+              maxlength="512"></textarea>
+    <div class="input-hint">
+      <span>Enter to send · Shift+Enter for newline</span>
+      <span id="char-count">0 / 512</span>
+    </div>
+  </div>
+  <button class="send" id="send-btn" onclick="sendPrompt()">Send</button>
+</div>
+
+<script>
+const API = '/api/albert/chat';
+let busy = false;
+
+// ── status badge ──────────────────────────────────────────────────────────────
+async function loadStatus() {
+  try {
+    const r = await fetch('/api/albert/status');
+    if (!r.ok) throw new Error();
+    const d = await r.json();
+    document.getElementById('status-badge').innerHTML =
+      `<span class="live-dot"></span>ep${d.epoch} · ${d.arch}`;
+  } catch {
+    document.getElementById('status-badge').innerHTML =
+      '<span class="live-dot" style="background:#f56565"></span>offline';
+  }
+}
+loadStatus();
+setInterval(loadStatus, 30000);
+
+// ── textarea auto-resize + char count ─────────────────────────────────────────
+const ta = document.getElementById('prompt');
+ta.addEventListener('input', () => {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
+  document.getElementById('char-count').textContent =
+    `${ta.value.length} / 512`;
+});
+ta.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPrompt(); }
+});
+
+// ── chat ──────────────────────────────────────────────────────────────────────
+function appendMsg(role, text, meta) {
+  document.getElementById('empty')?.remove();
+  const feed = document.getElementById('messages');
+  const div  = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `
+    <div class="msg-label">${role === 'user' ? 'you' : 'albert.'}</div>
+    <div class="msg-bubble">${escHtml(text)}</div>
+    ${meta ? `<div class="msg-meta">${meta}</div>` : ''}
+  `;
+  feed.appendChild(div);
+  feed.scrollTop = feed.scrollHeight;
+  return div;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function sendPrompt() {
+  if (busy) return;
+  const prompt = ta.value.trim();
+  if (!prompt) return;
+
+  busy = true;
+  document.getElementById('send-btn').disabled = true;
+  ta.value = '';
+  ta.style.height = 'auto';
+  document.getElementById('char-count').textContent = '0 / 512';
+
+  appendMsg('user', prompt, null);
+
+  // thinking indicator
+  const thinkDiv = document.createElement('div');
+  thinkDiv.className = 'msg albert thinking';
+  thinkDiv.innerHTML = `
+    <div class="msg-label">albert.</div>
+    <div class="msg-bubble">generating…</div>
+  `;
+  document.getElementById('messages').appendChild(thinkDiv);
+  document.getElementById('messages').scrollTop = 999999;
+
+  try {
+    const resp = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, max_tokens: 128, temperature: 0.9 }),
+    });
+    thinkDiv.remove();
+    if (!resp.ok) {
+      const err = await resp.text();
+      appendMsg('albert', `[error ${resp.status}] ${err}`, null);
+    } else {
+      const d = await resp.json();
+      // strip prompt echo from output
+      const out = d.text.startsWith(prompt)
+        ? d.text.slice(prompt.length).trimStart()
+        : d.text;
+      appendMsg('albert', out || '(empty output)',
+        `${d.tok_s.toFixed(1)} tok/s · ep${d.epoch}`);
+    }
+  } catch (e) {
+    thinkDiv.remove();
+    appendMsg('albert', `[network error] ${e.message}`, null);
+  }
+
+  busy = false;
+  document.getElementById('send-btn').disabled = false;
+  ta.focus();
+}
+</script>
+</body>
+</html>

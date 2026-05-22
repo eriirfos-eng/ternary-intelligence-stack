@@ -598,6 +598,7 @@ async fn require_admin_key(
 // ─── GET / ───────────────────────────────────────────────────────────────────
 
 static INDEX_HTML:      &str = include_str!("../../ternlang-web/index.html");
+static TALK_HTML:       &str = include_str!("../../ternlang-web/talk.html");
 static PRICING_HTML:    &str = include_str!("../../ternlang-web/pricing.html");
 static IMPRESSUM_HTML:  &str = include_str!("../../ternlang-web/impressum.html");
 static AGB_HTML:        &str = include_str!("../../ternlang-web/agb.html");
@@ -765,6 +766,57 @@ async fn pricing_page()     -> Html<&'static str> { Html(PRICING_HTML) }
 async fn impressum_page()  -> Html<&'static str> { Html(IMPRESSUM_HTML) }
 async fn agb_page()        -> Html<&'static str> { Html(AGB_HTML) }
 async fn datenschutz_page()-> Html<&'static str> { Html(DATENSCHUTZ_HTML) }
+async fn talk_page()        -> Html<&'static str> { Html(TALK_HTML) }
+
+// ─── albert. inference proxy ─────────────────────────────────────────────────
+// Forwards /api/albert/chat and /api/albert/status to the Modal CPU endpoint.
+// ALBERT_SERVE_URL env var must be set to the deployed Modal web server URL.
+
+async fn albert_chat(
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<serde_json::Value>,
+) -> Response {
+    albert_proxy(&state, "POST", "generate", Some(body)).await
+}
+
+async fn albert_status(State(state): State<Arc<AppState>>) -> Response {
+    albert_proxy(&state, "GET", "status", None).await
+}
+
+async fn albert_proxy(
+    _state: &Arc<AppState>,
+    method: &str,
+    path:   &str,
+    body:   Option<serde_json::Value>,
+) -> Response {
+    let base = match std::env::var("ALBERT_SERVE_URL") {
+        Ok(u) => u,
+        Err(_) => return (
+            axum::http::StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error": "ALBERT_SERVE_URL not configured"})),
+        ).into_response(),
+    };
+    let url = format!("{}/{}", base.trim_end_matches('/'), path);
+    let client = reqwest::Client::new();
+    let req = if method == "POST" {
+        client.post(&url).json(&body.unwrap_or(serde_json::Value::Null))
+    } else {
+        client.get(&url)
+    };
+    match req.timeout(std::time::Duration::from_secs(120)).send().await {
+        Ok(r) => {
+            let status = axum::http::StatusCode::from_u16(r.status().as_u16())
+                .unwrap_or(axum::http::StatusCode::INTERNAL_SERVER_ERROR);
+            match r.json::<serde_json::Value>().await {
+                Ok(j)  => (status, Json(j)).into_response(),
+                Err(e) => (axum::http::StatusCode::BAD_GATEWAY,
+                    Json(serde_json::json!({"error": e.to_string()}))).into_response(),
+            }
+        }
+        Err(e) => (axum::http::StatusCode::BAD_GATEWAY,
+            Json(serde_json::json!({"error": e.to_string()}))).into_response(),
+    }
+}
 
 async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Response {
     // Serve the website to browsers; return JSON manifest to API clients.
@@ -5408,6 +5460,9 @@ async fn main() {
         .route("/api/kpi/upload/{filename}", post(kpi_upload))
         .route("/benchmarks/training",  get(benchmarks_training))
         .route("/fortune",              get(fortune_page))
+        .route("/talk",                 get(talk_page))
+        .route("/api/albert/chat",      post(albert_chat))
+        .route("/api/albert/status",    get(albert_status))
         .route("/api/github/activate",  post(github_activate))
         .route("/api/usage",      get(api_usage))
         .route("/api/stdlib/list", get(stdlib_list))
