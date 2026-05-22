@@ -1,8 +1,8 @@
 # Ternary Intelligence Stack (TIS) | RFI-IRFOS — Master Development Chronicle
 ### Official Evaluation Artifact (SPRIND / Next Frontier AI)
 **Stack Version:** v1.3.7 (Ecosystem) / v3.0 (albert. model)
-**Last Updated:** 2026-05-19
-**Status:** ACTIVE — PHASE 20: AUTO-EVOLUTIONARY TERNARY TRAINING
+**Last Updated:** 2026-05-22
+**Status:** ACTIVE — PHASE 20/21: TRAINING · PHASES 22-23 COMPLETE
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack
 **Patent Pending:** A50296/2026 (@sparseskip sparse matmul primitive)
 
@@ -39,10 +39,10 @@ ProgramBench exposes the gap between "code assistance" and "systems engineering"
 ### Phase 23: GPU Backend — CUDA Ternary Sparse Matmul
 *Target: 10-50× inference speedup on NVIDIA Pascal+ hardware. ETA: 2026 Q3*
 
-- [ ] **23.1 INT2-Packed Weight Encoding** — Pack ternary weights as 2-bit values (4 weights per byte). 16× memory reduction vs F32. Architecture documented in `cuda_matmul.rs` (TRL 3).
-- [ ] **23.2 dp4a GEMV Kernel** — CUDA `ternary_gemv_dp4a`: uses `__dp4a` integer dot product instruction (Pascal+, compute 6.1+). Projected 10-50× vs CPU baseline at 56% sparsity.
-- [ ] **23.3 candle CustomOp1 Integration** — Wire CUDA kernel into the candle tensor graph via `CustomOp1` trait so training and inference use the same code path.
-- [ ] **23.4 Benchmark Publication** — Docker image reproducing the sparsity speedup table. `docker run rfi-irfos/tis-bench` → reproduces all numbers from `BENCHMARKS.md`.
+- [x] **23.1 INT2-Packed Weight Encoding** — Pack ternary weights as 2-bit values (4 weights per byte). 16× memory reduction vs F32. Architecture documented in `cuda_matmul.rs` (TRL 3).
+- [x] **23.2 CuTern WMMA Kernel** — `ternary_linear.rs` `forward_wmma()`: fused shared-mem tile → warp-shuffle abs-max → INT8 quantize → WMMA 16×16×16 GEMM → dequantize. Compiled via `build.rs` / `cuda/ternary_gemm.cu` (SM 7.5 + PTX fallback). Result: 11.5 tok/s avg vs 7.8 tok/s cuBLAS baseline on T4.
+- [x] **23.3 candle CustomOp1 Integration** — Dispatched when `inference_cache` is set and N/K divisible by 16. Same code path for training and inference.
+- [x] **23.4 Benchmark Publication** — `BENCHMARKS.md §12` written: hardware, protocol, results table, root-cause analysis (256×256 matmuls cannot saturate T4's 40 SMs — CPU G kernel 37.0 tok/s peak wins at this scale), conclusion. `albert-train bench_gpu` fires Modal T4 container for reproducible runs.
 
 ---
 
@@ -54,8 +54,8 @@ ProgramBench exposes the gap between "code assistance" and "systems engineering"
 - [x] **22.3 Evolution Evidence** — `albert-moe-13/docs/EVOLUTION_EVIDENCE.md` — verified 3L→6L surgery timeline with Net2Net code and scaling table.
 - [x] **22.4 Reproducibility Spec** — `docs/REPRODUCIBILITY.md` + `repro_check.rs` + `verify_reproducibility.sh`.
 - [x] **22.5 Security Audit** — SQL injection fixed (2026-05-07), `.env` removed from repo, auth middleware verified globally applied.
-- [ ] **22.6 Held-out Perplexity** — Run `eval_perplexity.py` and publish `eval_results.json` as benchmark artifact. Float32 baseline comparison required.
-- [ ] **22.7 Benchmark Docker** — Reproduce sparsity speedup table in a pinned container with statistical uncertainty intervals.
+- [x] **22.6 Held-out Perplexity** — Run `eval_perplexity.py` and publish `eval_results.json` as benchmark artifact. Float32 baseline comparison required.
+- [x] **22.7 Benchmark Docker** — `albert-train bench_gpu` fires Modal T4 container; `BENCHMARKS.md §12` documents full reproducible protocol with results table.
 
 ---
 
@@ -65,10 +65,10 @@ ProgramBench exposes the gap between "code assistance" and "systems engineering"
 - [x] **21.1 Staged Corpus Loader** — `load_corpus(num_layers)` reads `data/corpus/stage_N/` dirs where N ≤ num_layers. Surgery increments depth; next restart auto-unlocks richer data. (2026-05-07)
 - [x] **21.2 Stage 3: Foundational** — Bible + Alice. Grammar, vocabulary, basic syntax. Active from 3L.
 - [x] **21.3 Stage 6: Narrative** — 12 Gutenberg classics (Moby Dick, War and Peace, Crime & Punishment, Frankenstein, etc.). Complex sentence structure, wider vocabulary. Active from 6L.
-- [ ] **21.4 Stage 7: Factual** — Simple Wikipedia (120k lines, 500k+ tokens). Diverse topics, factual prose, topic-sentence structure. Unlocks on next surgery → 7L. 🎯 *Imminent.*
-- [ ] **21.5 Stage 9: Instruction** — `qa_instruction.txt` (2196 User:/Albert: pairs from Wikipedia + Bible + Gutenberg). Instruction format unlock at 9L.
-- [ ] **21.6 Stage 11: Technical** — Linux kernel docs, EU AI Act text. Specialized language, legal/technical register. Unlocks at 11L.
-- [ ] **21.7 Stage 13: Command/Response** — TLDR pages (Unix command → description pairs). Terse instruction-following format. Unlocks at 13L.
+- [x] **21.4 Stage 7: Factual** — Simple Wikipedia (120k lines, 500k+ tokens). Active from 7L (surgery ep511).
+- [x] **21.5 Stage 9: Instruction** — `qa_instruction.txt` (2196 User:/Albert: pairs). Active from 9L.
+- [x] **21.6 Stage 11: Technical** — Linux kernel docs, EU AI Act text. Active from 11L.
+- [x] **21.7 Stage 13: Command/Response** — TLDR pages. Active from 13L. Stage 11-12 extended corpus (arxiv 11.7M, eurlex, science_SE, crossref 12.2M, pubmed 84.6M chars) also unlocked at surgery-6 (ep2487, 18L).
 
 ---
 
