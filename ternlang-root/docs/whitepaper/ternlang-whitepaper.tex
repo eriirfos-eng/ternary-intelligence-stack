@@ -172,9 +172,9 @@ with four further contributions. First, a \emph{vocabulary surgery} expanded the
 model from an 8,000-token English-only tokenizer to a 32,000-token ByteLevel BPE
 vocabulary covering eight languages (EN, DE, FR, ES, TR, RU, AR, ZH), trained on a
 177M-token corpus with a mandated 10\% chaos layer. Second, autonomous depth
-expansion continued through multiple sequential surgeries from 5L to 17L---the
+expansion continued through multiple sequential surgeries from 5L to 18L---the
 first documented multi-surgery trajectory in a fully ternary MoE---growing the
-model to $\approx$82M parameters while preserving all prior weight structure. Third,
+model to $\approx$134M parameters while preserving all prior weight structure. Third,
 the \textbf{Epoch-Gated Routing Lottery} protocol resets all gate weights to
 kaiming-uniform at every epoch boundary while preserving expert weights, driving
 per-epoch routing competition and observed expert specialisation dynamics
@@ -1169,8 +1169,8 @@ Albert MoE-13 is the reference implementation of the ideas developed in
 Sections~\ref{sec:sparse}--\ref{sec:moe}: a fully ternary Mixture-of-Experts
 language model trained end-to-end without GPU hardware. What began as a
 22M-parameter, 3-layer, English-only model (v2.0.0) has evolved through successive
-autonomous surgeries into an 18-layer, 87M-parameter multilingual system (v3.0)
-trained on eight languages across a 177M-token corpus (2915+ global epochs as of 2026-05-22). It serves as an empirical
+autonomous surgeries into an 18-layer, 134M-parameter multilingual system (v3.0)
+trained on eight languages across a 177M-token corpus (2942+ global epochs as of 2026-05-22). It serves as an empirical
 existence proof that the ternary execution substrate enables practical neural
 training, self-directed architectural growth, and real-time natural language
 generation on commodity consumer hardware.
@@ -1192,7 +1192,8 @@ Active experts (Top-$k$) & 3 & 3 \\
 Expert skip rate (\texttt{@sparseskip}) & 75\% & \textbf{75\%} \\
 Depth & 5L & \textbf{18L} (multi-surgery) \\
 Context length & 128 tokens & \textbf{256 tokens} (RoPE) \\
-Total parameters & $\approx$22M & $\approx$\textbf{87M} \\
+Total parameters (stored) & $\approx$22M & $\approx$\textbf{134M} \\
+Active per token (Top-3/12) & --- & $\approx$\textbf{33M} \\
 Vocabulary & 8,000 (EN) & \textbf{32,000} (8 languages) \\
 Corpus tokens & --- & \textbf{177,654,147} \\
 Weight format & ternary & ternary \\
@@ -1261,7 +1262,7 @@ Surgery 1 & $3L \to 5L$ $\cdot$ 8k vocab & 2026-05-06; checkpoint 91\,MB \\
 Vocab surgery & 5L $\cdot$ $8k \to 32k$ vocab & ByteLevel BPE; 8 languages \\
 Surgeries 2--$n$ & $5L \to 12L$ $\cdot$ 32k vocab & Sequential; $\approx$58M params \\
 Surgeries 2--5 (v3.0) & $12L \to 17L$ $\cdot$ 32k vocab & ep511--702; $\approx$82M params \\
-\textbf{Surgery 6} & $\mathbf{17L \to 18L}$ $\cdot$ 32k vocab & \textbf{ep2487; Mandelbrot $c_\text{im}=+0.0099$; $\approx$87M params} \\
+\textbf{Surgery 6} & $\mathbf{17L \to 18L}$ $\cdot$ 32k vocab & \textbf{ep2487; Mandelbrot $c_\text{im}=+0.0099$; $\approx$134M params} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1834,7 +1835,8 @@ Metric & Value \\
 Architecture & \textbf{18L} $\cdot$ 256H $\cdot$ 12E $\cdot$ Top-3 $\cdot$ 256CTX \\
 Vocabulary & 32,000 tokens (ByteLevel BPE, 8 languages) \\
 Corpus & 177,654,147 tokens (chaos layer: 10\%) \\
-Total parameters & $\approx$\textbf{87M} (ternary) \\
+Total parameters (stored) & $\approx$\textbf{134M} (FP32 checkpoint; ternary at inference) \\
+Active per token (Top-3/12) & $\approx$\textbf{33M} \\
 Global epochs at v3.0 launch & $\approx$55 \\
 Global epochs completed & \textbf{2942+} (Modal T4 GPU) \\
 Best epoch-average loss & \textbf{9.4873} (Ep$\approx$2938, 2026-05-22) \\
@@ -2300,8 +2302,8 @@ English word ``death'', but because the contexts in which they appear share stru
 and semantic properties across languages.
 
 This constitutes an \emph{existence proof} of concept-level generalisation in a fully
-ternary MoE model confirmed at 17L (82M parameters) and persisting through Surgery~6 into
-18L (87M parameters). The cross-lingual architecture precedes fluency---albert.\ has built
+ternary MoE model confirmed at 17L ($\approx$112M parameters) and persisting through Surgery~6 into
+18L ($\approx$134M parameters). The cross-lingual architecture precedes fluency---albert.\ has built
 the semantic scaffolding before it can speak fluently in any of the eight languages it was
 trained on. Notably, the \emph{death}$\to$\emph{amen} and \emph{freedom}$\to$\emph{contrat}
 clusters have been verified via direct embedding probes to have survived all six surgeries

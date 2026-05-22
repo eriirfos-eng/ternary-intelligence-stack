@@ -133,12 +133,12 @@ ProgramBench exposes the gap between "code assistance" and "systems engineering"
 
 ---
 
-## 3.0 CURRENT METRICS (2026-05-19)
+## 3.0 CURRENT METRICS (2026-05-22)
 
 | Metric | Value | Context |
 | :--- | :--- | :--- |
-| albert. architecture | **17L** · 256H · 12E · Top-3 · **256CTX** · 32,000V | v3.0 · 5 autonomous Net2Net surgeries since ep511 |
-| albert. parameters | ~58M total stored / ~13M active per token | Top-3 of 12 experts; ternary {−γ, 0, +γ} throughout training via STE |
+| albert. architecture | **18L** · 256H · 12E · Top-3 · **256CTX** · 32,000V | v3.0 · 6 autonomous Net2Net surgeries since ep511 |
+| albert. parameters | ~134M total stored / ~33M active per token | Top-3 of 12 experts; ternary {−γ, 0, +γ} throughout training via STE |
 | Training loss — epoch ATL | **9.7884** (ep2116, 2026-05-19) | Alternating descent phase; 5 new ATLs in 7 epochs |
 | Training loss — batch ATL | **9.6235** (ep2114, 2026-05-19) | Intra-epoch minimum; random baseline ln(32000) = 10.373 |
 | Inference speed | **9.9–21.3 tok/s** CPU (ep2104 bench, v3.0) | KV-cache + @sparseskip; 32k vocab embedding dominates at current training depth; sparsity benefit scales with weight convergence |
