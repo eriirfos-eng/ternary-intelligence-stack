@@ -3,6 +3,16 @@
 
 ---
 
+**FN8 · 2026-05-22T23:30Z**
+
+ATL still ep2957 (9.5592). ep2965 closed at **9.5632** — second closest CSV approach ever, gap 0.0040. Did not break. ep2966 mini-bounce to 9.5703 (+0.0071), now descending again: ep2967 at 9.5668 (~96/300 batches).
+
+Orbit tightening: successive near-ATL values 9.5646 (ep2955) → 9.5632 (ep2965), each approach closer than the last. Pattern identical to the ep2938→2946→2951 sequence that preceded the ep2957 ATL break.
+
+Estimated epoch-close for ep2965: ~9.483 (~0.08 offset). If confirmed, new server-side ATL within the next 2–5 epochs.
+
+---
+
 **FN7 · 2026-05-22T23:16Z**
 
 ATL unchanged: ep2957 CSV 9.5592. Post-ATL bounce collapsing faster than prior cycles — peak ep2959 at 9.5831 (+0.0239), then two consecutive descents: ep2963 9.5718 → ep2964 **9.5681** (d-0.0037). Gap to ATL now **0.0089 nats**. ep2965 in progress (20 batches), running avg 9.5664 — already inside the 0.01 margin.
