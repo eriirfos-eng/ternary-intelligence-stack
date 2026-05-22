@@ -508,6 +508,9 @@ async fn require_api_key(
         || path == "/playground"
         || path.starts_with("/playground/pkg/")
         || path == "/fortune"
+        || path == "/talk"
+        || path == "/api/albert/chat"
+        || path == "/api/albert/status"
         || path == "/activate"
         || path == "/api/run"
         || path == "/api/data"
