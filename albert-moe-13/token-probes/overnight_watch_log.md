@@ -3,6 +3,14 @@
 
 ---
 
+**FN7 · 2026-05-22T23:16Z**
+
+ATL unchanged: ep2957 CSV 9.5592. Post-ATL bounce collapsing faster than prior cycles — peak ep2959 at 9.5831 (+0.0239), then two consecutive descents: ep2963 9.5718 → ep2964 **9.5681** (d-0.0037). Gap to ATL now **0.0089 nats**. ep2965 in progress (20 batches), running avg 9.5664 — already inside the 0.01 margin.
+
+Pattern: shorter bounce, faster return. If ep2964/2965 continue, new ATL probe imminent within 2–4 epochs.
+
+---
+
 **FN6 · 2026-05-22T22:53Z**
 
 ep2957 closed at **CSV 9.5592** — new CSV ATL, breaking ep2955 (9.5646) by 0.0054. Estimated epoch-close ≈ **9.479** (~0.08 offset). If the offset holds, this is a new server-side ATL (prev est. ~9.484 at ep2955, server ATL was 9.4873 at ep2938).
