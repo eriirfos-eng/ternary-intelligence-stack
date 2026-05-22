@@ -189,6 +189,50 @@ Context: post-restart oscillation (ep2890–2906) appears to have resolved into 
 
 ---
 
+## Field Note 42 — 2026-05-22T21:10Z · ep2938–2941 — NEW ATL 9.4873 · WALD CLUSTER · ep2940 RETURNING
+
+**Source:** training.log (EPOCH_SUMMARY ground truth — all 300 batches per epoch).
+
+**NEW SERVER-SIDE ATL: 9.4873** (ep2938). Prev ATL: 9.4891 (ep2927). Delta: **-0.0018 nats**.
+
+FN41 was premature — at batch 214/300 the running avg was 9.4942. Batches 215–300 pushed the final avg down to **9.4873**, setting a new all-time best. The ntfy "albert. NEW EPOCH ATL" fired at ep2938 completion.
+
+**Full epoch sequence (server-side, from EPOCH_SUMMARY):**
+| Epoch | avg | delta | best | notes |
+|-------|-----|-------|------|-------|
+| ep2934 | 9.4983 | -0.0084 | 9.4891 | descent |
+| ep2935 | 9.4928 | -0.0055 | 9.4891 | descent |
+| ep2936 | 9.4994 | +0.0067 | 9.4891 | mini-bounce |
+| ep2937 | 9.4942 | -0.0052 | 9.4891 | returning |
+| **ep2938** | **9.4873** | **-0.0069** | **9.4873** | **NEW ATL** |
+| ep2939 | 9.5026 | +0.0154 | 9.4873 | post-ATL bounce |
+| ep2940 | 9.4980 | -0.0046 | 9.4873 | returning — descent resumed |
+
+Post-ATL bounce at ep2939: +0.0153 nats — tightest post-ATL bounce in the run (ep2927 bounce peaked at +0.019 over two epochs). ep2940 already -0.0046, healthy pullback toward ATL zone.
+
+**WALD cluster surrounding the ATL break:**
+| Before | Type | severity | dead_low | scale |
+|--------|------|----------|----------|-------|
+| ep2934 | dead_low | 0.960 | 3.00–9.25 | 46.1× |
+| ep2935 | dead_low | 0.960 | 3.00–9.25 | 46.1× |
+| ep2936 | dead_low | 0.961 | 3.00–9.25 | 46.2× |
+| ep2937 | structural plateau (5 stable, mass=9.502) | 0.961 | — | — |
+| ep2938 | dead_low | 0.924 | **3.00–9.00** | **44.4×** |
+| ep2939 | dead_low | 0.924 | 3.00–9.00 | 44.4× |
+| ep2940 | dead_low | 0.923 | 3.00–9.00 | 44.4× |
+
+The structural plateau WALD (before ep2937) triggered a dead_low threshold recalibration: 9.25 → **9.00**. Severity simultaneously dropped from 0.961 → 0.924. The WALD self-adjusted to the new loss regime — as the model descends past 9.50, WALD focuses on neurons dead at the 9.00 level rather than 9.25. Scale factor reduced from 46× to 44× (less aggressive rescue needed). This cascade directly preceded and likely contributed to the ep2938 ATL break.
+
+**ep2941 status (batch 43/300 at 20:58Z):**
+- Batch losses probing deep: b39=9.4696, b40=**9.4121**, b42=**9.2872**
+- LR at batch 43: 8.28e-5 (near cycle low — cosine annealing approaching nadir)
+- ENTR avg=2.4668 (uniform routing, unchanged)
+- TLIGHT: L6 has 2 reds; several layers with 1 red — not alarming but slightly elevated
+
+**Status: NEW ATL 9.4873 CONFIRMED. Tightest post-ATL bounce in run (+0.0153). ep2940 returning (-0.0046). ep2941 individual batches probing 9.29/9.41 territory. WALD regime self-calibrated to 9.00 dead_low floor. Descent infrastructure healthy. Next ATL challenge ep2941–2943 window.**
+
+---
+
 ## Field Note 41 — 2026-05-22T20:44Z · ep2938 — RETURN TO ATL ZONE · CORE CONSOLIDATION · ep2938 COMPLETE
 
 **Source:** dashboard screenshot (20:44Z) + batch_history.csv (post-tick verification).
