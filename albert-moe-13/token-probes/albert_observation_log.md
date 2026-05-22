@@ -189,6 +189,27 @@ Context: post-restart oscillation (ep2890–2906) appears to have resolved into 
 
 ---
 
+## Field Note 38 — 2026-05-22T19:54Z · ep2929–2930 — POST-ATL CONSOLIDATION · BOUNCE ROUNDING OFF
+
+**Source:** batch_history.csv. ep2929 complete (n=166), ep2930 partial (n=75).
+
+**Post-ATL bounce in progress.** Three epochs since the 9.4891 server-side ATL (FN37):
+
+| Epoch | n | Sampled avg | delta vs CSV ATL (9.5671) |
+|-------|---|-------------|--------------------------|
+| ep2927 | 145 | 9.5709 | +0.0038 |
+| ep2928 | 153 | 9.5813 | +0.0142 |
+| ep2929 | 166 | 9.5773 | +0.0102 |
+| ep2930 | 75 (partial) | 9.5739 | +0.0068 |
+
+Bounce peaked at ep2928 (9.5813), now declining: 9.5813 → 9.5773 → 9.5739. Classic rounded bounce pattern — peak behind us, gently drifting back down. Sampled ATL (9.5671) and server-side ATL (9.4891) both unchallenged.
+
+No new BEST events, no WALD signals visible in this interval.
+
+**Status: CONSOLIDATION. Bounce peak passed. Trend line pointing down. Next descent leg should challenge 9.5671 CSV ATL and eventually 9.4891 server-side ATL.**
+
+---
+
 ## Field Note 37 — 2026-05-22T19:41Z · ep2927 — NEW BEST 9.4891 · ROUTING DIVERSIFICATION · -0.0080
 
 **Source:** dashboard screenshot + browser notification. EP 2927 · batch 299/300 (nearly complete).
