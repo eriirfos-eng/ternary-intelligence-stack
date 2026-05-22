@@ -2813,15 +2813,18 @@
     }
     // Slice a pre-computed SMA array to the current chart viewport + overhang buffer.
     // Passes only visible points to Chart.js — reduces rendered nodes by 10-100x when zoomed in.
+    // Caps at MAX_CHART_PTS via even-stride downsample when the viewport covers a very wide
+    // range (e.g. full history at default zoom) to prevent passing 700k+ points to Chart.js.
     function smaVisibleSlice(fullArr) {
         if (!fullArr.length) return fullArr;
         const scale = chart.scales.x;
-        if (!scale) return fullArr;
+        if (!scale) return smaPreseedData(fullArr);
         const span = Math.max(scale.max - scale.min, 10);
         const buf  = span * 0.30 + 20; // 30% overhang each side + 20ep fixed pad
         const lo   = Math.max(0, lowerBound(fullArr, scale.min - buf));
         const hi   = Math.min(fullArr.length, lowerBound(fullArr, scale.max + buf));
-        return fullArr.slice(lo, hi);
+        const slice = fullArr.slice(lo, hi);
+        return slice.length <= MAX_CHART_PTS ? slice : smaPreseedData(slice);
     }
     // Re-apply render distance to all visible SMA datasets (call after zoom/pan/reset).
     function applyRenderDistance() {
