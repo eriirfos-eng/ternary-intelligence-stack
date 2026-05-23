@@ -1,7 +1,7 @@
 from "./moving_average.tern" import moving_average;
 
 fn main() -> trit {
-    let win: float[2];
+    let win: float[2] = 0.0;
     win[0] = 5.0;
     win[1] = 15.0;
     let avg: float = moving_average(win, 2);
