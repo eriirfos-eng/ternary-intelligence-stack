@@ -15,8 +15,8 @@ import os
 import sys
 from pathlib import Path
 
-# Reject rows from other training runs — this run never went below ~10.2.
-LOSS_MIN    = 9.5
+# Reject rows from other training runs — lower bound updated as batch=8/F16 reaches 9.3x.
+LOSS_MIN    = 8.0
 LOSS_MAX    = 13.0
 
 DOWNLOADS   = Path.home() / "Desktop" / "Downloads"

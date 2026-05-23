@@ -48,13 +48,13 @@ app = modal.App("albert-serve")
 
 @app.function(
     image=image,
-    cpu=2.0,
-    memory=2048,          # checkpoint ~537MB + working memory
+    cpu=4.0,
+    memory=3072,          # checkpoint ~537MB + working memory + inference buffers
     volumes={"/vol": vol},
     min_containers=1,     # one always-on container — model stays loaded
     timeout=3600,
 )
-@modal.web_server(8000)
+@modal.web_server(8000, startup_timeout=180)
 def serve():
     env = {
         **os.environ,
@@ -79,22 +79,36 @@ def serve():
             'homepage   = "https://ternlang.com"\n'
         )
 
-    print("[serve] cargo build --release --features serve ...")
-    result = subprocess.run(
-        ["/root/.cargo/bin/cargo", "build", "--release",
-         "--bin", "albert_serve", "--features", "serve",
-         "-p", "moe-llm-core"],
-        cwd="/src",
-        env=env,
-    )
-    if result.returncode != 0:
-        print("[serve] build failed — exiting", file=sys.stderr)
-        sys.exit(1)
+    cached_bin = "/vol/albert/bin/albert_serve_v2"  # v2: KV-cache decode path
+    os.makedirs("/vol/albert/bin", exist_ok=True)
 
-    print("[serve] starting albert_serve on :8000 with root=/vol")
-    # exec — replaces this Python process with the Rust server
-    os.execve(
-        "/tmp/cargo-target/release/albert_serve",
-        ["/tmp/cargo-target/release/albert_serve", "/vol"],
-        {**env, "PORT": "8000"},
+    if os.path.exists(cached_bin):
+        print("[serve] using cached binary from volume")
+        import shutil
+        shutil.copy2(cached_bin, "/tmp/albert_serve")
+        os.chmod("/tmp/albert_serve", 0o755)
+        bin_path = "/tmp/albert_serve"
+    else:
+        print("[serve] cargo build --release --features serve ...")
+        result = subprocess.run(
+            ["/root/.cargo/bin/cargo", "build", "--release",
+             "--bin", "albert_serve", "--features", "serve",
+             "-p", "moe-llm-core"],
+            cwd="/src",
+            env=env,
+        )
+        if result.returncode != 0:
+            print("[serve] build failed — exiting", file=sys.stderr)
+            sys.exit(1)
+        # cache binary to volume for future cold starts
+        import shutil
+        shutil.copy2("/tmp/cargo-target/release/albert_serve", cached_bin)
+        os.chmod(cached_bin, 0o755)
+        print(f"[serve] cached binary to {cached_bin}")
+        bin_path = "/tmp/cargo-target/release/albert_serve"
+
+    print("[serve] starting albert_serve on :8000 with root=/vol/albert")
+    subprocess.Popen(
+        [bin_path, "/vol/albert"],
+        env={**env, "PORT": "8000"},
     )

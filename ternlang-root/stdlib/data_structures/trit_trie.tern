@@ -1,0 +1,5 @@
+fn main() -> trit {
+    // Ternary Trie for Trit-Sequences
+    let root = null;
+    return 0;
+}

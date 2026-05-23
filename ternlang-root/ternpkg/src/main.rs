@@ -27,7 +27,7 @@
 //!   "eriirfos-eng/ternary-intelligence-stack--tis-" = "latest"
 //!   "some-user/some-lib" = "v0.2.0"
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
@@ -146,27 +146,48 @@ fn github_archive_url(owner: &str, repo: &str, tag: &str) -> String {
     }
 }
 
-/// Simulate package installation (prints what would happen; real download needs curl/reqwest).
-fn install_package(spec: &str, tern_modules: &Path) -> Result<(), String> {
+/// Install a package and recursively resolve its transitive dependencies.
+/// `visited` prevents cycles and re-installs in the dependency DAG.
+fn install_package(
+    spec: &str,
+    tern_modules: &Path,
+    visited: &mut HashSet<String>,
+) -> Result<(), String> {
     let (owner, repo, tag) = parse_pkg_spec(spec)
         .ok_or_else(|| format!("Invalid package spec: {}", spec))?;
-    let url = github_archive_url(owner, repo, tag);
-    let install_dir = tern_modules.join(format!("{}__{}", owner, repo));
+
+    // Canonical key: owner__repo (tag-independent; we install the requested version)
+    let canonical = format!("{}__{}", owner, repo);
+    if visited.contains(&canonical) {
+        return Ok(());
+    }
+    visited.insert(canonical.clone());
+
+    let url         = github_archive_url(owner, repo, tag);
+    let install_dir = tern_modules.join(&canonical);
 
     if install_dir.exists() {
         println!("  [cached] {} ({})", spec, tag);
-        return Ok(());
+    } else {
+        println!("  [install] {} @ {}", spec, tag);
+        println!("    source: {}", url);
+        println!("    target: {}", install_dir.display());
+        println!("    run:    curl -L '{}' | tar xz -C '{}'",
+                 url, tern_modules.display());
+        println!("    (automatic download planned for ternpkg v0.2)");
     }
 
-    println!("  [install] {} @ {}", spec, tag);
-    println!("    source: {}", url);
-    println!("    target: {}", install_dir.display());
-
-    // In v0.1: print the curl command the user would run.
-    // Production: use a HTTP client (reqwest) to download and unpack.
-    println!("    run:    curl -L '{}' | tar xz -C '{}'",
-             url, tern_modules.display());
-    println!("    (automatic download planned for ternpkg v0.2)");
+    // Resolve transitive dependencies from the installed package's manifest.
+    let dep_manifest = install_dir.join("ternlang.toml");
+    if dep_manifest.exists() {
+        let child = Manifest::load(&dep_manifest)?;
+        if !child.dependencies.is_empty() {
+            println!("  [transitive] {} has {} dep(s)", spec, child.dependencies.len());
+            for (dep_spec, _) in &child.dependencies {
+                install_package(dep_spec, tern_modules, visited)?;
+            }
+        }
+    }
 
     Ok(())
 }
@@ -237,20 +258,22 @@ fn cmd_install(pkg: Option<&str>) {
         fs::create_dir_all(&tern_modules).expect("Cannot create .tern_modules");
     }
 
+    let mut visited = HashSet::new();
+
     if let Some(spec) = pkg {
-        // Add and install a single package
+        // Add and install a single package (with transitive deps)
         let (_, _, tag) = parse_pkg_spec(spec).unwrap_or(("", spec, "latest"));
         manifest.dependencies.insert(spec.to_string(), tag.to_string());
         match manifest.save(&toml_path) {
             Ok(_) => {}
             Err(e) => { eprintln!("Error saving manifest: {}", e); return; }
         }
-        match install_package(spec, &tern_modules) {
+        match install_package(spec, &tern_modules, &mut visited) {
             Ok(_)  => println!("Done."),
             Err(e) => eprintln!("Error: {}", e),
         }
     } else {
-        // Install all dependencies from manifest
+        // Install all direct dependencies (and their transitive deps)
         if manifest.dependencies.is_empty() {
             println!("No dependencies in ternlang.toml");
             return;
@@ -259,12 +282,12 @@ fn cmd_install(pkg: Option<&str>) {
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
         for (dep, _) in &deps {
-            match install_package(dep, &tern_modules) {
+            match install_package(dep, &tern_modules, &mut visited) {
                 Ok(_)  => {}
                 Err(e) => eprintln!("Error installing {}: {}", dep, e),
             }
         }
-        println!("Done. {} package(s) processed.", deps.len());
+        println!("Done. {} root package(s) processed.", deps.len());
     }
 }
 
@@ -319,6 +342,22 @@ fn print_help() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashSet;
+
+    #[test]
+    fn test_transitive_no_cycle() {
+        // install_package with a non-existent dir should not panic or loop
+        let tmp = std::env::temp_dir().join("ternpkg_test_transitive");
+        let _ = fs::create_dir_all(&tmp);
+        let mut visited = HashSet::new();
+        // non-existent package — should produce install output without crashing
+        let result = install_package("test-owner/no-such-repo", &tmp, &mut visited);
+        assert!(result.is_ok());
+        // second call with same spec must be skipped (visited set)
+        let result2 = install_package("test-owner/no-such-repo", &tmp, &mut visited);
+        assert!(result2.is_ok());
+        assert_eq!(visited.len(), 1);
+    }
 
     #[test]
     fn test_parse_pkg_spec_simple() {

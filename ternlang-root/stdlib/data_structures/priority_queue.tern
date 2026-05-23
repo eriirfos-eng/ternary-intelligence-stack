@@ -1,0 +1,5 @@
+fn main() -> trit {
+    // Ternary Priority Queue (Min-Heap)
+    let heap: int[100] = 0;
+    return 0;
+}

@@ -1227,6 +1227,15 @@
     const POLL_MS            = _qp.has('poll_ms') ? Math.max(200, parseInt(_qp.get('poll_ms'))) : 500;
     const MAX_CHART_PTS      = 5000;
     const INITIAL_WINDOW_BYTES = 512 * 1024; // snap to last 512KB on first load
+    const PRESEED_EPOCH_MIN  = _qp.has('preseed_min') ? parseFloat(_qp.get('preseed_min')) : 0;
+    // Notch filter: exclude a specific epoch range from preseed to remove surgery spike artefacts.
+    // The ep394–499 surgery dip (loss 8.0–10+) creates a distracting V on the chart.
+    // Notching ep380–525 removes it cleanly — both edges land at loss ~10 so no discontinuity.
+    // Override with ?preseed_notch_lo=0&preseed_notch_hi=0 to disable.
+    const PRESEED_NOTCH_LO   = _qp.has('preseed_notch_lo') ? parseFloat(_qp.get('preseed_notch_lo')) : 380;
+    const PRESEED_NOTCH_HI   = _qp.has('preseed_notch_hi') ? parseFloat(_qp.get('preseed_notch_hi')) : 525;
+    // Loss floor — also keep 8.8 to guard against any other sub-8.8 artefacts.
+    const PRESEED_LOSS_MIN   = _qp.has('preseed_loss_min') ? parseFloat(_qp.get('preseed_loss_min')) : 8.8;
 
     // ── State ──────────────────────────────────────────────────────────
     let lastBytePos      = 0;   // byte offset into training.log — only fetch new bytes
@@ -2437,7 +2446,7 @@
                             c.canvas.style.cursor = 'grabbing';
                             document.body.style.cursor = 'grabbing';
                         },
-                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); chart.update('none'); syncSubChartX(); }
+                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); syncScatterToViewport(); chart.update('none'); syncSubChartX(); }
                     },
                     zoom: {
                         wheel: { enabled: true, speed: 0.20 }, pinch: { enabled: true }, mode: 'xy',
@@ -2453,6 +2462,7 @@
                                 _t = setTimeout(() => {
                                     isInteracting = false;
                                     chart.stop();
+                                    syncScatterToViewport();
                                     chart.update('none');
                                     syncSubChartX();
                                 }, 120);
@@ -2795,6 +2805,22 @@
             if (!ds[dsIdx].hidden && smaCacheFull[ci].length)
                 ds[dsIdx].data = smaPreseedData(smaCacheFull[ci]);
         });
+    }
+
+    // Sync the raw scatter (dataset[0]) to the current viewport.
+    // When zoomed out wide: fill with a downsampled view of the full smaLog so the
+    // entire training history is visible as individual points. When zoomed in: the
+    // live polling loop maintains dataset[0] with dense recent data — leave it alone.
+    function syncScatterToViewport() {
+        if (!chart.scales.x || !smaLog.length) return;
+        const span = chart.scales.x.max - chart.scales.x.min;
+        if (span < 100) return; // zoomed in — leave live data alone
+        const buf = span * 0.1;
+        const lo  = lowerBound(smaLog, chart.scales.x.min - buf);
+        const hi  = Math.min(smaLog.length, lowerBound(smaLog, chart.scales.x.max + buf));
+        const slice = smaLog.slice(lo, hi);
+        const pts = slice.length <= MAX_CHART_PTS ? slice : smaPreseedData(slice);
+        chart.data.datasets[0].data = pts.map(p => ({ x: p.x, y: p.y, epoch: Math.floor(p.x) }));
     }
 
     // ── TMA — Ternary Moving Average ───────────────────────────────────
@@ -4279,10 +4305,13 @@
         if (existing.length !== layerNorms.length) {
             wrap.innerHTML = '';
             for (let i = 0; i < layerNorms.length; i++) {
+                const isEmbed = i === layerNorms.length - 2;
+                const isHead  = i === layerNorms.length - 1;
+                const label   = isEmbed ? 'emb' : isHead ? 'lm' : `L${i}`;
                 const row = document.createElement('div');
                 row.className = 'gbar-row';
                 row.innerHTML =
-                    `<span class="gbar-label">L${i}</span>` +
+                    `<span class="gbar-label">${label}</span>` +
                     `<div class="gbar-track">` +
                       `<div class="gbar-fill" style="width:0%;"></div>` +
                     `</div>` +
@@ -4303,8 +4332,11 @@
             row.querySelector('.gbar-fill').style.background = col;
             const fmtN = n < 1e-4 ? n.toExponential(2) : n.toFixed(6);
             row.querySelector('.gbar-val').textContent       = fmtN;
+            const tipLabel = i === layerNorms.length - 2 ? 'Embedding — Gradient Norm'
+                           : i === layerNorms.length - 1 ? 'LM Head — Gradient Norm'
+                           : `Layer ${i} — Gradient Norm`;
             row.onmouseenter = ev => showTip(ev,
-                `<b>Layer ${i} — Gradient Norm</b><br>` +
+                `<b>${tipLabel}</b><br>` +
                 `∥∇L∥ = <b>${n.toExponential(3)}</b><br>` +
                 `Bar = relative to this step's min–max range (low=white, high=red).<br>` +
                 `Very low values may indicate vanishing gradients.`);
@@ -5409,7 +5441,7 @@
             if (comma < 0) continue;
             const x = parseFloat(line.slice(0, comma));
             const y = parseFloat(line.slice(comma + 1));
-            if (isFinite(x) && isFinite(y) && x >= 0 && y > 1 && y < 50 && x !== _lastPreseedX) {
+            if (isFinite(x) && isFinite(y) && x >= PRESEED_EPOCH_MIN && y >= PRESEED_LOSS_MIN && y < 50 && x !== _lastPreseedX && !(x >= PRESEED_NOTCH_LO && x <= PRESEED_NOTCH_HI)) {
                 smaLog.push({ x, y });
                 _lastPreseedX = x;
             }
@@ -5422,6 +5454,7 @@
             const m = line.match(/^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)/);
             if (!m) continue;
             const ge = parseInt(m[1]), al = parseFloat(m[2]);
+            if (ge < PRESEED_EPOCH_MIN) continue;
             if (!epochLog.some(e => e.global_epoch === ge))
                 epochLog.push({ local_epoch: ge, global_epoch: ge, layers: null, avg_loss: al, clipped: false, skipped: false });
             const tm = line.match(/tns=(\d+)/);

@@ -257,6 +257,17 @@
     }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.45} }
 
+    .type-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 0.85em;
+      background: var(--teal);
+      margin-left: 1px;
+      vertical-align: text-bottom;
+      animation: type-blink 0.65s step-end infinite;
+    }
+    @keyframes type-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
     /* ── empty state ── */
     .empty-state {
       flex: 1;
@@ -614,6 +625,34 @@ function appendMsg(role, text, meta) {
   return div;
 }
 
+function finishSend() {
+  busy = false;
+  document.getElementById('send-btn').disabled = false;
+  ta.focus();
+}
+
+function typewriterReveal(text, bubble, onDone) {
+  const feed = document.getElementById('messages');
+  const cursor = document.createElement('span');
+  cursor.className = 'type-cursor';
+  bubble.appendChild(cursor);
+  feed.scrollTop = feed.scrollHeight;
+
+  // Speed: finish in ~1.8s regardless of length; floor at 6ms, cap at 60ms.
+  const interval = Math.min(60, Math.max(6, Math.floor(1800 / Math.max(text.length, 1))));
+  let i = 0;
+  const timer = setInterval(() => {
+    if (i < text.length) {
+      cursor.insertAdjacentText('beforebegin', text[i++]);
+      feed.scrollTop = feed.scrollHeight;
+    } else {
+      clearInterval(timer);
+      cursor.remove();
+      if (onDone) onDone();
+    }
+  }, interval);
+}
+
 async function sendPrompt() {
   if (busy) return;
   const prompt = ta.value.trim();
@@ -627,14 +666,27 @@ async function sendPrompt() {
 
   appendMsg('user', prompt, null);
 
+  const thinkPhrases = [
+    'pondering…', 'thinking…', 'crunching numbers…', 'rearranging neurons…',
+    'consulting the ternary oracle…', 'weighing the evidence…', 'activating experts…',
+    'reading between the tokens…', 'doing math…', 'almost there…',
+    'herding gradients…', 'asking the sparse layers…',
+  ];
+  let thinkIdx = Math.floor(Math.random() * thinkPhrases.length);
   const thinkDiv = document.createElement('div');
   thinkDiv.className = 'msg albert thinking';
   thinkDiv.innerHTML = `
     <div class="msg-label">albert.</div>
-    <div class="msg-bubble">generating…</div>
+    <div class="msg-bubble" id="think-phrase">${thinkPhrases[thinkIdx]}</div>
   `;
-  document.getElementById('messages').appendChild(thinkDiv);
-  document.getElementById('messages').scrollTop = 999999;
+  const feed = document.getElementById('messages');
+  feed.appendChild(thinkDiv);
+  feed.scrollTop = 999999;
+  const thinkTimer = setInterval(() => {
+    thinkIdx = (thinkIdx + 1) % thinkPhrases.length;
+    const el = document.getElementById('think-phrase');
+    if (el) el.textContent = thinkPhrases[thinkIdx];
+  }, 1800);
 
   try {
     const resp = await fetch(API, {
@@ -642,23 +694,42 @@ async function sendPrompt() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, max_tokens: 128, temperature: 0.9 }),
     });
+    clearInterval(thinkTimer);
     thinkDiv.remove();
+
     if (!resp.ok) {
       const err = await resp.text();
       appendMsg('albert', `[error ${resp.status}] ${err}`, null);
-    } else {
-      const d = await resp.json();
-      const out = d.text.startsWith(prompt) ? d.text.slice(prompt.length).trimStart() : d.text;
-      appendMsg('albert', out || '(empty output)', `${d.tok_s.toFixed(1)} tok/s · ep${d.epoch}`);
+      finishSend();
+      return;
     }
+
+    const d = await resp.json();
+    const out = d.text.startsWith(prompt) ? d.text.slice(prompt.length).trimStart() : d.text;
+    const finalText = out || '(empty output)';
+
+    // Create the albert bubble without text yet.
+    document.getElementById('empty')?.remove();
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'msg albert';
+    msgDiv.innerHTML = `<div class="msg-label">albert.</div><div class="msg-bubble"></div>`;
+    feed.appendChild(msgDiv);
+    const bubble = msgDiv.querySelector('.msg-bubble');
+
+    typewriterReveal(finalText, bubble, () => {
+      const meta = document.createElement('div');
+      meta.className = 'msg-meta';
+      meta.textContent = `${d.tok_s.toFixed(1)} tok/s · ep${d.epoch}`;
+      msgDiv.appendChild(meta);
+      finishSend();
+    });
+
   } catch (e) {
+    clearInterval(thinkTimer);
     thinkDiv.remove();
     appendMsg('albert', `[network error] ${e.message}`, null);
+    finishSend();
   }
-
-  busy = false;
-  document.getElementById('send-btn').disabled = false;
-  ta.focus();
 }
 
 // ── speech to text ───────────────────────────────────────────────────────────

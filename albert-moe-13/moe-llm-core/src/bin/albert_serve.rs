@@ -106,26 +106,37 @@ fn generate(state: &ModelState, prompt: &str, max_new: usize, temperature: f64)
 {
     let device = Device::Cpu;
     let prompt_ids = state.tokenizer.encode(prompt);
-    let mut tokens: Vec<u32> = prompt_ids;
-    let max_seq    = state.config.max_seq_len;
-    let t0         = std::time::Instant::now();
+    if prompt_ids.is_empty() {
+        return (String::new(), 0.0);
+    }
 
-    for _ in 0..max_new {
-        let start = tokens.len().saturating_sub(max_seq);
-        let ctx   = &tokens[start..];
-        let input = Tensor::new(ctx, &device).unwrap()
-            .to_dtype(DType::U32).unwrap()
-            .unsqueeze(0).unwrap();
-        let logits = state.model.forward(&input).unwrap();
-        let dims   = logits.dims();
-        let last   = logits.i((0, dims[1] - 1)).unwrap();
+    // Prefill: process full prompt once, populate KV-cache.
+    state.model.clear_kv_cache();
+    let prompt_tensor = Tensor::new(prompt_ids.as_slice(), &device).unwrap()
+        .to_dtype(DType::U32).unwrap()
+        .unsqueeze(0).unwrap();
+    let prefill_logits = state.model.forward_prefill(&prompt_tensor).unwrap();
+    let dims  = prefill_logits.dims();
+    let last  = prefill_logits.i((0, dims[1] - 1)).unwrap();
+    let first = sample_token(&last, temperature).unwrap();
+
+    let t0 = std::time::Instant::now();
+    let mut new_tokens: Vec<u32> = vec![first];
+
+    // Decode: single-token steps, O(1) per step via KV-cache.
+    for _ in 1..max_new {
+        let logits = state.model.forward_decode(*new_tokens.last().unwrap(), &device).unwrap();
+        let last   = logits.i((0, 0)).unwrap(); // [1, 1, V] → [V]
         let next   = sample_token(&last, temperature).unwrap();
-        tokens.push(next);
+        new_tokens.push(next);
     }
 
     let elapsed = t0.elapsed().as_secs_f64();
-    let tok_s   = max_new as f64 / elapsed;
-    (state.tokenizer.decode(&tokens), tok_s)
+    let tok_s   = (max_new - 1).max(1) as f64 / elapsed;
+
+    let mut all_tokens = prompt_ids;
+    all_tokens.extend_from_slice(&new_tokens);
+    (state.tokenizer.decode(&all_tokens), tok_s)
 }
 
 // ─── handlers ────────────────────────────────────────────────────────────────

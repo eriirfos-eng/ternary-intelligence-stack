@@ -5,7 +5,8 @@ use logos::Logos;
 #[logos(skip(r"//[^\n]*", allow_greedy = true))]   // Skip line comments
 #[logos(skip(r"/\*[^*]*\*+(?:[^*/][^*]*\*+)*/", allow_greedy = true))]  // Skip block comments /* ... */
 pub enum Token {
-    #[regex(r"[0-9]+\.[0-9]+", |lex| lex.slice().parse::<f64>().ok(), priority = 100)]
+    #[regex(r"[0-9]+\.[0-9]+(?:[eE][+-]?[0-9]+)?", |lex| lex.slice().parse::<f64>().ok(), priority = 100)]
+    #[regex(r"[0-9]+[eE][+-]?[0-9]+", |lex| lex.slice().parse::<f64>().ok(), priority = 100)]
     Float(f64),
 
     // Ternary Specific
@@ -231,6 +232,27 @@ pub enum Token {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_float_scientific_notation() {
+        let cases: &[(&str, f64)] = &[
+            ("1.23e-10",  1.23e-10),
+            ("1.23E+10",  1.23e10),
+            ("9.5e2",     9.5e2),
+            ("1e5",       1e5),
+            ("2E-3",      2e-3),
+        ];
+        for (input, expected) in cases {
+            let mut lex = Token::lexer(input);
+            match lex.next() {
+                Some(Ok(Token::Float(v))) => {
+                    let rel = (v - expected).abs() / expected.abs().max(f64::EPSILON);
+                    assert!(rel < 1e-12, "input={input} got={v} expected={expected}");
+                }
+                other => panic!("input={input}: expected Float, got {other:?}"),
+            }
+        }
+    }
 
     #[test]
     fn test_lexer() {

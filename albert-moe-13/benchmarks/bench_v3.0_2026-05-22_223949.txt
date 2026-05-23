@@ -1,0 +1,64 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 2957 epochs | 2026-05-22 22:39
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→  IN��IS together the IN��IS together the IN��IS together the IN��IS together
+    58.8 tok/s  17ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+→ ��IS together the IN��IS together the IN��IS together the IN��IS together
+    83.3 tok/s  12ms/tok
+
+[P3] the ternary number system uses three distinct
+→  who ال�в��IS th light publiczm ENannSe them�  apا�� publiczy yche fatherوExSeॼ oper� in� IN based insero began�و At sont during severalwewardbr� � within ISBN the�era INHゎ publicign�ERcer
+    55.6 tok/s  18ms/tok
+
+[P4] once upon a time in a kingdom far
+→  stillzm the9IONgrIONARrow human form IN thezm  �� Emton the�phAs children � theEx”в��т model� public air head school� y�* uit��Ch ShION publicк headero the             yida thehipCh 100AT24
+    62.5 tok/s  16ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+→ �ini� There � yida*тschically Theyese� that second� beganeb ال�ا dans�Chley�у system� alla=cl just together� thehipYley the� took head ysk�Ch laс theuth anotheraca�� head la�zm� controlzm IN
+    66.7 tok/s  15ms/tok
+
+[P6] the EU AI Act entered into force on
+→ � including origin� since� y� the ال� just began Baraisía�ken�    27 within ap �EL during 13ley�ologкain��ona public 13� ال�ida model�ALero light 13� began American after────────────────────────────────────────────────────────────────────────� theaca Sh�� great * came theuthuesaca
+    66.7 tok/s  15ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+→ ──────────────────────────────────────────────────────────────────────── school becameو Bo�    Heهção the� TherekenION began since ShkenION His Ab model givenati duringER),ati� ��ken�� during 13*ا     pod controlUC children together that الؼuth old name� control began based*о� ال� together under*────────────────────────────────────────────────────────────────────────we father
+    71.4 tok/s  14ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+→ � dans�� far� Sh� went� INв� più _ theا�ن*�� duringفida� dans� von good� inter�Ex��He:ن much�Yлnie�� origin Sh���= delle IN�و livingwe centuryмtain: controluth
+    66.7 tok/s  15ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+→ ION:اni�ER Hisatt dansا� � schoolido�ION*Ex*  auf school*uth take� ال�ido Helesseroadas  control IN public nel IN�**ally�less Shati during� together school�уن ENICition little    ero�     Sh --*
+    71.4 tok/s  14ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+→  who � duringEx     � together* dellو� sign� ausм� schoolido DeER band dans few duringفuth public aus � became parteido became while    قniر several sign dansadas EN began publicidoا�� during deni IN became signwe�ER� bo* school public father
+    62.5 tok/s  16ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+→ ign�OR during� y�ct began�*� the�Anさuthف yuth sub�uth�� under public*�с light ال�� IN ENс together�ION $�*�ically �tonク�� ra� publicو public�icallyن� together public       old
+    66.7 tok/s  15ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+→ � control� � *ょuk� them being All       �IONize�uth* became ENSe� year Nederlands � auf�*28IT public show beganures�ION  IN public� y serIT� several the     skER �we bo Dieida afterukUC� USUCcl
+    62.5 tok/s  16ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+→ ITс la Amley INoverleden public     2007лbr�     dansو dansame nel became�:    IT� togetherAC uitEx� during centuryurs� jesthipida � became� began delle �phEx� publicaca Hisida schoolER before    � dansacaOMر ال�وк de
+    71.4 tok/s  14ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+→ � controlbr theEx ال�        became oldida school INION Hisс �Ex y process� y फida� y town sideerouth� that France cell*� yearida�romم Les To public� y 2008     ION low � ال�aca � auf IN publicallyاbr history the air
+    66.7 tok/s  15ms/tok
+
+[P15] the meaning of life according to
+→ �ign       � =ION school � town duringсni IN must becameIONUT large boION IN 100 publicEx الious � thbr  zm few INwe        tonк�دni� bar began�       ERION school��� uit language�  EN together IN� beر began�ores
+    66.7 tok/s  15ms/tok
+

@@ -118,7 +118,7 @@ const COLLAPSE_STREAK_LIMIT: u32 = 2;
 // then one backward pass covers all N sequences. Mirrors the ternary
 // hold state: withhold the weight update until enough evidence accumulates.
 const GRAD_ACCUM_STEPS: usize = 4;
-const BATCH_SIZE: usize = 4;   // CTX=256: attention is O(seq²), T4 16GB needs batch ≤ 4
+const BATCH_SIZE: usize = 8;   // CTX=256, F16 attn: T4 16GB comfortable at 8 (params+moments ~2GB, activations ~4GB)
 // Direct LR boost applied after Adam's step for cold layers (norm < THRESHOLD).
 // Adam normalizes away gradient amplification via its second-moment denominator,
 // so we bypass it entirely: a sign-normalized SGD step with lr = current_lr * cold_boost.
@@ -216,22 +216,32 @@ fn global_grad_norm(varmap: &VarMap, grads: &candle_core::backprop::GradStore) -
     sq_sum.sqrt()
 }
 
-/// Compute L2 gradient norm per transformer layer.
-/// Returns a Vec of length num_layers; each entry is sqrt(sum of squared grads
-/// for all tensors whose name starts with "blocks.N.").
+/// Compute L2 gradient norm per transformer layer, plus embed and lm_head.
+/// Returns a Vec of length num_layers + 2:
+///   [0..num_layers] = block layer norms (blocks.N.*)
+///   [num_layers]    = embedding norm (embed.*)
+///   [num_layers+1]  = lm_head norm (lm_head.*)
+/// Appending non-block entries makes the bars non-zero even when ternary block
+/// gradients are near machine-zero (common in late F32 training).
 fn per_layer_grad_norm(varmap: &VarMap, grads: &candle_core::backprop::GradStore, num_layers: usize) -> Vec<f32> {
-    let mut sq: Vec<f32> = vec![0.0; num_layers];
+    let mut sq: Vec<f32> = vec![0.0; num_layers + 2];
     let all_vars = varmap.data().lock().unwrap();
     for (name, var) in all_vars.iter() {
-        let li = name.strip_prefix("blocks.")
-            .and_then(|s| s.split('.').next())
-            .and_then(|s| s.parse::<usize>().ok());
-        if let Some(i) = li {
-            if i < num_layers {
-                if let Some(g) = grads.get(var.as_tensor()) {
-                    if let Ok(s) = g.sqr().and_then(|t| t.sum_all()).and_then(|t| t.to_scalar::<f32>()) {
-                        if s.is_finite() { sq[i] += s; }
-                    }
+        let idx = if let Some(rest) = name.strip_prefix("blocks.") {
+            rest.split('.').next()
+                .and_then(|s| s.parse::<usize>().ok())
+                .filter(|&i| i < num_layers)
+        } else if name.starts_with("embed.") {
+            Some(num_layers)
+        } else if name.starts_with("lm_head.") {
+            Some(num_layers + 1)
+        } else {
+            None
+        };
+        if let Some(i) = idx {
+            if let Some(g) = grads.get(var.as_tensor()) {
+                if let Ok(s) = g.sqr().and_then(|t| t.sum_all()).and_then(|t| t.to_scalar::<f32>()) {
+                    if s.is_finite() { sq[i] += s; }
                 }
             }
         }
@@ -1156,11 +1166,11 @@ fn train_cycle(
         let mut skipped_steps = 0u32;
         // Mycelium epoch telemetry accumulators
         let mut last_tlight_states: Vec<String> = vec![String::new(); config.num_layers];
-        let mut epoch_layer_norm_acc: Vec<f32>  = vec![0.0; config.num_layers];
+        let mut epoch_layer_norm_acc: Vec<f32>  = vec![0.0; config.num_layers + 2]; // +2: embed, lm_head
         let mut epoch_layer_norm_count: usize   = 0;
         // Cache the most recently computed per-layer norms so the GRAD log (which fires
         // every 10 batches) can emit real values even on non-step batches.
-        let mut last_layer_norms: Vec<f32> = vec![0.0_f32; config.num_layers];
+        let mut last_layer_norms: Vec<f32> = vec![0.0_f32; config.num_layers + 2]; // +2: embed, lm_head
         let mut last_norm: f32 = 0.0_f32;
         // Per-epoch routing accumulator for expert dominance tripwire.
         let mut epoch_route_acc: Vec<f32>  = vec![0.0; config.num_experts];
@@ -1215,9 +1225,10 @@ fn train_cycle(
 
             // Gate div computation to optimizer-step batches only — avoids running all
             // 12 experts on every batch (144 extra forward passes × GRAD_ACCUM_STEPS = 4×).
+            // Also skip entirely once div weight decays to zero (epoch >= DIV_DECAY_END_EPOCH).
             let is_step_batch = (batch_idx + 1) % GRAD_ACCUM_STEPS == 0
                 || batch_idx + 1 == num_batches;
-            set_div_enabled(is_step_batch);
+            set_div_enabled(is_step_batch && div_loss_weight(total_epochs as usize) > 0.0);
 
             clear_entropy_capture();
             clear_lb_capture();
@@ -1384,7 +1395,8 @@ fn train_cycle(
                     // TTL burst detection — per-layer grad norm vs EMA baseline.
                     // When ratio > BURST_RATIO_THRESHOLD, freeze that layer's TTL logit modifiers
                     // for TTL_FREEZE_GRAD_STEPS optimizer steps so gate can learn without correction.
-                    for (i, &n) in layer_norms.iter().enumerate() {
+                    // Only iterate over transformer blocks — embed/lm_head (indices 18,19) have no TTL.
+                    for (i, &n) in layer_norms.iter().take(config.num_layers).enumerate() {
                         if n > 0.0 {
                             if grad_norm_ema[i] == 0.0 {
                                 // Bootstrap: first real observation sets the baseline, no burst check.
@@ -1481,7 +1493,7 @@ fn train_cycle(
                 // GRAD — per-layer gradient norm, every 10 batches to keep log readable.
                 // Uses last_layer_norms (cached from most recent step batch) so this never
                 // emits zeros on non-step batches.
-                // Dashboard parses "GRAD step=N n=X.XXXX L=n0,n1,n2,..."
+                // Dashboard parses "GRAD step=N n=X.XXXX L=n0,...,n17,embed,lm_head"
                 if batch_idx % 10 == 0 || batch_idx == 0 {
                     let ln_str: Vec<String> = last_layer_norms.iter()
                         .map(|n| format!("{:.2e}", n)).collect();

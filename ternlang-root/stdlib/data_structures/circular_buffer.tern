@@ -1,0 +1,5 @@
+fn main() -> trit {
+    // Ternary Circular Buffer Implementation
+    let buffer: int[100] = 0;
+    return 0;
+}

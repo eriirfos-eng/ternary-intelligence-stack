@@ -1,4 +1,4 @@
-use candle_core::{Result, Tensor, D};
+use candle_core::{DType, Result, Tensor, D};
 use candle_nn::VarBuilder;
 use super::ternary_linear::TernaryLinear;
 use std::cell::RefCell;
@@ -89,6 +89,22 @@ impl Attention {
         let k = apply_rope(&k, 0)?;
 
         let mask = self.get_mask(seq_len, x.device())?;
+
+        #[cfg(feature = "cuda")]
+        if x.device().is_cuda() {
+            let scale = (self.head_dim as f64).sqrt();
+            let q16 = q.to_dtype(DType::F16)?;
+            let k16 = k.to_dtype(DType::F16)?;
+            let v16 = v.to_dtype(DType::F16)?;
+            let mask16 = mask.to_dtype(DType::F16)?;
+            let mut attn = (q16.matmul(&k16.transpose(2, 3)?.contiguous()?)? / scale)?;
+            attn = attn.broadcast_add(&mask16)?;
+            let attn = candle_nn::ops::softmax(&attn, D::Minus1)?;
+            let out = attn.matmul(&v16)?.to_dtype(DType::F32)?
+                .transpose(1, 2)?.contiguous()?.reshape((b_sz, seq_len, h_sz))?;
+            return self.o_proj.forward(&out);
+        }
+
         let mut attn_weights = (q.matmul(&k.transpose(2, 3)?.contiguous()?)? / (self.head_dim as f64).sqrt())?;
         attn_weights = attn_weights.broadcast_add(&mask)?;
         let attn_weights = candle_nn::ops::softmax(&attn_weights, D::Minus1)?;
@@ -116,6 +132,22 @@ impl Attention {
         *self.kv_cache.borrow_mut() = Some((k.clone(), v.clone()));
 
         let mask = self.get_mask(seq_len, x.device())?;
+
+        #[cfg(feature = "cuda")]
+        if x.device().is_cuda() {
+            let scale = (self.head_dim as f64).sqrt();
+            let q16 = q.to_dtype(DType::F16)?;
+            let k16 = k.to_dtype(DType::F16)?;
+            let v16 = v.to_dtype(DType::F16)?;
+            let mask16 = mask.to_dtype(DType::F16)?;
+            let mut attn = (q16.matmul(&k16.transpose(2, 3)?.contiguous()?)? / scale)?;
+            attn = attn.broadcast_add(&mask16)?;
+            let attn = candle_nn::ops::softmax(&attn, D::Minus1)?;
+            let out = attn.matmul(&v16)?.to_dtype(DType::F32)?
+                .transpose(1, 2)?.contiguous()?.reshape((b_sz, seq_len, h_sz))?;
+            return self.o_proj.forward(&out);
+        }
+
         let mut attn_weights = (q.matmul(&k.transpose(2, 3)?.contiguous()?)? / (self.head_dim as f64).sqrt())?;
         attn_weights = attn_weights.broadcast_add(&mask)?;
         let attn_weights = candle_nn::ops::softmax(&attn_weights, D::Minus1)?;
@@ -159,6 +191,21 @@ impl Attention {
         *self.kv_cache.borrow_mut() = Some((k.clone(), v.clone()));
 
         let scale = (self.head_dim as f64).sqrt();
+
+        #[cfg(feature = "cuda")]
+        if x.device().is_cuda() {
+            let q16 = q.to_dtype(DType::F16)?;
+            let k16 = k.to_dtype(DType::F16)?;
+            let v16 = v.to_dtype(DType::F16)?;
+            let attn = candle_nn::ops::softmax(
+                &(q16.matmul(&k16.transpose(2, 3)?.contiguous()?)? / scale)?,
+                D::Minus1,
+            )?;
+            let out = attn.matmul(&v16)?.to_dtype(DType::F32)?
+                .transpose(1, 2)?.contiguous()?.reshape((b_sz, seq_len, h_sz))?;
+            return self.o_proj.forward(&out);
+        }
+
         let attn_weights = candle_nn::ops::softmax(
             &(q.matmul(&k.transpose(2, 3)?.contiguous()?)? / scale)?,
             D::Minus1,

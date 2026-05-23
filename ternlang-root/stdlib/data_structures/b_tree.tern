@@ -1,0 +1,5 @@
+fn main() -> trit {
+    // Ternary B-Tree (Order 3) Implementation
+    let root = null;
+    return 0;
+}

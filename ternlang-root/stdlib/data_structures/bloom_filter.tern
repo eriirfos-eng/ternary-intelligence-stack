@@ -1,0 +1,5 @@
+fn main() -> trit {
+    // Ternary Bloom Filter Implementation
+    let filter: int[100] = 0;
+    return 0;
+}

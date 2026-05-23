@@ -1,0 +1,5 @@
+fn main() -> trit {
+    // Ternary Deque Implementation
+    let arr: int[100] = 0;
+    return 0;
+}

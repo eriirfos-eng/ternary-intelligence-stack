@@ -3,6 +3,50 @@
 
 ---
 
+**FN16 · 2026-05-23T07:51Z** *(epoch_history.log — ep3042+3043 close)*
+
+ep3042 avg=**9.4653** (d+0.0087) · ep3043 avg=**9.4688** (d+0.0035). No new ATL — best holds at ep3041 **9.4566**, since_best=3. Typical post-restart bounce; model slightly above ATL floor, needs 1–2 more epochs to recapture.
+
+**WALD sev jumped to 0.968** (was 0.926–0.928 at FN11) — fill 4.2% stable, mass 9.456–9.458. Governor accumulating but since_best=3 far from surgery threshold (~20–30). hot=L17, cold=L0 (gradient weight concentrating in final block). Myc L0–L3 all zero — consistent with block gradient near-zero (only lm_head 1.85e-3 visible; structural EMA not established yet). TTL warmed up by step 620: multiple G/R tokens per layer (L4 G4/O7/R1 most active). ep3044 b24/300 in progress.
+
+---
+
+**FN15 · 2026-05-23T07:37Z** *(training log + dashboard — post-crash restart)*
+
+Training resumed ep3042. Crash from previous attempt fixed (index-out-of-bounds in TTL burst loop: `layer_norms` expanded to 20 entries but `grad_norm_ema` was 18-wide — fixed with `.take(config.num_layers)`). Build confirmed live. ep3042 b39/300, loss 9.42, LR 2.96e-4. Routing: H=2.4678, E=0.081–0.089 (balanced, consistent with FN14). TTL reset to warmup (all G0/O12/R0 — runtime EMA not checkpointed, bootstraps each run). Per-layer gradient norm display confirmed working: global gg=0.0022, L8–L9 dominant orange bars, emb+lm_head bars visible. Expert activity: CMP 100% / INT 81% / PLN 59% / ABS 39% — structural cluster dominant. No new ATL (ep3042 mid-epoch). Dashboard chart dips (ep300–700, loss 8.0–8.5 pre-surgery) causing y-axis inflation (4.1–13.6); preseed loss floor fix queued.
+
+---
+
+**FN14 · 2026-05-23T07:14Z** *(training log + dashboard — post-restart observation)*
+
+New build deployed: BATCH_SIZE=8 + F16 attention matmuls (tensor cores). Immediate effect — batch losses dropped from 9.55–9.60 plateau to **9.33–9.49** range within first 20 batches of ep3040. Rapid ATL cascade: ep3040 b20 → 9.3305; ep3041 b288 dashboard ATL **9.2384** (d-0.319 from pre-restart CSV ATL 9.5564). Epoch-avg at ep3041 close: **9.4566** (new server-side ATL, prev ~9.4605 at ep3014). Routing stable: H=2.467, E=0.079–0.088 (balanced). TTL warming: L12 G4/O7/R1 most confident. Training stopped at ep3042 b10 for checkpoint pull + clean restart with fixed build (gradient norm telemetry + SMAS CSV threshold fix). CSV coverage for ep3040–3041: only 28 rows captured (SMAS bug — sub-9.5 batches dropped by old _LOSS_MIN=9.5 guard; fix deployed, active on restart). Manual download data to be stitched on next albert-train preflight.
+
+---
+
+**FN13 · 2026-05-23T06:35Z** *(batch_history.csv — local sync)*
+
+ep3039 in progress (57 sampled batches), CSV avg **9.5564** — new tracking-window low, below previous floor ep3020 (9.5607). Single-epoch delta d-0.0149 is steepest descent observed since FN12. Sequence ep3036→3039: 9.5784 → 9.5692 → 9.5713 → **9.5564**. Server-side estimate ~9.476; ATL threshold requires ~9.540 CSV (still 0.016 above). Mid-epoch — watch ep3039 close. If it holds below 9.560 this would be the first genuine descent below the plateau band.
+
+---
+
+**FN12 · 2026-05-23T06:15Z** *(batch_history.csv — local sync)*
+
+ep3035 in progress (~230/300 batches). CSV orbit ep3028→3035: 9.5638–9.5736. No new ATL probe below ep3031 (9.5638 CSV ≈ 9.484 server-side; ATL requires ≈9.540 CSV). since_best≈27, steady. No WALD event. WALD sev/fill/myc unchanged from FN11 (no Modal volume pull this tick — stale local epoch_history.log). Pattern: same tight orbit as FN11, no signal of break imminent.
+
+---
+
+**FN11 · 2026-05-23T05:37Z** *(epoch_history.log — Modal volume pull)*
+
+ep3028, since_best=20. **Epoch-log ATL confirmed: 9.4605 at ep3014** — significantly better than the ~9.469 estimated from dashboard FN10 (dashboard strip lagged real ATL by ~10 epochs). Post-ATL orbit over 20 epochs: 9.47–9.48, highly stable.
+
+Epoch strip ep3014→3028: 9.4608 · 9.4614 · 9.4742 · 9.4619 · 9.4803 · 9.4715 · **9.4694** · 9.4770 · 9.4717 · 9.4755 · 9.4803 · 9.4814 · 9.4799 · 9.4746 · **9.4748** — oscillating without probing deeper.
+
+WALD: sev 0.926–0.928, fill 6.2% (stable). Mycelium L0–L3 locked at 1.48–1.57e-9 (structural baseline). hot=L10 (shifted from L17 noted at FN10), cold=L7.
+
+Pattern: 20-epoch plateau without ATL probe. WALD sev ticking down very slightly (0.928→0.926) — could be governor accumulating. since_best=20 is approaching where past WALD events have fired. Watch for amplify trigger in next 10–20 epochs.
+
+---
+
 **FN10 · 2026-05-23T05:06Z** *(dashboard read — direct observation)*
 
 ep3024, batch 142/300. **9.5 hard floor broken overnight.** Dashboard EP AVG **9.4755**; recent epoch strip: 9.4755 · 9.4717 · 9.4770 · **9.4694** (new server-side ATL visible). Model consolidated below 9.50 — the floor that held since 18L surgery is behind it.

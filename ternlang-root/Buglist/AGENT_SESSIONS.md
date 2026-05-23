@@ -236,3 +236,26 @@ Files written:
 Compiler/VM observations:
 - Built-in `sqrt` causes `Call stack overflow (BET-013)` in current build. Workaround: use `sqrt_approx` (Newton-Raphson).
 - `cast(int) / cast(int)` can sometimes result in integer division even when assigned to float. Workaround: force float context with `* 1.0`.
+
+## 2026-05-23 — stdlib session — 15 files
+Dirs covered: stdlib/causal, stdlib/crypto, stdlib/finance, stdlib/signal, stdlib/ai
+Files written:
+- stdlib/causal/bayesian_update.tern — prior updates with posterior calculation
+- stdlib/finance/compound_interest.tern — standard interest math
+- stdlib/crypto/trit_hash_simple.tern — djb2-style hash for trit sequences
+- stdlib/crypto/trit_hash_simple.test.tern — hash suite
+- stdlib/signal/low_pass_filter.tern — first-order filter
+- stdlib/signal/low_pass_filter.test.tern — signal filter test
+- stdlib/finance/black_scholes_approx.tern — option pricing approximation
+- stdlib/causal/causal_path_detector.tern — simple graph path detection
+- stdlib/causal/structural_causal_model.tern — SCM logic
+- stdlib/causal/structural_causal_model.test.tern — SCM test
+- stdlib/crypto/trit_diffie_hellman_simple.tern — DH key exchange
+- stdlib/finance/sharpe_ratio.tern — risk-adjusted return
+- stdlib/finance/sharpe_ratio.test.tern — sharpe test
+- stdlib/signal/moving_average.tern — signal SMA
+- stdlib/signal/moving_average.test.tern — SMA test
+
+Compiler/VM observations:
+- match patterns require 1 and _ when testing boolean-like comparison results.
+- Fixed-size array initialization requires explicit let arr: int[N] = 0;.
