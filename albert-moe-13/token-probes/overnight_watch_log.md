@@ -3,6 +3,19 @@
 
 ---
 
+**FN9 · 2026-05-23T04:50Z**
+
+**New CSV ATL: ep3004 at 9.5561** — breaks ep2957 (9.5592) by 0.0031. Estimated epoch-close ≈ **9.476** (~0.08 offset), new server-side ATL (prev ~9.479 at ep2957).
+
+Training progressed ~30 epochs since FN8 (ep2973→ep3021). Post-ep3004 pattern: oscillating in a tight 9.56–9.57 band with multiple near-ATL probes:
+ep3009: 9.5575 | ep3011: 9.5623 | ep3014: 9.5598 | ep3017: 9.5629 | ep3020: **9.5607**
+
+ep3020 closed at 9.5607 (gap to ATL: 0.0046) — another close approach. ep3021 in progress (~114/300 batches), running avg 9.5727 (post-ATL bounce).
+
+Local minima not systematically descending post-ep3004 — oscillating rather than probing deeper. Plateau may be forming. WALD/routing unobservable locally.
+
+---
+
 **FN8 · 2026-05-22T23:30Z**
 
 ATL still ep2957 (9.5592). ep2965 closed at **9.5632** — second closest CSV approach ever, gap 0.0040. Did not break. ep2966 mini-bounce to 9.5703 (+0.0071), now descending again: ep2967 at 9.5668 (~96/300 batches).
