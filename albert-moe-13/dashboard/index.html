@@ -4330,7 +4330,7 @@
             const col = gradBarColor((n - minN) / rangeN);
             row.querySelector('.gbar-fill').style.width      = pct + '%';
             row.querySelector('.gbar-fill').style.background = col;
-            const fmtN = n < 1e-4 ? n.toExponential(2) : n.toFixed(6);
+            const fmtN = n < 1e-4 ? n.toExponential(3) : n.toFixed(6);
             row.querySelector('.gbar-val').textContent       = fmtN;
             const tipLabel = i === layerNorms.length - 2 ? 'Embedding — Gradient Norm'
                            : i === layerNorms.length - 1 ? 'LM Head — Gradient Norm'

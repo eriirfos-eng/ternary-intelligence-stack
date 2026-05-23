@@ -43,6 +43,9 @@ parser.add_argument("--local",       action="store_true",
 parser.add_argument("--contributor", default=None, metavar="NAME",
                     help="CPU local training with auto-spore push: 30 batches/epoch, "
                          "checkpoint pushed to albert-spores after each epoch")
+parser.add_argument("--batch-size",  type=int, default=None, metavar="N",
+                    help="Micro-batch size. Defaults to 2 for --local/--contributor (CPU), "
+                         "8 for GPU. Pass explicitly to override.")
 args, _ = parser.parse_known_args()
 
 # --contributor implies --local
@@ -68,8 +71,10 @@ if args.local:
         sys.exit(1)
 
     binary = os.path.join(HERE, "moe-llm-core", "target", "release", "train_bible")
+    cpu_batch_size = args.batch_size if args.batch_size is not None else 2
     cmd = [binary, f"--root={HERE}", "--gate-diversity=0.5", "--lb-weight=0.03",
-           "--div-weight=0.001", f"--batches-per-epoch={batches}"]
+           "--div-weight=0.001", f"--batches-per-epoch={batches}",
+           f"--batch-size={cpu_batch_size}"]
     print(f"[albert-train] {' '.join(cmd)}")
     if contributor:
         print(f"[albert-train] auto-spore: every checkpoint → albert-spores (as '{contributor}')")
