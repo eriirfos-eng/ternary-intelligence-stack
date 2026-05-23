@@ -1,0 +1,5 @@
+// trits: -1, 0, 1
+let a : trit = 1;
+let b : trit = -1;
+let c : trit = a + b; // should be 0
+print(c);
