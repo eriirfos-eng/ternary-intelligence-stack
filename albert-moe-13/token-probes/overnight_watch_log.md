@@ -3,6 +3,106 @@
 
 ---
 
+**FN29 · 2026-05-23T09:30Z** *(training.log — ep3060 confirmed, ep3061 b297/300)*
+
+Post-ATL orbit: ep3058=**9.4526** (ATL) → ep3059=9.4603 (d+0.0077, bounce) → ep3060=9.4585 (d-0.0018, returning). since_best=2. Normal post-ATL pattern — model re-approaching ATL territory.
+
+**WALD plateau 18** (was 16 at FN28 — two ticks in two epochs). mass=9.448 stable (stopped ticking). Surgery gate soft-lower=~20, now **2 epochs away**. MYCELIUM ep3060: dead=0, blooming=2, myc_stable=19 — expert deaths have stopped since resurrections at ep3057. Governor still holding (since_best=2, plateau not at threshold). ep3061 b297/300 at 09:30Z.
+
+---
+
+**FN28 · 2026-05-23T09:19Z** *(training.log — ep3058 close confirmed, ep3059 in progress)*
+
+**★ Fourth ATL break: ep3058 avg=9.4526** (d-0.0028) — FN27 "descent slowing" was premature. Cascade continues: 9.4557→9.4556→9.4554→**9.4526**. since_best=0. Slope steepened again from d-0.0003 to d-0.0028.
+
+WALD plateau count **16** (up from 15). mass=**9.448** (tick sequence: 9.451→9.450→9.449→9.448 across last 4 epochs — steady structural erosion). dead_low=6.25 experts, dead_high=5.25 experts. **Surgery gate ~20–30 epochs out; at this rate (1 tick/epoch) ~4 more ATL breaks before gate fires.** Governor holding correctly (since_best=0). hot=L17, cold=L0. ep3059 b99/300 in progress.
+
+---
+
+**FN27 · 2026-05-23T09:15Z** *(training.log — ep3057 close confirmed, ep3058 b255/300)*
+
+ep3057 close confirmed: avg=**9.4554** (d-0.0003), since_best=0. Three-epoch ATL cascade complete: 9.4557→9.4556→9.4554. Descent slowing (d-0.0022 → d-0.0064 → d-0.0003) — possible mini-plateau forming.
+
+**Fourth resurrection round at ep3057:** L2E11←L2E0 and **L8E10←L8E0** — pattern shifted. Previously only E11 dying; now E10 dead in L8. Two expert slots (10 and 11) across multiple layers (L0,L2,L3,L8) being chronically starved of routing. WALD: "15 stable epochs, sev=0.969 mass=9.449" → amplify OFF. **Plateau count 15 — approaching surgery gate (~20–30).** Governor holds while since_best=0. ep3058 b255/300, losses 9.45–9.50, ETA ~50s. TTL step 4800: L9 G4, L15 G4, L17 G3 most active; L0 all-orange (cold).
+
+---
+
+**FN26 · 2026-05-23T09:11Z** *(training.log — ep3057 ATL BREAK #3)*
+
+**★ Third ATL break: ep3057 avg=9.4554** — cascade: 9.4557 → 9.4556 → **9.4554**. since_best=0. Model in sustained descent. WALD mass still dropping (9.449 at ep3056, trajectory continues). dead=2 returned (myc_stable=16, blooming=4) — fourth resurrection round imminent at ep3057 close. Watching for ep3058 summary.
+
+---
+
+**FN25 · 2026-05-23T09:07Z** *(training.log — ep3056 ATL BREAK #2, ep3057 b275/300)*
+
+**★ Second consecutive ATL break: ep3056 avg=9.4556** (d-0.0064) — beats ep3054 (9.4557) by 0.0001. since_best=0. Model in active descent, not orbiting. WALD mass=**9.449** (new run low, dropping every epoch: 9.453→9.451→9.450→9.449). myc_stable=15, dead=0. ep3057 b275/300 at 09:07Z — opening batch 9.3196, b274 loss 9.3980 — running well below ATL at batch level. Third consecutive ATL break possible at ep3057 close (~30s).
+
+---
+
+**FN24 · 2026-05-23T09:00Z** *(training.log — ep3054 ATL BREAK, ep3055 complete, ep3056 opening)*
+
+**★ NEW ATL: ep3054 avg=9.4557** (d-0.0022) — breaks ep3041 (9.4566) by **0.0009 nats**. since_best=0. Best checkpoint saved. 13-epoch orbit (ep3041→3054) finally resolved as predicted. Approach sequence: 9.4603→9.4680→9.4662→9.4605→9.4642→9.4580→**9.4557**.
+
+WALD at break: sev ticked 0.968→**0.969**, mass=**9.451** (new run low). Plateau count logged as 12 stable epochs → amplify still OFF (governor held correctly). ep3055 post-ATL bounce avg=9.4620 (d+0.0063), since_best=1 — normal. WALD mass=**9.450** (another tick down). myc_stable=14, dead=0, blooming=3. ep3056 b0/300 opening at 9.5251.
+
+---
+
+**FN23 · 2026-05-23T08:48Z** *(training.log — ep3053 complete, ep3054 opening)*
+
+ep3053 avg=**9.4580** (d-0.0062), since_best=13. **Gap to ATL now 0.0014 nats** — new closest approach in this run (prev record ep3048: 0.0037). ATL break is imminent; ep3054 needs only a d-0.0015 descent to set a new server-side ATL.
+
+Trajectory tightening hard: 9.4642 → **9.4580**. WALD mass=**9.453** — new run low (9.455→9.453 across ep3052→3053), structural descent confirmed. myc_stable=12, dead=0, blooming=4 — no resurrections this epoch. Amplify still OFF. ep3054 b0/300 opening at 9.4939. Watching closely.
+
+---
+
+**FN22 · 2026-05-23T08:44Z** *(training.log — ep3052 complete, ep3053 b188/300)*
+
+ep3052 avg=9.4642 (d+0.0037), since_best=12. Small bounce — no new resurrections, myc_stable=11, dead=0. WALD mass=**9.455** (new low for this run, prior floor was 9.456). Orbit band has compressed: was 9.467–9.472 at FN17, now oscillating 9.460–9.468 — model descending in structure even without ATL probe. ep3053 b188/300, ETA ~2 min.
+
+---
+
+**FN21 · 2026-05-23T08:37Z** *(training.log — ep3051 complete, ep3052 b130/300)*
+
+ep3051 avg=**9.4605** (d-0.0057), since_best=11. **Gap to ATL now 0.0039** — nearly matching ep3048's closest approach (0.0037). Orbit clearly contracting: 9.4603 → 9.4680 → 9.4662 → **9.4605**. ATL break looking probable in next 1–3 epochs if descent holds.
+
+**Third resurrection: L8E11 ← L8E0** (σ=0.050) at ep3051 close. Pattern: Expert 11 slot dead in L0, L3, L8 in sequence — E11 is a chronically under-routed expert across early–mid layers. Resurrections are firing correctly; myc_stable=10, blooming=4, dead cleared each time. WALD explicitly logged "structural plateau (9 stable epochs)" → amplify OFF. mass=9.456 stable. ep3052 b130/300 in progress; L9 G4 most active. Routing H=2.467, balanced.
+
+---
+
+**FN20 · 2026-05-23T08:28Z** *(training.log — ep3049+3050 complete, ep3051 b10/300)*
+
+ep3049 avg=9.4680 (d+0.0077) — expected post-resurrection bounce (L0E11/L3E11 noise). ep3050 avg=**9.4662** (d-0.0018) — descent immediately resumed. since_best=10. Orbit now: 9.4603 (dip) → 9.4680 (bounce) → 9.4662 — contracting back toward the 9.46 floor. No ATL; gap to ep3041 best (9.4566) = 0.0096.
+
+myc_stable rising: 7→8→9 across ep3048–3050. blooming=4. dead=0 confirmed (resurrections held). WALD mass ticked to 9.459 (small perturbation from resurrection, prior was 9.455–9.456). sev/fill unchanged. ep3051 opening at 9.5006 (normal). WALD plateau count: 10 — halfway to surgery gate (~20–30).
+
+---
+
+**FN19 · 2026-05-23T08:23Z** *(training.log — ep3048 complete, ep3049 b222/300)*
+
+ep3048 avg=**9.4603** (d-0.0071), since_best=8. **Closest ATL approach since break: gap now 0.0037 nats** (ATL=9.4566 ep3041). Model resuming descent after 5-epoch plateau; if ep3049 holds this trajectory, ATL probe is imminent.
+
+**First mycelium resurrections this run:** MYCELIUM resurrected L0E11←L0E0 and L3E11←L3E0 (both σ=0.050) at ep3048 close. dead=2 → repaired. blooming=4, myc_stable=7. Expert 11 seeded in L0 and L3 from their dead Expert 0 slots — structural repair underway, even though myc_L0-L3 pressure still reads zero (EMA not yet warm enough to register).
+
+WALD acknowledged: "structural plateau (6 stable epochs, sev=0.968 mass=9.456) → **amplify OFF**" — surgery governor correctly withheld while descent was active. sev/fill/mass unchanged. LB aux loss still disabled; LB value drifting slightly lower (55.6 vs prior 56.4). ep3049 b222/300, opening batch 9.3532 — below ATL at batch level. Watch ep3049 close.
+
+---
+
+**FN18 · 2026-05-23T08:16Z** *(training.log — ep3047 complete, ep3048 b136/300)*
+
+ep3047 avg=**9.4674** (d-0.0046), since_best=7. No ATL — gap to ep3041 best (9.4566) now 0.0108 nats. Orbit ep3042→3047: 9.4653 · 9.4688 · 9.4677 · 9.4682 · 9.4720 · **9.4674** — tight band, no probe signal yet.
+
+**Mycelium blooming emerging:** ep3045 blooming=0 → ep3046 blooming=2 → ep3047 blooming=3. Structural EMA establishing in early layers (dead=0 in all, hot=L17/cold=L0 unchanged). This is the governor precondition beginning to close — still small (3/18 layers), but not zero anymore. WALD fill=4.2%, mass=9.456, sev=0.968 locked. LB loss disabled (auxiliary penalty off). Routing H=2.467, E balanced. TTL step 1930: L9 briefly G5/O6/R1 — most confident layer seen this run.
+
+---
+
+**FN17 · 2026-05-23T08:07Z** *(training.log — ep3042–3046 complete, ep3047 opening)*
+
+ep strip (post-ATL bounce): 9.4653 · 9.4688 · **9.4677** · 9.4682 · 9.4720. Best still ep3041 **9.4566**, since_best=6. No ATL probe — model orbiting 9.467–9.472, no descent signal. Pattern mirrors FN11 (20-epoch plateau at 9.47–9.48 after ep3014 ATL); since_best=6 is early — surgery threshold ~20–30.
+
+WALD locked: sev=0.968, fill=4.2%, mass 9.455–9.458 (tiny oscillation, essentially flat). hot=L17, cold=L0 — unchanged. Myc L0–L3 still zero (structural EMA not established). TTL fully warmed by step 1470: all layers carrying G/O/R mix (L6/L10 double-R most cautious; L7/L15/L17 triple-G most confident). Routing H=2.4669, E=0.080–0.087, balanced. LB=56.1–56.7. ep3047 b3/300 in progress.
+
+---
+
 **FN16 · 2026-05-23T07:51Z** *(epoch_history.log — ep3042+3043 close)*
 
 ep3042 avg=**9.4653** (d+0.0087) · ep3043 avg=**9.4688** (d+0.0035). No new ATL — best holds at ep3041 **9.4566**, since_best=3. Typical post-restart bounce; model slightly above ATL floor, needs 1–2 more epochs to recapture.

@@ -46,6 +46,8 @@ struct TrainFlags {
     /// Number of batches per epoch. Default 300 (GPU). Contributors use 30 for
     /// frequent checkpoints on slow hardware.
     batches_per_epoch: usize,
+    /// Micro-batch size per forward pass. Default 8 (GPU). Use 2 for CPU to avoid freezing.
+    batch_size: usize,
 }
 
 fn parse_args() -> TrainFlags {
@@ -62,6 +64,7 @@ fn parse_args() -> TrainFlags {
         stop_at_epoch:       None,
         spores_dir:          String::new(),
         batches_per_epoch:   300,
+        batch_size:          8,
     };
     for arg in &args[1..] {
         match arg.as_str() {
@@ -86,6 +89,8 @@ fn parse_args() -> TrainFlags {
                     flags.spores_dir = v.to_string();
                 } else if let Some(v) = arg.strip_prefix("--batches-per-epoch=") {
                     if let Ok(n) = v.parse::<usize>() { flags.batches_per_epoch = n.max(1); }
+                } else if let Some(v) = arg.strip_prefix("--batch-size=") {
+                    if let Ok(n) = v.parse::<usize>() { flags.batch_size = n.max(1); }
                 }
             }
         }
@@ -1211,9 +1216,10 @@ fn train_cycle(
             let lr = cosine_lr(base_lr, min_lr, *global_step % lr_cycle_steps, lr_cycle_steps);
             opt.set_learning_rate(lr);
 
-            let mut input_rows: Vec<Tensor> = Vec::with_capacity(BATCH_SIZE);
-            let mut target_rows: Vec<Tensor> = Vec::with_capacity(BATCH_SIZE);
-            for _ in 0..BATCH_SIZE {
+            let batch_size = flags.batch_size;
+            let mut input_rows: Vec<Tensor> = Vec::with_capacity(batch_size);
+            let mut target_rows: Vec<Tensor> = Vec::with_capacity(batch_size);
+            for _ in 0..batch_size {
                 let start = rand::random::<usize>() % (tokens.len() - seq_len - 1);
                 input_rows.push(Tensor::new(&tokens[start..start + seq_len], device)?
                     .to_dtype(DType::U32)?);
@@ -1235,7 +1241,7 @@ fn train_cycle(
             clear_tlight_capture();
             clear_div_capture();
             let logits      = model.forward(&input_tensor)?;
-            let logits      = logits.reshape((BATCH_SIZE * seq_len, config.vocab_size))?;
+            let logits      = logits.reshape((batch_size * seq_len, config.vocab_size))?;
             let target_flat = target_tensor.flatten_all()?;
             let ce_loss     = loss::cross_entropy(&logits, &target_flat)?;
 
