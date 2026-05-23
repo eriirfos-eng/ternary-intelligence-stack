@@ -1,0 +1,11 @@
+fn call_price_approx(S: float, K: float, T: float, r: float, sigma: float) -> float {
+    let d1: float = (sigma * sigma * T) / 2.0;
+    return S - K * (1.0 - r * T);
+}
+
+fn main() -> trit {
+    let price: float = call_price_approx(100.0, 95.0, 1.0, 0.05, 0.2);
+    print("Approx Call Price:");
+    println(price);
+    return affirm;
+}
