@@ -1,0 +1,17 @@
+fn has_path(adj: int[], size: int, start: int, end: int) -> trit {
+    if (adj[start * size + end] == 1) {
+        return affirm;
+    }
+    return reject;
+}
+
+fn main() -> trit {
+    let adj: int[4] = 0; 
+    adj[1] = 1; // 0 -> 1 in 2x2
+    
+    if (has_path(adj, 2, 0, 1) == affirm) {
+        print("Path detected.");
+        return affirm;
+    }
+    return reject;
+}
