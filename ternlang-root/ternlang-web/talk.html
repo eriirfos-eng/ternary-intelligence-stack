@@ -134,6 +134,14 @@
       flex-shrink: 0;
     }
 
+    @media (max-width: 600px) {
+      .topbar { padding: 8px 14px; gap: 8px; }
+      .topbar-right { gap: 8px; }
+      .theme-toggle { display: none; }
+      .topbar-links { display: none; }
+      .status-badge { font-size: 0.6rem; padding: 2px 7px; }
+    }
+
     /* ── theme toggle ── */
     .theme-toggle {
       display: flex;
@@ -478,9 +486,199 @@
       font-family: 'JetBrains Mono', monospace;
       min-height: 1rem;
     }
+
+    /* ── translate row ── */
+    .translate-row {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 0 4px;
+    }
+    .translate-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem;
+      padding: 2px 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      letter-spacing: 0.04em;
+    }
+    .translate-btn:hover { border-color: var(--teal); color: var(--teal); }
+    .translate-btn.loading { opacity: 0.5; cursor: wait; }
+    .translate-panel {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .translate-panel[hidden] { display: none; }
+    .translate-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--teal);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .translate-output {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--text);
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .translate-note {
+      font-size: 0.66rem;
+      color: var(--dim);
+      font-family: 'Inter', sans-serif;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      line-height: 1.55;
+    }
+    .translate-note strong { color: var(--warn-hi); }
+
+    /* ── translated token highlight ── */
+    .tr-word { color: var(--teal); font-style: italic; }
+
+    /* ── HC user bubble override ── */
+    :root[data-theme="hc"] .msg.user .msg-bubble {
+      background: #ffffff;
+      color: #000000;
+    }
+
+    /* ── landing state ── */
+    body.landing .messages {
+      opacity: 0;
+      max-height: 0 !important;
+      padding: 0 !important;
+      gap: 0 !important;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .messages { transition: opacity 0.4s ease; }
+    body.landing .bottom {
+      flex: 1;
+      justify-content: center;
+      padding-bottom: 10vh;
+    }
+    body.landing {
+      background: radial-gradient(ellipse at 50% 52%, rgba(0,245,196,0.07) 0%, var(--bg) 62%);
+    }
+    body.landing .pill-wrap {
+      box-shadow: 0 0 0 1px rgba(0,245,196,0.25), 0 8px 40px rgba(0,245,196,0.08);
+    }
+
+    /* ── orb (landing only) ── */
+    .bottom { position: relative; }
+    .orb {
+      pointer-events: none; user-select: none;
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 540px; height: 440px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 50% 38%,
+        rgba(255,255,255,0.22) 0%,
+        rgba(0,245,196,0.40) 16%,
+        rgba(74,158,255,0.24) 40%,
+        rgba(0,245,196,0.10) 60%,
+        transparent 78%
+      );
+      filter: blur(54px);
+      z-index: 0; display: none; opacity: 1;
+      transition: opacity 0.55s ease-out, transform 0.55s ease-out, filter 0.55s ease-out;
+    }
+    body.landing .orb { display: block; animation: orb-drift 8s ease-in-out infinite; }
+    @keyframes orb-drift {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      28%       { transform: translate(-50%, -54%) scale(1.07); }
+      56%       { transform: translate(-48%, -47%) scale(0.94); }
+      80%       { transform: translate(-52%, -52%) scale(1.03); }
+    }
+    .orb.poof {
+      animation: none !important; opacity: 0 !important;
+      transform: translate(-50%, -50%) scale(3) !important;
+      filter: blur(90px) !important;
+    }
+    /* particle network canvas — unblurred layer on top of the orb blob */
+    .orb-canvas {
+      pointer-events: none; user-select: none;
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 540px; height: 440px;
+      z-index: 1; display: none; opacity: 1;
+      transition: opacity 0.55s ease-out;
+    }
+    body.landing .orb-canvas { display: block; }
+    .orb-canvas.poof { opacity: 0 !important; }
+
+    /* raise other bottom children above the orb */
+    .pill-wrap, .input-hint, .disclaimer, .how-panel, .hero { position: relative; z-index: 1; }
+
+    /* ── hero (landing only) ── */
+    .hero {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+      padding-bottom: 32px;
+      pointer-events: none;
+    }
+    body.landing .hero { display: flex; }
+    .hero-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem;
+      color: var(--teal);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .hero-sub {
+      font-size: 0.8rem;
+      color: var(--dim);
+      max-width: 380px;
+      line-height: 1.65;
+    }
+
+    /* ── how it works toggle ── */
+    .how-link {
+      display: inline-block;
+      margin-top: 5px;
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      letter-spacing: 0.03em;
+    }
+    .how-link:hover { color: var(--teal); }
+    .how-panel {
+      width: 100%;
+      max-width: 680px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 0.72rem;
+      color: var(--dim);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.65;
+      text-align: left;
+    }
+    .how-panel[hidden] { display: none; }
+    .how-panel strong { color: var(--text); }
+    .how-panel em { color: var(--teal); font-style: normal; }
   </style>
 </head>
-<body>
+<body class="landing">
 
 <div class="topbar">
   <div class="topbar-left">
@@ -516,6 +714,12 @@
 </div>
 
 <div class="bottom">
+  <div class="orb" id="orb"></div>
+  <canvas class="orb-canvas" id="orb-canvas" width="540" height="440"></canvas>
+  <div class="hero">
+    <div class="hero-name">albert.</div>
+    <div class="hero-sub">A 134M-parameter ternary MoE model learning 8 languages from scratch. Talk to it. Watch it grow.</div>
+  </div>
   <div class="pill-wrap">
     <textarea id="prompt" rows="1" placeholder="Send a prompt to albert. …" maxlength="512"></textarea>
     <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Voice input">
@@ -531,8 +735,14 @@
   </div>
   <div class="disclaimer">
     <strong>Research stage.</strong>
-    albert. is in active training — output may be incoherent or surprising.
-    That is expected and honest. <strong>Come back as training progresses.</strong>
+    albert. is in active training — output may be incoherent or surprising. That is expected and honest.
+    albert. is not yet fluent in language selection: it activates domain-correct knowledge across multiple
+    language channels simultaneously, producing multilingual token streams.
+    Translations are a best-effort interpretation of that output. <strong>Come back as training progresses.</strong>
+  </div>
+  <span class="how-link" onclick="toggleHow()">how it works</span>
+  <div class="how-panel" id="how-panel" hidden>
+    albert. reads text in <strong>8 languages simultaneously</strong> and learns from all of them at once. At this stage it correctly activates domain knowledge — but has no mechanism yet to select <em>which language</em> to output in. The result is a multilingual token stream: domain-correct, language-mixed. The <em>translate</em> button above each reply runs that stream through Google Translate as a best-effort interpretation. Output changes as training progresses.
   </div>
 </div>
 
@@ -658,6 +868,37 @@ async function sendPrompt() {
   const prompt = ta.value.trim();
   if (!prompt) return;
 
+  // Landing → active: poof orb + FLIP animation
+  if (document.body.classList.contains('landing')) {
+    const orb = document.getElementById('orb');
+    const orbCanvas = document.getElementById('orb-canvas');
+    if (orb) {
+      orb.classList.add('poof');
+      if (orbCanvas) orbCanvas.classList.add('poof');
+      setTimeout(() => {
+        orb.style.display = 'none';
+        if (orbCanvas) orbCanvas.style.display = 'none';
+        if (window._stopOrbAnim) window._stopOrbAnim();
+      }, 600);
+    }
+    const bottomEl = document.querySelector('.bottom');
+    const before = bottomEl.getBoundingClientRect();
+    document.body.classList.remove('landing');
+    const after = bottomEl.getBoundingClientRect();
+    const dy = before.top - after.top;
+    if (Math.abs(dy) > 1) {
+      bottomEl.style.transition = 'none';
+      bottomEl.style.transform = `translateY(${dy}px)`;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          bottomEl.style.transition = 'transform 0.42s cubic-bezier(0.4,0,0.2,1)';
+          bottomEl.style.transform = 'translateY(0)';
+          setTimeout(() => { bottomEl.style.transform = ''; bottomEl.style.transition = ''; }, 440);
+        });
+      });
+    }
+  }
+
   busy = true;
   document.getElementById('send-btn').disabled = true;
   ta.value = '';
@@ -721,6 +962,25 @@ async function sendPrompt() {
       meta.className = 'msg-meta';
       meta.textContent = `${d.tok_s.toFixed(1)} tok/s · ep${d.epoch}`;
       msgDiv.appendChild(meta);
+
+      const translateRow = document.createElement('div');
+      translateRow.className = 'translate-row';
+      const translateBtn = document.createElement('button');
+      translateBtn.className = 'translate-btn';
+      translateBtn.textContent = 'translate';
+      translateBtn._albertText = finalText;
+      translateBtn.addEventListener('click', function() { toggleTranslate(this); });
+      const translatePanel = document.createElement('div');
+      translatePanel.className = 'translate-panel';
+      translatePanel.hidden = true;
+      translatePanel.innerHTML = `
+        <div class="translate-label">english translation</div>
+        <div class="translate-output"></div>
+      `;
+      translateRow.appendChild(translateBtn);
+      translateRow.appendChild(translatePanel);
+      msgDiv.appendChild(translateRow);
+
       finishSend();
     });
 
@@ -738,10 +998,7 @@ let recognizing  = false;
 
 (function initSpeech() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    document.getElementById('mic-btn').style.display = 'none';
-    return;
-  }
+  if (!SR) { return; }
   recognition = new SR();
   recognition.continuous     = false;
   recognition.interimResults = true;
@@ -782,9 +1039,22 @@ let recognizing  = false;
   };
 })();
 
-function toggleMic() {
-  if (!recognition) return;
+async function toggleMic() {
   if (recognizing) { recognition.stop(); return; }
+  // Always ask for mic permission — this is what triggers the browser dialog
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(t => t.stop()); // release immediately; recognition manages its own stream
+  } catch (err) {
+    ta.placeholder = err.name === 'NotAllowedError' ? 'microphone access denied' : 'microphone not available';
+    setTimeout(() => { ta.placeholder = 'Send a prompt to albert. …'; }, 2500);
+    return;
+  }
+  if (!recognition) {
+    ta.placeholder = 'voice recognition not available — try Chrome or Edge';
+    setTimeout(() => { ta.placeholder = 'Send a prompt to albert. …'; }, 3000);
+    return;
+  }
   recognition.start();
 }
 
@@ -817,6 +1087,122 @@ async function submitFeedback() {
   setTimeout(closeFeedback, 2000);
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFeedback(); });
+
+// ── translate ─────────────────────────────────────────────────────────────────
+function toggleHow() {
+  const p = document.getElementById('how-panel');
+  p.hidden = !p.hidden;
+}
+
+async function toggleTranslate(btn) {
+  const panel = btn.nextElementSibling;
+  if (!panel.hidden) {
+    panel.hidden = true;
+    btn.textContent = 'translate';
+    return;
+  }
+  const output = panel.querySelector('.translate-output');
+  if (output.dataset.done === '1') {
+    panel.hidden = false;
+    btn.textContent = 'hide translation';
+    return;
+  }
+  btn.classList.add('loading');
+  btn.textContent = 'translating…';
+  try {
+    const r = await fetch('/api/albert/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: btn._albertText }),
+    });
+    const d = await r.json();
+    output.innerHTML = '';
+    const fullTr = (d.translation || '').trim();
+    if (!fullTr) {
+      output.textContent = '(no translation available)';
+    } else {
+      const origWords = btn._albertText.trim().split(/\s+/);
+      const trWords   = fullTr.split(/\s+/);
+      for (let i = 0; i < origWords.length; i++) {
+        if (i > 0) output.appendChild(document.createTextNode(' '));
+        const ow = origWords[i];
+        const tw = trWords[i] !== undefined ? trWords[i] : ow;
+        const strip = s => s.replace(/[^a-z0-9]/gi, '').toLowerCase();
+        const span = document.createElement('span');
+        if (strip(ow) !== strip(tw)) {
+          span.className = 'tr-word';
+          span.textContent = tw;
+          span.title = ow;
+        } else {
+          span.textContent = ow;
+        }
+        output.appendChild(span);
+      }
+    }
+    output.dataset.done = '1';
+    panel.hidden = false;
+    btn.textContent = 'hide translation';
+    btn.classList.remove('loading');
+  } catch (e) {
+    output.textContent = `[error: ${e.message}]`;
+    output.dataset.done = '1';
+    panel.hidden = false;
+    btn.textContent = 'hide translation';
+    btn.classList.remove('loading');
+  }
+}
+
+// ── ternary particle network ──────────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('orb-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = 540, H = 440;
+  const N = 19, LINK = 132, SPD = 0.21;
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+
+  const pts = Array.from({ length: N }, () => ({
+    x:  rnd(15, W - 15),
+    y:  rnd(15, H - 15),
+    vx: (Math.random() < 0.5 ? 1 : -1) * rnd(0.07, SPD),
+    vy: (Math.random() < 0.5 ? 1 : -1) * rnd(0.07, SPD),
+    r:  rnd(1.7, 2.5),
+    col: Math.random() < 0.15 ? 'rgba(210,72,72,0.85)' : 'rgba(0,245,196,0.88)',
+  }));
+
+  let rafId;
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < N; i++) {
+      for (let j = i + 1; j < N; j++) {
+        const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < LINK) {
+          ctx.strokeStyle = `rgba(0,245,196,${((1 - d / LINK) * 0.28).toFixed(3)})`;
+          ctx.lineWidth = 0.65;
+          ctx.beginPath();
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    for (const p of pts) {
+      ctx.fillStyle = p.col;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0)  { p.x = 0;  p.vx =  Math.abs(p.vx); }
+      if (p.x > W)  { p.x = W;  p.vx = -Math.abs(p.vx); }
+      if (p.y < 0)  { p.y = 0;  p.vy =  Math.abs(p.vy); }
+      if (p.y > H)  { p.y = H;  p.vy = -Math.abs(p.vy); }
+    }
+    rafId = requestAnimationFrame(frame);
+  }
+  frame();
+  window._stopOrbAnim = () => { cancelAnimationFrame(rafId); };
+})();
 </script>
 </body>
 </html>
