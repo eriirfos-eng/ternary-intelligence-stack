@@ -1,0 +1,18 @@
+fn low_pass(current: float, previous: float, alpha: float) -> float {
+    return previous + alpha * (current - previous);
+}
+
+fn main() -> trit {
+    let alpha: float = 0.1;
+    let val0: float = 0.0;
+    let val1: float = 10.0;
+    let filtered: float = low_pass(val1, val0, alpha);
+    
+    print("Filtered value:");
+    println(filtered);
+    
+    match (filtered > 0.0) {
+        1 => { return affirm; }
+        _ => { return reject; }
+    }
+}
