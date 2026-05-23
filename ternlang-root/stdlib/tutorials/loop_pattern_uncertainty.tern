@@ -1,0 +1,5 @@
+let arr: int[3] = 0;
+for i in 0..2 {
+    arr[i] = i - 1;
+}
+print(arr[0]);

@@ -1,0 +1,8 @@
+let latch: int = 0;
+match (1) {
+    1 => latch = 1,
+    -1 => latch = -1,
+    0 => latch = 0,
+    _ => latch = 0
+}
+print(latch);

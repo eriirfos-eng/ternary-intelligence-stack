@@ -1,0 +1,5 @@
+fn relu(val: int) -> int {
+    if (val > 0) { return val; }
+    return 0;
+}
+print(relu(1));

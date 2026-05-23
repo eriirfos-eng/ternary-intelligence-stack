@@ -1,0 +1,7 @@
+let v: int[10] = 0;
+let start: int = 0;
+// Benchmarking simple sum
+for x in v {
+    start = start + x;
+}
+print(start);

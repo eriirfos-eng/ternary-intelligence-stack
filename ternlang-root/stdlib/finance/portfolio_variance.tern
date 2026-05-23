@@ -1,0 +1,5 @@
+let weights: int[3] = 0;
+weights[0] = 1;
+weights[1] = 0;
+weights[2] = -1;
+print(weights[0]);

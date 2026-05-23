@@ -1,0 +1,6 @@
+let state: int = 0;
+fn set(val: int) {
+    state = val;
+}
+set(1);
+print(state);

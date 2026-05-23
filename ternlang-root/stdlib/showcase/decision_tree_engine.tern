@@ -1,0 +1,9 @@
+fn decide(val: int) -> int {
+    match (val) {
+        1 => return 1,
+        -1 => return -1,
+        0 => return 0,
+        _ => return 0
+    }
+}
+print(decide(1));

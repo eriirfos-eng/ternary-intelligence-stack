@@ -1,0 +1,6 @@
+// No explicit import needed in this prototype, just demo usage.
+let a : trit = 1;
+let b : trit = -1;
+let c : trit = a + b;
+print(c);
+assert(c == 0);

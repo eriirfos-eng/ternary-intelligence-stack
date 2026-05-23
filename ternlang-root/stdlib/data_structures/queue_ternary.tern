@@ -1,0 +1,8 @@
+let q: int[10] = 0;
+let head: int = 0;
+fn enqueue(val: int) {
+    q[head] = val;
+    head = head + 1;
+}
+enqueue(-1);
+print(q[0]);

@@ -1,5 +1,6 @@
-// trits: -1, 0, 1
-let a : trit = 1;
-let b : trit = -1;
-let c : trit = a + b; // should be 0
-print(c);
+let x: int = 1;
+let y: int = -1;
+let z: int = 0;
+// Basic arithmetic operations
+let sum: int = x + y + z;
+print(sum);

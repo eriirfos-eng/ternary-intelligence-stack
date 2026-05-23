@@ -1,0 +1,3 @@
+struct Node { val: int }
+let n: Node = { val: 1 };
+print(n.val);

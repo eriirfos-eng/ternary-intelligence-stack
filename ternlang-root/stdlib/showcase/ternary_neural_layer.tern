@@ -1,0 +1,6 @@
+let weights: int[3] = 0;
+weights[0] = 1;
+fn forward(input: int) -> int {
+    return input * weights[0];
+}
+print(forward(1));

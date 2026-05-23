@@ -1,0 +1,10 @@
+fn sum_tensor(t: int[3]) -> int {
+    let s: int = 0;
+    for x in t {
+        s = s + x;
+    }
+    return s;
+}
+let t: int[3] = 0;
+t[0] = 1;
+print(sum_tensor(t));

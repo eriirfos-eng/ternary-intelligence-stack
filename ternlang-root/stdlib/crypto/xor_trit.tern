@@ -1,0 +1,5 @@
+fn xor_trit(a: int, b: int) -> int {
+    if (a == b) { return 0; }
+    return 1;
+}
+print(xor_trit(1, -1));

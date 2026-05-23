@@ -1,0 +1,9 @@
+let input: int = 1;
+let result: int = 0;
+match (input) {
+    1 => result = 1,
+    -1 => result = -1,
+    0 => result = 0,
+    _ => result = 0
+}
+print(result);

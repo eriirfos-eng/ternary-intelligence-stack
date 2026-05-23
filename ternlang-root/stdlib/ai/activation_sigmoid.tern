@@ -1,0 +1,9 @@
+fn sigmoid_stub(val: int) -> int {
+    match (val) {
+        1 => return 1,
+        -1 => return 0,
+        0 => return 0,
+        _ => return 0
+    }
+}
+print(sigmoid_stub(1));

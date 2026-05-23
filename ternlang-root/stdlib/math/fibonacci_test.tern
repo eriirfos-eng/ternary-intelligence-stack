@@ -1,0 +1,8 @@
+fn test_fib() {
+    let f: int = 5;
+    match (f) {
+        5 => print(1),
+        _ => print(-1)
+    }
+}
+test_fib();

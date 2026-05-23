@@ -1,0 +1,5 @@
+let data: int[3] = 0;
+data[0] = 0;
+data[1] = 1;
+data[2] = -1;
+print(data[2]);

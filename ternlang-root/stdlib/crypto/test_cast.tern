@@ -1,0 +1,11 @@
+fn main() -> trit {
+    let s: string = "A";
+    let code: int = cast<int>(s[0]);
+    print("Code of A is: ");
+    // print(code); // Need to see if print handles int
+    match (code > 0) {
+        1 => { print("Valid code"); }
+        _ => { print("Invalid code"); }
+    }
+    return 0;
+}

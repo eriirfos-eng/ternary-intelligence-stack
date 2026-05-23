@@ -1,0 +1,6 @@
+struct State { val: int }
+let s: State = { val: 0 };
+match (s.val) {
+    0 => print(0),
+    _ => print(1)
+}

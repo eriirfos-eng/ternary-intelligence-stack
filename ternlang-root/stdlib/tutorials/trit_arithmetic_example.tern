@@ -1,0 +1,9 @@
+fn calculate(a: int, b: int) -> int {
+    match (a + b) {
+        1 => return 1,
+        -1 => return -1,
+        0 => return 0,
+        _ => return 0
+    }
+}
+print(calculate(1, -1));
