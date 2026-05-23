@@ -1,0 +1,10 @@
+from "./sharpe_ratio.tern" import sharpe_ratio;
+
+fn main() -> trit {
+    let s: float = sharpe_ratio(0.10, 0.02, 0.08);
+    if (s == 1.0) {
+        print("Sharpe Test Passed.");
+        return affirm;
+    }
+    return reject;
+}
