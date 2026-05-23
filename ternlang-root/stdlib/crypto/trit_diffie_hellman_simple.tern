@@ -1,0 +1,24 @@
+fn mod_pow(base: int, exp: int, modulus: int) -> int {
+    let res: int = 1;
+    let b: int = base % modulus;
+    let e: int = exp;
+    while (e > 0) {
+        if (e % 2 == 1) {
+            res = (res * b) % modulus;
+        }
+        b = (b * b) % modulus;
+        e = e / 2;
+    }
+    return res;
+}
+
+fn main() -> trit {
+    let p: int = 23;
+    let g: int = 5;
+    let a_private: int = 6;
+    let a_public: int = mod_pow(g, a_private, p);
+    
+    print("A Public Key:");
+    println(a_public);
+    return affirm;
+}
