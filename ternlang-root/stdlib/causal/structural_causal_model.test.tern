@@ -1,0 +1,10 @@
+from "./structural_causal_model.tern" import model_y;
+
+fn main() -> trit {
+    let y: float = model_y(10.0, 0.0);
+    if (y == 25.0) {
+        print("SCM Test Passed.");
+        return affirm;
+    }
+    return reject;
+}
