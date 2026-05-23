@@ -1,0 +1,20 @@
+fn moving_average(window: float[], size: int) -> float {
+    let sum: float = 0.0;
+    let i: int = 0;
+    while (i < size) {
+        sum = sum + window[i];
+        i = i + 1;
+    }
+    return sum / cast<float>(size);
+}
+
+fn main() -> trit {
+    let win: float[3];
+    win[0] = 1.0;
+    win[1] = 2.0;
+    win[2] = 3.0;
+    let avg: float = moving_average(win, 3);
+    print("Moving Average:");
+    println(avg);
+    return affirm;
+}
