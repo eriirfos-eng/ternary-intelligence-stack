@@ -1,0 +1,12 @@
+fn model_y(x: float, u: float) -> float {
+    return 2.5 * x + u;
+}
+
+fn main() -> trit {
+    let x: float = 1.0;
+    let noise: float = 0.2;
+    let y: float = model_y(x, noise);
+    print("SCM Output Y:");
+    println(y);
+    return affirm;
+}
