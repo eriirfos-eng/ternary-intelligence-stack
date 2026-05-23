@@ -3,6 +3,18 @@
 
 ---
 
+**FN10 · 2026-05-23T05:06Z** *(dashboard read — direct observation)*
+
+ep3024, batch 142/300. **9.5 hard floor broken overnight.** Dashboard EP AVG **9.4755**; recent epoch strip: 9.4755 · 9.4717 · 9.4770 · **9.4694** (new server-side ATL visible). Model consolidated below 9.50 — the floor that held since 18L surgery is behind it.
+
+Expert activity: CMP **100%** · INT 85% · PLN 79% · ABS 67% · LNG 59% · LOG 12% · SEM 15%. Abstract/planning cluster dominant; CMP fully saturated suggests structural work in progress. TTL routing: G 6% / **O 83%** / R 3% — mostly deliberating, low certainty. Gradient hot at L8 (red bar), L17 active.
+
+CSV ATL (batch-level) ep3004 9.5561 unchanged — dashboard server ATL ~9.469 (9.4694 epoch avg, likely latest best).
+
+Pattern: broke floor, now orbiting 9.47–9.48. No indication of WALD surgery yet (amplify state not visible). Next watch: whether orbit tightens below 9.46 or stabilises here.
+
+---
+
 **FN9 · 2026-05-23T04:50Z**
 
 **New CSV ATL: ep3004 at 9.5561** — breaks ep2957 (9.5592) by 0.0031. Estimated epoch-close ≈ **9.476** (~0.08 offset), new server-side ATL (prev ~9.479 at ep2957).
