@@ -1,0 +1,10 @@
+from "./low_pass_filter.tern" import low_pass;
+
+fn main() -> trit {
+    let result: float = low_pass(10.0, 0.0, 0.5);
+    if (result == 5.0) {
+        print("Test passed: Filter correct.");
+        return affirm;
+    }
+    return reject;
+}
