@@ -1,0 +1,11 @@
+fn sharpe_ratio(returns: float, risk_free: float, volatility: float) -> float {
+    if (volatility == 0.0) { return 0.0; }
+    return (returns - risk_free) / volatility;
+}
+
+fn main() -> trit {
+    let s: float = sharpe_ratio(0.12, 0.03, 0.15);
+    print("Sharpe Ratio:");
+    println(s);
+    return affirm;
+}
