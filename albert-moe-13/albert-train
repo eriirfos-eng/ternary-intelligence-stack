@@ -14,7 +14,8 @@ albert-train — one command to start GPU training + local dashboard
 import os, sys, subprocess, threading, signal, time, shutil, argparse, re
 
 HERE          = os.path.dirname(os.path.abspath(__file__))
-LOG           = os.path.join(HERE, "dashboard", "training.log")
+LOG           = os.path.expanduser("~/.albert/training.log")
+os.makedirs(os.path.expanduser("~/.albert"), exist_ok=True)
 BATCH_HISTORY = os.path.join(HERE, "dashboard", "batch_history.csv")
 DASH_SRV      = os.path.join(HERE, "dashboard", "run_server.py")
 MODAL_PY      = os.path.join(HERE, "train_modal.py")
