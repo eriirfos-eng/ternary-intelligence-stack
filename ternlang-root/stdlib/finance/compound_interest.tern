@@ -1,0 +1,24 @@
+fn calculate_compound_interest(principal: float, rate: float, time: int) -> float {
+    // A = P(1 + r)^t
+    return principal * pow(1.0 + rate, time);
+}
+
+fn main() -> trit {
+    let p: float = 1000.0;
+    let r: float = 0.05;
+    let t: int = 10;
+    
+    let amount: float = calculate_compound_interest(p, r, t);
+    print("Compound interest calculation complete.");
+    
+    match (amount > p) {
+        1 => {
+            print("Investment grew.");
+        }
+        _ => {
+            print("Investment did not grow.");
+        }
+    }
+    
+    return 0;
+}
