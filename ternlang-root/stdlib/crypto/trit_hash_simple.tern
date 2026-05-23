@@ -1,0 +1,33 @@
+fn simple_hash(data: int[], len: int) -> int {
+    let hash: int = 5381;
+    let i: int = 0;
+    while (i < len) {
+        // djb2 adaptation: hash * 33 + data[i]
+        hash = hash * 33 + data[i];
+        i = i + 1;
+    }
+    return hash;
+}
+
+fn main() -> trit {
+    let input: int[5] = 0;
+    input[0] = 1;
+    input[1] = -1;
+    input[2] = 0;
+    input[3] = 1;
+    input[4] = 1;
+
+    let h: int = simple_hash(input, 5);
+    
+    println("Hash calculated:");
+    println(h);
+    
+    match (h != 0) {
+        1 => {
+            return affirm;
+        }
+        _ => {
+            return reject;
+        }
+    }
+}
