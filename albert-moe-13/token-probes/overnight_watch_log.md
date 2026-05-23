@@ -3,6 +3,48 @@
 
 ---
 
+**FN34 · 2026-05-23T10:27Z** *(training.log — MODAL CRASH during ep3068)*
+
+**Training down.** `modal.exception.ConnectionError: Deadline exceeded` — Modal heartbeat timed out mid-epoch. batch_history.csv froze at 10:16:27 (ep3068 b~249/300). training.log last write 10:27:13. Last clean checkpoint: **ep3067** (avg=9.4574, WALD=25). No data loss — ep3068 will replay on restart. Needs `albert-train` restart.
+
+---
+
+**FN33 · 2026-05-23T10:21Z** *(dashboard screenshots 10:20Z — ep3068 b282/300, log still at ep3067)*
+
+**Routing imbalance visible in dashboard**: CMP=**100%** (4× overloaded), PLN=74%, ABS=73%, INT=74% all heavy. SEM=3%, INF=5% near-dead. Top-3 with 12 experts should yield ~25% avg — CMP at 100% is extreme concentration. LB weight 0.03 not correcting it. TTL: 81% orange, 6% green, 3% red — mostly on-target/partial, low green means underloaded experts aren't being boosted much.
+
+**GRADIENT FLOW BLOCKED**: per-layer norm chart (zoomed, confirmed by Simeon) — lm head = 0.001846 (sole active bar), emb = 0.00e+0, L17–L10 = all 0.00e+0. **Entire transformer body at zero gradient**. Only the output projection is updating. global |g| = 0.6018 (likely computed differently). Body convergence or vanishing gradient through all 18 layers — consistent with the plateau and the WALD structural stagnation. This is the root cause of the current ceiling.
+
+**Global ATL = 9.0935** (dashboard header) — this is the pre-surgery epoch-avg low. Current best 9.4526 is still 0.036 above it. The hard floor at 9.5 post-18L surgery has been well cleared; model now working toward pre-surgery territory.
+
+ep3068 b282/300 at 10:20Z — close imminent.
+
+---
+
+**FN32 · 2026-05-23T10:15Z** *(training.log — ep3067 confirmed, ep3068 b196/300)*
+
+ep3066=9.4602 (d-0.0004, flat), ep3067=**9.4574** (d-0.0028, descending) — within 0.0048 of ATL. since_best=9 but loss is coming down.
+
+**WALD sev ticked 0.969→0.970** at ep3067 — first severity change in ~15 epochs. mass=**9.446** (new run low; sequence: 9.451→9.449→9.448→9.447→9.448→9.449→9.448→9.446). WALD plateau **25**, no surgery yet. Threshold appears >25. ep3068 b196/300 at 10:15Z, losses 9.46–9.56 (noisy).
+
+---
+
+**FN31 · 2026-05-23T10:00Z** *(training.log — ep3065 confirmed, ep3066 opening)*
+
+Near-miss: ep3064=**9.4532** (d-0.0081) — 0.0006 above ATL (9.4526), since_best=6. Closest approach since the ATL break at ep3058. ep3065 bounced to 9.4607 (d+0.0075, since_best=7) — oscillating in ATL territory without breaking through. Model is probing the floor.
+
+WALD plateau **23** (21→22→23 across ep3063–3065). Surgery still not fired — threshold appears >23. mass=9.448 stable. sev=0.969 unchanged. No resurrection events, dead=0. ep3066 opening at 10:00Z.
+
+---
+
+**FN30 · 2026-05-23T09:45Z** *(training.log — ep3062 confirmed, ep3063 b148/300)*
+
+**WALD plateau = 20** — at the soft gate lower bound. Sequence: 15→16→17→18→19→**20** across ep3057–3062, one tick per epoch. mass=9.447–9.449 (stable, minor fluctuation). sev=0.969 unchanged.
+
+ep3061=9.4600 (d+0.0015), ep3062=9.4658 (d+0.0058), since_best=4 — post-ATL drift, not descending. MYCELIUM: dead=0, blooming=2, myc_stable=21. **Governor conditions approaching met**: WALD≥20, since_best=4 (not in descent), myc_stable=21. Surgery has not fired yet — threshold may be 25–30. Watching ep3063 close for count=21 and any surgery log event. ep3063 b148/300 at 09:45Z.
+
+---
+
 **FN29 · 2026-05-23T09:30Z** *(training.log — ep3060 confirmed, ep3061 b297/300)*
 
 Post-ATL orbit: ep3058=**9.4526** (ATL) → ep3059=9.4603 (d+0.0077, bounce) → ep3060=9.4585 (d-0.0018, returning). since_best=2. Normal post-ATL pattern — model re-approaching ATL territory.
