@@ -1,0 +1,24 @@
+fn update_prior(prior: float, likelihood: float, evidence: float) -> float {
+    return (prior * likelihood) / evidence;
+}
+
+fn main() -> trit {
+    let prior: float = 0.5;
+    let likelihood: float = 0.8;
+    let evidence: float = 0.7;
+    
+    let posterior: float = update_prior(prior, likelihood, evidence);
+    
+    print("Posterior calculation complete.");
+    
+    match (posterior > 0.5) {
+        1 => {
+            print("Likely true.");
+        }
+        _ => {
+            print("Unlikely or neutral.");
+        }
+    }
+    
+    return 0;
+}
