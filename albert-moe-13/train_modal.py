@@ -231,6 +231,7 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: i
         f"--gate-diversity={gate_diversity}",
         f"--lb-weight={lb_weight}",
         "--div-weight=0.001",
+        "--batch-size=6",
     ]
     if stop_at_epoch > 0:
         cmd.append(f"--stop-at-epoch={stop_at_epoch}")
