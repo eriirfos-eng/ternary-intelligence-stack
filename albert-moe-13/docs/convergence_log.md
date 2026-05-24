@@ -1,13 +1,13 @@
 # Albert MoE-13 — Convergence Log
 
 Empirical training loss data from native ternary training from random initialization.
-Active run: v3.0 — **18L** · 32k vocab · 635 MB multilingual corpus (2026-05-10, ongoing). Surgery 6 fired ep2487 (17L→18L). Epoch-ATL 9.5800 (ep2576, 2026-05-21). 6 surgeries complete.
+Active run: v3.0 — **20L** · 32k vocab · 635 MB multilingual corpus (2026-05-10, ongoing). Surgery 8 fired ep3383 (19L→20L). EP_AVG ATL 9.3182 (ep3326). Chip ATL **8.8540** (ep3412). 8 surgeries complete.
 
 ---
 
 ## v3.0 — Active Training Run (2026-05-16, ongoing)
 
-Architecture: **17 layers** · 256 hidden · 12 experts · Top-3 routing · **256 ctx** · **32,000 vocab** (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL)  
+Architecture: **20 layers** · 256 hidden · 12 experts · Top-3 routing · **256 ctx** · **32,000 vocab** (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL)  
 Corpus: Stage 10 corpus active — stages [3,6,7,8,9,10] · 10% chaos layer invariant enforced  
 Optimizer: AdamW, cosine LR, GRAD_ACCUM=4, BATCH=4  
 Hardware: **Modal.com T4 GPU** (~$0.003/epoch at CTX=256)  
@@ -91,9 +91,23 @@ correct only after the vocabulary transfer plateau breaks.
 | Ep 2564 | 18L | **9.5855** | Epoch ATL (04:32Z). d−0.0069. **Simeon downloaded weights proactively (Modal budget 80%).** |
 | Ep 2576 | 18L | **9.5800** | Epoch ATL (05:32Z). d−0.0236. **Bounce phase resolved (11 epochs). Probe trigger 9.58 reached.** wald_sev 0.948. |
 
-**All-time best (epoch avg):** 9.5800 (ep2576, 2026-05-21T05:32Z)
-**All-time best (intra-batch):** 9.2961 (dashboard chip — exact epoch unknown)
-**Surgery governor status:** 17L→18L surgery fired at ep2487. 18L Gen 1 step 1/6 active. PLATEAU gate filling. MYC_STABLE=42+. Descent ongoing — surgery not imminent.
+| Ep 2860 | 18L | ~9.52 | **CLIFF 1** — sharp descent from ~9.61 base. Server-side ATL broke to 9.5236. |
+| Ep 2887 | 18L | — | **Weight pull** — training paused mid-epoch (WiFi interruption; LAN cable installed). Restart from ep2887 checkpoint. Gap ep2888–2889 in CSV. |
+| Ep 2890+ | 18L | ~9.50 | **CLIFF 2** — AdamW buffer reset on restart produced second cliff, floor ~9.50. ATL chip 9.1370. |
+| Ep 2922 | 18L | **9.4992** | **9.50 FLOOR BROKEN** (2026-05-22T~19:11Z) — first server-side epoch-avg below 9.50 in entire v3.0 run. LOG expert surged 0%→28%; L10 gradient awakening. WALD fires (n=1508) preceded break. |
+| Ep 2927 | 18L | **9.4891** | Epoch ATL (d−0.0080 — largest single-epoch ATL drop post-surgery-6). Routing diversifying: CTX 15%, GEN 13%, SYN 10%, INF 10% waking. |
+| Ep 2938 | 18L | **9.4873** | Epoch ATL. Post-ATL bounce peak only +0.019 nats — tightest bounce in post-surgery-6 record. |
+| Ep 3015 | 18L | — | ATL chip **9.0935** (intra-batch low). |
+| Ep 3124 | 18L | **9.4131** | EP_AVG ATL. Hard plateau begins — since_best accumulating, EP_AVG pinned 9.42–9.46. |
+| Ep 3263 | 18L | **9.3651** | **EP_AVG ATL** — broke 139-epoch plateau (9.4131 held since ep3124). ATL chip **9.0095** (was 9.0935). |
+| Ep 3325 | 18L→**19L** | **SURGERY 7** | **18L→19L Net2Net surgery** (2026-05-24T13:47Z). Plateau Δ held 9.42–9.46 for 36+ epochs. 1315 tensors. [ttlfreeze] armed (ema_alpha=0.02), [divloss] 1e-3 weight override, gate-diversity 0.300. Pre-surgery best archived as `albert_v3.0.best.18L.safetensors`. |
+| Ep 3326 | 19L | **9.3182** | **EP_AVG ATL — new record, first 19L epoch** (2026-05-24T~14:00Z). Improvement 0.047 nats over prior best. ATL chip **8.9190** (was 9.0095). WALD fired 6.2% (18 batches, expected post-surgery volatility). LR stepped down ~1.84e-4 → 1.13e-4. Expert reactivation: SYN/CTX back to 4%, PLN 79%, CMP 83%, INT 100%. |
+| Ep 3383 | 19L→**20L** | **SURGERY 8** | **19L→20L Net2Net surgery** (2026-05-24T~20:00Z). Only **58 epochs** after surgery 7 — plateau formed almost immediately at 19L floor, governor fired. 1384 tensors. |
+| Ep 3412 | 20L | — | ATL chip **8.8540** (−1.36% from prior 8.9190). 20L settling. Surgery gate: MYC_STABLE 31/≥5, PLATEAU 0.0054/<0.020 w=144, since_best=16. ~128 epochs of runway before next surgery consideration. EP_AVG ATL 9.3327. CMP 100%, PLN 77%, INT 68%. |
+
+**All-time best (epoch avg):** 9.3182 (ep3326, 2026-05-24T~14:00Z, 19L)
+**All-time best (intra-batch):** 8.8540 (ep3412, 2026-05-24, 20L)
+**Surgery governor status:** 8 surgeries complete. 20L active. Surgery 9 (20L→21L) gate armed — MYC_STABLE met, plateau window w=144, since_best=16 at ep3412. ~128 epochs until surgery consideration.
 
 ### Alternating Descent Phase — Governor Validation Finding (2026-05-19)
 

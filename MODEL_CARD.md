@@ -31,8 +31,8 @@ pipeline_tag: text-generation
 **Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
-**Last updated:** 2026-05-19  
-**Training status:** Active — ep2116+, epoch ATL **9.7884** (ep2116), batch ATL **9.6235** (ep2114) — surgery loss gate cleared; alternating descent phase (5 new ATLs in 7 epochs)
+**Last updated:** 2026-05-24  
+**Training status:** Active — ep3412 · **20L** · 8 surgeries complete. EP_AVG ATL **9.3182** (ep3326). Chip ATL **8.8540** (ep3412, new record). Two surgeries fired today: 18L→19L (ep3325, 13:47Z) and 19L→20L (ep3383, ~20:00Z, 58 epochs apart). Surgery gate 20L→21L armed, w=144, since_best=16.
 
 ---
 
@@ -47,7 +47,7 @@ weights, targeting inference on edge hardware and low-power devices.
 | Property | Value |
 |----------|-------|
 | Architecture | Ternary MoE (Mixture of Experts) |
-| Layers | 17 |
+| Layers | 20 |
 | Hidden size | 256 |
 | Experts | 12 (Top-3 routing per token) |
 | Context length | 256 tokens |
