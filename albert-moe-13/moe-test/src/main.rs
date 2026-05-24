@@ -24,7 +24,7 @@ use ratatui::{
     Terminal,
 };
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, MouseEvent, MouseEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -106,6 +106,9 @@ struct App {
     // KV-cache decode state
     need_prefill: bool,
     kv_seq_pos: usize,
+
+    // Sampling
+    temperature: f32,
 
     // /bench command state
     bench_mode: bool,
@@ -199,6 +202,7 @@ impl App {
             popup_selected: 0,
             need_prefill: false,
             kv_seq_pos: 0,
+            temperature: 0.8,
             bench_mode: false,
             bench_step: 0,
             bench_results: Vec::new(),
@@ -229,7 +233,7 @@ impl App {
         if n >= BENCH_PROMPTS.len() { return; }
         let prompt = BENCH_PROMPTS[n];
 
-        self.transcript.push_str(&format!("\n[P{}] {}\nAlbert: ", n + 1, prompt));
+        self.transcript.push_str(&format!("\n── Benchmark P{}/{} ──\n{}\nAlbert: ", n + 1, BENCH_PROMPTS.len(), prompt));
 
         self.current_tokens = self.tokenizer.encode(prompt);
         self.prompt_token_len = self.current_tokens.len();
@@ -241,6 +245,31 @@ impl App {
         self.kv_seq_pos = 0;
         self.is_generating = true;
         self.tokens_to_generate = 64;
+    }
+
+    fn sample_from_logits(&self, logits_vec: Vec<f32>) -> u32 {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static RNG: AtomicU64 = AtomicU64::new(0x517cc1b727220a95);
+        // xorshift64
+        let mut s = RNG.load(Ordering::Relaxed);
+        s ^= s << 13; s ^= s >> 7; s ^= s << 17;
+        RNG.store(s, Ordering::Relaxed);
+
+        let t = self.temperature;
+        // apply temperature and softmax
+        let max_l = logits_vec.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+        let exp: Vec<f32> = logits_vec.iter().map(|&x| ((x - max_l) / t).exp()).collect();
+        let sum: f32 = exp.iter().sum();
+        let probs: Vec<f32> = exp.iter().map(|&e| e / sum).collect();
+
+        // u64 -> [0,1) float
+        let r = (s >> 11) as f32 / (1u64 << 53) as f32;
+        let mut cumul = 0.0f32;
+        for (i, &p) in probs.iter().enumerate() {
+            cumul += p;
+            if r < cumul { return i as u32; }
+        }
+        (probs.len() - 1) as u32
     }
 
     fn step_generation(&mut self) {
@@ -267,10 +296,8 @@ impl App {
             self.kv_seq_pos = context.len();
             self.need_prefill = false;
 
-            let pr = candle_nn::ops::softmax(&last_logits, 0).unwrap().to_vec1::<f32>().unwrap();
-            pr.iter().enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(i, _)| i as u32).unwrap()
+            let logits_vec = last_logits.to_vec1::<f32>().unwrap();
+            self.sample_from_logits(logits_vec)
         } else {
             // ── Decode: single token, O(1) per layer via KV-cache ──
             // 3 experts active, 9 skipped — SparseSkip is at full effect here.
@@ -281,10 +308,8 @@ impl App {
             self.kv_seq_pos += 1;
 
             let last_logits = logits.i((0, 0)).unwrap();
-            let pr = candle_nn::ops::softmax(&last_logits, 0).unwrap().to_vec1::<f32>().unwrap();
-            pr.iter().enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(i, _)| i as u32).unwrap()
+            let logits_vec = last_logits.to_vec1::<f32>().unwrap();
+            self.sample_from_logits(logits_vec)
         };
 
         self.current_tokens.push(next_token);
@@ -974,7 +999,16 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
         let timeout = if app.is_generating { Duration::from_millis(1) } else { Duration::from_millis(10) };
 
         if event::poll(timeout)? {
-            if let Event::Key(key) = event::read()? {
+            match event::read()? {
+            Event::Mouse(MouseEvent { kind: MouseEventKind::ScrollUp, .. }) => {
+                app.scroll_pos = app.scroll_pos.saturating_sub(3);
+                app.auto_scroll = false;
+            }
+            Event::Mouse(MouseEvent { kind: MouseEventKind::ScrollDown, .. }) => {
+                app.scroll_pos = app.scroll_pos.saturating_add(3);
+                app.auto_scroll = false;
+            }
+            Event::Key(key) => {
                 // Popup is active whenever the input starts with '/' and we're not generating.
                 let popup_active = app.input.starts_with('/') && !app.is_generating;
 
@@ -1070,6 +1104,8 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     _ => {}
                 }
             }
+            _ => {}
+            } // end match event::read()
         }
 
         if app.is_generating {
