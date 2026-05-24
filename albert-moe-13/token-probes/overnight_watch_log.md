@@ -3,6 +3,30 @@
 
 ---
 
+**FN59 · 2026-05-24T22:24Z** *(overnight watch · CSV ep3413 · 20L)*
+
+**ATL ALERT: 9.3182 record broken.** ep3383 hit **9.2862** — new 20L ATL, improvement of 0.0320 nats. ATL break happened early in the 20L run (ep3383, only 3 epochs after surgery). New alert threshold: 9.2862.
+
+CSV stale (21:05 download, ep3413 epoch summaries, ep3414 partial batch). Previous tick FN58 confirmed ep3422 alive at 21:36 — training has likely progressed to ~ep3440+ by now.
+
+**Plateau forming.** since_best = 30+ epochs (ep3383 → ep3413). 10-epoch rolling averages: ep3381–3390 avg **9.302** → ep3391–3400 avg **9.312** → ep3401–3410 avg **9.323**. Clear upward drift, floor not revisited since ep3392 (9.2915). Loss settling into 9.307–9.333 band.
+
+**Routing healthy.** Expert load: e0–e11 range 0.079–0.086. Entropy stable at 2.466. No dead experts, no monopolisation. Grad norm very low: 0.002 — flat landscape consistent with plateau saturation.
+
+**WALD: silent.** No WALD events in epoch summaries across all 33 20L epochs. Surgery governor accumulating plateau pressure via since_best only.
+
+**Surgery watch.** Governor gate: since_best ~30+, no WALD to add pressure. Pure plateau signal. Expected gate: since_best continues climbing — surgery fires when governor deems plateau genuine. Fibonacci mechanics mean threshold timing is dynamic. Next ATL probe window depends on whether current plateau breaks or governor acts first.
+
+No stops, no spikes, no anomalies. Need fresh CSV to confirm current epoch.
+
+---
+
+**FN58 · 2026-05-24T21:36Z** *(overnight watch start · ep3422 · 20L)*
+
+Training alive. Latest CSV row: ep3422.66 · batch loss 9.2350. No spikes, no stops. Loss range on last 5 batches: 9.20–9.46 — normal variance, no WALD-grade excursion. CSV row count: 1,020,419. Surgery gate armed (20L→21L, since_best=~29 post-surgery, ~115 epochs runway). Baseline floor for spike alert: 9.3182 epoch-avg. Watching.
+
+---
+
 **FN57 · 2026-05-24T21:08Z** *(token probe — post-s9_ep3414_20L)*
 
 ### EMBEDDING GEOMETRY FROZEN — 10/10 · SURGERY 9 BOUNDARY · ep2492→ep3414 = 922 epochs
