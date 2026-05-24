@@ -2816,9 +2816,15 @@
         const span = chart.scales.x.max - chart.scales.x.min;
         if (span < 100) return; // zoomed in — leave live data alone
         const buf = span * 0.1;
-        const lo  = lowerBound(smaLog, chart.scales.x.min - buf);
-        const hi  = Math.min(smaLog.length, lowerBound(smaLog, chart.scales.x.max + buf));
+        // clamp query window to actual data range — panning into future gives empty slice otherwise
+        const dataMaxX = smaLog[smaLog.length - 1].x;
+        const queryLo  = chart.scales.x.min - buf;
+        const queryHi  = Math.min(chart.scales.x.max + buf, dataMaxX + 1);
+        if (queryLo > dataMaxX) return; // panned fully past data — leave dataset as-is
+        const lo  = lowerBound(smaLog, queryLo);
+        const hi  = Math.min(smaLog.length, lowerBound(smaLog, queryHi));
         const slice = smaLog.slice(lo, hi);
+        if (!slice.length) return; // no data in viewport — don't blank the chart
         const pts = slice.length <= MAX_CHART_PTS ? slice : smaPreseedData(slice);
         chart.data.datasets[0].data = pts.map(p => ({ x: p.x, y: p.y, epoch: Math.floor(p.x) }));
     }
@@ -4272,16 +4278,22 @@
         return `rgb(255,${g},${b})`;
     }
     function gradBarColor(ratio) {
-        // Linear white → yellow → red across the full 0→1 min-max range.
-        // Designed for relative normalization: minimum layer = white, maximum = red.
+        // Log-scale layer bars. t=0 → dim slate-blue (noise floor), t=1 → hot red.
+        // Never white — even frozen layers show a visible dim bar.
         const r = Math.min(1, Math.max(0, ratio));
-        if (r < 0.5) {
-            const b = Math.round(255 * (1 - r * 2));
-            return `rgb(255,255,${b})`;
+        if (r < 0.33) {
+            const f = r / 0.33;
+            return `rgb(${Math.round(60+20*f)},${Math.round(80+120*f)},${Math.round(190+50*f)})`;
+        } else if (r < 0.67) {
+            const f = (r - 0.33) / 0.34;
+            return `rgb(${Math.round(80+175*f)},${Math.round(200+20*f)},${Math.round(240-240*f)})`;
+        } else {
+            const f = (r - 0.67) / 0.33;
+            return `rgb(255,${Math.round(220-180*f)},0)`;
         }
-        const g = Math.round(255 * (1 - (r - 0.5) * 2));
-        return `rgb(255,${g},0)`;
     }
+
+    const GRAD_LOG_FLOOR = 1e-15; // anything below f32 subnormal → noise floor
 
     function renderGradBars() {
         if (!latestGrad) return;
@@ -4290,23 +4302,41 @@
         if (waiting) waiting.remove();
 
         const { norm, layerNorms } = latestGrad;
-        const minN   = Math.min(...layerNorms);
-        const maxN   = Math.max(...layerNorms, 1e-9);
-        // Relative normalization: stretch bar range to the inter-layer spread so
-        // small differences (e.g. 2.07e-9 vs 2.20e-9) become visible.
-        // Floor at 0.5% of maxN to avoid divide-by-zero when all layers are identical.
-        const rangeN = Math.max(maxN - minN, maxN * 0.005);
+        // layerNorms layout: [L0 … L(N-1), emb, lm]
+        const numLayers  = layerNorms.length - 2;
+        const layerOnly  = layerNorms.slice(0, numLayers);
+        const embNorm    = layerNorms[numLayers];
+        const lmNorm     = layerNorms[numLayers + 1];
+
+        // Transformer layers: log scale so near-zero gradients (1e-8 vs 1e-12)
+        // remain distinguishable instead of collapsing to white.
+        // Floor is fixed at GRAD_LOG_FLOOR so t=0 always means "at noise floor".
+        const logFloor = Math.log10(GRAD_LOG_FLOOR);
+        const layerLogVals = layerOnly.map(v => Math.log10(Math.max(v, GRAD_LOG_FLOOR)));
+        const layerLogMax  = Math.max(...layerLogVals, logFloor + 1.0);
+        const layerLogRange = Math.max(layerLogMax - logFloor, 1.0); // at least 1 decade
+        const allAtFloor = layerOnly.every(v => v <= GRAD_LOG_FLOOR);
+
+        // emb and lm head — their own group scale so both bars are meaningful.
+        const specialMax   = Math.max(embNorm, lmNorm, 1e-9);
+        const specialMin   = Math.min(embNorm, lmNorm);
+        const specialRange = Math.max(specialMax - specialMin, specialMax * 0.005);
 
         // Build row scaffolding once (or when layer count changes).
-        // Never rebuild on every update — doing so destroys the DOM elements
-        // before their CSS transition can play. Widths must be mutated in-place
-        // for the `transition: width 0.4s ease` on .gbar-fill to fire.
+        // Never rebuild on every update — CSS transitions need stable DOM nodes.
         const existing = wrap.querySelectorAll('.gbar-row');
         if (existing.length !== layerNorms.length) {
             wrap.innerHTML = '';
             for (let i = 0; i < layerNorms.length; i++) {
-                const isEmbed = i === layerNorms.length - 2;
-                const isHead  = i === layerNorms.length - 1;
+                // Separator between last transformer layer and the emb/lm group.
+                if (i === numLayers) {
+                    const sep = document.createElement('div');
+                    sep.className = 'gbar-sep';
+                    sep.style.cssText = 'height:1px;background:rgba(100,116,139,0.35);margin:3px 0 4px;';
+                    wrap.appendChild(sep);
+                }
+                const isEmbed = i === numLayers;
+                const isHead  = i === numLayers + 1;
                 const label   = isEmbed ? 'emb' : isHead ? 'lm' : `L${i}`;
                 const row = document.createElement('div');
                 row.className = 'gbar-row';
@@ -4323,23 +4353,45 @@
 
         // Update widths, colors, and values in-place — transition plays automatically.
         wrap.querySelectorAll('.gbar-row').forEach((row, i) => {
-            const n   = layerNorms[i];
-            // Bar width: relative to this step's range (5% floor so minimum is visible).
-            const pct = (Math.min(1, (n - minN) / rangeN) * 90 + 5).toFixed(1);
-            // Color: linear white→yellow→red across the min-max range.
-            const col = gradBarColor((n - minN) / rangeN);
+            const n       = layerNorms[i];
+            const isEmbed = i === numLayers;
+            const isHead  = i === numLayers + 1;
+            let pct, col;
+            if (isEmbed || isHead) {
+                // emb / lm: normalize within their own group, distinct colors.
+                const t = Math.min(1, (n - specialMin) / specialRange);
+                pct = (t * 90 + 5).toFixed(1);
+                col = isHead
+                    ? `rgba(251,146,60,${(0.35 + 0.65 * t).toFixed(2)})`   // orange for lm
+                    : `rgba(34,211,238,${(0.35 + 0.65 * t).toFixed(2)})`;  // cyan for emb
+            } else {
+                // Transformer layers: log scale, floor-anchored.
+                // dim blue = at noise floor; hot red = maximum across layers.
+                const logN = Math.log10(Math.max(n, GRAD_LOG_FLOOR));
+                const t = Math.min(1, (logN - logFloor) / layerLogRange);
+                pct = (t * 90 + 5).toFixed(1);
+                col = gradBarColor(t);
+            }
             row.querySelector('.gbar-fill').style.width      = pct + '%';
             row.querySelector('.gbar-fill').style.background = col;
             const fmtN = n < 1e-4 ? n.toExponential(3) : n.toFixed(6);
-            row.querySelector('.gbar-val').textContent       = fmtN;
-            const tipLabel = i === layerNorms.length - 2 ? 'Embedding — Gradient Norm'
-                           : i === layerNorms.length - 1 ? 'LM Head — Gradient Norm'
+            row.querySelector('.gbar-val').textContent = fmtN;
+            const tipLabel = isEmbed ? 'Embedding — Gradient Norm'
+                           : isHead  ? 'LM Head — Gradient Norm'
                            : `Layer ${i} — Gradient Norm`;
+            const tipScale = (isEmbed || isHead)
+                ? `Bar = relative to emb/lm group (isolated from layer scale).<br>lm=${lmNorm.toExponential(2)}, emb=${embNorm.toExponential(2)}, ratio=${lmNorm > 0 ? (lmNorm/Math.max(embNorm,1e-12)).toFixed(1) : '—'}×`
+                : `Bar = log scale, floor=${GRAD_LOG_FLOOR.toExponential(0)}. ` +
+                  (allAtFloor
+                      ? `All layers at noise floor — gradients below f32 precision.`
+                      : `Layer range: ${Math.pow(10,logFloor).toExponential(0)} – ${Math.pow(10,layerLogMax).toExponential(2)} (${layerLogRange.toFixed(1)} decades).`);
             row.onmouseenter = ev => showTip(ev,
                 `<b>${tipLabel}</b><br>` +
                 `∥∇L∥ = <b>${n.toExponential(3)}</b><br>` +
-                `Bar = relative to this step's min–max range (low=white, high=red).<br>` +
-                `Very low values may indicate vanishing gradients.`);
+                `${tipScale}<br>` +
+                ((!isEmbed && !isHead && n <= GRAD_LOG_FLOOR)
+                    ? `⚠ Below f32 subnormal — deep ternary vanishing gradient.`
+                    : `Relative position shown on log scale.`));
         });
 
         const globalEl = document.getElementById('grad-norm-global');
