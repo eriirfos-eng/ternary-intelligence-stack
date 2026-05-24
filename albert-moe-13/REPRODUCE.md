@@ -91,7 +91,7 @@ The model is mid-training; PPL will be lower on a later checkpoint. Run without
 ```
 
 Runs the same 15 multilingual prompts used in bench_v3.0_* exports. On CPU at
-18L expect 14–37 tok/s depending on prompt length (shorter = more routing
+20L expect 14–37 tok/s depending on prompt length (shorter = more routing
 overhead per token). On Modal T4 via `python3 train_modal.py bench_gpu` the
 CUDA path activates and throughput scales with batch size.
 

@@ -10,7 +10,7 @@ albert. is a ternary Mixture-of-Experts language model trained **from scratch** 
 
 | Parameter | Value |
 |-----------|-------|
-| Layers | 18L (expanded from 12L via 6 net2net surgeries; latest: ep2487 17L→18L, 2026-05-20) |
+| Layers | 20L (expanded from 12L via 8 net2net surgeries; latest: ep3160 19L→20L, 2026-05-24) |
 | Hidden dim | 256 |
 | Experts | 12E, Top-3 routing |
 | Context length | 256 tokens |
@@ -91,21 +91,21 @@ albert. self-expands via layer insertion surgery when the loss plateau gate fire
 
 - **Gate condition:** Loss variance < 0.02 nats over any 144-epoch (Fibonacci) window + `myc_stable >= 5`
 - **Expansion:** Inserts one new layer using net2net identity initialization with Mandelbrot-seeded biases
-- **History:** 6 surgeries completed (12L → 13L → 14L → 15L → 16L → 17L → 18L); latest ep2487 2026-05-20, Mandelbrot c_im=0.0099, no spike
-- **Next gate:** 18L → 19L, Gen 1 step 2/6, plateau window 377 epochs, ceiling 21L (epoch ATL 9.6248, batch ATL 9.3866)
+- **History:** 8 surgeries completed (12L → 13L → 14L → 15L → 16L → 17L → 18L → 19L → 20L); latest ep3160 19L→20L
+- **Next gate:** 20L → 21L armed, ~128 epochs runway (epoch ATL 9.3182, chip ATL 8.8540)
 
 Surgery governor detail: `albert-moe-13/docs/EVOLUTION_EVIDENCE.md`
 
 ---
 
-## Training state (as of 2026-05-17)
+## Training state (as of 2026-05-24)
 
 | Metric | Value |
 |--------|-------|
-| Current epoch | ~1600 |
-| Batch ATL | 9.9925 (ep1584) |
-| Epoch ATL | 10.0915 (ep1584) |
-| Surgery gap | ~0.29 nats |
+| Current epoch | 3414 |
+| Chip ATL | 8.8540 (ep3412) |
+| Epoch ATL | 9.3182 (ep3326) |
+| Surgery gate | 20L→21L armed, ~128ep runway |
 | Modal account | simeon-feedback |
 
 ---

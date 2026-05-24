@@ -42,7 +42,7 @@ Evidence from ep1549 benchmark outputs:
 | "Isaac Newton… gravitation" | `universel`, `light`, `ainsi` | French *universel* (universal), Newton's optics, French scientific connective |
 | "Bibel… Buch Mose" | `Roman`, `Michael`, `Guerra` | Romans (book of Bible), archangel, Old Testament warfare |
 
-**The model is not producing random multilingual noise.** It is broadcasting domain-correct tokens across all trained languages at once, because it has not yet learned to gate language selection. The semantic knowledge is present and domain-accurate; the representational capacity to *select one language* is what the 17L→21L surgery is expected to consolidate.
+**The model is not producing random multilingual noise.** It is broadcasting domain-correct tokens across all trained languages at once, because it has not yet learned to gate language selection. The semantic knowledge is present and domain-accurate; the representational capacity to *select one language* is what the ongoing 20L→21L expansion is expected to consolidate.
 
 **Training phase arc** (observed across ep0–ep1573):
 
@@ -74,7 +74,7 @@ The architecture combines:
 | Parameter | Value |
 |-----------|-------|
 | Hidden size | 256 |
-| Layers | **18** (v2.0.0: 4L→12L over 10 surgeries; v3.0: ep511 12L→13L, ep547 13L→14L, ep611 14L→15L, ep645 15L→16L, ep701 16L→17L, ep2487 17L→18L) |
+| Layers | **20** (v2.0.0: 4L→12L over 10 surgeries; v3.0: ep511 12L→13L, ep547 13L→14L, ep611 14L→15L, ep645 15L→16L, ep701 16L→17L, ep2487 17L→18L, ep2802 18L→19L, ep3160 19L→20L) |
 | Attention heads | 4 |
 | Experts | 12 |
 | Context length | 256 tokens |
@@ -85,7 +85,7 @@ The architecture combines:
 | LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-22):** Global Epoch 2942 · epoch-ATL **9.4873** · chip-ATL **9.1254** · 6 Net2Net surgeries complete (12L→18L) · training on Modal T4 GPU (~450ms/batch)
+**Training state (2026-05-24):** Global Epoch 3414 · epoch-ATL **9.3182** (ep3326) · chip-ATL **8.8540** (ep3412) · 8 Net2Net surgeries complete (12L→20L) · training on Modal T4 GPU (~450ms/batch)
 
 ---
 
@@ -104,7 +104,7 @@ All core implementation files are **public and directly accessible** on GitHub. 
 | TTL routing | [traffic\_light.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/model/traffic_light.rs) | EMA utilization → trit states Green/Orange/Red, anti-stagnation burst |
 | WALD loss-space analysis | [wald.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/wald.rs) | Batch histogram, dead zone detection, severity → amplification scale |
 | SPORE federated training | [spore.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-llm-core/src/spore.rs) | `SporeManager` — fitness gate, α=0.08 blend, ternary re-ternarization |
-| Empirical convergence log | [convergence\_log.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/docs/convergence_log.md) | Loss trajectory from ep0 → current, all 5 surgery events, ATL history |
+| Empirical convergence log | [convergence\_log.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/docs/convergence_log.md) | Loss trajectory from ep0 → current, all 8 surgery events, ATL history |
 | Benchmark suite | [moe-test/src/main.rs](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/albert-moe-13/moe-test/src/main.rs) | `run_bench_mode()` — speed + @sparseskip analysis + perplexity, CSV export |
 | BET ISA specification | [BET-ISA-SPEC.md](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/docs/specifications/BET-ISA-SPEC.md) | Full BET instruction set, opcode table, 2-bit packing schema |
 | Language grammar | [grammar.ebnf](https://github.com/eriirfos-eng/ternary-intelligence-stack/blob/main/ternlang-root/spec/grammar.ebnf) | Complete EBNF grammar for Ternlang |
@@ -218,7 +218,7 @@ albert-moe-13/
 │   ├── chaos/                      # v3.0 — 10% chaos layer (~43 MB, invariant enforced)
 │   └── vocab_v3.json               # ByteLevel BPE vocabulary (32,000 tokens)
 ├── models/
-│   ├── albert_v3.0.safetensors     # Active checkpoint (v3.0, 18L)
+│   ├── albert_v3.0.safetensors     # Active checkpoint (v3.0, 20L)
 │   ├── albert_v3.0.config.json     # Architecture config
 │   ├── albert_v3.0.meta            # Global epoch counter
 │   └── README.md                   # Checkpoint registry
@@ -267,9 +267,9 @@ Albert automatically unlocks richer training data as it grows deeper via Net2Net
 | 256H · 5L | CPU (i7-4800MQ) | ~5.5 s |
 | 256H · 12L | CPU (i7-4800MQ) | ~13 s |
 | 256H · 17L | CPU (i7-4800MQ) | ~18 s |
-| 256H · 18L (current) | Modal T4 GPU | ~450 ms |
+| 256H · 20L (current) | Modal T4 GPU | ~450 ms |
 
-T4 GPU training via Modal gives ~40× speedup over CPU for the 18L architecture. `albert-train` handles the full launch: image build with CUDA, volume-cached crate downloads, live log streaming to local dashboard.
+T4 GPU training via Modal gives ~40× speedup over CPU for the 20L architecture. `albert-train` handles the full launch: image build with CUDA, volume-cached crate downloads, live log streaming to local dashboard.
 
 ---
 
