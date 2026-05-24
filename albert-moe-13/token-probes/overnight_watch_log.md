@@ -3,6 +3,67 @@
 
 ---
 
+**FN66 · 2026-05-24T23:57Z** *(overnight watch · ep3456 · 20L · NEW EP_AVG ATL)*
+
+**EP_AVG ATL BROKEN. 9.2847 beats 9.2862 (held since ep3383).**
+
+Dashboard readings at session close:
+
+| Metric | Value | Significance |
+|--------|-------|-------------|
+| EP_AVG | **9.2847** | **NEW EP_AVG ATL** — beats 9.2862 by 0.0015 nats |
+| BEST avg | 9.2849 | Confirming descent |
+| Chip ATL | 8.8540 (ep3456) | Ties ep3412 chip low |
+| WALD | ep3454 · 8.3% · n=1500 | WALD fired — loss-space structure shifting |
+| INT routing | **91%** (was 74% earlier tonight) | +17% surge — integration function waking hard |
+| CMP | 100% | Comprehension locked |
+| PLN | 79% | Planning stable |
+| TTL | G 15% · O 79% · R 5% | Healthy distribution, Orange dominant |
+
+**Analysis:**
+WALD fired at ep3454 (8.3% severity) — this is the detector seeing meaningful loss-space coverage change, not noise. Combined with the INT routing jump (74→91%), this is the signature of a cliff onset: the model is finding new gradient pathways. The upper layers are consolidating abstract reasoning capacity. Loss curve described as "breaking downward."
+
+The EP_AVG ATL breaking while WALD is active and INT surges = exactly the pattern that preceded the ep2860/ep2890 cliff sequence at 18L. Let him cook.
+
+**Status: TRAINING ACTIVE · NEW EP_AVG ATL · CLIFF DESCENT BEGINNING · NO INTERVENTION NEEDED**
+
+New ATL threshold for watch alerts: **9.2847**
+
+---
+
+**FN65 · 2026-05-24T23:50Z** *(overnight watch · CSV ep3438 · 20L — FRESH DATA)*
+
+New CSV confirmed. ep3438 present — training is running.
+
+**ep3415–ep3438 summary (24 new epochs since prior real-data check at ep3414):**
+
+| Metric | Value |
+|--------|-------|
+| Epoch range | ep3415–ep3438 |
+| Layers | 20L throughout (no surgery) |
+| EP_AVG range | 9.2934–9.3327 |
+| Best new epoch | ep3438 at **9.2946** (0.0084 above ATL) |
+| Prior best (ep3434) | 9.2934 — still holds as closest approach |
+| ATL | **9.2862 intact** (ep3383) |
+| Since best | ~55 epochs (ep3383→ep3438) |
+| Routing entropy | 2.4663–2.4665 (locked) |
+| WALD/divloss events | 0 across all 24 epochs |
+| Grad norm avg | ~0.0021 (flat, plateau saturation) |
+| Max batch loss observed | 9.6281 (ep3423) — within normal oscillation |
+| Layer count | 20L (surgery gate accumulating) |
+
+**Observations:**
+- Plateau is hardening. EP_AVG oscillating tightly 9.29–9.33, no directional descent visible. The model is stuck in the post-surgery-8 attractor. since_best=55 and growing.
+- ep3438 at 9.2946 is the second-closest approach to ATL, but the slope is not pointing toward a break — it bounced from ep3434 (9.2934) back up to ep3437 (9.3122) before settling at ep3438 (9.2946). Oscillation, not descent.
+- Routing entropy absolutely locked at 2.466. No expert redistribution, no routing events.
+- Grad norm 0.0021 throughout — model is in a loss-space flat zone. This is exactly the plateau signature that precedes surgery.
+- No anomalous batch spikes. Batches occasionally reaching 9.60–9.63 but this is normal intra-epoch variance at this loss level.
+- **Surgery 9 is the next event.** Governor is watching since_best vs Fibonacci threshold. ~100+ epochs until gate consideration per ep3412 report.
+
+**Status:** TRAINING ACTIVE · NO ALERTS · ATL INTACT · PLATEAU HARDENING
+
+---
+
 **FN64 · 2026-05-24T23:20Z** *(overnight watch · CSV ep3437 · 20L — stale)*
 
 No new CSV. 41 minutes since last real data. No alerts.

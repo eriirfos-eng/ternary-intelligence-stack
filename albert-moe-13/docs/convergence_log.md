@@ -1,7 +1,7 @@
 # Albert MoE-13 — Convergence Log
 
 Empirical training loss data from native ternary training from random initialization.
-Active run: v3.0 — **20L** · 32k vocab · 635 MB multilingual corpus (2026-05-10, ongoing). Surgery 8 fired ep3383 (19L→20L). EP_AVG ATL 9.3182 (ep3326). Chip ATL **8.8540** (ep3412). 8 surgeries complete.
+Active run: v3.0 — **20L** · 32k vocab · 635 MB multilingual corpus (2026-05-10, ongoing). Surgery 8 fired ep3383 (19L→20L). EP_AVG ATL **9.2847** (ep3456, 2026-05-24). Chip ATL **8.8540** (ep3412/ep3456 tied). 8 surgeries complete. Cliff descent in progress — WALD ep3454, INT 91%.
 
 ---
 
@@ -104,10 +104,13 @@ correct only after the vocabulary transfer plateau breaks.
 | Ep 3326 | 19L | **9.3182** | **EP_AVG ATL — new record, first 19L epoch** (2026-05-24T~14:00Z). Improvement 0.047 nats over prior best. ATL chip **8.9190** (was 9.0095). WALD fired 6.2% (18 batches, expected post-surgery volatility). LR stepped down ~1.84e-4 → 1.13e-4. Expert reactivation: SYN/CTX back to 4%, PLN 79%, CMP 83%, INT 100%. |
 | Ep 3383 | 19L→**20L** | **SURGERY 8** | **19L→20L Net2Net surgery** (2026-05-24T~20:00Z). Only **58 epochs** after surgery 7 — plateau formed almost immediately at 19L floor, governor fired. 1384 tensors. |
 | Ep 3412 | 20L | — | ATL chip **8.8540** (−1.36% from prior 8.9190). 20L settling. Surgery gate: MYC_STABLE 31/≥5, PLATEAU 0.0054/<0.020 w=144, since_best=16. ~128 epochs of runway before next surgery consideration. EP_AVG ATL 9.3327. CMP 100%, PLN 77%, INT 68%. |
+| Ep 3434 | 20L | **9.2934** | Closest 20L approach to ATL during plateau phase (since_best=51). |
+| Ep 3454 | 20L | — | **WALD fired 8.3% · n=1500.** Loss-space coverage shift. INT routing surges 74%→91% (integration function waking). Cliff descent beginning. |
+| Ep 3456 | 20L | **9.2847** | **EP_AVG ATL — new record** (2026-05-24T~23:57Z). Beats ep3383 9.2862 by 0.0015 nats. Chip ATL 8.8540 tied. CMP 100%, PLN 79%, INT 91%, TTL G15/O79/R5. Loss curve breaking downward at session close. |
 
-**All-time best (epoch avg):** 9.3182 (ep3326, 2026-05-24T~14:00Z, 19L)
-**All-time best (intra-batch):** 8.8540 (ep3412, 2026-05-24, 20L)
-**Surgery governor status:** 8 surgeries complete. 20L active. Surgery 9 (20L→21L) gate armed — MYC_STABLE met, plateau window w=144, since_best=16 at ep3412. ~128 epochs until surgery consideration.
+**All-time best (epoch avg):** 9.2847 (ep3456, 2026-05-24T~23:57Z, 20L)
+**All-time best (intra-batch):** 8.8540 (ep3412 / ep3456 tied, 2026-05-24, 20L)
+**Surgery governor status:** 8 surgeries complete. 20L active. Cliff descent in progress — WALD active, INT surging. Surgery 9 gate: since_best reset at ep3456.
 
 ### Alternating Descent Phase — Governor Validation Finding (2026-05-19)
 
