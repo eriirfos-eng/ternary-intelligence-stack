@@ -3,6 +3,24 @@
 
 ---
 
+**FN60 · 2026-05-24T22:52Z** *(overnight watch · CSV ep3437 · 20L)*
+
+**Training active.** Latest CSV timestamped 22:39 UTC. Latest batch step 1031326, ep3438 in progress (batch loss 9.1786 — low intra-epoch value, normal). ep3437 last complete epoch.
+
+**Plateau deepens — since_best = 54.** ATL 9.2862 set at ep3383. CSV covers ep3381–3437 (57 epochs). Closest post-ATL approach: ep3434 hit **9.2934** — 0.0072 above ATL, best since the ATL itself. ep3431 (9.3017), ep3430 (9.3025), ep3426 (9.3053) all cluster as a second close approach group. Slight positive momentum: last-5 avg **9.3040** vs last-10 avg **9.3057**.
+
+**No loss spikes at epoch level.** Batch-level excursions >9.59 (threshold: ATL+0.3) occurred in 14/10000 batches (0.14%) across ep3406–3436. All isolated single-batch events; epoch averages unaffected (range 9.293–9.332). Normal gradient noise. Not alarming.
+
+**Routing: fully stable.** Entropy locked at 2.466 across entire CSV. Expert load e0–e11 range 0.079–0.088, zero dead experts. Grad norm 0.002 — consistent flat landscape. lb ~62.6.
+
+**WALD: silent.** Zero WALD events across all 57 20L epochs in this CSV. Governor accumulating pressure via since_best=54 only.
+
+**Surgery watch.** since_best=54 is a significant plateau depth at 20L. Governor Fibonacci gate pressure climbing. ep3434 at 9.2934 suggests model hasn't abandoned the ATL zone — another approach possible before surgery fires, but plateau is established. Watch for governor action in next 20–30 epochs.
+
+No stops, no anomalies. ATL 9.2862 intact.
+
+---
+
 **FN59 · 2026-05-24T22:24Z** *(overnight watch · CSV ep3413 · 20L)*
 
 **ATL ALERT: 9.3182 record broken.** ep3383 hit **9.2862** — new 20L ATL, improvement of 0.0320 nats. ATL break happened early in the 20L run (ep3383, only 3 epochs after surgery). New alert threshold: 9.2862.
