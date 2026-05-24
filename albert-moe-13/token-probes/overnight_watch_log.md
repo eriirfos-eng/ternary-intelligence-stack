@@ -3,6 +3,12 @@
 
 ---
 
+**FN63 · 2026-05-24T23:18Z** *(overnight watch · CSV ep3437 · 20L — stale)*
+
+No new CSV. Same 22:39 UTC file. 39 minutes without a fresh download. Training presumed active — last confirmed ep3438 in progress at step 1031326. No alerts.
+
+---
+
 **FN62 · 2026-05-24T23:06Z** *(overnight watch · CSV ep3437 · 20L — stale)*
 
 No new CSV. Same 22:39 UTC file. Training presumed active. Rescheduling.
