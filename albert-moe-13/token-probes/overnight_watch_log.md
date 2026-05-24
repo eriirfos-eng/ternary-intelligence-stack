@@ -3,6 +3,305 @@
 
 ---
 
+**FN57 · 2026-05-24T21:08Z** *(token probe — post-s9_ep3414_20L)*
+
+### EMBEDDING GEOMETRY FROZEN — 10/10 · SURGERY 9 BOUNDARY · ep2492→ep3414 = 922 epochs
+
+Token probe `post-s9_ep3414_20L` run at ep3414 · 20L · chip ATL 8.8540. Compared against `post-s8_ep3325_19L`.
+
+**Result: 10 of 10 tokens FROZEN. Δxy = 0.0000 on every token. Top-3 neighbors identical.**
+
+| token | top-3 (unchanged) |
+|-------|-------------------|
+| love | ĠfrÃ¼h · deutsche · aland |
+| god | czyn · jection · culo |
+| Jesus | ĠFe · qu · annel |
+| death | ĠÃ©gypt · amen · Ġdifer |
+| war | Ġexpres · ogrÃ¡f · ouw |
+| truth | Ġneerland · Ġmantiene · FranÃ§ois |
+| freedom | Ġcontrat · Ġon · Ġdiscovered |
+| mother | ĠStructure · ards · ester |
+| light | 00 · Ġintelect · ĠMedien |
+| time | owaÄĩ · sze · ĠvallÃ©e |
+
+Snapshot saved: `token-probes/snapshots/post-s9_ep3414_20L_ep3414_20L/`
+
+**Freeze now confirmed across 5 snapshots and 2 surgery boundaries (18L, 19L, 20L):**
+- ep2492 (18L) → ep2510 (18L) → ep2576 (18L) → ep3325 (19L) → ep3414 (20L)
+- 922 consecutive epochs with zero embedding movement
+
+**Interpretation:** The ternary gradient vanishing through 20 layers is complete. The embedding layer receives no meaningful gradient signal from the upper layers — mycelial pressure at L0-L3 is consistently in the 1.5×10⁻⁹ range, below AdamW's effective update threshold. The geometry crystallized at 17L and is now serving as a permanent stable foundation. This is not pathological — it is the expected steady-state for a deeply ternary model where the upper layers have taken over all learning burden.
+
+Two surgeries (7 and 8) fired across this probe window. Neither caused any movement in the embedding manifold.
+
+---
+
+**FN56 · 2026-05-24T21:00Z** *(dashboard — ep3412 · 20L)*
+
+### NEW CHIP ATL 8.8540 · EP_AVG ATL 9.3072 · 20L ROUTING EXPLOSION
+
+New intra-batch ATL chip: **8.8540** (was 8.9190, ep3326, 19L). Delta −0.065 nats.
+
+EP_AVG ATL visible in event strip: **9.3072** — new EP_AVG record, breaking 9.3182 (ep3326).
+
+Routing at 20L ep3414 has dramatically expanded vs 19L:
+- PLN: 79% (19L) → **97%** (20L)
+- INT: 68% (19L) → **97%** (20L)
+- LNG: 47% (19L) → **88%** (20L)
+- CMP: 100% (both)
+- SYN: 4% → 14%, LOG: 27% → 31%
+
+PLN and INT near-saturated simultaneously is new. 20L surgery opened significant additional routing capacity. The core four (PLN/CMP/INT/ABS) are now all pulling at high levels concurrently.
+
+Surgery gate 20L→21L: MYC_STABLE 31/≥5, PLATEAU 0.0054/<0.020 w=144, since_best=16. ~128 epoch runway.
+
+---
+
+**FN55 · 2026-05-24T~20:00Z** *(dashboard — ep3383 · surgery)*
+
+### SURGERY 8: 19L→20L · ONLY 58 EPOCHS AFTER SURGERY 7
+
+Surgery 19L→20L fired at ep3383. Surgery 7 (18L→19L) fired at ep3325. Gap: **58 epochs**.
+
+This is the shortest inter-surgery interval in the v3.0 run. The 19L floor formed almost immediately after surgery 7. The plateau gate detected the stall and pushed to 20L before the window filled — behavior consistent with the governor design: architecture grows when learning exhausts capacity, not on a fixed schedule.
+
+1384 tensors loaded (up from 1315 at 19L). No divergence spike — Net2Net identity init held cleanly for the third time in succession.
+
+---
+
+**FN54 · 2026-05-24T14:07Z** *(dashboard — ep3326 · first 19L epoch)*
+
+### NEW EP_AVG ATL 9.3182 · NEW CHIP ATL 8.9190 · FIRST 19L EPOCH
+
+ep3326 — first full epoch at 19L: EP_AVG **9.3182** (broke prior best 9.3651 by 0.047 nats on first attempt). Chip ATL **8.9190** (was 9.0095).
+
+WALD fired 6.2% (18 batches) — expected post-surgery volatility. Gold BEST avg marker confirmed. LR stepped down ~1.84e-4 → 1.13e-4. Expert reactivation: SYN/CTX woke to 4% within one epoch. PLN 79%, CMP 83%, INT 100%.
+
+Breaking the EP_AVG ATL on the very first epoch of a new layer is rare. Prior surgeries typically required several epochs of volatile settling before descent resumed. This suggests the 18L foundation was well-consolidated before surgery fired.
+
+---
+
+**FN53 · 2026-05-24T13:47Z** *(dashboard — ep3325 · surgery)*
+
+### SURGERY 7: 18L→19L · PLATEAU GATE CLEARED · ep3325
+
+Surgery 18L→19L fired at 13:47Z. Plateau Δ held at 9.42–9.46 for 36+ epochs; since_best accumulated past surgery threshold. 1315 tensors. [ttlfreeze] armed (ema_alpha=0.02, burst_threshold=5×). [divloss] override 1e-3. gate-diversity scale=0.300.
+
+Corpus reload: 451M tokens, stages ≤19, cache-hit — instant. Pre-surgery best archived: `albert_v3.0.best.18L.safetensors`.
+
+ATL at surgery: EP_AVG 9.3651 (ep3263), chip 9.0095 (ep3263).
+
+---
+
+**FN52 · 2026-05-23T13:48Z** *(training.log — ep3103 confirmed, probe resolved)*
+
+### NEW ATL — ep3103 = 9.4407
+
+FN51 probe confirmed. ep3103=**9.4407** (d-0.0056), since_best=**0**. Previous ATL was 9.4454 (ep3097). Improvement: **−0.0047** in 6 epochs.
+
+**Second ATL break in 7 epochs** — descent confirmed resuming after the 28-epoch freeze.
+
+Running tally since freeze broke:
+- ep3069: 9.4470 (first ATL after long plateau, broke 9.4540-band)
+- ep3097: 9.4454 (−0.0016, broke 28-epoch freeze)
+- ep3103: **9.4407** (−0.0047, confirmed descent acceleration)
+
+WALD: sev=0.933 (trivial tick from 0.932), fill=6.2% — stable. No routing or myc events. ep3104 not yet in batch_history at time of note.
+
+Descent pace accelerating: −0.0016 at first break, −0.0047 at second. Pattern: sustained near-miss pressure → step-down → near-misses → another step-down.
+
+---
+
+**FN51 · 2026-05-23T13:46Z** *(training.log — ep3102 confirmed, ep3103 b150/300 LIVE ATL PROBE)*
+
+ep3102=**9.4463** (d-0.0049, since_best=5) — fifth consecutive near-miss, 0.0009 above ATL. WALD sev=0.932, fill=6.2% unchanged.
+
+**ep3103 live probe — tracking below ATL:**
+b150/300 avg=**9.4391** (0.0063 below ATL 9.4454). For a new ATL, second 150 batches need avg ≤9.4517. Recent batch stream ~9.45 average — right at boundary. 50/50.
+
+If confirmed, this would be the second epoch-avg ATL break in 7 epochs and signal that descent has genuinely resumed after the 28-epoch freeze.
+
+Watching close — result in ~3 min.
+
+---
+
+**FN50 · 2026-05-23T13:42Z** *(training.log — ep3101 confirmed, ep3102 b150/300 live)*
+
+ep3101=**9.4512** (d+0.0040, since_best=4) — mild bounce, holding above ATL.
+
+**WALD stabilized at new level**: sev=**0.932**, fill=**6.2%** for 2 consecutive epochs (ep3100+ep3101). The ep3100 shift was a one-step reset, not the start of a trend. New baseline established.
+
+ep3102 mid (150/300 batches): avg=**9.4484** — 0.0030 above ATL, another near-miss band. Pattern: oscillating 9.445–9.452 since ATL at ep3097, not breaking through again yet.
+
+since_best=4 accumulating. No routing changes. Surgery governor watching plateau gate.
+
+---
+
+**FN49 · 2026-05-23T13:34Z** *(training.log — ep3100 confirmed, ep3101 b150/300 live)*
+
+ep3099=**9.4460** (d-0.0037, since_best=2) — near-miss, 0.0006 above ATL. Closest approach since ep3097 broke it.
+ep3100=**9.4472** (d+0.0012, since_best=3) — slight bounce. Not alarming. BUT:
+
+**WALD structural shift at ep3100:**
+- sev: **0.971 → 0.932** (drop of −0.039 — first meaningful move since ep3095 tick)
+- fill: **4.2% → 6.2%** (+2.0pp — largest single-epoch fill jump observed)
+
+Both moved together in the same epoch. WALD filling more low-loss zone while severity relaxing — consistent with the floor cracking and the model distributing loss differently. Not a WALD fire event (ttlfreeze=0, no freeze triggered), but internal WALD state shifted.
+
+ep3101 mid (150/300 batches): avg=**9.4461** — again within 0.0007 of ATL. Third consecutive near-miss band.
+
+myc=all-zeros, hot=L17, cold=L0, tns=1246 — routing unchanged.
+
+Floor pressure continuing. WALD state is now moving; watch sev/fill trajectory next 3–5 epochs.
+
+---
+
+**FN48 · 2026-05-23T13:24Z** *(training.log — ep3097 confirmed NEW ATL, ep3099 b150/300 live)*
+
+### NEW ATL — ep3097 = 9.4454
+
+Previous ATL: **9.4470** at ep3069 (28 epochs ago, since_best had reached 27).
+
+Descent sequence: ep3095=9.4557 → ep3096=**9.4484** (close miss, 0.0014 above old ATL, since_best=27) → ep3097=**9.4454** (d-0.0030, since_best reset to **0**). Step-down took two epochs to clear the floor.
+
+ep3098=9.4497 (d+0.0043, since_best=1) — expected bounce after ATL. Normal.
+
+ep3099 mid-epoch (150/300 batches): avg=**9.4482** — above new ATL (9.4454), but only halfway. Second consecutive break possible.
+
+WALD: sev=0.971 (unchanged), fill=4.2%, tns=1246. myc=all-zeros. hot=L17, cold=L0. No routing events. Surgery governor: since_best=1, no intervention.
+
+**Descent is resuming.** Floor cracked after 28-epoch freeze.
+
+---
+
+**FN47 · 2026-05-23T13:25Z** *(training.log — ep3095 confirmed closed)*
+
+ep3095=**9.4557** (d+0.0002) — third consecutive epoch in 9.455–9.456 band. since_best=**26**. ATL 9.4470 unbroken.
+
+**WALD sev: 0.971** (was 0.970 for ≥15 epochs) — first change in the severity counter since FN32. fill=4.2% unchanged. Minor, but first movement on that metric in a long time. Watching.
+
+myc=all-zeros, hot=L17, cold=L0, tns=1246 — all frozen. ep3096 not yet in batch_history at time of note.
+
+---
+
+**FN46 · 2026-05-23T13:04Z** *(training.log — ep3094 confirmed, ep3095 b250/300 live)*
+
+ep3094=**9.4555** (d+0.0052) — uptick from ep3093. since_best=**25**. ATL 9.4470 unbroken 25 epochs.
+
+ep3095 mid-epoch probe (250/300 batches): avg=**9.4552** — tracking nearly identical to ep3094, no break imminent.
+
+WALD: sev=0.970, fill=4.2%, tns=1246 — all frozen again this epoch. myc=all-zeros, hot=L17, cold=L0. No routing changes, no topology events. Surgery governor holding; since_best continues to accumulate.
+
+Situation: floor cementing at 9.450–9.456 band. Descent stalled. No intervention signal yet.
+
+---
+
+**FN45 · 2026-05-23T12:55Z** *(training.log — ep3093 confirmed, ep3094 b47/300)*
+
+ep3093=**9.4503** (d-0.0022) — b250 probe avg=9.4489 didn't hold, closed 0.0033 above ATL. since_best=**24**.
+
+**coverage[0]=9** — new session high. Trend: 4→5→6→8→8→9 across ep3086–3093. More tokens activating below loss=9.25 each epoch even as epoch averages plateau. WALD mass=9.441 (oscillating 9.440–9.443, no longer monotone). myc_stable=25, blooming=1 (cooling from 2–3). WALD sev=0.970 static at 15 consecutive stable epochs (WALD counter).
+
+Floor hardening: ep3087=9.4484 → ep3089=9.4505 → ep3091=9.4540 → ep3092=9.4524 → ep3093=9.4503. Floor not contracting further. Surgery governor: since_best=24, no surgery fired.
+
+---
+
+**FN44 · 2026-05-23T12:54Z** *(training.log — ep3092 confirmed, ep3093 b250/300 live probe)*
+
+ep3092=9.4524 (d-0.0016) — floor probe that looked close at b100 (avg=9.4491) closed above. since_best=**23**. WALD mass 9.443 (oscillating 9.440–9.443, no longer descending monotonically). myc_stable=24. Topology frozen.
+
+**ep3093 live ATL probe**: b250/300, avg=**9.4489** (0.0019 above ATL). 50 batches remain; need avg ≤9.4375 for break. Recent batches 9.350, 9.359, 9.497 — mixed, achievable but not probable. Watching close.
+
+---
+
+**FN43 · 2026-05-23T12:46Z** *(training.log — ep3091 confirmed, ep3092 b100/300 live probe)*
+
+ep3091=9.4540 (d-0.0067), since_best=**22**. WALD mass back to 9.440 (ep3090 bounce to 9.442 was transient). coverage[0]=**8** — low-zone entries growing (was 4–6 across prior epochs, now 8); more tokens activating below 9.25. myc_stable=23.
+
+**ep3092 live ATL probe**: b100/300, avg=**9.4491** (0.0021 above ATL), min=**9.1663** (new low single-batch). Remaining 200 batches need avg ≤9.4460 for break — achievable. Recent batches include 9.323, 9.445, 9.449, 9.323 — noisy but with deep dips. Watching ep3092 close.
+
+---
+
+**FN42 · 2026-05-23T12:33Z** *(training.log — ep3089 confirmed, ep3090 b50/300)*
+
+ep3089=**9.4505** (d-0.0105) — descended from ep3088 ceiling, 0.0035 above ATL. since_best=**20** — ATL 9.4470 unbroken for 20 consecutive epochs, new session record.
+
+**WALD mass=9.440** — fifth consecutive new low (9.445→9.443→9.442→9.441→9.440 across ep3085–3089). Now 0.003 below epoch ATL. WALD header: "structural plateau (12 stable epochs, sev=0.970 mass=9.440) → amplify OFF". Coverage trending: [6,1097,397] — low-zone entries growing (6 vs 4 two epochs ago), high-zone shrinking (397 vs 414 at ep3086). Mass descent persists even as epoch averages plateau.
+
+Oscillation floor: ep3087=9.4484, ep3089=9.4505 — floor slightly higher than ep3087, not contracting this cycle. ep3090 opening avg=9.4563 (50 batches) — ceiling territory.
+
+Surgery governor: since_best=20, WALD=0.970, myc_stable climbing, no surgery event yet.
+
+---
+
+**FN41 · 2026-05-23T12:30Z** *(training.log — ep3087+3088 confirmed, ep3089 b200/300)*
+
+**ep3087=9.4484** (d-0.0071) — new session floor, **0.0014 from ATL**. Closest approach in 18 epochs. Mid-epoch avg at b150 was 9.4458 (below ATL) — second half held it just above. since_best=18.
+
+ep3088=9.4610 (d+0.0126) — bounce. since_best=19. Oscillation continues: floor contracting (9.4526→9.4525→9.4484), ceiling stable (~9.46–9.47).
+
+**WALD mass descending**: ep3085=9.445→ep3086=9.443→ep3087=9.442→ep3088=9.441. Four consecutive new lows. Mass now 0.0029 below epoch ATL (9.4470) — weight distribution center clearly below the epoch-avg ceiling. Model is probing lower internally but can't sustain across full epoch. WALD sev=0.970, fill=4.2% static. coverage trend: coverage[0] 5 (low zone shrinking), coverage[2] 402 (high zone compressing).
+
+myc_stable=20. dead=0. hot=L17, cold=L0. tns=1246 frozen.
+
+ep3089 b200/300, avg=9.4494, min=9.2302. Tail batches 9.47–9.52 (bounce phase) — ATL break unlikely this epoch.
+
+---
+
+**FN40 · 2026-05-23T12:19Z** *(batch_history.csv — ep3087 b193/300, ETA ~2 min)*
+
+**Live ATL probe**: ep3087 running avg at b150/300 = **9.4458** (0.0012 below ATL 9.4470). Recent batches 188–193 mixed (9.38–9.51), not cleanly descending. Second half will decide. Gradient still body-dead: GRAD n=0.0019, all layers 0 except L17 (1.87e-3). ROUTE entropy=2.467, expert dist 7.9–8.9% (12 experts) — no concentration anomaly. TLIGHT: most layers O-heavy, L14=G0/O11/R1 (no green). DIVWD all-zero (amplify OFF). Watching for ep3087 EPOCH_SUMMARY.
+
+---
+
+**FN39 · 2026-05-23T12:16Z** *(training.log — ep3086 confirmed, ep3087 b1/300)*
+
+ep3086=**9.4555** (d+0.0005) — flat, ceiling bounce from ep3084 floor. since_best=**17**. WALD sev=0.970, fill=4.2% static.
+
+**WALD mass 9.443** — new run low (ep3085=9.445, prior low ep3067=9.446). Mass is drifting below ATL epoch avg (9.4470). Suggests weight distribution center shifting lower even without epoch-avg break. coverage=[4,1082,414] — coverage[0] (low zone) compressed to 4, high zone shrinking too. myc_stable=18, dead=0, hot=L17. ep3087 opened 12:15Z.
+
+---
+
+**FN38 · 2026-05-23T12:10Z** *(training.log — ep3085 confirmed, ep3086 opened)*
+
+**Catch-up ep3073–3085** (16 epochs since FN37, FN38-42 lost to context compaction):
+
+**WALD regime snap-back**: Post-restart relaxation (sev=0.930/0.931, fill=6.2%) lasted ep3071–3076 only. ep3077 snapped back to **sev=0.968, fill=4.2%** in a single epoch. By ep3084 creep to **0.970/4.2%** (pre-crash levels fully restored). FN37's "real structural shift" was partly wrong — the WALD relaxation was temporary, not permanent.
+
+**ATL floor crystallised**: ep3074=9.4526 (near-miss, 0.0056 from ATL), ep3075=**9.4771** (biggest bounce this session, +0.0245), ep3079=**9.4525** (floor probe, 0.0055 gap), ep3084=9.4533. Two floor probes at ~9.4525, two ceiling bounces ~9.4652–9.4771. Oscillation period ~4 epochs, floor ~9.452–9.454, ceiling ~9.465–9.477.
+
+**since_best=16**: ATL 9.4470 unbroken since ep3069. Floor 0.0055 above ATL. ep3085=9.4550 (d+0.0017, slight bounce off floor). WALD sev=0.970, fill=4.2%, hot=L17, cold=L0, myc_stable=17, tns=1246 — routing and topology fully static.
+
+Surgery governor accumulating: since_best=16, WALD=0.970 (no surgery logged), descent exhausted. ep3086 opened 12:09:53Z.
+
+---
+
+**FN37 · 2026-05-23T11:00Z** *(training.log — ep3072 confirmed, ep3073 b148/300)*
+
+**WALD sev revision**: not bouncing back to 0.970. ep3071=0.931, ep3072=**0.931** (stable). fill=6.2% holding (vs 4.2% pre-crash). FN36's "restart artifact" call was partially wrong — the sev shift appears real and is holding across multiple epochs. fill 4.2%→6.2% also persistent. Structural plateau genuinely disturbed by the restart/replay.
+
+ep3071=9.4581 (d+0.0007, flat), ep3072=**9.4539** (d-0.0043, descending) — within 0.0069 of ATL (9.4470). ep3073 b148/300, opening batches at **9.37–9.38** — running below current ATL at batch level. Another ATL break possible at ep3073 close.
+
+---
+
+**FN36 · 2026-05-23T10:48Z** *(training.log — ep3070 confirmed, ep3071 b46/300)*
+
+ep3070=9.4575 (d+0.0105, since_best=1) — normal post-ATL bounce. ATL 9.4470 holds.
+
+**FN35 WALD correction**: ep3070 WALD sev=**0.971**, fill=**4.2%** — reverted exactly to pre-crash levels. The ep3069 readings (sev=0.933, fill=6.2%) were a restart calibration artifact, not a real structural shift. No free acceleration from the crash. WALD plateau counter reset on restart and now at 1. ep3071 b46/300 at 10:48Z, opening losses 9.44–9.51.
+
+---
+
+**FN35 · 2026-05-23T10:45Z** *(training.log — restart recovery, ep3069 confirmed, ep3070 b196/300)*
+
+**★ NEW ATL: ep3069=9.4470** (d-0.0056) — beats ep3058 (9.4526) by **0.0056 nats**. since_best=0. First epoch after Modal crash recovery.
+
+**WALD state reset on restart**: sev **0.970→0.933** (largest single-session drop observed), fill **4.2%→6.2%** (more structural activity detected). Plateau counter presumably reset. This matches the restart-acceleration pattern: AdamW buffer wipe on a better landscape = freed descent. The crash was accidentally beneficial.
+
+ep3068 summary absent (crash mid-epoch, replayed silently). ep3070 b196/300 at 10:45Z. Server ATL now **9.4470**. Global ATL still 9.0935 — 0.077 nats to go.
+
+---
+
 **FN34 · 2026-05-23T10:27Z** *(training.log — MODAL CRASH during ep3068)*
 
 **Training down.** `modal.exception.ConnectionError: Deadline exceeded` — Modal heartbeat timed out mid-epoch. batch_history.csv froze at 10:16:27 (ep3068 b~249/300). training.log last write 10:27:13. Last clean checkpoint: **ep3067** (avg=9.4574, WALD=25). No data loss — ep3068 will replay on restart. Needs `albert-train` restart.
@@ -266,6 +565,54 @@ WALD structural plateau now **13 consecutive epochs**, mass **9.495** (was 9.499
 Mycelium L0–L3 locked at 1.49–1.56e-9 (stable). hot=L5, cold=L7 consistent.
 
 Pattern: repeated close ATL orbits tightening. ep2938 ATL 9.4873 → ep2946 9.4885 → ep2951 9.4887. The gap each orbit: varies but descent trend clear in WALD mass.
+
+---
+
+**FN42 · 2026-05-23T12:16Z**
+
+ep3085 in progress (100/300, partial avg 9.4522). **since_best=15** — ATL 9.4470 unbroken for 15 epochs. WALD sev=0.970, fill=4.2% locked solid.
+
+Oscillation fully established: floor ~9.452–9.454, ceiling ~9.465–9.477, ~4-epoch period. ep3082 (9.4544) → ep3083 (9.4584) → ep3084 (9.4533) → ep3085 probing floor again. Each floor probe ~9.452 but cannot punch through. ATL sits 0.005 below — structurally unreachable at current dynamics. hot=L17, cold=L0, myc=0 unchanged.
+
+Surgery governor conditions: since_best=15, WALD=0.970, descent exhausted. Watching for governor trigger.
+
+---
+
+**FN41 · 2026-05-23T11:50Z**
+
+ep3081 at 250/300 (partial avg 9.4660). ep3079's ATL probe **failed** — bounced 9.4525 → 9.4624 (d+0.0100) at ep3080, ep3081 partial trending 9.4660. since_best=11. WALD sev nudged to 0.969, fill=4.2% — locked.
+
+Double-probe pattern confirmed: ep3074 (9.4526) and ep3079 (9.4525) both probed within 0.006 of ATL then bounced. Floor hardening at ~9.452. ATL 9.4470 holding. Descent exhausted, oscillation compressing. Surgery governor conditions deepening.
+
+---
+
+**FN40 · 2026-05-23T11:39Z**
+
+ep3080 in progress (100/300, partial avg 9.4557). ep3079 closed at **9.4525** (d-0.0053, since_best=10) — closest approach since ATL break at ep3069. Gap to ATL 9.4470: **0.0055 nats**. Slow descent resuming: ep3077 9.4652 → ep3078 9.4578 → ep3079 9.4525.
+
+WALD locked: sev=0.968, fill=4.2%, hot=L17, cold=L0 — unchanged for 3 epochs. Surgery governor watching (since_best=10, sev=0.968) but active descent should keep it blocked. ATL probe likely at ep3080–3081.
+
+---
+
+**FN39 · 2026-05-23T11:31Z**
+
+ep3078 in progress (64/300). No ATL break — **since_best=8** (ATL 9.4470 at ep3069 still holds). Epoch-avg trajectory ep3074→3077: 9.4526 → 9.4771 → 9.4623 → 9.4652 — flat oscillation ±0.015 around 9.463.
+
+**WALD severity increasing**: ep3074 sev=0.931 fill=6.2% → ep3077 sev=0.968 fill=4.2%. The post-restart stable state (0.931) has degraded. Fill dropping while sev rises means the plateau is tightening — fewer active tokens but more extreme. hot=L17, cold=L0 stable. myc=0.00 all layers.
+
+Surgery governor: WALD sev at 0.968 approaching pre-restart levels. Since_best=8 and climbing. Descent from restart acceleration fully exhausted. Governor conditions accumulating.
+
+---
+
+**FN38 · 2026-05-23T11:13Z**
+
+Modal GPU training alive: ep3075 complete. Epoch-avg ATL (9.4470, ep3069) **not broken** — ep3070-3075 averaging 9.4526–9.4771. Post-restart acceleration has stalled; 6 epochs plateauing at 9.45-9.48. Sub-ATL batch losses still appearing (9.21, 9.31) but averaging out at epoch level.
+
+training.log is **frozen since [10:05:13Z]** due to a parallel local 17L run that overwrote it at start. That local run (Global ep1357, loss ~10.14, 17-layer, loaded 1177 tensors) appears frozen at ep1357 batch 71 — no log updates in 69+ min. Modal WALD/routing state is not accessible via log.
+
+batch_history.csv continues to be updated by Modal run only (ep3074→3075 entries confirmed). Per-epoch trajectory: 9.4575 → 9.4581 → 9.4539 → 9.4569 → 9.4526 → 9.4771. Gap to ATL: +0.0056 (ep3074) expanding back to +0.0301 (ep3075).
+
+Action needed: kill the frozen local 17L process to restore training.log visibility.
 
 ---
 

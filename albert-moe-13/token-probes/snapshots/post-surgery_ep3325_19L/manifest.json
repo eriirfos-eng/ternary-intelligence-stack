@@ -1,0 +1,74 @@
+{
+  "label": "post-surgery",
+  "epoch": 3325,
+  "arch_layers": 19,
+  "loss": 9.4131,
+  "timestamp": "2026-05-24T13:59:02+00:00",
+  "note": "",
+  "host": "localhost:8888",
+  "neighbors_k": 32000,
+  "tokens": [
+    "love",
+    "god",
+    "Jesus",
+    "death",
+    "war",
+    "truth",
+    "freedom",
+    "mother",
+    "light",
+    "time"
+  ],
+  "summary": {
+    "love": {
+      "resolved": "love",
+      "top5": [],
+      "top_sim": null
+    },
+    "god": {
+      "resolved": "god",
+      "top5": [],
+      "top_sim": null
+    },
+    "Jesus": {
+      "resolved": "Jesus",
+      "top5": [],
+      "top_sim": null
+    },
+    "death": {
+      "resolved": "death",
+      "top5": [],
+      "top_sim": null
+    },
+    "war": {
+      "resolved": "war",
+      "top5": [],
+      "top_sim": null
+    },
+    "truth": {
+      "resolved": "truth",
+      "top5": [],
+      "top_sim": null
+    },
+    "freedom": {
+      "resolved": "freedom",
+      "top5": [],
+      "top_sim": null
+    },
+    "mother": {
+      "resolved": "mother",
+      "top5": [],
+      "top_sim": null
+    },
+    "light": {
+      "resolved": "light",
+      "top5": [],
+      "top_sim": null
+    },
+    "time": {
+      "resolved": "time",
+      "top5": [],
+      "top_sim": null
+    }
+  }
+}
