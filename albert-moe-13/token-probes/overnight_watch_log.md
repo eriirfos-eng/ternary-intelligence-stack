@@ -3,6 +3,12 @@
 
 ---
 
+**FN61 · 2026-05-24T23:04Z** *(overnight watch · CSV ep3437 · 20L — stale)*
+
+No new CSV since FN60. Same file (22:39 UTC, ep3437). Training presumed active — ep3438 was in progress at last check. No new data to assess. Next tick will re-check for updated download.
+
+---
+
 **FN60 · 2026-05-24T22:52Z** *(overnight watch · CSV ep3437 · 20L)*
 
 **Training active.** Latest CSV timestamped 22:39 UTC. Latest batch step 1031326, ep3438 in progress (batch loss 9.1786 — low intra-epoch value, normal). ep3437 last complete epoch.
