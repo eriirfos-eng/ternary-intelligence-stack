@@ -90,7 +90,7 @@
             border-radius: 10px;
             padding: 12px 16px;
             z-index: 9990;
-            min-width: 260px;
+            min-width: 300px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.7);
             font-size: 11px;
             line-height: 1.9;
@@ -108,7 +108,7 @@
         .gate-row { display: flex; align-items: center; gap: 7px; margin: 2px 0; }
         .gate-dot-lbl { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; flex: 0 0 78px; }
         .gate-val { font-weight: bold; }
-        .gate-sub { color: var(--muted); font-size: 10px; }
+        .gate-sub { color: var(--muted); font-size: 10px; white-space: nowrap; }
         .gate-footer { margin-top: 8px; font-size: 10px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 6px; }
 
         #model-name { color: var(--accent); font-weight: bold; font-size: 13px; letter-spacing: 1px; font-family: inherit; }
@@ -2446,7 +2446,7 @@
                             c.canvas.style.cursor = 'grabbing';
                             document.body.style.cursor = 'grabbing';
                         },
-                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); syncScatterToViewport(); chart.update('none'); syncSubChartX(); }
+                        onPanComplete: ({ chart: c }) => { isInteracting = false; c.canvas.style.cursor = 'grab'; document.body.style.cursor = ''; chart.stop(); syncScatterToViewport(); applyRenderDistance(); chart.update('none'); syncSubChartX(); }
                     },
                     zoom: {
                         wheel: { enabled: true, speed: 0.20 }, pinch: { enabled: true }, mode: 'xy',
@@ -2463,6 +2463,7 @@
                                     isInteracting = false;
                                     chart.stop();
                                     syncScatterToViewport();
+                                    applyRenderDistance();
                                     chart.update('none');
                                     syncSubChartX();
                                 }, 120);
@@ -3164,7 +3165,11 @@
                 // gets processed in the same pass.
                 if (line.startsWith('RUN_START ')) {
                     newPts.length = 0;
-                    chart.data.datasets.forEach(ds => ds.data = []);
+                    // Do NOT blank datasets or smaCacheFull — preseed history stays visible
+                    // during corpus load. New live data appends naturally on next poll.
+                    // Only the raw-scatter live tail (dataset[0]) is cleared so it rebuilds
+                    // from the preseed + live merge; SMA datasets keep preseed context.
+                    chart.data.datasets[0].data = [];
                     epochAvgLog.length = 0;
                     bestLoss = allTimeBestBatch; worstLoss = -Infinity;
                     sessionStartLoss = null; totalPts = 0;
@@ -3172,7 +3177,7 @@
                     trailCurrentMin.fill(Infinity);
                     userHasZoomed = false; newPointStartIdx = Infinity;
                     batchLog = []; smaLog.length = smaPreSeedLen; // epochLog preserved; smaPreSeedLen preserves historical pre-seed
-                    smaCacheFull = [[], [], [], [], [], [], [], []]; // clear SMA caches — will recompute from pre-seed on next poll
+                    // smaCacheFull kept intact — preseed SMAs remain valid; updateSma() extends them incrementally
                     document.getElementById('v-loss').textContent  = '—';
                     document.getElementById('v-epoch').textContent = '—';
                     document.getElementById('v-best').textContent  = allTimeBestBatch === Infinity ? '—' : allTimeBestBatch.toFixed(4);
@@ -4911,9 +4916,39 @@
         _gateOverlay.style.left = rect.left + 'px';
         _gateOverlay.style.top  = (rect.bottom + 6) + 'px';
         _gateOverlay.classList.toggle('open');
-        updateGateChip(); // immediate render with current state
-        await poll();     // always fetch fresh data on every click
-        updateGateChip(); // re-render with any new epoch summaries from the poll
+        updateGateChip(); // immediate render with current in-memory state
+        // Fetch fresh epoch_history.log tail — guaranteed current gate data
+        // (training.log poll only brings new bytes since last poll, which may
+        // have no new EPOCH_SUMMARY if between epochs; epoch_history.log always
+        // has the latest summaries written at epoch-end by train_bible).
+        try {
+            const r = await fetch('/dashboard/epoch_history.log?t=' + Date.now(), {
+                cache: 'no-store',
+                headers: { Range: 'bytes=-16384' } // ~200 epoch lines — enough for full ring
+            });
+            if (r.ok || r.status === 206) {
+                const txt = await r.text();
+                const ringFromTail = [];
+                let lastGm = null;
+                for (const line of txt.split('\n')) {
+                    const m = line.match(/^EPOCH_SUMMARY epoch=\d+ loss_avg=([\d.]+)/);
+                    if (m) ringFromTail.push(parseFloat(m[1]));
+                    const gm = line.match(/loss_best=[\d.]+ since_best=(\d+) wald_sev=([\d.]+) wald_fill=([\d.]+)%/);
+                    if (gm) lastGm = gm;
+                }
+                if (lastGm) {
+                    gGateSinceBest = parseInt(lastGm[1]);
+                    gGateWaldSev   = parseFloat(lastGm[2]);
+                    gGateWaldFill  = parseFloat(lastGm[3]);
+                }
+                if (ringFromTail.length > 0) {
+                    const combined = gLossRing.concat(ringFromTail);
+                    gLossRing = combined.slice(-gGateFibWin);
+                }
+            }
+        } catch (_) {}
+        await poll(); // also pull any new MYCELIUM / evolution lines from training.log
+        updateGateChip(); // final render with freshest possible state
     });
     _gateOverlay.addEventListener('click', e => e.stopPropagation());
 
