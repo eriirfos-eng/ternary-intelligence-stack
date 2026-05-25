@@ -2448,6 +2448,18 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 72 — 2026-05-25T21:20:30Z · quiet tick · ntfy silent · spore injection complete · last known ep3687
+
+**Source:** ntfy poll (since=30m) — no events.
+
+**State (last known from FN71):** ep3687 (22L) · BEST 9.2933 · gap to pre-S9 ATL 9.2847: **0.0086 nats** · TTL G20%/O75%/R5%
+
+No WALD, SURGERY, SUB-9.3, or EPOCH events in the 21-minute window since FN71. Training running silently — expected behaviour between epoch closes.
+
+**Spore injection note:** zabih-sudo ep2144 (18L, loss 5.8782) text injection completed at 21:19:33Z. 193 samples written to `data/corpus/chaos/spores_zabih-sudo.txt` (130KB). Retokenization and Modal push running as next step — corpus_cache.bin will be updated before end of nightwatch.
+
+---
+
 ## Field Note 71 — 2026-05-25T20:58:40Z · ep3687 · ep3686 closes 9.3030 · not yet · ABS surges 76% · gap 0.0086
 
 **Source:** dashboard screenshot (20:57:09)
