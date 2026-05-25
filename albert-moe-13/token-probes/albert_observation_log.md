@@ -2448,6 +2448,58 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 71 — 2026-05-25T20:58:40Z · ep3687 · ep3686 closes 9.3030 · not yet · ABS surges 76% · gap 0.0086
+
+**Source:** dashboard screenshot (20:57:09)
+
+**State:** ep3687 (22L) · batch 176/300 · EP AVG 9.3030 (ep3686 close) · T-610 9.3127 · BEST epoch avg 9.2933 · ATL chip 8.8420 · gap to pre-S9 ATL 9.2847: **0.0086 nats** (BEST unchanged)
+
+### ep3686 verdict: 9.3030 — not a new BEST
+
+ep3686 closed at 9.3030, confirmed as leftmost event bar entry. Above the BEST (9.2933) by 0.0097 nats. The T-610 reading of 9.2932 in FN70 (batch 273/300) reflected intra-epoch batch variance pulling the trailing window low — the epoch average settled higher at close. Floor is real but not broken yet.
+
+### Epoch closes since FN70 (events bar, newest → oldest)
+
+| Epoch (est.) | Avg    | Note |
+|---|---|---|
+| ep3686 | 9.3030 | confirmed close — not a new BEST |
+| ep3685 | 9.3028 | FN70 most recent |
+| ep3684 | 9.3101 | |
+| ep3683 | 9.3089 | |
+| ep3682 | 9.3039 | |
+| ep3681 | 9.2996 | sub-9.30 |
+
+### Expert routing (ep3687 batch 176) — PLN/ABS swing back
+
+| Expert | FN70 (22L b273) | FN71 (22L b176) | Δ |
+|--------|-----------------|-----------------|---|
+| PLN    | 61%             | **100%**        | **+39** |
+| ABS    | 48%             | **76%**         | **+28** |
+| CMP    | 100%            | 90%             | -10 |
+| INT    | 67%             | 53%             | -14 |
+| MEM    | 14%             | **0%**          | **-14 (gone)** |
+| LNG    | 8%              | 16%             | +8 |
+| LOG    | 19%             | 14%             | -5 |
+| INF    | 12%             | 2%              | -10 |
+| CTX    | 8%              | 8%              | 0 |
+| GEN    | 4%              | 4%              | 0 |
+| SYN    | 10%             | 0%              | -10 |
+| SEM    | 2%              | 2%              | 0 |
+
+Large oscillation: PLN fully restored to 100%, ABS surging to 76% (highest observed post-S10). The MEM emergence from FN70 collapsed back to 0%. The model is cycling between two routing configurations — a PLN/ABS-dominant mode (FN71) and an INT/MEM/INF-dominant mode (FN70). This alternating pattern across consecutive epochs is consistent with L22 still negotiating its niche within the stack.
+
+### TTL
+
+**G 20% / O 75% / R 5%** — holding near the FN68 post-surge range. Stable.
+
+### Chart note
+
+Y-axis shows label "9.2861" — lowest value on the active display range, suggesting intra-batch lows are reaching this depth during ep3687. Not a confirmed epoch close.
+
+### Assessment
+
+**ep3686 at 9.3030 missed the BEST by 0.0097 — close but above the line.** The routing oscillation between PLN/ABS and INT/MEM modes across alternate epochs is the key pattern to track: it suggests L22 is still finalising its role, alternating between structural (PLN/ABS) and connective (INT/MEM) operation. When this oscillation settles, the epoch average should compress. The chart showing intra-epoch lows at 9.2861 confirms the model reaches sub-9.29 territory within batches — the epoch-level break is a matter of the oscillation resolving. Nightwatch continues.
+
 ## Field Note 70 — 2026-05-25T20:55:44Z · ep3686 · T-610 9.2932 BREAKS previous BEST · ATL break imminent
 
 **Source:** dashboard screenshot (20:54:22) + TTL close-up screenshot
