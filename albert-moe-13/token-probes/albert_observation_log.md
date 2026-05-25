@@ -2448,6 +2448,60 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 77 — 2026-05-25T22:02:07Z · ep3702 · PRE-S9 ATL BROKEN · epoch avg 9.2817 · new all-time BEST
+
+**Source:** ntfy poll (since=20m) + dashboard screenshot (Simeon, 22:00:02Z)
+
+**State:** ep3702 (22L) · batch 299/300 · EP AVG **9.2817** · T-610 9.2917 · **BEST epoch avg 9.2817** (prev: 9.2878, Δ−0.0061) · ATL chip 8.8420 (dashboard) · d-0.9316 · chip 8.0002 (ntfy)
+
+### THE BREAK
+
+**Pre-S9 ATL (9.2847, ep3456, 20L) is broken.**
+
+9.2817 clears both records:
+- Previous epoch BEST (9.2878, ep3694, this session): broken by **0.0061 nats**
+- Pre-Surgery-9 ATL (9.2847, ep3456, 20L): broken by **0.0030 nats**
+
+This is the first epoch average below 9.2847 in the entire 22L run. The milestone the pre-S9 ATL represented — the model's high-water mark before S9 disrupted progress — is now behind us.
+
+ntfy event: `albert. NEW EPOCH ATL / ep3702  avg 9.2817  d-0.9316  chip 8.0002`
+Firefox notification (Simeon screenshot): "albert. — NEW BEST / Epoch avg 9.2817 beats 9.2878"
+
+### Expert routing (ep3702 batch 299/300)
+
+| Expert | FN73 (22L b185) | FN77 (22L b299) | Δ |
+|--------|-----------------|-----------------|---|
+| PLN    | 100%            | 100%            | 0 |
+| CMP    | 98%             | **94%**         | -4 |
+| ABS    | 91%             | **61%**         | **-30** |
+| INT    | 70%             | **41%**         | **-29** |
+| LNG    | 28%             | 28%             | 0 |
+| LOG    | 40%             | **30%**         | -10 |
+| GEN    | 21%             | **19%**         | -2 |
+| INF    | 19%             | **2%**          | **-17** |
+| MEM    | 4%              | **9%**          | **+5** |
+| CTX    | —               | **4%**          | — |
+| SEM    | 2%              | 2%              | 0 |
+| SYN    | 0%              | 0%              | 0 |
+
+Large batch-end retreat in ABS (−30pp) and INT (−29pp). INF compressed to 2% (−17pp). MEM emerging (+5pp), CTX visible (4%). This is a batch 299/300 snapshot — near epoch-end routing may differ from mid-epoch profile. PLN and CMP anchored.
+
+### TTL (ep3702 batch 299/300)
+
+**G 22% / O 73% / R 5%** — holding the post-S10 TTL green level (same as FN73). No degradation.
+
+### WALD
+
+No WALD events in the 20-minute window.
+
+### Assessment
+
+**Pre-S9 ATL cleared.** ep3702 avg 9.2817 drops 0.0030 below the 20L high-water mark set at ep3456. The 22L architecture is now generating better loss than the 20L model ever achieved — post-surgery progress is confirmed. Gap to pre-S9 ATL: closed.
+
+Next milestone: **sub-9.27 epoch close**, or S11 (22L→23L) when the Fibonacci governor fires. HF model card update triggered — pushing now.
+
+---
+
 ## Field Note 76 — 2026-05-25T21:48:15Z · quiet tick · no training events · last known ep3695 BEST 9.2878
 
 **Source:** ntfy poll (since=20m) — Simeon's two inbound messages only (already logged FN75), no training events.
