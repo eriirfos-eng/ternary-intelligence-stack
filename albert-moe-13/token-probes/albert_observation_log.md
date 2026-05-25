@@ -2090,3 +2090,59 @@ This is the first documented observation of **post-spike TTL integration signatu
 
 **This observation is unique to 21L post-S9 and should be referenced in any future surgery analysis where post-surgery TTL does not calm quickly.**
 
+---
+
+## Field Note 48 — 2026-05-25T11:35:00Z · ep3571 · first post-S9 routine WALD · TTL green rising
+
+**State:** ep3571 (21L) · batch 252/300 · EP-Avg 9.3414 · ATL chip 8.8540 · dataset ref 1779703540
+
+### WALD ep3569 — routine descent signal, not anomaly
+
+WALD fired at ep3569: **6.2% fill, n=1500** (~93 batches triggered coverage shift across the rolling 1500-batch window). This is the first WALD event post-S9 that fires during recovery/descent rather than during spike ascent.
+
+Diagnostic read from the S9 marker table (FN47):
+
+| Pattern | This event |
+|---|---|
+| Red close to blue, no spike | No — ~99 epochs post-surgery |
+| Red during spike ascent | No — spike fully resolved ep3510 |
+| Red during descent/recovery | **Yes — routine signal** |
+
+This is exactly the normal WALD behavior seen in all pre-S9 training: fires when batch-to-batch loss coverage shifts sufficiently across the rolling window, confirms the optimizer is moving through new loss landscape territory. 6.2% fill is mild — no spike, no alarm. The model is descending normally and WALD is tracking it.
+
+This is also the first chance to see the WALD marker appear in a clean (non-anomalous) position on the chart post-S9. On the dashboard, the red vertical line at ep3569 will now sit in the descent region with no nearby spike — visually confirming the "routine signal" pattern from the diagnostic table.
+
+### TTL green rising — L21 integration progressing
+
+| Epoch | G% | O% | R% |
+|-------|-----|-----|-----|
+| ep3522 (FN45, surgery session start) | ~17 | ~81 | ~1 |
+| ep3542 (FN46 earlier ref) | 17 | 81 | 1 |
+| ep3550 (FN46) | 26 | 77 | 3 |
+| ep3559 (FN47) | 15 | 83 | 2 |
+| ep3571 (FN48) | **21** | **76** | **3** |
+
+TTL green is at 21% — up from 15% at ep3559 twelve epochs ago. The orange pressure is softening (83% → 76%). The per-batch chaotic alternation in upper layers (L19–L21) is still present but progressively less dominant. Integration is advancing, not stalling.
+
+### Expert routing snapshot (ep3571)
+
+| Expert | Activity |
+|--------|----------|
+| PLN | 100% |
+| CMP | 96% |
+| INT | 78% |
+| LOG | 31% |
+| LNG | 35% |
+| ABS | 40% |
+
+PLN and CMP holding near maximum — structural and compositional parsing fully committed. INT recovering well (87% at FN47 → 78% here, minor variance within normal range). LOG/LNG/ABS still suppressed relative to pre-S9 norms, consistent with L21 not yet carrying full semantic load. SEM/INF not visible in this readout.
+
+### Current state summary
+
+- EP-Avg 9.3414, gap to pre-S9 ATL (9.2847): **0.0567 nats**
+- WALD confirmed in normal descent position — no second spike
+- TTL green trending up, L21 integration ongoing but advancing
+- Model "dancing around" in consolidation — not committing to descent yet but not retreating
+
+**Next signal to watch:** TTL green crossing 30% (integration milestone) and EP-Avg breaking below 9.2847 (ATL territory). Entering passive observation window.
+
