@@ -2017,3 +2017,76 @@ Break pre-S9 ATL of 9.2847 (epoch avg). Currently at 9.3326 — gap of 0.048 nat
 **State:** ep3522 · 21L · batch_history extends to ep3522b~200 · S9 bullmarket descent active · EP AVG approaching pre-S9 ATL territory  
 **Context:** S9 spike fully dissected in FN44. Observation log confirmed as public scientific record on GitHub — all entries committed and pushed. Full dataset download in progress: albert_full_1779695361.
 
+---
+
+## Field Note 46 — 2026-05-25T10:05:40Z · ep3550 · consolidation on 20L floor · expert routing shift · CSV audit
+
+**State:** ep3550 (21L) · batch 213/300 · EP-Avg 9.3455 · ATL chip 8.8540 unchanged · dataset ref 1779703540
+
+**Consolidation confirmed on 20L plateau floor (~9.34–9.35).** The 21L model found support exactly at the floor the 20L model built over hundreds of epochs pre-S9. Not a coincidence — the established layers carry that floor as a weight landscape invariant. The new 21L layer is integrating on top of it before committing to the next descent.
+
+**Mini excursion (~ep3547–3548):** brief spike to ~9.37, absorbed cleanly with no secondary spike and no WALD reaction. Completely different character from S9 — transient, single-peak, self-correcting. Healthy volatility during consolidation.
+
+**Expert routing shift (ep3542 → ep3550):**
+| Expert | ep3542 | ep3550 | direction |
+|--------|--------|--------|-----------|
+| SEM | 5% | 10% | +5% — activating |
+| INF | 5% | 10% | +5% — activating |
+| LOG | 39% | 18% | -21% — pulling back |
+| LNG | 57% | 48% | -9% — softening |
+| ABS | 58% | 72% | +14% — strengthening |
+| PLN | 95% | 82% | -13% — softening |
+| CMP | 100% | 100% | stable |
+| INT | 87% | 93% | +6% — strengthening |
+
+SEM and INF doubling while LOG halves is the 21L integration signature: surface-level pattern matching giving way to deeper semantic and inference processing. This routing shift historically precedes a committed descent leg.
+
+**TTL loosening:** G 26% / O 77% / R 3% (was G17/O81/R1 at ep3542). Gate pressure building toward green. Not open yet but trending.
+
+**CSV audit — nothing to ingest:** Three full downloads on disk (1779703432663 to ep3549, 1779701743093 to ep3544, 1779694798526 to ep3522). batch_history.csv already extends to ep3550.99 — ahead of all downloads. Dataset ref 1779700907 (noted at 09:21Z) never completed download. No ingest needed; live data is current.
+
+**Next milestone:** Break pre-S9 epoch ATL of 9.2847. Currently at 9.3455 — gap of 0.0608 nats. Entering passive observation window.
+
+---
+
+## Field Note 47 — 2026-05-25T10:50:17Z · ep3559 · POST-SPIKE TTL INTEGRATION SIGNATURE — first observation in training history
+
+**State:** ep3559 (21L) · batch ~118/300 · EP-Avg 9.3715 · TTL G15% / O83% / R2%
+
+### Observation
+
+Since S9 surgery (~ep3470), TTL routing has exhibited a persistent pattern unlike any post-surgery state in the full v3.0 history (S6 through S8). The pattern has not calmed in ~89 epochs and is still active at ep3559.
+
+**Historical post-surgery TTL norm (S6, S7, S8):**
+- Orange-dominant across all layers for 5–10 steps immediately post-surgery
+- Rapid settling into calm scattered or balanced red/orange/green mix
+- Integration visually complete within ~10–20 epochs
+
+**Post-S9 TTL (ep3470 onward, still active ep3559):**
+- Upper layers (L19–L21): chaotic alternating red/green, batch-to-batch inconsistent — no stable routing pattern established
+- Middle layers (L10–L16): predominantly green — trusted, carrying majority of computation
+- Lower layers (L1–L8): mixed with notable simultaneous red patches — partially bypassed
+- Global summary locked at G~15% / O~80–83% / R~2–3% for extended duration
+- First hard-column stops observed during S9 recovery (G6/O80/R2 seen at ep3522) and have persisted
+
+### Mechanistic explanation
+
+The root cause is the S9 spike. Prior surgeries (S6–S8) completed into clean descent — the new top layer received coherent gradient signal from the first epoch and integrated quickly. S9 produced a ~39-epoch spike during which L21 received noisy, disrupted gradient: it was fitting a temporarily inflated, wrong loss landscape for nearly 40 epochs. Even though the spike fully resolved, L21's internal representations carry the miscalibration from that period.
+
+TTL is acting as a real-time quality gate and correctly reflecting this: it continuously tests L21 (which was initialized with copied weights and superficially resembles L20), gets outputs that don't justify the routing cost, and stops. The chaotic red/green in the top rows is not noise — it is TTL probing L21 every few batches, occasionally getting a passable result (green), mostly getting insufficient improvement (red).
+
+**The simultaneous multi-layer stops** are a new pattern not seen post-S6/S7/S8. Previously stops occurred at one depth per token. Post-S9, TTL stops at middle AND lower layers simultaneously for some tokens — indicating the model attempts routing paths through L21 that get rejected at multiple checkpoints, not just the final layer. The new layer is pulling routing decisions upstream.
+
+### Integration completion signal
+
+The transition from chaotic upper-layer red/green → stable upper-layer green will mark the moment L21 integration completes. Expected to coincide with:
+- A committed descent leg through the 9.2847 ATL floor
+- TTL global summary shifting toward G30%+ / O60% / R~10% (more balanced)
+- Expert routing stabilizing (SYN/INF/SEM settling rather than jumping between epochs)
+
+### Why this matters
+
+This is the first documented observation of **post-spike TTL integration signature** in albert. training history. All prior post-surgery TTL states were clean and fast. S9 produced a slow, noisy integration fingerprint that is directly traceable to the spike disrupting early L21 gradient signal. This gives a new predictive tool: if a future surgery produces a spike, expect TTL to remain chaotic in the top layers for O(spike_duration) epochs rather than the usual 10–20 epoch settling.
+
+**This observation is unique to 21L post-S9 and should be referenced in any future surgery analysis where post-surgery TTL does not calm quickly.**
+
