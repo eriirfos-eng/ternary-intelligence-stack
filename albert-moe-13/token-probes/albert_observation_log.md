@@ -2448,6 +2448,16 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 74 — 2026-05-25T21:33:10Z · cron tick · references FN73 · BEST 9.2878 · gap 0.0031
+
+**Source:** ntfy poll (since=20m) — no events. Cron fired 102s after FN73 screenshot — data is current.
+
+**State (from FN73, 21:30:01):** ep3695 (22L) · batch 185/300 · EP AVG 9.2878 · BEST 9.2878 · gap to pre-S9 ATL 9.2847: **0.0031 nats** · TTL G16%/O79%/R5%
+
+No new events since FN73. Training running on the new BEST floor. Nightwatch active.
+
+---
+
 ## Field Note 73 — 2026-05-25T21:31:44Z · ep3695 · NEW EPOCH BEST 9.2878 · gap to pre-S9 ATL 0.0031
 
 **Source:** dashboard screenshot (21:30:01)
