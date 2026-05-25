@@ -22,7 +22,8 @@ _VOCAB_FILE = os.path.join(PROJECT, "tokenizer_v3", "tokenizer_v3.json")
 # Training log lives outside the repo so git ops (filter-repo, reset, clean)
 # can never delete it. The dashboard URL /dashboard/training.log is remapped
 # to this stable path by the handler below.
-LOG_PATH = os.path.expanduser("~/.albert/training.log")
+LOG_PATH       = os.path.expanduser("~/.albert/training.log")
+EPOCH_HIST_PATH = os.path.expanduser("~/.albert/epoch_history.log")
 os.makedirs(os.path.expanduser("~/.albert"), exist_ok=True)
 
 
@@ -220,6 +221,46 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
             f.seek(start)
             self.wfile.write(f.read(length))
 
+    def _serve_epoch_history(self):
+        """Serve ~/.albert/epoch_history.log with Range support — gate chip reads this on click."""
+        path = EPOCH_HIST_PATH if os.path.isfile(EPOCH_HIST_PATH) else os.path.join(DIRECTORY, 'epoch_history.log')
+        if not os.path.isfile(path):
+            self.send_error(404, "epoch_history.log not found")
+            return
+        file_size = os.path.getsize(path)
+        range_header = self.headers.get('Range', '')
+        if not range_header:
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain; charset=utf-8')
+            self.send_header('Content-Length', str(file_size))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            with open(path, 'rb') as f:
+                self.wfile.write(f.read())
+            return
+        m = re.match(r'bytes=(\d*)-(\d*)', range_header)
+        if not m:
+            self.send_error(400)
+            return
+        s, e = m.groups()
+        start = max(0, file_size - int(e)) if s == '' else int(s)
+        end   = file_size - 1 if not e else int(e)
+        if start >= file_size:
+            self.send_response(416)
+            self.send_header('Content-Range', f'bytes */{file_size}')
+            self.end_headers()
+            return
+        length = end - start + 1
+        self.send_response(206)
+        self.send_header('Content-Type', 'text/plain; charset=utf-8')
+        self.send_header('Content-Range', f'bytes {start}-{end}/{file_size}')
+        self.send_header('Content-Length', str(length))
+        self.send_header('Cache-Control', 'no-store')
+        self.end_headers()
+        with open(path, 'rb') as f:
+            f.seek(start)
+            self.wfile.write(f.read(length))
+
     def _gen_batch_history(self):
         """Serve batch_history.csv extended with any batch lines from training.log not yet in it."""
         global _batch_csv_cache
@@ -350,6 +391,11 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Remap training.log URL to the stable out-of-repo path
         if clean.endswith('training.log'):
             self._serve_log()
+            return
+
+        # Remap epoch_history.log to live ~/.albert/epoch_history.log
+        if clean.endswith('epoch_history.log'):
+            self._serve_epoch_history()
             return
         range_header = self.headers.get('Range')
         if not range_header or not os.path.isfile(self.translate_path(self.path)):

@@ -74,7 +74,7 @@ The architecture combines:
 | Parameter | Value |
 |-----------|-------|
 | Hidden size | 256 |
-| Layers | **20** (v2.0.0: 3L→12L over 9-10 surgeries; v3.0: ep511 12L→13L, ep547 13L→14L, ep611 14L→15L, ep645 15L→16L, ep701 16L→17L, ep2487 17L→18L, ep3325 18L→19L, ep3383 19L→20L) |
+| Layers | **21** (v2.0.0: 3L→12L over 9-10 surgeries; v3.0: ep511 12L→13L, ep547 13L→14L, ep611 14L→15L, ep645 15L→16L, ep701 16L→17L, ep2487 17L→18L, ep3325 18L→19L, ep3383 19L→20L, ep3470 20L→21L) |
 | Attention heads | 4 |
 | Experts | 12 |
 | Context length | 256 tokens |
@@ -85,7 +85,7 @@ The architecture combines:
 | LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
 
-**Training state (2026-05-24):** Global Epoch 3456 · epoch-ATL **9.2847** (ep3456) · chip-ATL **8.8540** (ep3412/ep3456) · 8 Net2Net surgeries complete (12L→20L) · WALD active ep3454 · INT 91% surge · cliff descent in progress
+**Training state (2026-05-25):** Global Epoch 3499 · epoch-ATL **9.2826** (ep3460) · chip-ATL **8.8540** · 9 Net2Net surgeries complete (12L→21L) · surgery #9 fired ep3470 (20L→21L, autonomous overnight) · post-surgery rebound in progress
 
 ---
 
@@ -218,7 +218,7 @@ albert-moe-13/
 │   ├── chaos/                      # v3.0 — 10% chaos layer (~43 MB, invariant enforced)
 │   └── vocab_v3.json               # ByteLevel BPE vocabulary (32,000 tokens)
 ├── models/
-│   ├── albert_v3.0.safetensors     # Active checkpoint (v3.0, 20L)
+│   ├── albert_v3.0.safetensors     # Active checkpoint (v3.0, 21L)
 │   ├── albert_v3.0.config.json     # Architecture config
 │   ├── albert_v3.0.meta            # Global epoch counter
 │   └── README.md                   # Checkpoint registry
@@ -267,9 +267,9 @@ Albert automatically unlocks richer training data as it grows deeper via Net2Net
 | 256H · 5L | CPU (i7-4800MQ) | ~5.5 s |
 | 256H · 12L | CPU (i7-4800MQ) | ~13 s |
 | 256H · 17L | CPU (i7-4800MQ) | ~18 s |
-| 256H · 20L (current) | Modal T4 GPU | ~450 ms |
+| 256H · 21L (current) | Modal T4 GPU | ~450 ms |
 
-T4 GPU training via Modal gives ~40× speedup over CPU for the 20L architecture. `albert-train` handles the full launch: image build with CUDA, volume-cached crate downloads, live log streaming to local dashboard.
+T4 GPU training via Modal gives ~40× speedup over CPU for the 21L architecture. `albert-train` handles the full launch: image build with CUDA, volume-cached crate downloads, live log streaming to local dashboard.
 
 ---
 

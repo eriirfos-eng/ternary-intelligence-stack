@@ -15,6 +15,7 @@ import os, sys, subprocess, threading, signal, time, shutil, argparse, re
 
 HERE          = os.path.dirname(os.path.abspath(__file__))
 LOG           = os.path.expanduser("~/.albert/training.log")
+EPOCH_HIST    = os.path.expanduser("~/.albert/epoch_history.log")
 os.makedirs(os.path.expanduser("~/.albert"), exist_ok=True)
 BATCH_HISTORY = os.path.join(HERE, "dashboard", "batch_history.csv")
 DASH_SRV      = os.path.join(HERE, "dashboard", "run_server.py")
@@ -202,6 +203,7 @@ print(f"[albert-train] log → {LOG}")
 print()
 
 log_f        = open(LOG,           "w")  # overwrite — each run starts with a clean local log
+epoch_hist_f = open(EPOCH_HIST,    "a")  # append — gate chip reads this for since_best/wald_fill
 batch_hist_f = open(BATCH_HISTORY, "a")  # append — preserves history across runs
 
 # Load x-values already in batch_history.csv so restarts never write duplicates.
@@ -229,7 +231,11 @@ def stream():
         sys.stdout.flush()
         log_f.write(line)
         log_f.flush()
-        m = _BATCH_RE.match(line.strip())
+        stripped = line.strip()
+        if stripped.startswith('EPOCH_SUMMARY '):
+            epoch_hist_f.write(stripped + '\n')
+            epoch_hist_f.flush()
+        m = _BATCH_RE.match(stripped)
         if m:
             epoch = int(m.group(1))
             batch = int(m.group(2))

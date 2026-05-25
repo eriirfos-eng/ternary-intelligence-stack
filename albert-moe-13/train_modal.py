@@ -69,7 +69,7 @@ def cmd_setup():
             continue
         size = _du(local_abs)
         print(f"\n[{i}/{total}] uploading {local}  ({size})")
-        rc = _run(["modal", "volume", "put", _VOL, local, remote])
+        rc = _run(["modal", "volume", "put", "--force", _VOL, local, remote])
         if rc != 0:
             print(f"  ERROR: modal volume put exited {rc}")
             sys.exit(rc)

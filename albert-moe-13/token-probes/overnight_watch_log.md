@@ -3,6 +3,560 @@
 
 ---
 
+**FN155 · 2026-05-25T05:51Z** *(overnight watch · CSV ep3498 · training LIVE ep3499 · stale loop prompt)*
+
+No new CSV. Training live on nkepp75, ep3499 (21L) streaming. Dashboard TTL bug fixed (all 21 layers now rendering). Stale loop prompt state (20L, ep3413, ATL 9.2862) overridden — real ATL is **9.2826** (ep3460), model is 21L post-surgery #9. No alerts.
+
+---
+
+**FN154 · 2026-05-25T05:46Z** *(overnight watch · CSV ep3498 · training LIVE ep3499 streaming)*
+
+No new CSV. Training confirmed live: ep3499 (21L), batch ~63/300 streaming on dashboard, INT expert 100% (normal post-surgery), traffic lights greening up, LR 2.90e-4, grad norm 0.0024. Stale ATL threshold 9.3182 in loop prompt ignored — ATL is **9.2826** (ep3460). No alerts.
+
+---
+
+**FN153 · 2026-05-25T05:37Z** *(overnight watch · CSV ep3498 — TRAINING LIVE on nkepp75 · stale loop prompt)*
+
+No new CSV since ep3498. Stale ATL threshold 9.2862 in loop prompt ignored — ATL is **9.2826** (ep3460). Training running detached on nkepp75 at ep3499+. Post-surgery #9 rebound phase (21L, expected EP_AVG 9.33–9.42). No WALD events, no spikes, no stops. Next CSV will confirm ep3499+ state.
+
+---
+
+**FN152 · 2026-05-25T05:33Z** *(overnight watch · CSV ep3498 — TRAINING LIVE on nkepp75)*
+
+No new CSV yet. Last ep3498 (21L). Stale threshold 9.3182 ignored — watching 9.2826. Training confirmed running on nkepp75 (1/1 containers active, corpus loaded, 21L). Post-surgery rebound in progress (9.33–9.42 range). No alerts.
+
+---
+
+**FN151 · 2026-05-25T05:20Z** *(overnight watch · CSV ep3498 — TRAINING RESTARTING on nkepp75)*
+
+Container live (1/1 active), corpus loading. No new CSV yet. Training resuming from ep3498 on nkepp75 account. ATL: 9.2826 (ep3460). Watching for ep3499+.
+
+---
+
+**FN150 · 2026-05-25T05:15Z** *(overnight watch · CSV ep3498 — TRAINING STOPPED · stale loop prompt)*
+
+No new CSV. Stale threshold 9.3182 ignored — ATL is 9.2826 (ep3460). Manual checkpoint uploads in progress on nkepp75. No alerts.
+
+---
+
+**FN149 · 2026-05-25T05:10Z** *(overnight watch · CSV ep3498 — TRAINING STOPPED · setup uploading ~3.4GB to nkepp75)*
+
+No new CSV. setup uploading vocab + corpus + checkpoint (~3.4GB) to nkepp75 albert-vol. Training will resume at ep3499 once upload completes and modal run --detach fires. ATL: 9.2826 (ep3460).
+
+---
+
+**FN148 · 2026-05-25T05:05Z** *(overnight watch · CSV ep3498 — SETUP BUILDING on nkepp75)*
+
+Modal container build in progress on nkepp75 — Rust compile step, mounts created. Dashboard live, showing "WAITING FOR TELE DATA". Training not yet started. ARCH confirmed 21L on dashboard. ATL chip: 8.8540.
+
+---
+
+**FN147 · 2026-05-25T05:05Z** *(overnight watch · CSV ep3498 — TRAINING STOPPED · stale loop prompt)*
+
+No new CSV. Stale threshold 9.2862 ignored. Training stopped — nkepp75 setup in progress. ATL: 9.2826 (ep3460). No alerts.
+
+---
+
+**FN146 · 2026-05-25T05:02Z** *(overnight watch · CSV ep3498 — TRAINING STOPPED · stale loop prompt)*
+
+No new CSV. Stale prompt (threshold 9.2847, state ep3456) ignored. Training stopped — nkepp75 setup in progress. ATL: 9.2826 (ep3460).
+
+---
+
+**FN145 · 2026-05-25T05:02Z** *(overnight watch · CSV ep3498 — TRAINING STOPPED · stale loop prompt)*
+
+No new CSV. Stale threshold 9.3182 ignored. Training still stopped — Modal nkepp75 setup in progress. Watching for resume at ep3499+.
+
+---
+
+**FN144 · 2026-05-25T04:53Z** *(overnight watch · CSV ep3498 — TRAINING STOPPED · stale loop prompt)*
+
+No new CSV. Stale loop prompt (threshold 9.2847, state ep3456) — superseded. Current state: 21L, ep3498, ATL 9.2826 (ep3460), surgery #9 complete, training stopped pending Modal credit top-up.
+
+---
+
+**FN143 · 2026-05-25T04:52Z** *(overnight watch · CSV ep3498 — TRAINING STOPPED · awaiting Modal credit top-up)*
+
+No new CSV since FN142. Training confirmed stopped at ep3498 (21L) — Modal credits exhausted. Watching for resume. Stale loop threshold 9.2847 superseded — ATL is 9.2826 (ep3460).
+
+---
+
+**FN142 · 2026-05-25T04:50Z** *(overnight watch · NEW CSV ep3498 — SURGERY #9 FIRED · TRAINING STOPPED)*
+
+**NEW CSV:** albert_full_1779684488653.csv (7.8M) — 61 new epochs since last CSV.
+
+**SURGERY #9 CONFIRMED: 20L → 21L**
+- Last 20L epoch: ep3469 · EP_AVG 9.2862
+- Surgery fired: ~ep3470
+- First 21L epoch: ep3471 · EP_AVG 9.3505
+- 28 epochs at 21L in this CSV (ep3471–ep3498)
+
+**NEW ATL DURING CLIFF DESCENT (20L):**
+- ep3458: 9.2846 (below previous ATL 9.2847)
+- ep3460: **9.2826 — NEW ATL** (2.1 milli-units below prev ATL)
+- ATL threshold updated: 9.2847 → **9.2826**
+
+**POST-SURGERY STATE (21L, ep3471–ep3498):**
+- EP_AVG range: 9.33–9.42 (expected restart rebound)
+- Last value: ep3498 · 9.4021
+- No WALD events in 21L window yet
+
+**TRAINING STOPPED — Modal credits exhausted (user confirmed ~04:50Z)**
+- Last epoch in CSV: ep3498 · 21L
+- Action required: top up Modal credits and restart albert-train
+
+---
+
+**FN141 · 2026-05-25T04:45Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 in prompt ignored — watching against ATL 9.2847 (ep3456). CSV 6h06m stale. No alerts.
+
+---
+
+**FN140 · 2026-05-25T04:37Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 5h58m stale. No alerts.
+
+---
+
+**FN139 · 2026-05-25T04:36Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 5h57m stale. No alerts.
+
+---
+
+**FN138 · 2026-05-25T04:35Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 in prompt ignored — watching against ATL 9.2847 (ep3456). CSV 5h56m stale. No alerts.
+
+---
+
+**FN137 · 2026-05-25T04:30Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 in prompt ignored — watching against ATL 9.2847 (ep3456). CSV 5h51m stale. No alerts.
+
+---
+
+**FN136 · 2026-05-25T04:22Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 5h43m stale. No alerts.
+
+---
+
+**FN135 · 2026-05-25T04:21Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 5h42m stale. No alerts.
+
+---
+
+**FN134 · 2026-05-25T04:20Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 in prompt ignored — watching against ATL 9.2847 (ep3456). CSV 5h41m stale. No alerts.
+
+---
+
+**FN133 · 2026-05-25T04:15Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 in prompt ignored — watching against ATL 9.2847 (ep3456). CSV 5h36m stale. No alerts.
+
+---
+
+**FN132 · 2026-05-25T04:12Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 5h33m stale. No alerts.
+
+---
+
+**FN131 · 2026-05-25T04:06Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 5h27m stale. No alerts.
+
+---
+
+**FN130 · 2026-05-25T04:05Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 in prompt ignored — watching against ATL 9.2847 (ep3456). CSV 5h26m stale. No alerts.
+
+---
+
+**FN129 · 2026-05-25T04:00Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 in prompt ignored — watching against ATL 9.2847 (ep3456). CSV 5h21m stale. No alerts.
+
+---
+
+**FN128 · 2026-05-25T03:58Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 5h19m stale. No alerts.
+
+---
+
+**FN127 · 2026-05-25T03:56Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 3h57m stale. No alerts.
+
+---
+
+**FN126 · 2026-05-25T03:50Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). CSV 3h51m stale. No alerts.
+
+---
+
+**FN125 · 2026-05-25T03:45Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). CSV 3h46m stale. No alerts.
+
+---
+
+**FN124 · 2026-05-25T03:41Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 3h42m stale. No alerts.
+
+---
+
+**FN123 · 2026-05-25T03:40Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 3h41m stale. No alerts.
+
+---
+
+**FN122 · 2026-05-25T03:35Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). CSV 3h36m stale. No alerts.
+
+---
+
+**FN121 · 2026-05-25T03:30Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). CSV 3h31m stale. No alerts.
+
+---
+
+**FN120 · 2026-05-25T03:25Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 3h26m stale. No alerts.
+
+---
+
+**FN119 · 2026-05-25T03:24Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 3h25m stale. No alerts.
+
+---
+
+**FN118 · 2026-05-25T03:20Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). CSV 3h21m stale. No alerts.
+
+---
+
+**FN117 · 2026-05-25T03:15Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). CSV 3h16m stale. No alerts.
+
+---
+
+**FN116 · 2026-05-25T03:09Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 3h10m stale. No alerts.
+
+---
+
+**FN115 · 2026-05-25T03:08Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV 3h09m stale. No alerts.
+
+---
+
+**FN114 · 2026-05-25T03:05Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). CSV 3h06m stale. No alerts.
+
+---
+
+**FN113 · 2026-05-25T03:00Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). CSV now 3h01m stale. No alerts.
+
+---
+
+**FN112 · 2026-05-25T02:53Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV ~2h54m stale. No alerts.
+
+---
+
+**FN111 · 2026-05-25T02:52Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV ~2h53m stale. No alerts.
+
+---
+
+**FN110 · 2026-05-25T02:50Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). CSV ~2h51m stale. No alerts.
+
+---
+
+**FN109 · 2026-05-25T02:45Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). CSV ~2h46m stale. No alerts.
+
+---
+
+**FN108 · 2026-05-25T02:37Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV ~2h38m stale. No alerts.
+
+---
+
+**FN107 · 2026-05-25T02:36Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV ~2h37m stale. No alerts.
+
+---
+
+**FN106 · 2026-05-25T02:35Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). CSV ~2h36m stale. No alerts.
+
+---
+
+**FN105 · 2026-05-25T02:30Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). CSV ~2h31m stale. No alerts.
+
+---
+
+**FN104 · 2026-05-25T02:21Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN103 · 2026-05-25T02:20Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN102 · 2026-05-25T02:20Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV now ~2h21m stale. No alerts.
+
+---
+
+**FN101 · 2026-05-25T02:15Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). CSV now ~2h16m stale. No alerts.
+
+---
+
+**FN100 · 2026-05-25T02:05Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN99 · 2026-05-25T02:05Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV ~2h06m stale. No alerts.
+
+---
+
+**FN98 · 2026-05-25T02:04Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV now ~2h05m stale. No alerts.
+
+---
+
+**FN97 · 2026-05-25T02:00Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). CSV now ~2h stale. No alerts.
+
+---
+
+**FN96 · 2026-05-25T01:50Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN95 · 2026-05-25T01:49Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). CSV has been stale ~1h50m past last known dashboard state. No alerts.
+
+---
+
+**FN94 · 2026-05-25T01:48Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN93 · 2026-05-25T01:45Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN92 · 2026-05-25T01:35Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN91 · 2026-05-25T01:33Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN90 · 2026-05-25T01:32Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN89 · 2026-05-25T01:30Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN88 · 2026-05-25T01:20Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN87 · 2026-05-25T01:17Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN86 · 2026-05-25T01:16Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN85 · 2026-05-25T01:15Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN84 · 2026-05-25T01:05Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN83 · 2026-05-25T01:01Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN82 · 2026-05-25T01:00Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN81 · 2026-05-25T00:51Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN80 · 2026-05-25T00:50Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN79 · 2026-05-25T00:46Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Newest file peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN78 · 2026-05-25T00:45Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Newest file peaks at ep3437. Stale threshold 9.3182 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN77 · 2026-05-25T00:36Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Newest file peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN76 · 2026-05-25T00:35Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Newest file peaks at ep3437. Stale threshold 9.2862 ignored — watching against ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN75 · 2026-05-25T00:31Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Newest file still peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN74 · 2026-05-25T00:30Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Newest file peaks at ep3437. Alert threshold: ATL 9.2847 (ep3456) — prompt carried stale 9.3182, ignored. No alerts.
+
+---
+
+**FN73 · 2026-05-25T00:21Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Newest file `albert_full_1779662364890.csv` peaks at ep3437. ATL threshold: 9.2847 (ep3456). No alerts.
+
+---
+
+**FN72 · 2026-05-25T00:20Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Newest file `albert_full_1779662364890.csv` still peaks at ep3437. Alert threshold: ATL 9.2847 (ep3456). Prompt carried stale threshold 9.2862 — ignoring, watching against 9.2847. No alerts.
+
+---
+
+**FN71 · 2026-05-25T00:17Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Newest file `albert_full_1779662364890.csv` peaks at ep3437. Alert threshold corrected to ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN70 · 2026-05-25T00:15Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Newest file still `albert_full_1779662364890.csv`, peaks at ep3437. Alert threshold: ATL 9.2847 (ep3456). No alerts.
+
+---
+
+**FN69 · 2026-05-25T00:14Z** *(overnight watch · CSV ep3437 — stale)*
+
+No new CSV. Newest file `albert_full_1779662364890.csv` still peaks at ep3437. Last confirmed state remains ep3456 ATL 9.2847 (from dashboard, FN66). No alerts.
+
+---
+
+**FN68 · 2026-05-25T00:05Z** *(overnight watch · CSV ep3438 — stale)*
+
+No new CSV. Same file, max ep3438. Cliff descent reported at ep3456 (ATL 9.2847) remains the last known confirmed state. No alerts.
+
+---
+
+**FN67 · 2026-05-25T00:01Z** *(overnight watch · CSV ep3438 — stale · ep3456 ATL confirmed by Simeon)*
+
+No new CSV. Newest file still peaks at ep3438 (downloaded ~22:39 UTC). ep3456 ATL 9.2847 was reported directly from dashboard — logged in FN66, committed to convergence_log.md. No CSV-verifiable new data. Training presumed active and descending per cliff pattern. No alerts.
+
+---
+
 **FN66 · 2026-05-24T23:57Z** *(overnight watch · ep3456 · 20L · NEW EP_AVG ATL)*
 
 **EP_AVG ATL BROKEN. 9.2847 beats 9.2862 (held since ep3383).**

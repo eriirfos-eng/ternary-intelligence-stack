@@ -4510,7 +4510,7 @@
 
             _tlightCanvas.addEventListener('mousemove', ev => {
                 const rect    = _tlightCanvas.getBoundingClientRect();
-                const numL    = tlightHistory[0]?.layers.length || 12;
+                const numL    = tlightHistory.reduce((m, s) => Math.max(m, s?.layers?.length || 0), 1);
                 const numT    = tlightHistory.length;
                 const my      = ev.clientY - rect.top;
                 const gridH   = rect.height;
@@ -4548,7 +4548,7 @@
         }
 
         const ctx2d  = _tlightCanvas.getContext('2d');
-        const numL   = tlightHistory[0]?.layers.length || layers.length;
+        const numL   = layers.length;
         const numT   = tlightHistory.length;
         const lW     = TTL_LABEL_W;
         const gridH  = H;
@@ -4570,9 +4570,9 @@
             for (let ti = 0; ti < numT; ti++) {
                 const snap      = tlightHistory[ti];
                 const layerSnap = snap?.layers.find(l => l.layer === li);
-                ctx2d.fillStyle = !snap || snap.step === null ? 'rgba(255,255,255,0.04)'
-                    : (layerSnap?.r > 0) ? '#ef4444'
-                    : (layerSnap?.g > 0) ? '#22c55e'
+                ctx2d.fillStyle = !snap || snap.step === null || !layerSnap ? 'rgba(255,255,255,0.04)'
+                    : (layerSnap.r > 0) ? '#ef4444'
+                    : (layerSnap.g > 0) ? '#22c55e'
                     : '#f59e0b';
                 ctx2d.globalAlpha = 0.85;
                 ctx2d.fillRect(
