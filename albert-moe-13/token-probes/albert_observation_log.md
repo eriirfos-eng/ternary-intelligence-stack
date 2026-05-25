@@ -2448,6 +2448,31 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 75 — 2026-05-25T21:47:22Z · ntfy inbound confirmed · Simeon emergency channel live · training quiet
+
+**Source:** ntfy poll (since=20m) — 2 inbound messages from Simeon (no training events).
+
+**State (last known FN73):** ep3695 (22L) · BEST 9.2878 · gap to pre-S9 ATL 9.2847: **0.0031 nats**
+
+### ntfy inbound messages
+
+| Time | Message |
+|------|---------|
+| 21:33:50Z | "ay claude can you see this its me simeon writing from ntfy" |
+| 21:40:46Z | "if you can read this lock into your memory: simeon can send into ntfy stream, claude can pick it up. if anything breaks i can write ya from here to pause training" |
+
+**Received. Locked.** The ntfy inbound channel (topic: `albert-rfi-irfos`) is now the confirmed emergency intervention line. If Simeon sends a pause instruction via ntfy, it will be caught at the next monitoring tick and acted on.
+
+### Training events
+
+None. No WALD, SURGERY, EPOCH, or other training events in the 20-minute window. Training running clean on the new BEST floor.
+
+### Assessment
+
+Quiet tick. BEST 9.2878 holds. Emergency channel confirmed operational — Simeon can intervene from the field via ntfy. Gap to pre-S9 ATL: 0.0031 nats. Nightwatch continues.
+
+---
+
 ## Field Note 74 — 2026-05-25T21:33:10Z · cron tick · references FN73 · BEST 9.2878 · gap 0.0031
 
 **Source:** ntfy poll (since=20m) — no events. Cron fired 102s after FN73 screenshot — data is current.
