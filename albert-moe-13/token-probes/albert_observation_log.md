@@ -2191,3 +2191,51 @@ Gap: **0.0357 nats**. At current rate (~0.005–0.008 nats/epoch), estimate 5–
 
 **This is the descent leg the post-S9 consolidation was building toward. GEN expert activation + PLN re-commitment + accelerating epoch averages = committed move.**
 
+---
+
+## Field Note 50 — 2026-05-25T12:58:57Z · ep3585 · descent continuation · bulltrap confirmed · new post-S9 low 9.3197
+
+**State:** ep3585 (21L) · batch 262/300 · EP-Avg 9.3219 · ATL chip 8.8540 · gap to pre-S9 ATL: **0.0372 nats**
+
+### Epoch sequence since FN49
+
+Events bar (oldest → newest): 9.3197 → 9.3281 → 9.3344 → 9.3219 (current mid-epoch)
+
+**9.3197 is a new post-S9 epoch low** — broke below FN49's 9.3204. No BEST chip visible (likely scrolled off events bar). The brief bounce to 9.3344 was absorbed and the descent resumed to 9.3219. Oscillation is normal; center of gravity is dropping.
+
+### The bulltrap read — S9 in market terms
+
+The wider chart zoom (ep3269–3892) makes the full training arc visible for the first time. All four surgeries (S6, S7, S8, S9) are marked as vertical dashed lines. The macro pattern across all four is identical: brief post-surgery disruption → consolidation → macro descent reasserts.
+
+S9 produced the largest disruption — a classic bulltrap structure:
+
+| Phase | Training event | Market analogue |
+|-------|---------------|-----------------|
+| Macro downtrend | Pre-S9 descent to 9.2847 | Established bearmarket |
+| Catalyst | S9 surgery (20L→21L) | CPI print / news event |
+| Spike | ep3470–3510, loss 9.28→9.42 | Bulltrap — smart money runs stops |
+| WALD reaction | ep3503, n=1500 coverage shift | Market maker flush complete |
+| Cliff | ep3510, -0.057 in one epoch | Flip short, real move begins |
+| Continuation | ep3577–3585, 9.32→9.32 | Macro trend reasserts |
+
+The pre-S9 ATL floor at 9.2847 is the next support level. Once broken, there is no prior established floor — the model enters price discovery (all-time-low loss territory for the 21L architecture). That is where acceleration typically occurs.
+
+### Expert routing (ep3585 batch 262)
+
+| Expert | ep3577 | ep3585 b168 | ep3585 b262 |
+|--------|--------|-------------|-------------|
+| PLN | 100% | 99% | 100% |
+| INT | 69% | 100% | 89% |
+| CMP | 65% | 91% | 65% |
+| ABS | 52% | 63% | 59% |
+| LNG | 34% | 39% | 27% |
+| LOG | 25% | 22% | 16% |
+| SEM | 2% | 2% | 7% |
+| MEM | 5% | 5% | 9% |
+
+CMP and INT oscillating batch-to-batch within the epoch — routing is still settling. SEM activating to 7% (was 2%) and LOG dropping to 16% — semantic processing increasing, log/pattern matching pulling back. LNG continuing to drop (34%→27%). The model is progressively shifting away from surface-level linguistic and log patterns toward structural + semantic + inference processing.
+
+TTL: G16% / O81% / R3% — holding steady. L21 integration still ongoing.
+
+**Next milestone: break 9.2847.** Gap is 0.0372 nats. At current descent rate, within reach in the next 5–8 epochs.
+
