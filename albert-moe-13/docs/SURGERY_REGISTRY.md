@@ -2,7 +2,7 @@
 
 Consolidated record of all Net2Net depth-expansion events across the lifetime of the project.
 Primary source: `convergence_log.md` (v3.0), `EVOLUTION_EVIDENCE.md` (v2.0.0 surgeries 1–3).
-Last updated: 2026-05-24.
+Last updated: 2026-05-25.
 
 ---
 
@@ -49,7 +49,7 @@ Surgeries S1–S3 documented in `EVOLUTION_EVIDENCE.md`. S4–S9 individually un
 ## Version 3.0 — Multilingual Ternary (32k vocab, ternary STE from ep1)
 
 **Architecture start:** 12L · 256H · 12E · 32k vocab (weights transferred from v2.0.0 ep=best, loss 6.8821; embed + lm_head re-initialized for 32k)  
-**Architecture current:** 20L (as of 2026-05-24)
+**Architecture current:** 21L (as of 2026-05-25)
 
 All 8 surgeries documented in `convergence_log.md`.
 
@@ -63,8 +63,21 @@ All 8 surgeries documented in `convergence_log.md`.
 | S6 | 2487 | ~2522 | 17L→18L | 2026-05-20T21:33Z | 233 | +0.0099 | Δ0.0193 / 144 ep | — | 9.7170 | 9.6248 (ep2489) | Success; Gen 1 step 1/6; ceiling→21L |
 | S7 | 3325 | ~3360 | 18L→19L | 2026-05-24T13:47Z | — | — | 36+ ep (9.42–9.46) | 1315 | 9.3651 | **9.3182** (ep3326) | Success; [ttlfreeze] + [divloss] armed; ATL broke in first 19L epoch |
 | S8 | 3383 | ~3418 | 19L→20L | 2026-05-24T~20:00Z | — | — | 58 ep (plateau at 19L floor) | 1384 | 9.3182 | **9.2862** (ep3383) | Success; fastest post-surgery plateau in v3 history |
+| S9 | ~3437 | ~3472 | 20L→21L | 2026-05-25T~00:00Z | — | — | 54 ep (since_best accumulating) | 1453 | 9.2862 | **9.3930** (ep3503, still descending) | Success; largest post-surgery spike in v3 history (~9.43); fastest descent rate in v3 history (bullmarket); TTL hard stops (see note) |
 
-**v3.0 confirmed surgeries:** 8 (12L→20L, all documented)
+**v3.0 confirmed surgeries:** 9 (12L→21L, all documented)
+
+### Surgery S9 — Observations (2026-05-25)
+
+**TTL hard-column stops — first occurrence in v3.0 history.**  
+Post-S9, the Traffic Light Routing panel showed full-column red blocks: entire layers completely suppressed for multiple consecutive steps. Previous surgeries produced soft TTL transitions (gradual orange→red drift). S9 produced hard stops — columns of pure red lasting several steps — indicating the TTL is treating the new 21st layer as unproven and fully clamping its output while the established 20 layers route freely.
+
+TTL distribution post-S9: **G 21% · O 74% · R 5%** (vs. pre-surgery baseline G 6–17% · O 78–81% · R 2%).  
+Green surge = existing layers routing with high confidence. Red surge = new layer held in suppression.
+
+**Interpretation:** The 21L insertion is the deepest yet. The TTL responded proportionally — harder suppression than any previous surgery. The bullmarket descent is driven by the existing 20 proven layers running freely while the 21st layer receives gradient signal during its suppressed steps. When the 21st layer earns green slots (expected: gradual onset over ~100–300 epochs), a second acceleration phase is expected.
+
+**AdamW buffer reset coincidence:** Modal pod restart reset the optimizer state at approximately the same epoch as the surgery. Fresh AdamW momentum on an already-explored loss landscape contributed to the aggressive descent rate (see restart acceleration pattern in project memory).
 
 ---
 
@@ -74,8 +87,8 @@ All 8 surgeries documented in `convergence_log.md`.
 |---------|-----------|-----------------|---------------|
 | v1.x | 1 failed | 3L (no net change) | No records |
 | v2.0.0 | 9 confirmed (10 per README) | 3L→12L | S1–S3 in EVOLUTION_EVIDENCE.md; S4–S9 undocumented |
-| v3.0 | 8 confirmed | 12L→20L | All 8 in convergence_log.md |
-| **Total** | **17–18 surgical events** | **3L→20L** | |
+| v3.0 | 9 confirmed | 12L→21L | All 9 in convergence_log.md |
+| **Total** | **18–19 surgical events** | **3L→21L** | |
 
 **For SPRIND pitch (Q1):** "albert. has undergone approximately 18 Net2Net surgical depth expansions across its lifetime — 9–10 in v2.0.0 (3L→12L, individual epochs not preserved) and 8 in v3.0 (12L→20L, all precisely logged in convergence_log.md with timestamps, Mandelbrot perturbation parameters, and loss trajectories). One additional failed surgery in v1.x was the discovery event for the checkpoint-deletion bug that was subsequently fixed."
 
@@ -83,8 +96,8 @@ All 8 surgeries documented in `convergence_log.md`.
 
 ---
 
-## Surgery 9 — Next expected event
+## Surgery 10 — Next expected event
 
-**Current state (ep3437):** 20L · EP_AVG ATL 9.2862 · since_best=54 · MYC_STABLE met  
-**Gate:** PLATEAU w=144, since_best approaching threshold  
-**Projection:** Surgery 9 (20L→21L) expected within ~100–150 epochs from ep3412 governor report.
+**Current state (ep3508):** 21L · EP_AVG best post-S9 9.3930 · descending (bullmarket)  
+**Gate:** PLATEAU gate — since_best will begin accumulating once descent stalls below 9.2862  
+**Projection:** Surgery 10 (21L→22L) not imminent; model must first break pre-S9 ATL of 9.2862, then plateau again.

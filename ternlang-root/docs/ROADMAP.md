@@ -133,22 +133,20 @@ ProgramBench exposes the gap between "code assistance" and "systems engineering"
 
 ---
 
-## 3.0 CURRENT METRICS (2026-05-22)
+## 3.0 CURRENT METRICS (2026-05-25)
 
 | Metric | Value | Context |
 | :--- | :--- | :--- |
-| albert. architecture | **18L** · 256H · 12E · Top-3 · **256CTX** · 32,000V | v3.0 · 6 autonomous Net2Net surgeries since ep511 |
+| albert. architecture | **21L** · 256H · 12E · Top-3 · **256CTX** · 32,000V | v3.0 · 9 autonomous Net2Net surgeries since ep511 (12L→21L) |
 | albert. parameters | ~134M total stored / ~33M active per token | Top-3 of 12 experts; ternary {−γ, 0, +γ} throughout training via STE |
-| Training loss — epoch ATL | **9.7884** (ep2116, 2026-05-19) | Alternating descent phase; 5 new ATLs in 7 epochs |
-| Training loss — batch ATL | **9.6235** (ep2114, 2026-05-19) | Intra-epoch minimum; random baseline ln(32000) = 10.373 |
-| Inference speed | **9.9–21.3 tok/s** CPU (ep2104 bench, v3.0) | KV-cache + @sparseskip; 32k vocab embedding dominates at current training depth; sparsity benefit scales with weight convergence |
-| Routing sparsity | 9/12 experts skipped per decode step | Expert-level @sparseskip — 75% routing skip; entropy H=2.467 (uniform) |
-| Weight sparsity | 3–6% zero-weight skip at ep2116 (TELE) | Grows toward v2.0.0 levels (~56%) as weights converge; zero positions never touched in matmul |
-| Corpus (active) | **1.6 GB** total · stages [3,6,7,8,9,10] active | EN/DE/FR/HU/ZH/AR/KO/SV/FI + 15-language Wikipedia · 10% chaos layer invariant |
+| Training loss — epoch ATL | **9.2862** (ep3383, 2026-05-24) | Post-surgery bullmarket descent; 9.3930 best post-S9 (ep3503, still descending) |
+| Inference speed | **38.7–84.4 tok/s** CPU (bench 2026-05-25, 21L) | KV-cache + @sparseskip; 84.4 tok/s peak on HP ZBook 15 i7-4800MQ (2013, CPU only) |
+| Routing sparsity | 9/12 experts skipped per decode step | Expert-level @sparseskip — 75% routing skip; entropy H=2.466 (stable) |
+| Corpus (active) | **1.6 GB** total · stages [3,6,7,8,9,10,11,12,13] active | EN/DE/FR/HU/ZH/AR/KO/SV/FI + 15-language Wikipedia · 10% chaos layer invariant |
 | Patent | A50296/2026 | @sparseskip sparse matmul primitive — Patent Pending (Austria) |
 | Crates published | 38 crates at v1.3.7 | crates.io, all open-core LGPL |
 | MCP tools | 34 tools | All free tier via Smithery + HTTP |
-| Training epochs | ep2116+ (2026-05-19) | Modal T4 GPU · ~$0.021/epoch · uninterrupted run since 2026-05-10 |
+| Training epochs | ep3503+ (2026-05-25) | Modal T4 GPU · uninterrupted run since 2026-05-14 |
 
 ---
 

@@ -791,12 +791,12 @@ Both outprioritize the plain decimal rule (priority 10).
 
 ---
 
-### Architectural Limits Documented (Not Fixed — No Code Change)
+### 2026-04-17 — Architectural Limits Snapshot (pre-v1.2.1)
 
-The following were confirmed as architectural limits requiring major restructuring:
+The following were confirmed as architectural limits as of 2026-04-17. VM-STRUCT-001 and COMP-TENSOR-001 were subsequently resolved in v1.2.1 (2026-04-29) — see the [DONE] section below.
 
-- **VM-STRUCT-001** (`probe_33`, `probe_35`, `probe_54`): Structs returned from functions don't work because struct fields live in caller registers that get fully restored on TRET. The fields are gone by the time the caller reads the return slot. Fixing requires a struct-value ABI (stack-allocated struct layout). Marked [ARCH-LIMIT].
-- **COMP-TENSOR-001** (`probe_71`, `probe_72`): Tensor sizes use 16-bit immediates (TALLOC). >65535 element tensors silently truncate. Marked [ARCH-LIMIT].
+- **VM-STRUCT-001** (`probe_33`, `probe_35`, `probe_54`): ~~Structs returned from functions don't work because struct fields live in caller registers that get fully restored on TRET.~~ **FIXED in v1.2.1 (2026-04-29)** — `Value::Struct` ABI implemented with `Tstruct` (0x40) / `Tfield` (0x41) opcodes; struct return now heap-allocated, not register-flattened.
+- **COMP-TENSOR-001** (`probe_71`, `probe_72`): ~~Tensor sizes use 16-bit immediates (TALLOC). >65535 element tensors silently truncate.~~ **FIXED in v1.2.1 (2026-04-29)** — `Talloc` upgraded to 8-byte immediates (2× u32 for rows/cols); 32-bit dimension addressing, no size cap.
 - **probe_07 2D tensor**: Index OOB for 2D access patterns in certain edge cases. Marked [KNOWN / 2D-LIMIT].
 - **MOD-004**: Module file loading not implemented. Named imports fail with "file not found". Marked [UNRESOLVED].
 
