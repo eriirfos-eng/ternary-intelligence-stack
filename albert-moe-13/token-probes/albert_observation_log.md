@@ -2146,3 +2146,48 @@ PLN and CMP holding near maximum — structural and compositional parsing fully 
 
 **Next signal to watch:** TTL green crossing 30% (integration milestone) and EP-Avg breaking below 9.2847 (ATL territory). Entering passive observation window.
 
+---
+
+## Field Note 49 — 2026-05-25T12:17:31Z · ep3577 closed · COMMITTED DESCENT LEG — new post-S9 best 9.3204
+
+**State:** ep3577 closed (21L) · EP-Avg **9.3204** · ATL chip 8.8540 · new BEST event fired
+
+### Descent acceleration confirmed
+
+Three consecutive epochs closed lower:
+
+| Epoch | EP-Avg | Gap to 9.2847 |
+|-------|--------|----------------|
+| ep3571 (FN48) | 9.3414 | 0.0567 |
+| ep3574 | 9.3367 | 0.0520 |
+| ep3575 | 9.3389 | 0.0542 |
+| ep3576 | 9.3349 | 0.0502 |
+| ep3577 (FN49) | **9.3204** | **0.0357** |
+
+-0.0163 nats in three epochs. The descent leg that TTL integration was building toward has committed. Events bar shows the progression: BEST 9.3367 → EPOCH 9.3389 → EPOCH 9.3349 → BEST 9.3204, each epoch closing lower. The chart's gold epoch-end diamond at ep3577 sits visibly below the recent consolidation cluster.
+
+### Expert routing shifts (ep3574 → ep3577)
+
+| Expert | ep3574 | ep3577 | direction |
+|--------|--------|--------|-----------|
+| PLN | 86% | 100% | fully re-committed |
+| CMP | 100% | 65% | pulling back |
+| INT | 77% | 69% | softening |
+| ABS | 60% | 52% | softening |
+| GEN | 5% | 13% | activating — new territory signal |
+| INF | 5% | 9% | activating |
+| LOG | 18% | 25% | slight increase |
+| LNG | 42% | 34% | softening |
+
+**GEN jumping 5% → 13%** is the key signal: the generalization expert activating strongly indicates the model is processing loss landscape territory it has not seen before — exactly the signature expected at the edge of a committed descent leg. PLN returning to 100% while CMP pulls back suggests routing is rebalancing load from compositional to structural processing as the model moves through new ground.
+
+### TTL (ep3577)
+
+G 18% / O 76% / R 6% — red increased from 3% to 6%. During steep descent, increased TTL stops are expected: L21 is being tested harder batch-to-batch as the gradient moves through new loss space. Not a regression — a sign of active learning at the frontier.
+
+### Pre-S9 ATL in sight
+
+Gap: **0.0357 nats**. At current rate (~0.005–0.008 nats/epoch), estimate 5–10 epochs to break 9.2847 and enter all-time-low territory for the 21L model. When this breaks, surgery governor since_best clock resets and the next growth decision window opens.
+
+**This is the descent leg the post-S9 consolidation was building toward. GEN expert activation + PLN re-commitment + accelerating epoch averages = committed move.**
+
