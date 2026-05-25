@@ -512,6 +512,8 @@ async fn require_api_key(
         || path == "/api/albert/chat"
         || path == "/api/albert/status"
         || path == "/api/albert/translate"
+        || path == "/v1/models"
+        || path == "/v1/chat/completions"
         || path == "/activate"
         || path == "/api/run"
         || path == "/api/data"
