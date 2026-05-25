@@ -2239,3 +2239,42 @@ TTL: G16% / O81% / R3% — holding steady. L21 integration still ongoing.
 
 **Next milestone: break 9.2847.** Gap is 0.0372 nats. At current descent rate, within reach in the next 5–8 epochs.
 
+---
+
+## Field Note 51 — 2026-05-25T15:36:19Z · ep3618 · oscillatory descent continues · ATL batch-level improvement
+
+**State:** ep3618 (21L) · batch 270/300 · EP-Avg 9.3755 (running) · ATL header 8.8420 (-0.14%) · gap to pre-S9 ATL: **0.0592 nats**
+
+~33 epochs since FN50 (ep3585). User departing for the afternoon — cron watch engaged.
+
+### Epoch sequence since FN50
+
+Events bar (oldest → newest): 9.3755 → 9.3543 → 9.3439
+
+Four closed epochs visible, descending across the window: -0.032 nats over ~4 epochs. Center of gravity dropping despite individual oscillations. The gap to pre-S9 ATL widened from 0.0372 (FN50) to 0.0592 — consistent with post-low bounce pattern noted in FN50 oscillation read. The 9.3197 post-S9 low from FN50 was a spike below, not a new floor yet.
+
+### ATL header movement
+
+ATL improved: 8.8540 (FN50) → 8.8420 (-0.14%). This is the overall training ATL (batch-level minimum, set in early training before architecture surgeries), not the post-S9 epoch avg floor. Improvement means batch-level gradient momentarily reached a new historical low during the intervening ~33 epochs — signal that the loss landscape at 21L is still compressing at depth even while epoch averages oscillate.
+
+### Expert routing (ep3618 batch 270)
+
+| Expert | FN50 b262 | FN51 b270 |
+|--------|-----------|-----------|
+| PLN    | 100%      | 85%       |
+| CMP    | 65%       | 100%      |
+| INT    | 89%       | 88%       |
+| ABS    | 59%       | 68%       |
+| LNG    | 27%       | 31%       |
+| LOG    | 16%       | 19%       |
+| GEN    | 7%        | 7%        |
+| SEM    | 7%        | 2%        |
+
+CMP surged to 100% (was 65%) — compositional anchoring dominant this batch. PLN pulled back to 85% (was 100%). ABS continued rising (59%→68%). GEN stable at 7% — new-territory signal maintained. SEM dropped from 7%→2% — batch-to-batch oscillation, not a trend. LOG and LNG both ticked up slightly; not alarming at this scale.
+
+### TTL
+
+G 21% / O 75% / R 5% — green improved from FN50's G16/O81/R3. Orange pulled back, green gaining ground. Healthier TTL profile — L21 integration stabilising.
+
+**Cron watch active. Next milestone unchanged: break 9.2847.** Gap currently 0.0592 from most recent visible close (9.3439). Descent trend intact across the 4-epoch visible window.
+
