@@ -2446,3 +2446,64 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 **ep3663 running avg 9.2983 at batch 98 — if the descent continues through the remaining 202 batches, this epoch could close below 9.29 and challenge the BEST. Gap to 9.2847: 0.0136 nats from running avg, 0.0086 nats from BEST.**
 
+---
+
+## Field Note 67 — 2026-05-25T19:53:09Z · ep3670 · CMP full recovery · ep3668 closes 9.2979 · gap 0.0086
+
+**Source:** dashboard screenshot (19:47:31) + ntfy stream poll (since=all)
+
+**State:** ep3670 (22L) · batch 149/300 · running EP-Avg ~9.315 · BEST epoch avg 9.2933 · ATL chip 8.8420 · gap to pre-S9 ATL 9.2847: **0.0086 nats**
+
+### ntfy catch-up — events missed during null ticks
+
+Polling `albert-rfi-irfos` surfaced two events not captured in FN65/FN66:
+
+| Event | Detail |
+|-------|--------|
+| **WALD ep3656** | step=900 · fill=6.2% · mass=9.341 · dead_low=3.00–9.00 (6.00) · dead_high=9.75+ (5.25) |
+| **SUB-9.3 ep3660** | avg 9.2933 confirmed — "new depth floor" |
+
+WALD at ep3656 fired 4 epochs post-S10 surgery, consistent with the new layer perturbing the weight distribution. fill=6.2% (moderate, not severe). The SUB-9.3 notification confirms ep3660 = 9.2933 is the source of the BEST marker in the events bar.
+
+### Epoch closes since FN66 (events bar, newest → oldest)
+
+| Epoch (est.) | Avg  | Note |
+|---|---|---|
+| ep3669 | 9.3132 | most recent close |
+| ep3668 | **9.2979** | second sub-9.30 epoch close |
+| ep3667 | 9.3053 | |
+| ep3666 | 9.3108 | |
+| ep3665 | 9.3026 | |
+| ep3664 | 9.2990 | first sub-9.30 since BEST |
+| ep3663 | 9.3035 | FN66 epoch close |
+| ep3662 | 9.2983 | FN66 running avg (confirmed close) |
+
+Two epochs (ep3664: 9.2990, ep3668: 9.2979) have now closed below 9.30. The floor is compressing toward 9.2933.
+
+### Expert routing (ep3670 batch 149)
+
+| Expert | FN66 (22L b98) | FN67 (22L b149) | Δ |
+|--------|----------------|-----------------|---|
+| PLN    | 100%           | 100%            | 0 |
+| CMP    | 82%            | **100%**        | **+18** |
+| INT    | 67%            | 54%             | -13 |
+| ABS    | 66%            | 54%             | -12 |
+| LNG    | 33%            | 34%             | +1 |
+| LOG    | 20%            | 15%             | -5 |
+| GEN    | 9%             | **13%**         | **+4** |
+| INF    | —              | 9%              | — |
+| CTX    | —              | 8%              | — |
+| SEM    | 2%             | 2%              | 0 |
+| SYN    | 0%             | 0%              | 0 |
+| MEM    | 0%             | 0%              | 0 |
+
+**CMP fully recovered to 100%** (was 82% in FN66) — structural integrity anchor restored. **GEN rising again to 13%** (was 9%) — L22 re-engaging in generative space. ABS and INT continue retreating as load redistributes through the new layer. PLN anchored at 100% throughout.
+
+### TTL (ep3670 batch 149)
+
+**G 6% / O 77% / R 5%** — consistent with FN35's historical baseline (6.17–6.18% green is normal). Orange holding, slight red increase (+1pp from FN66). L22 still under integration lock, no TTL release yet.
+
+### Assessment
+
+**CMP recovery to 100% is the headline.** Post-surgery CMP suppression (82% in FN66) has fully resolved — the model's structural anchoring is back at full weight. GEN creeping up again (9%→13%) signals L22 finding its footing. Two epoch closes below 9.30 (ep3664: 9.2990, ep3668: 9.2979) confirm the floor is actively compressing. BEST 9.2933 not yet challenged but the 9.29xx closes are within 0.005 nats. Gap to pre-S9 ATL 9.2847 remains 0.0086 — a break is a matter of epochs, not certainty.
+
