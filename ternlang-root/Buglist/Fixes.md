@@ -798,7 +798,7 @@ The following were confirmed as architectural limits as of 2026-04-17. VM-STRUCT
 - **VM-STRUCT-001** (`probe_33`, `probe_35`, `probe_54`): ~~Structs returned from functions don't work because struct fields live in caller registers that get fully restored on TRET.~~ **FIXED in v1.2.1 (2026-04-29)** — `Value::Struct` ABI implemented with `Tstruct` (0x40) / `Tfield` (0x41) opcodes; struct return now heap-allocated, not register-flattened.
 - **COMP-TENSOR-001** (`probe_71`, `probe_72`): ~~Tensor sizes use 16-bit immediates (TALLOC). >65535 element tensors silently truncate.~~ **FIXED in v1.2.1 (2026-04-29)** — `Talloc` upgraded to 8-byte immediates (2× u32 for rows/cols); 32-bit dimension addressing, no size cap.
 - **probe_07 2D tensor**: Index OOB for 2D access patterns in certain edge cases. Marked [KNOWN / 2D-LIMIT].
-- **MOD-004**: Module file loading not implemented. Named imports fail with "file not found". Marked [UNRESOLVED].
+- **MOD-004**: ~~Module file loading not implemented. Named imports fail with "file not found".~~ **FIXED** — `ModuleResolver::from_source_file()` implements the `__file__` sentinel path; `from "file.tern" import func` resolves correctly in both `run` and `build` CLI commands. See [DONE] entry below.
 
 ## 2026-04-17 — Findings from 50-file session
 - **len(string) unsupported:** len() currently only accepts TensorRef. Workaround: avoided len() on strings or used specific word checks.
@@ -811,6 +811,20 @@ Symptom: Parse program error: ExpectedToken("Semicolon", "LParen").
 Diagnosis: The parser occasionally struggles with lookahead for parentheses in specific return or conditional contexts.
 Fix: Workaround applied — assign complex expressions to a temporary variable before evaluation, and use the 'hold' keyword instead of the function-style 'hold()'.
 Status: Resolved via idiom update in patterns.md and AGENT_SESSIONS.md.
+
+---
+
+## 2026-04-29 — [DONE] MOD-004 — File-Based Module Import Implemented
+
+**Problem:** `from "file.tern" import func` was not functional — the stdlib-only resolver had no filesystem access, causing "file not found" at runtime.
+**Fix:** Implemented `ModuleResolver` in `ternlang-core/src/stdlib.rs` with:
+- `from_source_file(path)` — resolves relative to the source file's directory
+- `__file__` sentinel path: `["__file__", "path/to/file.tern"]` → `std::fs::read_to_string`
+- Standard module path fallback: `base_dir/seg1/seg2.tern`
+
+Both `Commands::Run` and `Commands::Build` in `ternlang-cli/src/main.rs` now use `ModuleResolver::from_source_file(file)` instead of the stdlib-only resolver.
+
+**Remaining caveat (BET-013, open):** Named imports of functions that internally call non-imported local helpers trigger a call-stack overflow (patch address resolves to 0x0000). Workaround: `import *` to pull all transitive definitions. Compiler-side fix (pull transitive deps during resolve) is planned but not yet implemented.
 
 ---
 

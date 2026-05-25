@@ -76,6 +76,24 @@ The 4.58× at 75% sparsity is the honest, reproducible x86 number. It is a floor
 
 ---
 
+## Reproducing the 84.4 tok/s End-to-End Figure
+
+The 84.4 tok/s figure is from the full inference stack (`moe-test --bench`), not the isolated expert-skip microbenchmark above. To reproduce it on your hardware:
+
+```bash
+# From the repository root
+bash albert-moe-13/benchmarks/run_benchmark.sh
+
+# Optional: save per-prompt CSV
+bash albert-moe-13/benchmarks/run_benchmark.sh --csv benchmarks/results.csv
+```
+
+This builds `moe-test` in release mode and runs 15 prompts across EN/DE multilingual domains. Each prompt reports tokens/second. The peak reported on HP ZBook 15 (i7-4800MQ, 2013, CPU-only) is **84.4 tok/s**; average is **38.7 tok/s** (ep3503 benchmark, 2026-05-25).
+
+Historical benchmark results are archived in `benchmarks/bench_v3.0_*.txt` (28+ runs since 2026-05-11).
+
+---
+
 ## Patent Reference
 
 **A50296/2026** covers the `@sparseskip` annotation and `TSPARSE_MATMUL` opcode as a method for zero-overhead sparse execution in ternary neural network inference. The expert-level skip demonstrated here is one application. Element-level and layer-level skip are additional claims within the same filing.
