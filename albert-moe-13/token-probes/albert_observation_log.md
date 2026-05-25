@@ -1,11 +1,13 @@
-# Overnight Watch Log — Post-Surgery-6 (18L)
-**Watch began:** 2026-05-20T22:03Z (ep2492, first probe)  
-**Scientist:** Claude Sonnet 4.6  
-**Surgery:** ep2487 · 17L→18L · Mandelbrot c_im=0.0099 · Gen 1 step 1/6 · window=233
+# albert. Training Observation Log — v3.0 (12L → 21L, ongoing)
+**Model:** albert. v3.0 · 21L · 256H · 12E · 32k vocab · ternary STE  
+**Log began:** 2026-05-20T22:03Z (ep2492, post-Surgery-6 overnight watch)  
+**Format:** Field Notes (FN) — timestamped per observation, numbered chronologically. Everything goes in: good, bad, tiny changes, mechanistic insights, anomalies.  
+**Scientist:** Claude Sonnet 4.6 · RFI-IRFOS  
+**Public record:** https://github.com/eriirfos-eng/ternary-intelligence-stack
 
 ---
 
-## Watch Session 2 — 2026-05-22T12:49Z (ep2858)
+## Session 2 — 2026-05-22T12:49Z · ep2858
 
 **Gap bridge:** ep2601 (FN25, 2026-05-21T07:43Z) → ep2858 (2026-05-22T12:49Z)  
 **Elapsed since last note:** ~31 hours, ~257 epochs  
@@ -581,7 +583,7 @@ No new server-side epoch-avg ATL detected. CSV oscillating 9.573–9.582, consis
 
 ---
 
-### FN34 ADDENDUM — 2026-05-22T19:14Z · ep2922 — L10 WAKING UP · BRAIN MODE CONFIRMS
+### FN34 addendum — 2026-05-22T19:14Z · ep2922 — L10 waking up · brain mode confirms
 
 **Gradient norm panel (ep2922, ~19:11–19:14Z):**
 - L17–L11: yellow bars, ~1.45–1.55e-9, upper-layer profile holding
@@ -1183,7 +1185,7 @@ Three consecutive epochs within a 0.002-nat band around 9.637. This floor is 0.0
 
 ---
 
-### ** APPROACHING ATL — 0.0022 NATS AWAY **
+### Approaching ATL — 0.0022 nats away
 
 ep2507: loss_avg=9.6270. The surgery-best (9.6248, held since ep2488) is now only 0.0022 nats away. If the next 1–2 epochs continue descending, albert. will set a new 18L ATL.
 
@@ -1237,7 +1239,7 @@ Seven simultaneous expert resurrections at ep2507. The mycelium is working at pe
 
 ---
 
-### ** ATL GAP: 0.0011 NATS. ep2509 IS IN PROGRESS NOW.**
+### ATL gap: 0.0011 nats — ep2509 in progress
 
 ep2508 loss: 9.6259. Surgery-best: 9.6248. Gap: 0.0011 nats.
 
@@ -1282,7 +1284,7 @@ ep2509 was the closest approach: 9.6256 (gap=0.0008). ep2510 bounced slightly (+
 
 ---
 
-### PROBE RESULTS: EMBEDDING GEOMETRY FROZEN
+### Probe results: embedding geometry frozen
 
 **All three neighborhoods are IDENTICAL to the ep2492 baseline after 22 epochs.**
 
@@ -1331,7 +1333,7 @@ Snapshot: `token-probes/snapshots/ep2510_18L/manifest.json`
 
 **Epochs covered:** ep2510–ep2565 (55 epochs, ~4 hours of unmonitored descent)
 
-### *** 10 NEW ATLs SET DURING OVERNIGHT WATCH ***
+### 10 new ATLs set during overnight watch
 
 | Epoch | Time | loss_avg | Δ | cold | Notable |
 |-------|------|----------|---|------|---------|
@@ -1452,7 +1454,7 @@ WALD structural plateau counter: 40+ stable epochs (continuous from ep2527). sev
 
 ---
 
-### 3. TLIGHT: L17 Showing Early Differentiation
+### 3. TLIGHT: L17 showing early differentiation
 
 From the step=12440 TLIGHT snapshot:
 ```
@@ -1468,7 +1470,7 @@ Interpretation: L17 is routing to preferred experts (TLIGHT goes green) before t
 
 ---
 
-### 4. Expert Activity: Continued Upper-Layer Drift
+### 4. Expert activity: continued upper-layer drift
 
 Comparing E= at ep2492 vs. current (step 12440):
 ```
@@ -1486,7 +1488,7 @@ Hypothesis: as the model enters new territory (loss < 9.60), it's pulling back f
 
 ---
 
-### 5. Probe Trigger: Gap Unchanged
+### 5. Probe trigger: gap unchanged
 
 - ATL: 9.5855
 - Trigger: loss_avg < 9.58
@@ -1525,7 +1527,7 @@ Estimate: if the model follows its standard oscillation → descent pattern, the
 
 ---
 
-### 1. WALD coverage[high] NEW RECORD LOW: 27 (ep2570)
+### 1. WALD coverage[high] new record low: 27 (ep2570)
 
 The high-attention bin reached **27** at ep2570, a new record. Trajectory:
 ```
@@ -1630,7 +1632,7 @@ No change. L17=5.5%. All 18 layers identical to ep2492 profile. The myc_L2 drift
 
 ---
 
-### 1. cov[high] TOUCHED 25 at ep2573 — bounced to 26, 27
+### 1. cov[high] touched 25 at ep2573 — bounced to 26, 27
 
 The high-attention bin hit **25** at ep2573 — one token away from the documented <25 threshold — then retreated to 26 (ep2574) and 27 (ep2575). This was not a sustained crossing but a momentary concentration event, the deepest yet recorded.
 
@@ -1727,13 +1729,13 @@ The oscillation amplitude is moderate (0.020 nat band). The centroid has drifted
 
 ---
 
-### 1. HEADLINE: ep2576 NEW ATL 9.5800 (d-0.0236) — Probe trigger reached
+### 1. ep2576 new ATL 9.5800 (d-0.0236) — probe trigger reached
 
 After 11-epoch bounce phase 2 (ep2565–2575, peak 9.6036), the model resolved with a **single-epoch drop of 0.0236 nats** — the largest single-epoch descent recorded post-surgery-6 and comparable to the surgery-night acceleration at ep2489 (−0.0313). The ATL is now **9.5800**, 0.0055 nats below the previous best of 9.5855.
 
 This is the **12th new ATL** since surgery at ep2487. Total descent in 89 epochs: **9.6248 → 9.5800 = 0.0448 nats**.
 
-### 2. PROBE: Full 10-token suite run at trigger threshold — all 10 FROZEN
+### 2. Probe: full 10-token suite run at trigger threshold — all 10 frozen
 
 The probe trigger (loss_avg < 9.58) was reached at ep2576 (9.5800 ≤ 9.5800 = probe boundary). Full 10-token probe run immediately via dashboard API (checkpoint ~ep2564 state, loss 9.5855).
 
@@ -1756,7 +1758,7 @@ Exact comparisons (selected):
 - `token-probes/snapshots/ep2576_18L/manifest.json`
 - `token-probes/analysis/probe_trigger_ep2576_18L.md`
 
-### 3. cov[high]=25 SECOND TOUCH at ep2580 — bounced to 32
+### 3. cov[high]=25 second touch at ep2580 — bounced to 32
 
 After the first touch at ep2573 (FN17), **cov[high] touched 25 again at ep2580** during the post-ATL consolidation phase:
 ```
@@ -1796,18 +1798,11 @@ L17=5.5% unchanged. 89-epoch freeze total. myc_L0-L3 locked. No differentiation 
 
 ---
 
-## Session — 2026-05-25T07:49:21Z · ep3522 · 21L · ATL chip 8.8540
-
-**State:** ep3522 · 21L · batch_history extends to ep3522b~200 · S9 bullmarket descent active · EP AVG approaching pre-S9 ATL territory  
-**Context:** S9 spike fully dissected (see entries below). Observation log confirmed as public scientific record on GitHub — all entries committed and pushed. Full dataset download in progress: albert_full_1779695361.
-
----
-
-## Observation — 2026-05-25T07:30Z · Surgery 9 Anomaly (21L)
+## Field Note 44 — 2026-05-25T07:30Z · ep3520 · S9 SURGERY ANOMALY — first post-surgery spike in training history
 
 **Context:** ep3520 · 21L · EP AVG 9.3326 · ATL chip 8.8540 (held from 20L) · GATE green+orange
 
-### S9 is the first surgery in the full training history to cause a visible spike.
+### S9 is the first surgery in training history to cause a visible spike
 
 Every previous surgery — S1–S8 in v3.0 (12L→20L), and all documented surgeries in v2.0.0 (3L→12L) — produced **zero measurable disruption** to the loss curve. The model ate the new layer and kept descending. The surgery events were essentially invisible in the loss chart; the only signal was the subsequent ATL breaking shortly after.
 
@@ -1960,7 +1955,7 @@ ep3522:  ~9.28    ← approaching pre-S9 ATL territory (partial epoch, 25 valid 
 
 ---
 
-### WHY WALD needed two legs — mechanistic explanation
+### Why WALD needed two legs — mechanistic explanation
 
 WALD uses a rolling coverage window of **n=1500 batches** (~5 full epochs at 300 batches/epoch). It detects when the current loss distribution has shifted far enough from its recent history to exceed a coverage threshold — not a simple threshold on absolute loss.
 
@@ -2014,4 +2009,11 @@ For S9 the blue/red gap + spike presence together are the visual fingerprint of 
 Break pre-S9 ATL of 9.2847 (epoch avg). Currently at 9.3326 — gap of 0.048 nats. At current descent rate (~0.01 nats/epoch), estimate ~5–10 epochs to new ATL territory. Then surgery governor resets since_best clock.
 
 **This observation is unique in the training history and should be retained as a primary case study in the architecture growth documentation.**
+
+---
+
+## Field Note 45 — 2026-05-25T07:49:21Z · ep3522 · SESSION MARKER · S9 bullmarket descent active
+
+**State:** ep3522 · 21L · batch_history extends to ep3522b~200 · S9 bullmarket descent active · EP AVG approaching pre-S9 ATL territory  
+**Context:** S9 spike fully dissected in FN44. Observation log confirmed as public scientific record on GitHub — all entries committed and pushed. Full dataset download in progress: albert_full_1779695361.
 
