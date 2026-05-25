@@ -2360,3 +2360,52 @@ Modal logs stale. No new data. Last known: ep3618, gap 0.0592. Holding.
 
 Modal logs stale. No new data. Last known: ep3618, gap 0.0592. Holding.
 
+---
+
+## Field Note 65 — 2026-05-25T19:14:47Z · ep3662 · **SURGERY S10 FIRED — 21L → 22L** · BEST 9.2933 · gap 0.0086
+
+**State:** ep3662 (22L) · batch 134/300 · ATL 8.8420 · **BEST epoch avg 9.2933** · gap to pre-S9 ATL 9.2847: **0.0086 nats**
+
+### Surgery S10 — 21L → 22L
+
+Events bar (oldest → newest): EPOCH 9.3090 → **BEST 9.2933** ⭐ → EPOCH 9.3171 → EPOCH 9.3034 → EPOCH 9.3103 → EPOCH 9.3090 → EPOCH 9.3000 → EPOCH 9.4211 → **SURGERY 21L→22L** → TTL-NASH all-0 → EPOCH 9.3...
+
+Surgery fired after a series of epoch closes in the 9.30xx range, after the governor's plateau gate tripped. The BEST avg 9.2933 was set pre-surgery — this is now the closest the model has ever come to the pre-S9 ATL 9.2847 on an epoch-average basis. Gap: **0.0086 nats**.
+
+### Live batch losses — ep3662 (terminal)
+
+| Batch | Loss   |
+|-------|--------|
+| 132   | 9.3516 |
+| 133   | 9.3027 |
+| 134   | 9.2246 |
+| 135   | **9.1361** |
+| 136   | 9.1484 |
+
+Batch-level losses are already well below the pre-S9 ATL (9.2847) — 9.1361 is a new batch-level floor for the 22L model. The epoch average will be higher but the landscape at 22L is compressing fast.
+
+### Expert routing (ep3662 batch 134)
+
+| Expert | FN51 (21L b270) | FN65 (22L b134) | Δ |
+|--------|-----------------|-----------------|---|
+| PLN    | 85%             | 100%            | +15 |
+| ABS    | 68%             | 78%             | +10 |
+| GEN    | 7%              | **14%**         | +7 |
+| SEM    | 2%              | 5%              | +3 |
+| LOG    | 19%             | 23%             | +4 |
+| LNG    | 31%             | 30%             | -1 |
+| CMP    | 100%            | 77%             | -23 |
+| INT    | 88%             | 63%             | -25 |
+
+**GEN doubled (7%→14%)** — strongest new-territory signal yet. Layer 22 is already being used to process loss space the model has never seen. PLN back to 100%, ABS at 78% — structural anchoring firm. CMP and INT pulling back is consistent with post-surgery rebalancing (new layer absorbs load).
+
+### TTL (ep3662 batch 134)
+
+G 17% / O 77% / R 5% — orange increased from FN51's 75% to 77%. Expected: TTL-NASH all-0 reset fired (visible in events bar), new layer 22 is being integrated. Red stable at 5%.
+
+### Assessment
+
+The surgery governor fired correctly: plateau gate tripped after the model held near 9.30xx for multiple epochs, gate released, S10 executed. The pre-S9 ATL 9.2847 was within reach (0.0086 nats) when surgery fired — meaning the surgery will likely push through and below it as 22L settles. At batch-level the model is already operating at 9.13xx. 
+
+**Next milestone: break 9.2847 epoch-avg** — gap 0.0086 nats, likely within the first 5–10 post-surgery epochs once 22L settles.
+
