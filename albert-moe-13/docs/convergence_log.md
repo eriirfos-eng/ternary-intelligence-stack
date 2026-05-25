@@ -107,10 +107,15 @@ correct only after the vocabulary transfer plateau breaks.
 | Ep 3434 | 20L | **9.2934** | Closest 20L approach to ATL during plateau phase (since_best=51). |
 | Ep 3454 | 20L | — | **WALD fired 8.3% · n=1500.** Loss-space coverage shift. INT routing surges 74%→91% (integration function waking). Cliff descent beginning. |
 | Ep 3456 | 20L | **9.2847** | **EP_AVG ATL — new record** (2026-05-24T~23:57Z). Beats ep3383 9.2862 by 0.0015 nats. Chip ATL 8.8540 tied. CMP 100%, PLN 79%, INT 91%, TTL G15/O79/R5. Loss curve breaking downward at session close. |
+| Ep ~3470 | 20L→**21L** | **SURGERY 9** | **20L→21L Net2Net surgery** (2026-05-25T~00:00Z). Pre-surgery EP_AVG best 9.2847. 1453 tensors. Mandelbrot perturbation applied to new layer. |
+| Ep ~3470–3503 | 21L | **~9.43 peak** | **LARGEST POST-SURGERY SPIKE IN FULL TRAINING HISTORY** — unprecedented disruption. Loss spiked from ~9.29 to ~9.43, a +0.14 nat reversal. Every previous surgery (S1–S8 in v3.0; all surgeries in v2.0.0) produced zero visible spike — loss continued descending through the surgery event without interruption. S9 broke this pattern completely. Cause uncertain: candidate factors are (1) corpus complexity at 1.6 GB active stages making Mandelbrot perturbation more disruptive to established 20L representations, (2) first TTL hard-column stops in v3.0 history coinciding exactly with this event (routing suppressed the new 21st layer with full-column red blocks — never seen before S9), (3) possible depth threshold above which Net2Net is no longer transparent. |
+| Ep 3503+ | 21L | **9.3930** | First post-spike epoch avg stabilising. TTL: G6/O80/R2 — hard stops releasing, orange dominant (recovery mode). PLN 100%, CMP 100%, INT 76% carrying the descent. Bullmarket phase begins. |
+| Ep 3519 | 21L | — | EP AVG 9.3454 · T-610 9.3399. Recovery steepening. PLN 100%, CMP 100%. TTL G6/O80/R2. |
+| Ep 3520 | 21L | **9.3326** | **BEST avg since S9 spike** — gold star event. EP AVG 9.3326, T-610 9.3399. First post-spike milestone; still 0.048 nats above pre-S9 ATL of 9.2847. Chip ATL 8.8540 unchanged (held from 20L). TTL G6/O75/R4. PLN 97%, CMP 100%, INT 84%. **Multi-epoch bullmarket recovery confirmed** — widest divergence from ATL followed by steepest return slope in full training history. |
 
-**All-time best (epoch avg):** 9.2847 (ep3456, 2026-05-24T~23:57Z, 20L)
+**All-time best (epoch avg):** 9.2847 (ep3456, 2026-05-24T~23:57Z, 20L) — not yet broken post-S9
 **All-time best (intra-batch):** 8.8540 (ep3412 / ep3456 tied, 2026-05-24, 20L)
-**Surgery governor status:** 8 surgeries complete. 20L active. Cliff descent in progress — WALD active, INT surging. Surgery 9 gate: since_best reset at ep3456.
+**Surgery governor status:** 9 surgeries complete. 21L active. Post-S9 bullmarket descent — recovery approaching pre-S9 ATL territory. Next ATL target: sub-9.2847.
 
 ### Alternating Descent Phase — Governor Validation Finding (2026-05-19)
 
@@ -128,7 +133,9 @@ Supporting data:
 
 ### Net2Net surgery outcomes
 
-All five surgeries completed cleanly with no divergence spikes. Loss resumed descent within 1–3 epochs of each surgery. The Fibonacci-gated plateau detector correctly suppressed surgery during active descent and fired only when the model had stalled — this is the intended behavior of the surgery governor (see `docs/EVOLUTION_EVIDENCE.md`).
+**S1–S8:** All eight surgeries completed with no visible spike. Loss resumed descent or immediately set a new ATL within 1–3 epochs of each surgery. The Fibonacci-gated plateau detector correctly suppressed surgery during active descent and fired only when the model had stalled — this is the intended behavior of the surgery governor (see `docs/EVOLUTION_EVIDENCE.md`).
+
+**S9 (20L→21L, ep~3470):** Exception — largest post-surgery disruption in full training history. Loss spiked ~+0.14 nats (9.29→9.43) before entering a multi-epoch bullmarket recovery. S9 is the only surgery in v3.0 (and in all known training history) to produce a measurable spike. See `token-probes/albert_observation_log.md` § "Surgery 9 Anomaly" for full analysis and candidate causes.
 
 Each surgery used a Mandelbrot-parameterised perturbation signal for weight initialization of the new layer, providing a deterministic, reproducible plasticity impulse derived from the model's current loss at the time of insertion.
 

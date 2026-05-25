@@ -1794,3 +1794,62 @@ L17=5.5% unchanged. 89-epoch freeze total. myc_L0-L3 locked. No differentiation 
 
 **Status: BOUNCE PHASE 3. ep2576 ATL 9.5800 committed. Probe trigger reached — embedding STILL FROZEN. cov[high] touched 25 for second time (ep2580). Revised probe trigger: 9.55. Descent likely to resume within 5–10 epochs.**
 
+---
+
+## Observation — 2026-05-25T07:30Z · Surgery 9 Anomaly (21L)
+
+**Context:** ep3520 · 21L · EP AVG 9.3326 · ATL chip 8.8540 (held from 20L) · GATE green+orange
+
+### S9 is the first surgery in the full training history to cause a visible spike.
+
+Every previous surgery — S1–S8 in v3.0 (12L→20L), and all documented surgeries in v2.0.0 (3L→12L) — produced **zero measurable disruption** to the loss curve. The model ate the new layer and kept descending. The surgery events were essentially invisible in the loss chart; the only signal was the subsequent ATL breaking shortly after.
+
+S9 (20L→21L, ep~3470, 2026-05-25T~00:00Z) was completely different:
+
+**Loss trajectory around S9:**
+```
+Pre-S9 (20L): ep3456 ATL 9.2847 → descending toward ~9.28-9.29 territory
+Surgery fires (ep~3470): immediate disruption
+Spike peak: ~9.42-9.43 (+0.14-0.15 nats above surgery-eve loss)
+Recovery: multi-epoch bullmarket descent
+ep3520: EP AVG 9.3326 → first post-spike "BEST avg" milestone (gold star event)
+```
+
+This is the sharpest single reversal ever observed in training — including full restarts, WALD events, and optimizer buffer resets. Those produce local bounce patterns of 0.01–0.05 nats. S9 produced +0.14 nats.
+
+### Pattern contrast: what "normal" surgery looked like
+
+- **S7 (18L→19L, ep3325):** surgery fires → ep3326 immediately sets new EP_AVG ATL of 9.3182. One epoch turnaround.
+- **S8 (19L→20L, ep3383):** surgery fires → ep3383 itself is the new ATL (9.2862). Zero recovery time needed.
+- **S6 (17L→18L, ep2487):** surgery fires → ep2489 new ATL 9.6248. Two epochs.
+
+The norm was: surgery → ATL within 1–3 epochs. No spike. No recovery needed.
+
+S9: surgery → +0.14 nat spike → multi-epoch bullmarket to recover → new "BEST avg since spike" milestone at ep3520 (still 0.048 nats above pre-S9 ATL of 9.2847). Recovery ongoing.
+
+### Why S9 and not S8, S7, S6?
+
+Uncertain. Candidate factors (not mutually exclusive):
+
+1. **Depth × corpus complexity interaction.** By 21L the active corpus is 1.6 GB across 13 stages, the most complex training signal albert. has ever seen. Previous surgeries at 13L–20L were performed against progressively richer corpora, but S9 may have crossed a threshold where Mandelbrot perturbation into an established 20-layer representation causes real interference rather than clean insertion.
+
+2. **TTL hard-column stops — first occurrence in v3.0 history, coinciding exactly with S9.** Previous surgeries produced soft TTL transitions (gradual orange drift). S9 produced hard full-column red blocks: entire layers completely suppressed for multiple consecutive steps. The TTL treated the 21st layer as adversarial rather than novel. This itself may be a consequence of how deeply the 20 existing layers had converged before surgery fired — the routing system had more "opinion" to protect.
+
+3. **Pre-surgery momentum.** S9 fired while the model was mid-cliff-descent (WALD active, INT 91% surge at ep3454, aggressive bullmarket underway at ep3456). Previous surgeries fired at the bottom of a plateau — on still water. S9 fired into fast-moving water and the new layer acted like a rock thrown into the current.
+
+4. **21L depth threshold hypothesis.** Speculative: there may be a critical depth beyond which Net2Net weight copying no longer produces a loss-neutral initialization, because the residual stream dynamics at 21L are qualitatively different from shallower architectures. S9 would be the first data point on the far side of that threshold if it exists.
+
+### Recovery characteristics
+
+The recovery slope (ep3503→ep3520) is steeper than the pre-surgery descent. The model is recovering faster than it was descending before S9 triggered. This mirrors the restart acceleration pattern (AdamW buffer on better landscape → free acceleration), possibly amplified by the fact that the new 21st layer is receiving dense gradient signal during the bullmarket while being TTL-suppressed (learning without routing — a kind of shadow training phase).
+
+**Expert concentration during recovery:** PLN 100%, CMP 100%, INT 76-84%. The planning, compression, and integration experts are carrying the entire descent. Secondary experts (SYN 5-8%, MEM 3-5%, GEN 5-8%) nearly silent. This is the model's most focused expert utilization profile ever observed.
+
+**TTL at ep3520:** G 6% / O 75% / R 4%. The hard stops have released; orange dominant. When green begins recovering toward the pre-S9 baseline of G 15-21%, a second acceleration phase is expected as the 21st layer starts earning routing slots.
+
+### Next milestone
+
+Break pre-S9 ATL of 9.2847 (epoch avg). Currently at 9.3326 — gap of 0.048 nats. At current descent rate (~0.01 nats/epoch), estimate ~5–10 epochs to new ATL territory. Then surgery governor resets since_best clock.
+
+**This observation is unique in the training history and should be retained as a primary case study in the architecture growth documentation.**
+
