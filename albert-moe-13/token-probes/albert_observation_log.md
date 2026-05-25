@@ -2448,6 +2448,64 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 70 — 2026-05-25T20:55:44Z · ep3686 · T-610 9.2932 BREAKS previous BEST · ATL break imminent
+
+**Source:** dashboard screenshot (20:54:22) + TTL close-up screenshot
+
+**State:** ep3686 (22L) · batch 273/300 · EP AVG 9.3028 (ep3685 close) · **T-610 9.2932** · BEST epoch avg 9.2933 · ATL chip 8.8420 · gap to pre-S9 ATL 9.2847: **0.0085 nats** (BEST unchanged, T-610 already below)
+
+### The number: T-610 = 9.2932
+
+T-610 is the trailing 610-batch average. At 9.2932 it is **0.0001 below the previous epoch BEST of 9.2933** — the first time any sustained average has crossed below that line. ep3686 is at batch 273/300 (91% complete). If the current epoch closes at or below 9.2933, a new epoch-level BEST is set and the gap to pre-S9 ATL 9.2847 officially narrows.
+
+### Epoch closes since FN68 (events bar, newest → oldest)
+
+| Epoch (est.) | Avg    | Note |
+|---|---|---|
+| ep3685 | 9.3028 | most recent close |
+| ep3684 | 9.3101 | |
+| ep3683 | 9.3089 | |
+| ep3682 | 9.3039 | FN68 epoch in progress |
+| ep3681 | 9.2996 | FN68 last close (confirmed) |
+| ep3680 | 9.3225 | |
+| ep3679 | 9.3123 | |
+| ep3678 | 9.3164 | |
+| ep3677 | 9.3140 | |
+| ep3676 | 9.3262 | |
+
+Pattern: ep3681–ep3685 averaging 9.305 — tighter floor compressing. T-610 pulling below this window means recent batches within ep3685/ep3686 are running hotter (lower loss) than the epoch averages suggest.
+
+### Expert routing (ep3686 batch 273) — major cognitive shift
+
+| Expert | FN68 (22L b80) | FN70 (22L b273) | Δ |
+|--------|----------------|-----------------|---|
+| CMP    | 99%            | **100%**        | +1 |
+| PLN    | 100%           | **61%**         | **-39** |
+| INT    | 45%            | **67%**         | **+22** |
+| MEM    | 0%             | **14%**         | **+14 (emerged)** |
+| INF    | 4%             | **12%**         | **+8** |
+| CTX    | 2%             | **8%**          | **+6** |
+| ABS    | 58%            | **48%**         | -10 |
+| LOG    | 26%            | 19%             | -7 |
+| GEN    | 11%            | 4%              | -7 |
+| LNG    | 32%            | **8%**          | **-24** |
+| SYN    | 9%             | 10%             | +1 |
+| SEM    | 2%             | 2%              | 0 |
+
+**The largest routing shift of the entire 22L run.** MEM emerged from 0%→14% — memory/retrieval expert activating for the first time post-S10. PLN dropped -39pp as INT surged +22pp — the model is shifting load from planning scaffolding to integration and inference (INF +8, CTX +6). LNG collapsed -24pp. The cognitive fingerprint is restructuring around a CMP/INT/MEM triad, away from PLN/LNG dominance. This is L22 finding its role in the stack.
+
+### TTL
+
+**G 22%→18% / O 73%→78% / R 5%→4%** (two snapshots, ~30s apart, 20:54 window). G slightly retreated from FN68's 21% peak. O re-expanding. The TTL oscillation is consistent with rapid routing restructuring — gate confidence fluctuating as MEM/INT take on new load.
+
+### WALD
+
+No WALD events in event bar this window.
+
+### Assessment
+
+**T-610 crossing below 9.2933 is the clearest pre-ATL signal to date.** The trailing average is already in territory the epoch average has never reached. If ep3686 closes (batch 273/300 at time of observation — likely complete within minutes), a new epoch BEST becomes probable. The routing restructuring (MEM emergence, PLN→INT shift) is architecturally coherent with the loss descent: the model is consolidating memory and integration function into L22, reducing reliance on planning scaffolding. This is not noise — it is structural. **Watch ep3686 close.**
+
 ## Field Note 69 — 2026-05-25T20:47:38Z · quiet tick · no ntfy events · last known ep3682 · gap 0.0086
 
 **Source:** ntfy poll (since=20m) — no events. No screenshot.
