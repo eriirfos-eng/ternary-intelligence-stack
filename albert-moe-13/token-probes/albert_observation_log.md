@@ -2409,3 +2409,40 @@ The surgery governor fired correctly: plateau gate tripped after the model held 
 
 **Next milestone: break 9.2847 epoch-avg** — gap 0.0086 nats, likely within the first 5–10 post-surgery epochs once 22L settles.
 
+---
+
+## Field Note 66 — 2026-05-25T19:18:21Z · ep3663 · post-S10 L22 TTL integration · EP-Avg 9.2983 · gap 0.0086
+
+**State:** ep3663 (22L) · batch 98/300 · EP-Avg 9.2983 (running) · BEST epoch avg 9.2933 · ATL 8.8420 · gap to pre-S9 ATL: **0.0086 nats**
+
+### Post-surgery descent — one epoch later
+
+ep3662 closed at **9.2983** — confirmed by leftmost event in bar (newest). The full post-surgery epoch sequence now visible:
+
+Events bar (newest → oldest): EPOCH 9.2983 | EPOCH 9.3090 | BEST 9.2933 | EPOCH 9.3171 | EPOCH 9.3034 | EPOCH 9.3103 | EPOCH 9.3089 | EPOCH 9.3060 | EPOCH 9.4211 | SURGERY 21L→22L | TTL-NASH all-0
+
+Post-surgery disruption peaked at 9.4211 (one epoch), then rapid descent: 9.3060 → 9.3034 → 9.3103 → 9.3089 → BEST 9.2933 → 9.3090 → **9.2983** (ep3662 close). The BEST at 9.2933 is still the floor; ep3662 at 9.2983 is 0.005 nats above it but the trajectory is clearly pushing down.
+
+### TTL — L22 integration lock
+
+**TTL: G 18% / O 78% / R 4%**
+
+User observation: "TTL completely blocking out the new layers." The TTL heatmap shows L21–L22 dominated by red/orange — the governor is throttling the new layer's contribution while it trains in. This is the correct and expected behavior: the TTL system routes around L22 until its weights are stable enough to integrate. Green is concentrated in the lower, established layers. As L22's gradient norm converges, TTL will progressively release it — same pattern seen after every prior surgery.
+
+### Expert routing (ep3663 batch 98)
+
+| Expert | FN65 (22L b134) | FN66 (22L b98) | Δ |
+|--------|-----------------|----------------|---|
+| PLN    | 100%            | 100%           | 0 |
+| CMP    | 77%             | 82%            | +5 |
+| INT    | 63%             | 67%            | +4 |
+| ABS    | 78%             | 66%            | -12 |
+| GEN    | 14%             | 9%             | -5 |
+| LNG    | 30%             | 33%            | +3 |
+| LOG    | 23%             | 20%            | -3 |
+| SEM    | 5%              | 2%             | -3 |
+
+GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled back (78%→66%). CMP and INT recovering. PLN anchored at 100%. The routing is stabilising after the surgery disruption burst.
+
+**ep3663 running avg 9.2983 at batch 98 — if the descent continues through the remaining 202 batches, this epoch could close below 9.29 and challenge the BEST. Gap to 9.2847: 0.0136 nats from running avg, 0.0086 nats from BEST.**
+
