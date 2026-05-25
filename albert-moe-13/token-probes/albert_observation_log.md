@@ -1847,6 +1847,31 @@ The recovery slope (ep3503→ep3520) is steeper than the pre-surgery descent. Th
 
 **TTL at ep3520:** G 6% / O 75% / R 4%. The hard stops have released; orange dominant. When green begins recovering toward the pre-S9 baseline of G 15-21%, a second acceleration phase is expected as the 21st layer starts earning routing slots.
 
+### S9 spike microstructure — double-peak / WALD-triggered resolution (ep3522 zoom)
+
+The tight zoom reveals the S9 spike has a specific M-shape structure, distinct from any prior WALD or surgery event:
+
+```
+ep3470  Surgery fires (blue line)
+        ↓
+        Leg 1 up  — immediate spike, fast ascent
+        Brief plateau / attempt to stabilize
+        Leg 2 up  — second push, makes a new high above Leg 1
+        ← WALD fires here (red line) — on the second leg, not the first
+        One more high after WALD ("defiance" — model hasn't absorbed WALD tap yet)
+        → Hard commitment to descent
+ep3522  Curve sitting at pre-surgery plateau average (dashed line) — full recovery
+```
+
+**Contrast with normal WALD behavior:**
+- *Daydreaming mode:* loss drifts slowly upward → WALD fires softly, one tap, model resumes descent immediately
+- *Too-fast descent mode:* loss drops too sharply → WALD fires "Nope" → small pullback, then descent resumes
+- *S9 mode:* surgery causes a sharp spike → WALD watches Leg 1, watches Leg 2, fires on the second escalation → model makes one more high anyway → then descends hard
+
+WALD did not react to the surgery itself — it reacted to the *second escalation*. The threshold required two legs of anomalous loss movement before the n=1500 coverage window registered a significant shift. This is consistent with WALD's design as a coverage detector, not a spike detector: a single-leg spike might not move enough of the loss-space distribution to cross the threshold; two legs in the same direction do.
+
+**ep3522 status:** Curve is at the pre-surgery EP_AVG floor (dashed reference line). Full recovery confirmed. Next target: break pre-S9 ATL of 9.2847.
+
 ### WALD marker as surgery diagnostic
 
 The dashboard renders two types of vertical epoch lines: **blue** = surgery trigger epoch, **red** = WALD firing epoch. The tight S9 zoom (Image 5, 2026-05-25) shows the red WALD line displaced from the blue surgery line, with the gap spanning part of the spike ascent. This means WALD detected the loss-space coverage shift caused by the disruption — not a descent-acceleration signal as usual.
