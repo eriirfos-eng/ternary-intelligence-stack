@@ -2448,6 +2448,62 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 68 — 2026-05-25T20:35:31Z · ep3682 · TTL green surge +15pp · ep3681 closes 9.2996 · gap 0.0086
+
+**Source:** dashboard screenshot (20:35:31)
+
+**State:** ep3682 (22L) · batch 80/300 · last epoch close 9.2996 (ep3681) · BEST epoch avg 9.2933 · ATL chip 8.8420 · T-610 9.3116 · gap to pre-S9 ATL 9.2847: **0.0086 nats** (BEST unchanged)
+
+### Epoch closes since FN67 (events bar, newest → oldest)
+
+| Epoch (est.) | Avg  | Note |
+|---|---|---|
+| ep3681 | **9.2996** | most recent close · third sub-9.30 post-S10 |
+| ep3680 | 9.3225 | |
+| ep3679 | 9.3123 | |
+| ep3678 | 9.3164 | |
+| ep3677 | 9.3140 | |
+| ep3676 | 9.3262 | |
+| ep3675 | 9.3109 | |
+| ep3674 | 9.3103 | |
+| ep3673 | 9.3163 | |
+| ep3672 | 9.3209 | |
+
+ep3681 (9.2996) is the third sub-9.30 epoch close post-S10. Sub-9.30 closes: ep3664 (9.2990), ep3668 (9.2979), ep3681 (9.2996). The floor is real but not compressing further yet — BEST 9.2933 still holds.
+
+### Expert routing (ep3682 batch 80)
+
+| Expert | FN67 (22L b149) | FN68 (22L b80) | Δ |
+|--------|-----------------|----------------|---|
+| PLN    | 100%            | 100%           | 0 |
+| CMP    | 100%            | **99%**        | -1 |
+| INT    | 54%             | **45%**        | **-9** |
+| ABS    | 54%             | **58%**        | **+4** |
+| LNG    | 34%             | 32%            | -2 |
+| LOG    | 15%             | **26%**        | **+11** |
+| GEN    | 13%             | 11%            | -2 |
+| SYN    | 0%              | **9%**         | **+9 (emerged)** |
+| INF    | 9%              | 4%             | -5 |
+| CTX    | 8%              | 2%             | -6 |
+| SEM    | 2%              | 2%             | 0 |
+| MEM    | 0%              | 0%             | 0 |
+
+Notable shifts: LOG +11pp (15%→26%), SYN emerged from 0%→9%, INT retreated -9pp. LOG + SYN rising together suggests syntactic/logical structure processing consolidating. CTX and INF compressing — the model is relying less on context recall and inference scaffolding, more on direct pattern application.
+
+### TTL (ep3682 batch 80)
+
+**G 21% / O 73% / R 6%** — G jumped from 6% (FN67) to 21% — a +15pp surge. Orange compressed correspondingly (-4pp). Red held steady (+1pp).
+
+This is a significant TTL shift. Green = high-confidence gate decisions, efficient routing. A jump from 6%→21% in one monitoring window suggests L22 is no longer under integration lock — gate confidence has surged across layers. This is the largest TTL green move observed post-S10.
+
+### WALD
+
+No WALD events visible in the event bar for this window.
+
+### Assessment
+
+**TTL green surge is the headline.** G jumping from 6%→21% in ~40 minutes indicates L22 integration unlocking: gate decisions across the architecture are now high-confidence at 3× the prior rate. LOG resurgence (+11pp) and SYN emergence (+9pp) are consistent with syntactic/logical consolidation following the surge — the model is re-routing load from scaffolding experts (CTX, INF) into direct structure experts (LOG, SYN). ep3681 close at 9.2996 is the third sub-9.30 post-S10; floor established and holding. BEST 9.2933 not challenged this window, gap to pre-S9 ATL 9.2847 unchanged at 0.0086.
+
 ## Field Note 67 — 2026-05-25T19:53:09Z · ep3670 · CMP full recovery · ep3668 closes 9.2979 · gap 0.0086
 
 **Source:** dashboard screenshot (19:47:31) + ntfy stream poll (since=all)
