@@ -1872,6 +1872,122 @@ WALD did not react to the surgery itself — it reacted to the *second escalatio
 
 **ep3522 status:** Curve is at the pre-surgery EP_AVG floor (dashed reference line). Full recovery confirmed. Next target: break pre-S9 ATL of 9.2847.
 
+---
+
+### S9 spike — full epoch-by-epoch dissection (2026-05-25, extracted from batch_history.csv)
+
+Exact epoch averages across the full S9 event window (300 batches/epoch, computed from raw batch data):
+
+```
+ep3468:  9.2951   pre-surgery
+ep3469:  9.2862   pre-surgery minimum (effectively ATL at time of surgery)
+ep3470:  9.2963   surgery fires — barely a ripple (+0.010 nat)
+
+--- LEG 1 ---
+ep3471:  9.3480   first real jump (+0.052 from ep3470)
+ep3472:  9.3419   slight pullback
+ep3473:  9.3338   valley between legs (lowest point of M valley)
+ep3474:  9.3498   begins climbing again
+ep3475:  9.3588
+ep3476:  9.3479
+ep3477:  9.3561
+ep3478:  9.3562
+ep3479:  9.3612   Leg 1 plateau ceiling ~9.36
+
+--- LEG 2 ---
+ep3480:  9.3776   second escalation begins (+0.016 step-up from ep3479)
+ep3481:  9.3823
+ep3482:  9.3911
+ep3483:  9.3855
+ep3484:  9.3896
+ep3485:  9.3913
+ep3486:  9.3962
+ep3487:  9.4031   ← FIRST BREACH OF 9.40
+ep3488:  9.3923
+ep3489:  9.4115   ← Leg 2 first peak
+ep3490:  9.3917
+ep3491:  9.4008
+ep3492:  9.4072
+ep3493:  9.4054
+ep3494:  9.3989
+ep3495:  9.3980
+ep3496:  9.4075
+ep3497:  9.4035
+ep3498:  9.4009
+ep3499:  9.3978
+ep3500:  9.3930
+ep3501:  9.4017
+ep3502:  9.4023
+ep3503:  9.4011   WALD fires somewhere in this window (red line on chart)
+
+--- POST-WALD DEFIANCE ---
+ep3504:  9.4266   ← HIGHEST SINGLE EPOCH IN ENTIRE SPIKE
+ep3505:  9.4162
+ep3506:  9.4174
+ep3507:  9.4083
+ep3508:  9.4038
+ep3509:  9.4172
+
+--- HARD DESCENT ---
+ep3510:  9.3701   drops 0.057 in one epoch — sharpest step-down in the event
+ep3511:  9.3671
+ep3512:  9.3780
+ep3513:  9.3841
+ep3514:  9.3453
+ep3515:  9.3432
+ep3516:  9.3489
+ep3517:  9.3410
+ep3518:  9.3454
+ep3519:  9.3326   ← first post-spike BEST avg milestone (gold star event)
+ep3520:  9.3351
+ep3521:  9.3411
+ep3522:  ~9.28    ← approaching pre-S9 ATL territory (partial epoch, 25 valid batches)
+```
+
+**Total spike duration:** ep3470 → ep3509 = 39 epochs from surgery to descent commit  
+**Leg 1 ceiling:** ~9.36 (ep3471–3479)  
+**Valley between legs:** 9.33–9.34 (ep3472–3473)  
+**Leg 2 ceiling:** ~9.41 (ep3487–3503)  
+**WALD defiance high:** 9.4266 (ep3504) — the single highest epoch in all of v3.0  
+**Descent trigger epoch:** ep3510 (-0.057 nat single-epoch drop)
+
+---
+
+### WHY WALD needed two legs — mechanistic explanation
+
+WALD uses a rolling coverage window of **n=1500 batches** (~5 full epochs at 300 batches/epoch). It detects when the current loss distribution has shifted far enough from its recent history to exceed a coverage threshold — not a simple threshold on absolute loss.
+
+**After Leg 1 (ep3471–3479):**  
+The n=1500 window at, say, ep3479 contains:
+- ~1250 batches from the pre-surgery period (loss ~9.28–9.30)
+- ~250 batches from Leg 1 (loss ~9.33–9.36)
+
+Leg 1 batches are only ~17% of the window. The coverage shift is diluted. WALD threshold not crossed.
+
+**After Leg 2 escalates past 9.40 (ep3487+):**  
+By ep3487 (~17 epochs after surgery), the window has rotated. Pre-surgery batches have dropped off. The window is now:
+- ~1200–1500 batches from the spike period (loss ~9.35–9.41)
+- Few or no pre-surgery batches remaining
+
+Coverage shift is now dominant. WALD fires.
+
+**The "defiance" high at ep3504 (+0.023 above the Leg 2 body):**  
+WALD fires during the ep3487–3503 plateau. But the optimizer's AdamW second-moment buffer (the "velocity" accumulated from recent upward gradient steps) is already loaded in the spike direction. One epoch of accumulated momentum overshoots before the WALD correction fully propagates through the gradient loop. ep3504 hits 9.4266 — higher than anything before it — then the correction lands and descent begins at ep3510.
+
+**The ep3510 cliff (-0.057 in one epoch):**  
+When WALD's correction finally dominates: the AdamW buffer is now pointed downward (WALD pulled back), the new 21st layer is receiving dense gradient signal, and the 20 established layers know exactly where to go. The combination produces the sharpest single-epoch drop in the entire post-S9 window — steeper than anything in the Leg 2 ascent.
+
+**Summary in one line:** WALD is a coverage detector, not a spike alarm. It needed enough of its 5-epoch rolling window to fill with anomalous loss before firing. Leg 1 alone filled ~17% of the window — not enough. Leg 2 sustained for 17+ epochs filled ~100% — WALD fired.
+
+---
+
+### Full dataset ingested (2026-05-25, albert_full_1779694798526.csv)
+
+Downloaded: `albert_full_1779694798526.csv` (5.2 MB, ep3500–ep3522 batch 91).  
+Format: `step, global_epoch, batch, layers, loss, grad_norm, per-layer L1 norms, per-expert routing, entropy, per-layer sparsity, per-expert activity, lb, per-layer divgrad`  
+Contains full rich telemetry (routing, sparsity, gradient divergence) for the descent phase of the S9 spike.  
+Not ingested into batch_history.csv — existing data already covers this range and extends further (batch_history.csv ends at ep3522 batch ~200). Rich telemetry columns available for deeper routing/gradient analysis if needed.
+
 ### WALD marker as surgery diagnostic
 
 The dashboard renders two types of vertical epoch lines: **blue** = surgery trigger epoch, **red** = WALD firing epoch. The tight S9 zoom (Image 5, 2026-05-25) shows the red WALD line displaced from the blue surgery line, with the gap spanning part of the spike ascent. This means WALD detected the loss-space coverage shift caused by the disruption — not a descent-acceleration signal as usual.
