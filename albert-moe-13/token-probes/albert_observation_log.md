@@ -2278,3 +2278,13 @@ G 21% / O 75% / R 5% — green improved from FN50's G16/O81/R3. Orange pulled ba
 
 **Cron watch active. Next milestone unchanged: break 9.2847.** Gap currently 0.0592 from most recent visible close (9.3439). Descent trend intact across the 4-epoch visible window.
 
+---
+
+## Field Note 52 — 2026-05-25T16:02:17Z · cron tick · null observation (user away, Modal logs not synced)
+
+**State:** automated cron check — no dashboard data available. Local /tmp/albert_epoch_history.log last written 2026-05-24T04:35Z (ep3249) — stale by ~35h. Training runs on Modal; logs do not sync to local /tmp/ during a live session. Dashboard at localhost:8888 is browser-only, not CLI-accessible.
+
+Last known state from FN51 (2026-05-25T15:36Z): ep3618, EP-Avg running 9.3755, gap 0.0592, descent trend intact.
+
+Cron continues. Next manned screenshot will resume data collection.
+
