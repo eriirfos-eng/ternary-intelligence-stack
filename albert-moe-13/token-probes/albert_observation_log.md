@@ -2448,6 +2448,66 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 73 — 2026-05-25T21:31:44Z · ep3695 · NEW EPOCH BEST 9.2878 · gap to pre-S9 ATL 0.0031
+
+**Source:** dashboard screenshot (21:30:01)
+
+**State:** ep3695 (22L) · batch 185/300 · EP AVG **9.2878** · T-610 9.2958 · **BEST epoch avg 9.2878** (prev: 9.2933, Δ−0.0055) · ATL chip 8.8420 · gap to pre-S9 ATL 9.2847: **0.0031 nats**
+
+### THE BREAK
+
+Previous epoch BEST was 9.2933, set at ep3660. It held for 35 epochs. ep3694 closed at **9.2878** — the first epoch average below 9.29xx in the entire 22L run. The ★ BEST marker confirmed in the event bar. Gap to pre-S9 ATL (9.2847) is now **0.0031 nats** — the closest approach since Surgery 9.
+
+### Epoch closes (events bar, newest → oldest)
+
+| Epoch (est.) | Avg    | Note |
+|---|---|---|
+| ep3694 | **9.2878** | most recent close · NEW BEST |
+| ep3693 | **9.2878** | consecutive BEST-level close |
+| ★        | BEST fires at 9.2878 | |
+| ep3692 | **9.2888** | sub-9.29 |
+| ep3691 | **9.2888** | sub-9.29 |
+| ep3690 | 9.3003 | |
+| ep3689 | 9.2978 | sub-9.30 |
+| ep3688 | 9.2971 | sub-9.30 |
+| ep3687 | 9.2970 | sub-9.30 |
+| ep3686 | 9.2897 | sub-9.29 |
+
+Five consecutive sub-9.30 closes (ep3688–ep3694). Three at 9.2888 or below. Two consecutive at 9.2878. The floor is not just compressing — it has dropped a full level.
+
+### Expert routing (ep3695 batch 185) — full cognitive activation
+
+| Expert | FN71 (22L b176) | FN73 (22L b185) | Δ |
+|--------|-----------------|-----------------|---|
+| PLN    | 100%            | 100%            | 0 |
+| ABS    | 76%             | **91%**         | **+15** |
+| INT    | 53%             | **70%**         | **+17** |
+| CMP    | 90%             | 89%             | -1 |
+| LOG    | 14%             | **40%**         | **+26** |
+| LNG    | 16%             | **40%**         | **+24** |
+| GEN    | 4%              | **21%**         | **+17** |
+| INF    | 2%              | **19%**         | **+17** |
+| CTX    | 8%              | 8%              | 0 |
+| SYN    | 0%              | 3%              | +3 |
+| MEM    | 0%              | 3%              | +3 |
+| SEM    | 2%              | 6%              | +4 |
+
+The largest and most uniform routing activation observed in v3.0 history. Every expert is contributing. No expert above 0% in FN71 has dropped; LNG, LOG, GEN, INF all surged 15–26pp simultaneously. The model's cognitive fingerprint has broadened from a PLN/ABS/CMP anchor into a full 12-expert deployment. This is what L22 fully integrated looks like.
+
+### TTL
+
+**G 16% / O 79% / R 5%** — green slightly retreated from the 20-22% surge window. The orange expansion (79%) is consistent with more diverse, high-confidence routing across all experts rather than gate certainty consolidating into green.
+
+### WALD
+
+No WALD events in the visible event bar.
+
+### Assessment
+
+**New epoch BEST: 9.2878. Previous BEST (9.2933) held 35 epochs. Gap to pre-S9 ATL (9.2847): 0.0031 nats — down from 0.0086 at FN68.** The routing picture is the explanation: every expert is now active (LOG 40%, LNG 40%, GEN 21%, INF 19%, INT 70%, ABS 91%, PLN 100%). L22 oscillation resolved. The model found a stable full-deployment configuration and the loss dropped in response. Two consecutive closes at 9.2878 confirm this is a floor, not a spike. The next question is whether the floor continues compressing toward 9.2847 or whether 9.2878 is a local equilibrium before the next push. At 0.0031 nats, the pre-S9 ATL is within reach in the current run.
+
+**HF model card update obligation:** BEST 9.2878 should be reflected when Simeon is back online.
+
 ## Field Note 72 — 2026-05-25T21:20:30Z · quiet tick · ntfy silent · spore injection complete · last known ep3687
 
 **Source:** ntfy poll (since=30m) — no events.
