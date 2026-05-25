@@ -1796,6 +1796,13 @@ L17=5.5% unchanged. 89-epoch freeze total. myc_L0-L3 locked. No differentiation 
 
 ---
 
+## Session — 2026-05-25T07:49:21Z · ep3522 · 21L · ATL chip 8.8540
+
+**State:** ep3522 · 21L · batch_history extends to ep3522b~200 · S9 bullmarket descent active · EP AVG approaching pre-S9 ATL territory  
+**Context:** S9 spike fully dissected (see entries below). Observation log confirmed as public scientific record on GitHub — all entries committed and pushed. Full dataset download in progress: albert_full_1779695361.
+
+---
+
 ## Observation — 2026-05-25T07:30Z · Surgery 9 Anomaly (21L)
 
 **Context:** ep3520 · 21L · EP AVG 9.3326 · ATL chip 8.8540 (held from 20L) · GATE green+orange
