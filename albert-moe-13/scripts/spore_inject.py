@@ -39,9 +39,7 @@ HERE        = Path(__file__).resolve().parent.parent   # albert-moe-13/
 SPORES_REPO = Path.home() / "projects" / "albert-spores" / "spores"
 CHAOS_DIR   = HERE / "data" / "corpus" / "chaos"
 VOCAB_PATH  = HERE / "data" / "vocab_v3.json"
-CACHE_BIN   = HERE / "data" / "corpus_cache.bin"
 SERVE_BIN   = HERE / "target" / "release" / "albert_serve"
-TOKENIZER   = HERE / "scripts" / "train_tokenizer_v3.py"
 MODAL_VOL   = "albert-vol"
 
 # ── safetensors check ──────────────────────────────────────────────────────────
@@ -274,34 +272,28 @@ def check_invariant():
     else:
         print(f"  [invariant] OK")
 
-# ── corpus rebuild ─────────────────────────────────────────────────────────────
-
-def rebuild_cache() -> bool:
-    print("  [tokenize] rebuilding corpus_cache.bin ...")
-    rc = subprocess.run([sys.executable, str(TOKENIZER)], cwd=HERE).returncode
-    if rc != 0:
-        print(f"  [tokenize] ERROR: train_tokenizer_v3.py exited {rc}")
-        return False
-    size_mb = CACHE_BIN.stat().st_size / 1024 / 1024 if CACHE_BIN.exists() else 0
-    print(f"  [tokenize] corpus_cache.bin rebuilt ({size_mb:.1f} MB)")
-    return True
-
 # ── modal push ─────────────────────────────────────────────────────────────────
+# corpus_cache.bin is NOT rebuilt locally — load_corpus_cached() in train_bible.rs
+# auto-invalidates the cache when any corpus file mtime is newer than the cache.
+# We only push the new text files; the Modal container rebuilds the binary cache
+# on the next training restart.
 
-def modal_push() -> bool:
+def modal_push(spore_files: list[Path]) -> bool:
     if not shutil.which("modal"):
         print("  [modal] modal CLI not found — skipping push (run: pip install modal)")
         return False
-    print("  [modal] pushing corpus_cache.bin to albert-vol ...")
-    rc = subprocess.run(
-        ["modal", "volume", "put", "--force", MODAL_VOL,
-         "data/corpus_cache.bin", "/albert/data/corpus_cache.bin"],
-        cwd=HERE,
-    ).returncode
-    if rc != 0:
-        print(f"  [modal] ERROR: modal volume put exited {rc}")
-        return False
-    print("  [modal] pushed — Modal T4 will pick up new corpus on next training restart")
+    for spore_file in spore_files:
+        rel = spore_file.relative_to(HERE)
+        remote = f"/albert/{rel}"
+        print(f"  [modal] pushing {rel} → {remote}")
+        rc = subprocess.run(
+            ["modal", "volume", "put", "--force", MODAL_VOL, str(rel), remote],
+            cwd=HERE,
+        ).returncode
+        if rc != 0:
+            print(f"  [modal] ERROR: modal volume put exited {rc}")
+            return False
+    print("  [modal] done — Modal T4 will auto-rebuild corpus cache on next restart")
     return True
 
 # ── main ───────────────────────────────────────────────────────────────────────
@@ -383,30 +375,29 @@ def main():
         sys.exit(1)
 
     # 4 — invariant check
-    print("\n[4/6] checking 90/10 invariant ...")
+    print("\n[4/5] checking 90/10 invariant ...")
     check_invariant()
 
     if args.dry_run:
-        print("\n[dry-run] skipping retokenize and Modal push.")
-        print("Run without --dry-run to commit corpus changes.")
+        print("\n[dry-run] skipping Modal push.")
+        print("Run without --dry-run to push to Modal volume.")
         return
 
-    # 5 — rebuild
-    print("\n[5/6] rebuilding corpus_cache.bin ...")
-    if not rebuild_cache():
-        sys.exit(1)
-
-    # 6 — modal push
+    # 5 — modal push (text files only — binary cache auto-rebuilt by Modal on restart)
+    spore_files = [CHAOS_DIR / f"spores_{s['contributor']}.txt" for s in spores if
+                   (CHAOS_DIR / f"spores_{s['contributor']}.txt").exists()]
     if not args.no_modal:
-        print("\n[6/6] pushing to Modal volume ...")
-        modal_push()
+        print("\n[5/5] pushing spore text files to Modal volume ...")
+        modal_push(spore_files)
     else:
-        print("\n[6/6] --no-modal set — skipping Modal push")
-        print(f"  corpus_cache.bin updated locally at {CACHE_BIN}")
-        print(f"  To push manually: modal volume put --force albert-vol data/corpus_cache.bin /albert/data/corpus_cache.bin")
+        print("\n[5/5] --no-modal set — skipping Modal push")
+        for f in spore_files:
+            rel = f.relative_to(HERE)
+            print(f"  To push manually: modal volume put --force albert-vol {rel} /albert/{rel}")
 
     print("\n=== spore_inject complete ===")
     print("albert. will train on colony text on the next Modal restart.")
+    print("(corpus_cache.bin will be auto-rebuilt by the training binary on first run)")
 
 
 if __name__ == "__main__":
