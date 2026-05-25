@@ -992,70 +992,94 @@ async function sendPrompt() {
   }
 }
 
-// ── speech to text ───────────────────────────────────────────────────────────
-let recognition = null;
-let recognizing  = false;
+// ── speech to text (Whisper via Transformers.js) ─────────────────────────────
+// Replaces browser Web Speech API — multilingual, offline-capable, accurate.
+// Model: Xenova/whisper-tiny (~75MB, cached after first load).
+let whisperPipe    = null;
+let whisperLoading = false;
+let mediaRecorder  = null;
+let audioChunks    = [];
+let micActive      = false;
 
-(function initSpeech() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { return; }
-  recognition = new SR();
-  recognition.continuous     = false;
-  recognition.interimResults = true;
-  recognition.lang           = 'en-US';
-
-  let interim = '';
-  let baseText = '';
-
-  recognition.onstart = () => {
-    recognizing = true;
-    baseText = ta.value;
-    document.getElementById('mic-btn').classList.add('recording');
-  };
-  recognition.onend = () => {
-    recognizing = false;
-    document.getElementById('mic-btn').classList.remove('recording');
-    interim = '';
-  };
-  recognition.onerror = () => {
-    recognizing = false;
-    document.getElementById('mic-btn').classList.remove('recording');
-  };
-  recognition.onresult = (e) => {
-    interim = '';
-    let final = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) final += e.results[i][0].transcript;
-      else interim += e.results[i][0].transcript;
-    }
-    if (final) {
-      baseText = (baseText + ' ' + final).trim();
-      interim  = '';
-    }
-    ta.value = interim ? (baseText + ' ' + interim).trim() : baseText;
-    ta.style.height = 'auto';
-    ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
-    document.getElementById('char-count').textContent = `${ta.value.length} / 512`;
-  };
-})();
+async function loadWhisper() {
+  if (whisperPipe)    return whisperPipe;
+  if (whisperLoading) return null;
+  whisperLoading = true;
+  try {
+    const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+    whisperPipe = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny');
+  } catch (e) {
+    console.error('Whisper load failed:', e);
+    whisperLoading = false;
+    return null;
+  }
+  whisperLoading = false;
+  return whisperPipe;
+}
 
 async function toggleMic() {
-  if (recognizing) { recognition.stop(); return; }
-  // Always ask for mic permission — this is what triggers the browser dialog
+  const btn = document.getElementById('mic-btn');
+
+  if (micActive && mediaRecorder) {
+    mediaRecorder.stop();
+    return;
+  }
+
+  let stream;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(t => t.stop()); // release immediately; recognition manages its own stream
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch (err) {
     ta.placeholder = err.name === 'NotAllowedError' ? 'microphone access denied' : 'microphone not available';
     setTimeout(() => { ta.placeholder = 'Send a prompt to albert. …'; }, 2500);
     return;
   }
-  if (!recognition) {
-    ta.placeholder = 'voice recognition not available — try Chrome or Edge';
-    setTimeout(() => { ta.placeholder = 'Send a prompt to albert. …'; }, 3000);
-    return;
-  }
-  recognition.start();
+
+  micActive   = true;
+  audioChunks = [];
+  btn.classList.add('recording');
+
+  mediaRecorder = new MediaRecorder(stream);
+  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+
+  mediaRecorder.onstop = async () => {
+    micActive = false;
+    btn.classList.remove('recording');
+    stream.getTracks().forEach(t => t.stop());
+
+    if (!audioChunks.length) return;
+    ta.placeholder = 'transcribing…';
+
+    const pipe = await loadWhisper();
+    if (!pipe) {
+      ta.placeholder = 'whisper unavailable — try again';
+      setTimeout(() => { ta.placeholder = 'Send a prompt to albert. …'; }, 2000);
+      return;
+    }
+
+    try {
+      const blob    = new Blob(audioChunks, { type: 'audio/webm' });
+      const arrBuf  = await blob.arrayBuffer();
+      const actx    = new AudioContext({ sampleRate: 16000 });
+      const decoded = await actx.decodeAudioData(arrBuf);
+      const float32 = decoded.getChannelData(0);
+      actx.close();
+
+      const result = await pipe(float32, { sampling_rate: 16000 });
+      const text   = (result.text || '').trim();
+      if (text) {
+        ta.value = (ta.value + ' ' + text).trim();
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
+        document.getElementById('char-count').textContent = `${ta.value.length} / 512`;
+      }
+    } catch (e) {
+      console.error('Whisper transcription error:', e);
+    }
+
+    ta.placeholder = 'Send a prompt to albert. …';
+  };
+
+  mediaRecorder.start();
 }
 
 // ── feedback modal ────────────────────────────────────────────────────────────

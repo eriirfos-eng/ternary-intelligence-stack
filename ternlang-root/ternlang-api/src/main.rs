@@ -511,6 +511,7 @@ async fn require_api_key(
         || path == "/talk"
         || path == "/api/albert/chat"
         || path == "/api/albert/status"
+        || path == "/api/albert/translate"
         || path == "/activate"
         || path == "/api/run"
         || path == "/api/data"
@@ -786,6 +787,62 @@ async fn albert_status(State(state): State<Arc<AppState>>) -> Response {
     albert_proxy(&state, "GET", "status", None).await
 }
 
+async fn albert_translate(
+    Json(body): Json<serde_json::Value>,
+) -> Response {
+    let text = match body.get("text").and_then(|v| v.as_str()) {
+        Some(t) if !t.trim().is_empty() => t.to_string(),
+        _ => return (
+            axum::http::StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "missing text field"})),
+        ).into_response(),
+    };
+    let client = reqwest::Client::new();
+    let result = client
+        .get("https://translate.googleapis.com/translate_a/single")
+        .query(&[("client", "gtx"), ("sl", "auto"), ("tl", "en"), ("dt", "t"), ("q", text.as_str())])
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .await;
+    match result {
+        Ok(r) => match r.json::<serde_json::Value>().await {
+            Ok(j) => {
+                let raw_segs = j.as_array()
+                    .and_then(|a| a.first())
+                    .and_then(|v| v.as_array());
+                match raw_segs {
+                    Some(segs) => {
+                        let mut segments: Vec<serde_json::Value> = Vec::new();
+                        let mut full = String::new();
+                        for seg in segs {
+                            if let Some(arr) = seg.as_array() {
+                                let tr   = arr.first().and_then(|v| v.as_str()).unwrap_or("");
+                                let orig = arr.get(1).and_then(|v| v.as_str()).unwrap_or("");
+                                // segment changed = Google actually translated it (not English / not invented)
+                                let changed = tr.trim().to_lowercase() != orig.trim().to_lowercase();
+                                full.push_str(if changed { tr } else { orig });
+                                segments.push(serde_json::json!({
+                                    "o": orig, "t": tr, "changed": changed
+                                }));
+                            }
+                        }
+                        Json(serde_json::json!({
+                            "translation": full,
+                            "segments": segments
+                        })).into_response()
+                    }
+                    None => Json(serde_json::json!({"translation": "", "segments": []}))
+                        .into_response(),
+                }
+            }
+            Err(e) => (axum::http::StatusCode::BAD_GATEWAY,
+                Json(serde_json::json!({"error": e.to_string()}))).into_response(),
+        },
+        Err(e) => (axum::http::StatusCode::BAD_GATEWAY,
+            Json(serde_json::json!({"error": e.to_string()}))).into_response(),
+    }
+}
+
 async fn albert_proxy(
     _state: &Arc<AppState>,
     method: &str,
@@ -819,6 +876,126 @@ async fn albert_proxy(
         Err(e) => (axum::http::StatusCode::BAD_GATEWAY,
             Json(serde_json::json!({"error": e.to_string()}))).into_response(),
     }
+}
+
+// ─── OpenAI-compatible endpoints ──────────────────────────────────────────────
+// Allows Off Grid and any OpenAI-compatible client to connect to albert. as a
+// remote server. GET /v1/models + POST /v1/chat/completions.
+
+async fn openai_models() -> Response {
+    Json(serde_json::json!({
+        "object": "list",
+        "data": [{
+            "id": "albert-moe-13",
+            "object": "model",
+            "created": 1748131200,
+            "owned_by": "rfi-irfos",
+            "description": "albert. — ternary MoE language model, 134M params, 22L, trained from scratch by RFI-IRFOS"
+        }]
+    }))
+    .into_response()
+}
+
+async fn openai_chat_completions(
+    State(_state): State<Arc<AppState>>,
+    Json(body): Json<serde_json::Value>,
+) -> Response {
+    // Extract the last user message content as the raw prompt.
+    // No system prompt injection, no assistant framing — raw prompt to albert.generate.
+    let prompt = body
+        .get("messages")
+        .and_then(|m| m.as_array())
+        .and_then(|arr| {
+            arr.iter().rev().find_map(|msg| {
+                if msg.get("role").and_then(|r| r.as_str()) == Some("user") {
+                    msg.get("content").and_then(|c| c.as_str()).map(|s| s.to_string())
+                } else {
+                    None
+                }
+            })
+        });
+
+    let prompt = match prompt {
+        Some(p) if !p.trim().is_empty() => p,
+        _ => return (
+            axum::http::StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "messages must contain at least one user message"})),
+        ).into_response(),
+    };
+
+    let max_tokens = body.get("max_tokens").and_then(|v| v.as_u64()).unwrap_or(256);
+    let temperature = body.get("temperature").and_then(|v| v.as_f64()).unwrap_or(0.9);
+
+    let base = match std::env::var("ALBERT_SERVE_URL") {
+        Ok(u) => u,
+        Err(_) => return (
+            axum::http::StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error": "ALBERT_SERVE_URL not configured"})),
+        ).into_response(),
+    };
+
+    let url = format!("{}/generate", base.trim_end_matches('/'));
+    let client = reqwest::Client::new();
+    let albert_json: serde_json::Value = match client
+        .post(&url)
+        .json(&serde_json::json!({
+            "prompt": prompt,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+        }))
+        .timeout(std::time::Duration::from_secs(120))
+        .send()
+        .await
+    {
+        Ok(r) => match r.json().await {
+            Ok(j) => j,
+            Err(e) => return (
+                axum::http::StatusCode::BAD_GATEWAY,
+                Json(serde_json::json!({"error": e.to_string()})),
+            ).into_response(),
+        },
+        Err(e) => return (
+            axum::http::StatusCode::BAD_GATEWAY,
+            Json(serde_json::json!({"error": e.to_string()})),
+        ).into_response(),
+    };
+
+    let content = albert_json
+        .get("response")
+        .or_else(|| albert_json.get("text"))
+        .or_else(|| albert_json.get("output"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+
+    let id = format!(
+        "chatcmpl-albert-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+    );
+
+    // "role": "assistant" is Caesar's — OpenAI protocol field, not albert.'s identity.
+    Json(serde_json::json!({
+        "id": id,
+        "object": "chat.completion",
+        "model": "albert-moe-13",
+        "choices": [{
+            "index": 0,
+            "message": {
+                "role": "assistant",
+                "content": content
+            },
+            "finish_reason": "stop"
+        }],
+        "usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+        }
+    }))
+    .into_response()
 }
 
 async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Response {
@@ -5464,8 +5641,13 @@ async fn main() {
         .route("/benchmarks/training",  get(benchmarks_training))
         .route("/fortune",              get(fortune_page))
         .route("/talk",                 get(talk_page))
+        // OpenAI-compatible shim — protocol adapter for Off Grid and other clients.
+        // "role: assistant" is Caesar's; albert. is a Socratic sparring partner, not a helpful assistant.
+        .route("/v1/models",                get(openai_models))
+        .route("/v1/chat/completions",      post(openai_chat_completions))
         .route("/api/albert/chat",      post(albert_chat))
         .route("/api/albert/status",    get(albert_status))
+        .route("/api/albert/translate", post(albert_translate))
         .route("/api/github/activate",  post(github_activate))
         .route("/api/usage",      get(api_usage))
         .route("/api/stdlib/list", get(stdlib_list))
