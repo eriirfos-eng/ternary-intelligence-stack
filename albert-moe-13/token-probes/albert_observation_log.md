@@ -1847,6 +1847,20 @@ The recovery slope (ep3503→ep3520) is steeper than the pre-surgery descent. Th
 
 **TTL at ep3520:** G 6% / O 75% / R 4%. The hard stops have released; orange dominant. When green begins recovering toward the pre-S9 baseline of G 15-21%, a second acceleration phase is expected as the 21st layer starts earning routing slots.
 
+### WALD marker as surgery diagnostic
+
+The dashboard renders two types of vertical epoch lines: **blue** = surgery trigger epoch, **red** = WALD firing epoch. The tight S9 zoom (Image 5, 2026-05-25) shows the red WALD line displaced from the blue surgery line, with the gap spanning part of the spike ascent. This means WALD detected the loss-space coverage shift caused by the disruption — not a descent-acceleration signal as usual.
+
+This gives a new diagnostic read for future surgeries:
+
+| Pattern | Meaning |
+|---|---|
+| Red (WALD) fires close to blue (surgery), no spike | Normal: surgery absorbed cleanly, WALD reacts to routine post-surgery volatility |
+| Red fires well after blue, during spike ascent | Anomaly: WALD is reacting to disruption, not learning |
+| Red fires before blue | Pre-surgery coverage shift — model may have already been in disrupted state |
+
+For S9 the blue/red gap + spike presence together are the visual fingerprint of the anomaly. For all previous surgeries (S6, S7, S8) the WALD line would sit close to the surgery line and in the descent phase. **This is now the primary way to distinguish transparent vs disruptive surgeries on the chart.**
+
 ### Next milestone
 
 Break pre-S9 ATL of 9.2847 (epoch avg). Currently at 9.3326 — gap of 0.048 nats. At current descent rate (~0.01 nats/epoch), estimate ~5–10 epochs to new ATL territory. Then surgery governor resets since_best clock.
