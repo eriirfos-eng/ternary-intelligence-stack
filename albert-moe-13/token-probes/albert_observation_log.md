@@ -2448,6 +2448,16 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 69 — 2026-05-25T20:47:38Z · quiet tick · no ntfy events · last known ep3682 · gap 0.0086
+
+**Source:** ntfy poll (since=20m) — no events. No screenshot.
+
+**State (last known from FN68):** ep3682 (22L) · BEST 9.2933 · gap to pre-S9 ATL 9.2847: **0.0086 nats** · TTL G21%/O73%/R6%
+
+No WALD, SURGERY, SUB-9.3, or EPOCH events in the last 20 minutes. Training running silently. Dashboard alarm active on Simeon's end.
+
+---
+
 ## Field Note 68 — 2026-05-25T20:35:31Z · ep3682 · TTL green surge +15pp · ep3681 closes 9.2996 · gap 0.0086
 
 **Source:** dashboard screenshot (20:35:31)
