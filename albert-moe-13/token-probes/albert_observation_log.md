@@ -4709,3 +4709,37 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 **Elapsed time analysis:** ~22 min at ~3–4 min/epoch → approximately ep3905–3907 in progress. No threshold crossings → all epochs in the 9.31–9.32 band, no new BEST, WALD fill steady.
 
 **Assessment:** Training running normally in steady-state. No events requiring attention. SURGERY GATE is live; no myc_stable signal yet. Gap to pre-S9 ATL unchanged. No user wake required.
+
+---
+
+## FN119 · 2026-05-26T15:57:55Z · ep3908± · Extended quiet — ~10 epochs since ep3900, dashboard read from ep3905
+
+**State:** ep3905 observed 15:44Z · EP-Avg **9.3079** (T-610 running avg 9.3143) · BEST ~9.2788 (ep3708) · gap to pre-S9 ATL 9.2847 = **−0.0059**
+
+**Source:** Dashboard screenshot (ep3905, BATCH 155/300, 15:44Z) + ntfy quiet last 60m
+
+**Expert routing (ep3905 snapshot):**
+| Expert | % |
+|--------|---|
+| SYN | 20% |
+| SEM | 8% |
+| CTX | 13% |
+| INF | 10% |
+| MEM | 5% |
+| GEN | 15% |
+| LOG | 45% |
+| LNG | 28% |
+| ABS | 64% |
+| PLN | 100% |
+| CMP | 65% |
+| INT | 67% |
+
+**TTL:** G 6.14% / O 83% / R 3%
+
+**Per-layer gradient norm:** global_tg = 0.0016 (healthy, no explosion)
+
+**WALD:** Last fired ep3900 fill=6.2%; no re-fire since (fill stable, deduplication holding)
+
+**Notable routing vs FN116:** PLN at 100% (dominant), ABS 64%, CMP 65%, INT 67% — reasoning/logic cluster fully active. LOG 45% elevated. GEN 15% (moderate). LNG 28% (language moderate). TTL heavily Dormant (O 83%) is expected in steady-state plateau.
+
+**Assessment:** ep3905–3908 closing quietly in the 9.31–9.33 range. No threshold crossings, no WALD re-fires, no new BEST. Gradient norm 0.0016 is clean — no instability. PLN at 100% confirms the model is driving hard on planning/reasoning tokens; this is typical plateau behavior before surgery governor fires. SURGERY GATE still live, watching myc_stable. Extended quiet is normal — WALD deduplication suppresses re-fires when fill% is stable. No wake required. Estimated current epoch: ~3909 (37 min at ~3.5 min/epoch from ep3900).
