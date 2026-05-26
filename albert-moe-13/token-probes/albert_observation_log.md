@@ -4372,3 +4372,29 @@ ep3890 avg ticked up slightly as more batches arrived (9.3092@n=150 → 9.3152@n
 **loss_history ring:** ep3890 about to close → ~30/144. S11 gate ~114 epochs → **~2026-05-27T03:15Z**.
 
 **Assessment:** Simeon's read is accurate — "going sideways." The corridor has been 9.30–9.33 since ep3872 with two oscillatory spikes (ep3881, ep3887) that both resolved. Key routing shift: **LOG rose from 17% → 31%** while ABS cooled 76% → 68%. This is the most significant expert shift since FN91. Possible interpretation: the model is transitioning from pure abstraction-heavy routing toward logical inference, which may precede a descent phase (LOG handles deductive chaining, which typically improves loss in later training). The 80% dormant TTL suggests the model is in a consolidation phase. Combined with ring now at ~30/144, S11 gate still ~114 epochs out. No alarm conditions. No intervention warranted. Standard watch.
+
+---
+
+## Field Note 107 — 2026-05-26T14:17:25Z · ep3892 close · 3-ep avg 9.3146 — best since FN93
+
+**Source:** batch_history.csv · ntfy empty (0 events, 20m poll) · nightwatch tick
+
+**State:** ep3892 closed (22L) · avg=9.3201 · min=9.0166 · BEST **9.278839** (ep3708) · loss_history ring ~33/144 · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### Epoch closes since FN106
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3890 | 9.3184 | 9.0096 | closed (was batch 295/300 in FN106) |
+| ep3891 | 9.3148 | 8.9330 | new close — strong, best since ep3883 |
+| ep3892 | 9.3201 | 9.0166 | new close |
+
+3-epoch average (3889–3891): **9.3146** — lowest since FN93 (9.3077). Corridor is compressing back toward 9.31 after the ep3881/ep3887 oscillation spikes.
+
+Oscillation amplitude damping: the post-spike range is narrowing. ep3887 peak (9.3328) → ep3891 recent high (9.3201 for ep3892). The floor is holding at 9.31–9.32 range rather than 9.31–9.33.
+
+**ntfy:** Silent. Thirteenth consecutive empty 20m poll.
+
+**loss_history ring:** ~33/144. S11 gate ~111 epochs → **~2026-05-27T01:15Z** (revised earlier).
+
+**Assessment:** Positive development. The LOG routing surge (17%→31%, FN106) appears to be having the expected effect — ep3891 at 9.3148 is the cleanest close in ~8 epochs. The 3-ep avg is now tracking back toward the pre-drift range. If the next 2–3 epochs stay below 9.32, the plateau correction is underway. BEST and gap unchanged. No alarm conditions. Nightwatch holding.
