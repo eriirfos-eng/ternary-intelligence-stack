@@ -2448,6 +2448,75 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 92 — 2026-05-26T06:53:09Z · ep3813 b110 · HOME-write drift RESOLVED · sideways churn · since_best 93/144
+
+**Source:** Dashboard screenshot (06:53:09Z) · ntfy poll (since=6h): one result only — WALD ep3794 (stale). Gate tooltip (surgery gate panel).
+
+**State:** ep3813 (22L) · batch 110/300 · most recent close 9.3156 · BEST 9.228452 · gap to ATL: +0.0872 nats · since_best 93 · PLATEAU not met (w=144, 51 epochs to potential S11)
+
+### HOME-write drift resolved
+
+Dashboard showing ep3813 — 15 epochs past the volume-frozen ep3798 flagged in FN87–FN91. Container restarted between FN91 (06:47Z, ep3806 est.) and this tick. Volume writing presumably resumed. The 6-epoch gap FN91→FN92 is blind (ep3807–3812 unobservable from prior drift window), but since_best=93 from gate tooltip pins last BEST at ~ep3720.
+
+### Event bar (newest → oldest, all green checks — no WALD, no BEST)
+
+| Position | EP-Avg |
+|----------|--------|
+| 1 (newest) | 9.3156 |
+| 2 | 9.3178 |
+| 3 | 9.3128 |
+| 4 | 9.3202 |
+| 5 | 9.3237 |
+| 6 | 9.3092 |
+| 7 | 9.3146 |
+| 8 | 9.3112 |
+| 9 | 9.3216 |
+| 10 | 9.3183 |
+
+All green check marks. No WALD event since ep3794 (6.2% fill). Churn band confirmed: 9.309–9.324. Slight upward nudge from previous 9.30–9.31 band — model absorbing without new ATL.
+
+### Expert routing (ep3813 b110)
+
+| Expert | % | note |
+|--------|---|------|
+| PLN | 100% | anchored |
+| CMP | 92% | high — structural composition |
+| INT | 53% | integration active |
+| ABS | 65% | abstraction load |
+| LOG | 19% | |
+| LNG | 15% | |
+| CTX | 8% | |
+| SYN | 8% | |
+| MEM | 8% | |
+| GEN | 4% | minimal new-territory signal |
+| INF | 4% | |
+| SEM | 4% | |
+
+GEN at 4% — model not pushing into new loss territory; consistent with plateau. PLN+CMP dominant = structural consolidation phase.
+
+### TTL routing
+
+| G% | O% | R% |
+|----|----|----|
+| 6.26% | 77% | 4% |
+
+Green has dropped sharply from FN85–FN91 range (17–19%) to 6.26%. Orange holding at 77%. Notable: this low-green state may reflect post-container-restart recalibration or tighter TTL gating during plateau. Not alarming given red stable at 4%.
+
+### Surgery gate
+
+- **SURGERY GATE — 17L → 18L** (header label is a display artifact; pending surgery is S11, 22L → 23L)
+- MYC_STABLE: 19 / >= 5 — **GREEN** (met)
+- PLATEAU: 0.0662 / <8.020 w=144 — **RED** (not met; since_best=93, need 144)
+- wald_fill: 6.2% (unchanged from ep3794)
+
+At ~5 min/epoch, 51 epochs to surgery gate = ~4.25 h from this tick (~11:10 local) if no new BEST.
+
+### Assessment
+
+Drift resolved. Model confirmed running live at ep3813, churning in 9.31–9.32 band — slightly above the 9.30–9.31 band from the first post-restart window (ep3794–3800). No new ATL, no WALD, no surgery. since_best=93/144. Routing consolidation: PLN/CMP/ABS dominant, GEN minimal. Model is processing, not pushing. Surgery is the next expected event if the plateau holds. No intervention needed.
+
+---
+
 ## Field Note 91 — 2026-05-26T06:47:08Z · quiet tick · HOME-write drift 45 min · ep3806 est. · ntfy silent
 
 **Source:** ntfy poll (since=20m): silent. epoch_history.log (Modal volume): frozen at ep3798 (45 min of drift since FN87 at 06:02Z).
