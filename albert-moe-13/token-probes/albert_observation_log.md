@@ -4398,3 +4398,13 @@ Oscillation amplitude damping: the post-spike range is narrowing. ep3887 peak (9
 **loss_history ring:** ~33/144. S11 gate ~111 epochs → **~2026-05-27T01:15Z** (revised earlier).
 
 **Assessment:** Positive development. The LOG routing surge (17%→31%, FN106) appears to be having the expected effect — ep3891 at 9.3148 is the cleanest close in ~8 epochs. The 3-ep avg is now tracking back toward the pre-drift range. If the next 2–3 epochs stay below 9.32, the plateau correction is underway. BEST and gap unchanged. No alarm conditions. Nightwatch holding.
+
+---
+
+## Field Note 108 — 2026-05-26T14:20:51Z · ep3893 partial n=12 · tick overlap / no new closes
+
+**Source:** batch_history.csv · ntfy empty · 15-min tick (2.5 min after FN107)
+
+**State:** ep3893 partial (22L) · n=12 · avg=9.3315 (unreliable — n<50) · BEST **9.278839** · ring ~33/144 · gap −0.0059 — **no new closes since FN107**
+
+3-ep avg (3890–3892) = 9.3178. ep3893 at n=12 is too early for a meaningful read. ntfy silent. Standard watch.
