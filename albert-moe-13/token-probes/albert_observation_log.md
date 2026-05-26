@@ -4173,3 +4173,30 @@ Notable: ep3878's min of 9.0770 is the highest batch floor since the post-restar
 **State:** ep3879 partial (22L) · n=200 · avg=9.3226 · BEST **9.278839** · ring ~18/144 · gap −0.0059 — **no new epoch closes since FN96**
 
 ep3879 advanced from n=150 → n=200. 3-ep avg (3876–3878) unchanged at 9.3143. ntfy silent. State as FN96. Nightwatch holding.
+
+---
+
+## Field Note 98 — 2026-05-26T13:17:17Z · ep3882 partial · DRIFT FLAG TRIGGERED
+
+**Source:** batch_history.csv · ntfy empty (0 events, 20m poll) · nightwatch tick
+
+**State:** ep3882 partial (22L) · n=50 · avg=9.3434 (high variance, early) · BEST **9.278839** (ep3708) · loss_history ring ~21/144 · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### Epoch closes since FN97
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3879 | 9.3153 | 8.9681 | closed (was partial n=200) |
+| ep3880 | 9.3230 | 9.0314 | new close |
+| ep3881 | 9.3314 | 9.0397 | new close — highest avg since post-restart |
+| ep3882 | ~9.3434 | 9.1011 | partial n=50, high variance |
+
+3-epoch average (3879–3881): **9.3232** — up from 9.3143 (FN96), 9.3102 (FN94), 9.3077 (FN93). Cumulative drift: **+0.0155** over 8 epochs.
+
+**DRIFT FLAG triggered** (set in FN96: "if next 2–3 epochs sustain above 9.32, flag"). ep3880=9.3230, ep3881=9.3314 — two consecutive closes above 9.32. ep3882 at n=50 reads 9.3434 but unreliable this early. Floor also rising: ep3878=9.0770, ep3880=9.0314, ep3881=9.0397, ep3882=9.1011 — sub-9.1 batches disappearing.
+
+**ntfy:** Silent. Eighth consecutive empty 20m poll.
+
+**loss_history ring:** ~21/144. S11 gate ~123 epochs → **~2026-05-27T03:00Z**.
+
+**Assessment:** Upward drift is now statistically real — not oscillation noise. The compression that peaked at 9.3060 (ep3872) has fully reversed. Possible causes: (1) ABS surge (76%, FN91) routing load away from loss-reducing experts; (2) natural oscillation before a descent step; (3) generational cycling entering a higher-energy phase. Not at the 9.40 alarm threshold. BEST and gap unchanged. No surgeon wake warranted yet. Next tick is the decision point: if ep3882 closes above 9.33, escalate note; if it reverts below 9.31, drift was transient. Nightwatch on elevated watch.
