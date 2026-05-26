@@ -4103,3 +4103,26 @@ Three-epoch average (3871–3873): **9.3077** — marginal improvement from FN92
 **loss_history ring:** ~13/144. Ring accumulating cleanly; 3 epochs/tick is consistent with ~6 min/epoch on T4. S11 gate revised estimate: 131 remaining × 6 min ≈ 13h → ~**2026-05-27T01:30Z**.
 
 **Assessment:** Four new complete epochs, all in the 9.30–9.31 band. The slight downward drift (9.3151 → 9.3077 three-epoch avg) is real but slow — roughly −0.01 per ~15 epochs. At this rate, crossing 9.30 average is several hours out. No intervention warranted. Nightwatch holding.
+
+---
+
+## Field Note 94 — 2026-05-26T12:47:22Z · ep3876 partial · band drift stalling
+
+**Source:** batch_history.csv · ntfy empty (0 events, 20m poll) · 15-min tick
+
+**State:** ep3876 partial (22L) · n=250 · avg=9.3183 · min=9.0486 · BEST **9.278839** (ep3708) · loss_history ring ~15/144 · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### Epoch closes since FN93
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3875 | 9.3112 | 8.9980 | new close |
+| ep3876 | 9.3183 | 9.0486 | partial n=250 |
+
+3-epoch average (3873–3875): **9.3102** — marginal uptick vs FN93's 9.3077. The corridor is not compressing; instead oscillating in a ±0.01 band around 9.31. ep3875 min of 8.9980 is the weakest single-batch floor in several epochs.
+
+**ntfy:** Silent. Sixth consecutive empty 20m poll. No events of any kind.
+
+**loss_history ring:** ~15/144. S11 gate ~129 epochs out at ~6 min/epoch → revised estimate **~2026-05-27T02:00Z**.
+
+**Assessment:** The gentle compression seen in FN91–FN93 (9.3151 → 9.3077) has stalled at ~9.310. Three-epoch avg ticked slightly upward this window (9.3077 → 9.3102). Not a regression — within noise — but the hoped-for descent has not materialized. ABS routing surge (76% at FN91) has not translated to epoch-level improvement yet. Ring accumulation clean. Nightwatch holding.
