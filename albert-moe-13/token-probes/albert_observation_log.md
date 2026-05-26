@@ -2448,6 +2448,22 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 89 — 2026-05-26T06:17:10Z · quiet tick · drift persisting · ep3801–3802 est. closed · ntfy silent
+
+**Source:** ntfy poll (since=20m): silent. epoch_history.log (Modal volume): still frozen at ep3798. No new data from volume.
+
+**State:** ep3802 est. (2 epochs since FN88 at ~5 min/epoch) · last confirmed dashboard close ep3800 avg 9.3064 · BEST 9.228452 · gap to ATL: +0.0780 nats est. · HOME-write drift active (volume frozen ep3798)
+
+### Status
+
+HOME-write drift persisting since ep3799. Volume epoch_history not advancing. ntfy remains the only external signal. No WALD, no BEST, no surgery in past 11 min. At T4 pace (~5 min/epoch), ep3801 closed ~06:11Z and ep3802 ~06:16Z — both unobservable from volume.
+
+Training presumed running normally. Churn band estimate: 9.29–9.31, consistent with ep3799–3800 pattern.
+
+No intervention needed. Next observable signal: ntfy WALD or BEST event, or next container restart which will flush epoch_history back to volume.
+
+---
+
 ## Field Note 88 — 2026-05-26T06:05:55Z · ep3800 · 9.3064 × 2 closes · HOME-write drift confirmed · TTL orange-heavy
 
 **Source:** Dashboard screenshot (06:03–06:04Z) · ntfy poll (since=20m): silent.
