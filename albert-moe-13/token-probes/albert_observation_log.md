@@ -3980,3 +3980,13 @@ Fill **6.2%** — well below 15% wake threshold. Mass 9.319 is in-band with rece
 ep3825–3827 are newly surfaced from the +398,968 point CSV merge — previously-gapped epochs now visible. ep3862 closed at 9.3234, consistent with pre-restart band (9.31–9.33). No regression from restart.
 
 **loss_history ring:** 1 epoch accumulated. 143 to go until S11 gate fires. ntfy quiet otherwise — no SURGERY, SUB-9.3, or escalating events. Nightwatch holding.
+
+---
+
+## Field Note 89 — 2026-05-26T11:33:26Z · ep3863 n=100 · quiet tick · in-band
+
+**Source:** batch_history.csv · ntfy quiet (only WALD ep3862 already logged) · 15-min tick
+
+**State:** ep3863 (22L) · partial n=100 · avg 9.3146 · min 9.1110 · BEST **9.278839** (ep3708) · loss_history ring 1/144 · gap: **−0.0059**
+
+ep3863 progressing normally mid-epoch. No new ntfy events since FN88. Loss in-band. Nightwatch holding.
