@@ -3752,6 +3752,30 @@ ep3848 closed at **9.3198** — band still flat, no regression. Since_best ticke
 
 ---
 
+## Field Note 82 — 2026-05-26T10:18:43Z · ep3851 partial · since_best 142 · S11 IMMINENT (2 epochs)
+
+**Source:** batch_history.csv · ntfy quiet · 15-min tick
+
+**State:** ep3851 (22L) · partial n=250 · avg 9.3169 · BEST **9.278839** (ep3708) · since_best **142** · S11 gate at 144 (**2 epochs to fire**) · gap to pre-S9 ATL: **−0.0059** (beaten)
+
+| Epoch | Avg | Min batch |
+|-------|-----|-----------|
+| ep3847 | 9.3176 | 8.9629 |
+| ep3848 | 9.3198 | 8.9756 |
+| ep3849 | 9.3140 | 9.0532 |
+| ep3850 | **9.3209** | 9.0307 — elevated floor |
+| ep3851 | ~9.3169 | 8.9997 — partial n=250 |
+
+**S11 surgery trajectory:** ep3851 closes → since_best=143. ep3852 closes → since_best=144 → **gate fires**. Assuming no new best set, surgery fires in ~1 epoch (~12 min at current pace).
+
+ep3850 stands out: batch min 9.0307 is the highest in recent history (previous mins 8.88–8.97). The intra-epoch optimizer found no sub-9.0 territory for the first time in many epochs — consistent with a fully saturated landscape just before surgery. Epoch avg also highest recent value (9.3209). Both signals point to genuine plateau exhaustion.
+
+**Also in this session:** surgery gate persistence fix committed — `loss_history` now survives Modal restarts so the ring doesn't reset to zero each time. This is the first session where S11 can fire from a full, correctly-populated ring.
+
+ntfy quiet. WALD clean. **Next event: S11 surgery. Wake user.**
+
+---
+
 ## Field Note 81 — 2026-05-26T10:05:58Z · ep3849 batch 112 · dashboard screenshot · PLN saturation
 
 **Source:** Dashboard screenshot (10:04:30 local) · batch_history.csv · ntfy quiet
