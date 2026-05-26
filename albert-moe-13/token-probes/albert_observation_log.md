@@ -2448,6 +2448,16 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 91 — 2026-05-26T06:47:08Z · quiet tick · HOME-write drift 45 min · ep3806 est. · ntfy silent
+
+**Source:** ntfy poll (since=20m): silent. epoch_history.log (Modal volume): frozen at ep3798 (45 min of drift since FN87 at 06:02Z).
+
+**State:** ep3806 est. (~8 epochs since ep3798 at ~5 min/epoch) · last confirmed dashboard ep3800 avg 9.3064 · BEST 9.228452 · gap to ATL: +0.0780 nats est. · since_best ~98 est. · PLATEAU ~98/144
+
+HOME-write drift persisting. Volume blind. ntfy silent across all 3 polls since drift began. Training nominally continuing in churn band. No intervention needed. If drift continues past next container restart, epoch count will resume on volume.
+
+---
+
 ## Field Note 90 — 2026-05-26T06:32:09Z · quiet tick · HOME-write drift 30+ min · ep3803 est. · ntfy silent
 
 **Source:** ntfy poll (since=20m): silent. epoch_history.log (Modal volume): frozen at ep3798 (unchanged since FN87 at 06:02Z — 30 min of drift).
