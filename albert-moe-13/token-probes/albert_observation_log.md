@@ -4282,3 +4282,29 @@ ep3885 opened cleanly (9.3125@n=50, though high variance). 3-ep avg (3882–3884
 **State:** ep3887 closed (22L) · avg=9.3328 · min=8.9957 · BEST **9.278839** · ring ~27/144 · gap −0.0059
 
 ep3887 final: **9.3328** — marginally above ep3881's 9.3314, now the highest epoch average since the post-restart period. Confirms the re-emerging drift pattern flagged in FN102. 3-ep avg (3884–3886) = 9.3185 unchanged (ep3887 not yet in window). ep3888 close will determine if 9.33+ is consolidating. ntfy silent. Elevated watch.
+
+---
+
+## Field Note 104 — 2026-05-26T14:02:15Z · ep3890 partial · spike resolved — oscillation pattern confirmed
+
+**Source:** batch_history.csv · ntfy empty (0 events, 20m poll) · nightwatch tick
+
+**State:** ep3890 partial (22L) · n=150 · avg=9.3092 · min=9.0096 · BEST **9.278839** (ep3708) · loss_history ring ~29/144 · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### Epoch closes since FN103
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3888 | 9.3166 | 8.9013 | new close — immediate drop from ep3887 peak |
+| ep3889 | 9.3108 | 9.0285 | new close — back at 9.31 band |
+| ep3890 | ~9.3092 | 9.0096 | partial n=150 — potentially sub-9.31 |
+
+3-epoch average (3887–3889): **9.3201** — includes ep3887 spike. Excluding spike: (3888–3889) avg = **9.3137**. The post-spike reversion is clean and fast: 9.3328 → 9.3166 → 9.3108 in consecutive epochs.
+
+**Oscillation pattern confirmed.** Both spike events (ep3881: 9.3314, ep3887: 9.3328) resolved within 1–2 epochs back to 9.31. This is consistent with Fibonacci generational cycling creating periodic high-energy excursions rather than structural loss surface elevation. The 9.31 floor IS intact.
+
+**ntfy:** Silent. Eleventh consecutive empty 20m poll.
+
+**loss_history ring:** ~29/144. S11 gate ~115 epochs → **~2026-05-27T03:15Z**.
+
+**Assessment:** Drift flag downgraded to standard watch. The structural upshift hypothesis from FN102 is contradicted by ep3888–ep3890 data. Pattern is oscillatory: ~every 6–8 epochs, a 9.33 spike fires and resolves within 2 epochs. ep3890 at 9.3092 with n=150 is the most promising partial read since this session started — if it closes sub-9.31 it will be the lowest epoch avg since ep3872. BEST and gap unchanged. Nightwatch returning to standard watch.
