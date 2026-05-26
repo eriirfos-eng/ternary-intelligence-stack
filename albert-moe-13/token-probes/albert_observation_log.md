@@ -4650,3 +4650,22 @@ ep3899 checkpoints are written at batch 300 (epoch end). Interrupted at batch 25
 Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future runs — detached mode runs on Modal's infrastructure independently of local connectivity; ntfy still fires on all threshold events.
 
 **Assessment:** Routine connectivity incident. No data corruption, no WALD anomaly, no loss spike. ep3898 (9.3242) is a clean resume point. Gap to pre-S9 ATL unchanged at −0.0059.
+
+---
+
+## FN115 · 2026-05-26T15:15:16 local · Detached restart — cold start nominal
+
+**Status:** Training resumed after detached restart. No epoch complete yet.
+
+**Telemetry:**
+- EP: — (blank) · BATCH: — / — · ATL: 8.8104 (stale display value from prior run, inconsistent with chart Y-axis 9.1–9.6; ignore until first epoch closes)
+- Corpus cache hit: 451,386,914 tokens loaded instantly
+- Checkpoint: 1,522 tensors loaded from ep3898
+- Config: [gate-diversity] scale=0.300, fixed asymmetric logit bias active
+- ttlfreeze: enabled · ema_alpha=0.02 · burst_threshold=5x · freeze_steps=50 · max_bursts_per_epoch_per_layer=5
+- divloss: enabled weight=1.00e-3 (OVERRIDE — schedule bypassed)
+- [lb]: disabled
+
+**Recent event bar (epochs before interruption):** 9.3242, 9.3217, 9.3196, 9.3204, 9.3179, TTL-NASH all-0, 9.3201, 9.3148, 9.3184
+
+**Assessment:** Normal cold-start sequence. Cargo build complete, corpus loaded, tensors restored from ep3898. Training about to begin ep3899 again. All subsystems nominal. ATL display field should update to ~9.278 on first epoch close.
