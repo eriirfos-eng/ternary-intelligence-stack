@@ -2448,6 +2448,41 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 88 — 2026-05-26T06:05:55Z · ep3800 · 9.3064 × 2 closes · HOME-write drift confirmed · TTL orange-heavy
+
+**Source:** Dashboard screenshot (06:03–06:04Z) · ntfy poll (since=20m): silent.
+
+**State:** ep3800 (est.) · ep3799+3800 both avg 9.3064 · BEST 9.228452 · gap to ATL: +0.0780 nats · HOME-write drift active (volume frozen at ep3798)
+
+### Event bar closes (dashboard, most recent first)
+
+| Epoch (est.) | avg loss | delta |
+|---|---|---|
+| ep3800 | 9.3064 | — |
+| ep3799 | 9.3064 | +0.0039 vs ep3798 |
+| ep3798 | 9.3025 | (prior) |
+
+### TTL routing
+
+| Screenshot | G% | O% | R% |
+|---|---|---|---|
+| 06:03Z | 17% | 79% | 4% |
+| 06:04Z | 19% | 77% | 5% |
+
+Orange band holding at 77–79%. Slight G increase batch-to-batch (+2%) consistent with in-epoch variance, not a trend. Tooltip: L13 · step 2580 · G 2 · O 10 · R 0 — per-layer routing shows orange-dominant at L13.
+
+Expert routing breakdown: not visible in screenshots (TTL panel only). Carried from FN86: PLN 100%, CMP 87%, ABS 51%, INT 45%, LOG 20%.
+
+### HOME-write drift confirmed
+
+FN87 flagged that epoch_history stalled at ep3798 on the Modal volume. Dashboard now shows ep3799 and ep3800 have closed — confirming the current container is writing to `~/.albert/training.log` (ephemeral HOME) rather than the volume. epoch_history.log will not update until next container restart. ntfy is the only external signal channel until then.
+
+### Assessment
+
+Slight upward drift: ep3799–3800 both at 9.3064 vs ep3798's 9.3025. Not alarming — within the 9.29–9.31 churn band. No WALD, no BEST, no surgery. Training running normally; tracking visibility degraded due to HOME-write drift. No intervention needed.
+
+---
+
 ## Field Note 87 — 2026-05-26T06:02:10Z · quiet tick · epoch_history stalled at ep3798 · possible HOME-write drift
 
 **Source:** ntfy poll (since=20m): silent. epoch_history.log (Modal volume pull 06:02Z).
