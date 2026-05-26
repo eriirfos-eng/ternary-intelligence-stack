@@ -4697,3 +4697,15 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 **ntfy (last 20m):** No events beyond those logged in FN116. ep3901 in progress or recently closed without threshold changes. WALD deduplication likely suppressed re-fire if fill% held steady (~6.2%).
 
 **Assessment:** Quiet between epochs. Training proceeding normally in the 9.31–9.32 band. Surgery governor still watching myc_stable. No action required.
+
+---
+
+## FN118 · 2026-05-26T15:42:15Z · ep3905± · Extended quiet — ~5-6 epochs since ep3900, all below threshold
+
+**State:** Last event: ep3900 (15:20:36Z, ~22 min ago) · EP-Avg **~9.31–9.32** (inferred) · BEST ~9.2788 · gap to pre-S9 ATL = **−0.0059**
+
+**ntfy (last 30m):** Only ep3900 events; no new WALD, SURGERY, or threshold fires since. WALD deduplication suppressing re-fire (fill% stable ~6.2%).
+
+**Elapsed time analysis:** ~22 min at ~3–4 min/epoch → approximately ep3905–3907 in progress. No threshold crossings → all epochs in the 9.31–9.32 band, no new BEST, WALD fill steady.
+
+**Assessment:** Training running normally in steady-state. No events requiring attention. SURGERY GATE is live; no myc_stable signal yet. Gap to pre-S9 ATL unchanged. No user wake required.
