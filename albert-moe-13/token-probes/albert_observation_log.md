@@ -3990,3 +3990,27 @@ ep3825–3827 are newly surfaced from the +398,968 point CSV merge — previousl
 **State:** ep3863 (22L) · partial n=100 · avg 9.3146 · min 9.1110 · BEST **9.278839** (ep3708) · loss_history ring 1/144 · gap: **−0.0059**
 
 ep3863 progressing normally mid-epoch. No new ntfy events since FN88. Loss in-band. Nightwatch holding.
+---
+
+## Field Note 90 — 2026-05-26T11:48:45Z · ep3866 n=100 · 3 epochs closed clean · ring 4/144
+
+**Source:** batch_history.csv · ntfy poll since=2h (only ep3862 WALD present, already logged FN88) · 15-min tick
+
+**State:** ep3866 (22L) · partial n=100 · avg 9.3066 · min 8.9996 · BEST **9.278839** (ep3708) · loss_history ring 4/144 · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### Epoch closes since FN89
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3863 | 9.3223 | 9.0676 | closed clean, no WALD via ntfy |
+| ep3864 | 9.3044 | 8.9038 | closed clean, best batch of trio |
+| ep3865 | 9.3164 | 8.9583 | closed clean |
+| ep3866 | ~9.3066 | 8.9996 | partial n=100 |
+
+Three full epochs closed without triggering ntfy WALD events — either fill% stayed below the notification threshold or ntfy delivery issue for those epochs. Loss band holding steady at 9.30–9.32 average. ep3864 min of 8.9038 is notable (low batch spikes remain healthy).
+
+**ntfy:** Quiet. Only ep3862 WALD (fill=6.2%, FN88) appears in 2h window. No SURGERY, no SUB-9.3, no escalation.
+
+**loss_history ring:** 4/144 accumulated (ep3863–3866 in progress). S11 gate tracking correctly since persistence fix. ~140 epochs to go (~2026-05-27T23:00Z estimate).
+
+**BEST unchanged.** Gap to pre-S9 ATL holds at −0.0059. No intervention needed. Nightwatch holding.
