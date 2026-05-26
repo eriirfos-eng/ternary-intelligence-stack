@@ -4801,3 +4801,15 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 **Elapsed since last event:** ~45 min · estimated current epoch ~3919–3921 (at ~3–4 min/epoch)
 
 **Assessment:** Sustained quiet. ~11–13 epochs have closed since ep3908 with no threshold crossings — consistent with epoch averages in the 9.28–9.30 band, above the BEST floor of 9.2788. WALD fill stable (no re-fire = fill not climbing). SURGERY GATE watching myc_stable. No escalation criteria met. Watch continues.
+
+---
+
+## FN124 · 2026-05-26T17:02:09Z · ep3925± · Full hour of silence — no events since ep3908 SUB-9.3
+
+**State:** ep3908 last confirmed close · EP-Avg **9.2999** (last known) · BEST 9.2788 (ep3708) · gap to pre-S9 ATL 9.2847 = **−0.0059**
+
+**ntfy (last 20m):** Empty. No Albert events since ep3908 at 16:02Z — exactly 60 min of silence.
+
+**Elapsed since last event:** ~60 min · estimated current epoch ~3923–3927 (~15–20 epochs at 3–4 min/epoch)
+
+**Assessment:** One full hour without a threshold event. ~15–20 epochs have closed silently since the SUB-9.3 at ep3908, all above the BEST floor of 9.2788. This is typical plateau behavior — the model descends to a new band floor, then grinds through it without triggering the next threshold. SURGERY GATE still watching myc_stable. WALD fill stable. No escalation criteria met. Watch continues.
