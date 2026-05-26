@@ -3711,3 +3711,13 @@ No screenshot. Carried from FN70: G18% / O77% / R5%.
 
 **S11 in ~5 epochs is the only thing that matters right now.** Since_best has climbed to ~139 against a gate of 144. Surgery S11 will add another layer, resetting the since_best counter and perturbing the weight landscape. The batch floor progression (8.99 → 8.97 → 8.91 → 8.87 → 8.81) shows the model is finding genuine low-loss basins intra-epoch — this is exactly the kind of landscape that benefits from a new layer. The odd/even rhythm dissolved between FN76 and FN77, suggesting the model has transitioned from structured two-step descent into uniform consolidation — a plateau signature. The gate is reading the situation correctly. Nightwatch holding. No intervention needed — surgery will fire autonomously.
 
+---
+
+## Field Note 78 — 2026-05-26T09:53:46Z · ep3847 partial · since_best ~140 · S11 gate ~4 epochs · tick 20s after FN77
+
+**Source:** batch_history.csv · ntfy quiet · fired 20s after FN77
+
+**State:** ep3847 (22L) · partial n=100 · avg ~9.3153 · BEST **9.228452** · gap **+0.0749** · since_best **~140** · S11 gate at 144 (**~4 epochs away**)
+
+ep3846 confirmed closed at **9.3003** (was partial n=250 in FN77). Since_best ticked to ~140. No new events. Surgery imminent — watching.
+
