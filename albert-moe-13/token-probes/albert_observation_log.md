@@ -3833,3 +3833,24 @@ PLN at 100% saturation is the standout. The planning expert is being called by e
 
 ntfy quiet. WALD clean. No new BEST. Loss band flat. No intervention needed — nightwatch holding.
 
+---
+
+## Field Note 84 — 2026-05-26T11:17:30Z · ep3862 partial · quiet tick · Modal restart imminent
+
+**Source:** batch_history.csv · ntfy quiet · 15-min tick
+
+**State:** ep3862 (22L) · partial n=40 · avg ~9.3444 · BEST **9.278839** (ep3708) · loss_history persistence fix committed, Modal restart pending · gap to pre-S9 ATL 9.2847: **−0.0059** (beaten)
+
+| Epoch | Avg | Min batch |
+|-------|-----|-----------|
+| ep3857 | 9.3193 | 8.9690 |
+| ep3858 | 9.3146 | 8.9473 |
+| ep3859 | 9.3256 | 9.0096 |
+| ep3860 | 9.3137 | 9.0239 |
+| ep3861 | **9.3222** | 8.9572 — closed |
+| ep3862 | ~9.3444 | 9.1120 — partial n=40 |
+
+ep3861 closed at **9.3222** — in-band, no regression. ep3862 early batches slightly elevated (avg 9.3444 at n=40, normalises by close). Loss band holding flat 9.313–9.326 over last 8 epochs. BEST unchanged at 9.278839.
+
+ntfy quiet. No SURGERY, WALD, or EPOCH events. User is restarting Modal training to deploy the loss_history persistence fix — gate will begin counting from this restart. S11 expected ~144 epochs (~28h) after restart fires.
+
