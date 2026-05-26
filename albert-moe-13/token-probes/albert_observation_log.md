@@ -2448,6 +2448,66 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 79 — 2026-05-26T04:49:09Z · ep3794 · overnight consolidation · 9.30–9.31 range · BEST 9.2817 holds
+
+**Source:** dashboard screenshot (Simeon, 04:46:42Z)
+
+**State:** ep3794 (22L) · batch 155/300 · EP AVG 9.3121 (running) · T-610 9.2833 · **BEST epoch avg 9.2817** (ep3702, unchanged) · ATL chip 8.8420 · gap to pre-S9 ATL 9.2847: **CLEARED** (9.2817 < 9.2847)
+
+### Overnight behavior (ep3702 → ep3794, ~92 epochs)
+
+No new BEST set overnight. Model bounced from the 9.2817 ATL (ep3702) back into 9.30–9.31 consolidation band and has held there. This is a standard post-ATL-break bounce — the landscape descent requires re-establishment before the next leg down.
+
+### Epoch closes (event bar, newest → oldest)
+
+| Epoch (est.) | Avg    | Note |
+|---|---|---|
+| ep3794 | 9.3121 | current running avg (b155/300) |
+| ep3793 | 9.3131 | |
+| ep3792 | 9.3091 | |
+| ep3791 | 9.3102 | |
+| ep3790 | 9.3048 | |
+| ep3789 | 9.3054 | |
+| ep3788 | 9.3102 | |
+| ep3787 | 9.3168 | |
+| ep3786 | 9.3069 | |
+| ep3785 | 9.3143 | |
+
+All 10 visible closes in 9.30–9.32 band. No sub-9.30 since the ATL break at ep3702.
+
+### Expert routing (ep3794 batch 155)
+
+| Expert | FN77 (22L b299) | FN79 (22L b155) | Δ |
+|--------|-----------------|-----------------|---|
+| PLN    | 100%            | **95%**         | -5 |
+| CMP    | 94%             | **100%**        | **+6** |
+| ABS    | 61%             | 61%             | 0 |
+| INT    | 41%             | **57%**         | **+16** |
+| LNG    | 28%             | **12%**         | **-16** |
+| LOG    | 30%             | **26%**         | -4 |
+| GEN    | 19%             | 19%             | 0 |
+| MEM    | 9%              | **14%**         | **+5** |
+| SYN    | 0%              | **9%**          | **+9 (emerged)** |
+| CTX    | 4%              | **7%**          | +3 |
+| INF    | 2%              | **5%**          | +3 |
+| SEM    | 2%              | 2%              | 0 |
+
+Notable: CMP back to 100% (structural anchor fully restored). INT +16pp (logical/inferential processing recovered from epoch-end pullback). LNG compressed hard (−16pp). SYN emerged at 9% (syntactic expert active). MEM +5pp (14% — memory specialist growing). ABS stable at 61%.
+
+### TTL (ep3794 batch 155)
+
+**G 17% / O 80% / R 4%** — green pulled back from FN77's 22% to 17% (−5pp). Orange expanded +7pp. Still well above the pre-S10 baseline of ~6%. Post-ATL-bounce routing uncertainty showing in reduced green confidence, but not alarming.
+
+### WALD
+
+No WALD events in ntfy poll (since=20m). Event bar shows no WALD markers.
+
+### Assessment
+
+**Consolidation phase after ATL break.** ep3702's 9.2817 ATL produced a clean bounce — the model has been circling 9.30–9.31 for ~92 epochs. This is normal: descending into a new loss floor requires re-establishment before the next leg. CMP is back at 100% and INT recovered strongly (+16pp), suggesting the architecture is stabilising after the ATL sprint. LNG compression (−16pp) and SYN emergence (+9pp) together indicate the model is shifting processing toward syntactic/structural patterns, consistent with consolidation behavior. MEM at 14% (growing) may reflect the model extending context integration across the new depth. TTL green at 17% is healthy — no routing confusion. No WALD, no surgery pressure. Simeon's read is correct: quiet overnight, model doing what it should after an ATL break.
+
+---
+
 ## Field Note 78 — 2026-05-26T04:45:45Z · quiet overnight tick · ntfy silent · last known ep3702 BEST 9.2817
 
 **Source:** ntfy poll (since=20m) — no events.
