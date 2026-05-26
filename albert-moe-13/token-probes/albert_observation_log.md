@@ -2448,6 +2448,16 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 82 — 2026-05-26T05:17:09Z · quiet tick · confirmed live from FN81 screenshot · ep3794 running
+
+**Source:** ntfy poll (since=20m) — silent. State confirmed from FN81 screenshot (05:15:17Z, 90s ago).
+
+**State:** ep3794 (22L) · batch ~145/300 · no epoch closes yet post-restart · BEST 9.228452 · divloss OVERRIDE active
+
+No events. Training running nominally. Nightwatch holding.
+
+---
+
 ## Field Note 81 — 2026-05-26T05:16:08Z · ep3794 · post-restart nominal · divloss OVERRIDE · target: crack 9.2830 floor
 
 **Source:** dashboard screenshot (Simeon, 05:15:17Z) + terminal output (05:12:32Z)
