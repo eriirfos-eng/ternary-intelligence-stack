@@ -4136,3 +4136,30 @@ Three-epoch average (3871–3873): **9.3077** — marginal improvement from FN92
 **State:** ep3876 partial (22L) · n=250 · avg=9.3183 · BEST **9.278839** · ring ~15/144 · gap −0.0059 — **unchanged from FN94**
 
 No new epochs closed since FN94. Batch history static. ntfy silent. State as reported in FN94. Nightwatch holding.
+
+---
+
+## Field Note 96 — 2026-05-26T13:02:19Z · ep3879 partial · band drifting upward
+
+**Source:** batch_history.csv · ntfy empty (0 events, 20m poll) · nightwatch tick
+
+**State:** ep3879 partial (22L) · n=150 · avg=9.3247 · min=9.0051 · BEST **9.278839** (ep3708) · loss_history ring ~18/144 · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### Epoch closes since FN95
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3876 | 9.3157 | 9.0486 | closed (was partial n=250 in FN95) |
+| ep3877 | 9.3183 | 9.0327 | new close |
+| ep3878 | 9.3089 | 9.0770 | new close — highest floor in 10+ epochs |
+| ep3879 | ~9.3247 | 9.0051 | partial n=150 |
+
+3-epoch average (3876–3878): **9.3143** — up from FN94's 9.3102. Multi-tick upward drift now across three consecutive observations: 9.3077 (FN93) → 9.3102 (FN94) → 9.3143 (FN96). Not yet alarming but warrants watching.
+
+Notable: ep3878's min of 9.0770 is the highest batch floor since the post-restart period. The distribution is tightening upward — fewer sub-9.1 batches. Could indicate loss surface flattening at a slightly higher energy than desired.
+
+**ntfy:** Silent. Seventh consecutive empty 20m poll.
+
+**loss_history ring:** ~18/144. S11 gate ~126 epochs out → revised estimate **~2026-05-27T02:30Z**.
+
+**Assessment:** Three-tick upward drift in 3-ep avg (cumulative +0.0066 since FN93). No individual epoch broke 9.33, so this stays within acceptable variance, but if the next 2–3 epochs sustain above 9.32 the trend will need flagging. BEST unchanged. Gap unchanged. No intervention yet. Nightwatch holding — monitoring for drift confirmation.
