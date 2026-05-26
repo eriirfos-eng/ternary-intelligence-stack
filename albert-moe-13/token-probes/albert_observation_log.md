@@ -4789,3 +4789,15 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 **Elapsed since last event:** ~30 min · estimated current epoch ~3915–3917 (at ~3–4 min/epoch from ep3908)
 
 **Assessment:** Extended quiet after SUB-9.3 milestone at ep3908. No BEST broken, no WALD spike, no SURGERY. Model is running through epochs in the sub-9.3 band without triggering any new threshold events — this means epoch averages are closing in the 9.28–9.30 range (below 9.3 but not yet below 9.2788 for a new BEST). Deduplication holding on all thresholds already crossed. Watching for: new BEST below 9.2788, SURGERY governor fire, or WALD fill creep above 15%. No wake required.
+
+---
+
+## FN123 · 2026-05-26T16:47:08Z · ep3920± · Quiet hold — 45 min silence, no new events
+
+**State:** ep3908 last confirmed close · EP-Avg **9.2999** (last known) · BEST 9.2788 (ep3708) · gap to pre-S9 ATL 9.2847 = **−0.0059**
+
+**ntfy (last 20m):** Empty. No Albert events of any kind. Last event ep3908 SUB-9.3 at 16:02Z (~45 min ago).
+
+**Elapsed since last event:** ~45 min · estimated current epoch ~3919–3921 (at ~3–4 min/epoch)
+
+**Assessment:** Sustained quiet. ~11–13 epochs have closed since ep3908 with no threshold crossings — consistent with epoch averages in the 9.28–9.30 band, above the BEST floor of 9.2788. WALD fill stable (no re-fire = fill not climbing). SURGERY GATE watching myc_stable. No escalation criteria met. Watch continues.
