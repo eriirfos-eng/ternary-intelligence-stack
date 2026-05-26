@@ -3721,3 +3721,13 @@ No screenshot. Carried from FN70: G18% / O77% / R5%.
 
 ep3846 confirmed closed at **9.3003** (was partial n=250 in FN77). Since_best ticked to ~140. No new events. Surgery imminent — watching.
 
+---
+
+## Field Note 79 — 2026-05-26T10:01:00Z · ep3848 partial · since_best 139→140 · S11 gate ~4 epochs
+
+**Source:** batch_history.csv · ntfy quiet · routine tick
+
+**State:** ep3848 (22L) · partial n=250 · avg 9.3164 · BEST **9.278839** (ep3708) · since_best **139** (ep3847 closed) · S11 gate at 144 (**~4 epochs away**) · batch min 8.9756
+
+ep3847 closed at **9.3176** — slightly above ep3846 (9.3003), no regression. ep3848 at n=250/300, projecting to close ~9.316. Since_best holds at 139 until ep3848 closes (→140). Band remains flat 9.300–9.318 over last 8 epochs; no new floor records this window. Nightwatch holding. No intervention needed.
+
