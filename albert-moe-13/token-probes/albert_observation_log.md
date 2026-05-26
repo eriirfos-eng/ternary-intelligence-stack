@@ -3807,3 +3807,29 @@ Gate popup displays "SURGERY GATE — 17L → 18L" — stale label from S9/S10, 
 
 PLN at 100% saturation is the standout. The planning expert is being called by every token in the recent window — possibly a consolidation artifact just before surgery, where the model leans heavily on one expert as the loss landscape flattens. CMP at 86% confirms the core inference pair (PLN-CMP) is dominating. ABS+INT at 56% each = secondary pair active. Batch ATL 8.8104 stable — no new record this window. Loss band flat 9.300–9.320 for 9+ epochs. All gate conditions met except since_best (4 to go). Nightwatch holding.
 
+---
+
+## Field Note 83 — 2026-05-26T11:07:15Z · ep3861 partial · S11 OVERDUE — persistence fix not yet deployed
+
+**Source:** batch_history.csv · ntfy quiet · 15-min tick
+
+**State:** ep3861 (22L) · partial n=100 · avg 9.3249 · BEST **9.278839** (ep3708) · since_best **overdue** (118 complete epochs in csv since BEST; gate threshold 144) · gap to pre-S9 ATL 9.2847: **−0.0059** (beaten)
+
+| Epoch | Avg | Min batch | n |
+|-------|-----|-----------|---|
+| ep3855 | 9.3197 | 9.0590 | 300 |
+| ep3856 | 9.3180 | 8.8951 | 300 |
+| ep3857 | 9.3193 | 8.9690 | 300 |
+| ep3858 | 9.3146 | 8.9473 | 300 |
+| ep3859 | 9.3256 | 9.0096 | 300 |
+| ep3860 | 9.3137 | 9.0239 | 300 |
+| ep3861 | ~9.3249 | 8.9572 | 100 — partial |
+
+**S11 gate status:** 118 complete epochs have been recorded in batch_history.csv since ep3708 BEST — well past the 144 threshold. Yet S11 has not fired. ntfy confirms: no SURGERY event received. Training loss band unchanged at 9.31–9.33 with no post-surgery disruption signature.
+
+**Root cause:** The `loss_history` VecDeque in `evolution.rs` resets to empty on every Modal restart. The persistence fix (serializing loss_history as `h:` line in save_state/load_state) was committed this session but has **not yet been deployed to Modal** — the running training job still uses the old binary. The training code's internal since_best counter has been reset by at least one restart since ep3708, so from the training code's perspective the gate has never seen 144 consecutive epochs without a new best.
+
+**What needs to happen:** Next time `albert-train` is restarted on Modal, the fix will load and begin accumulating loss_history correctly. Gate will fire after 144 epochs from that restart point — approximately 28 hours if no interruption.
+
+ntfy quiet. WALD clean. No new BEST. Loss band flat. No intervention needed — nightwatch holding.
+
