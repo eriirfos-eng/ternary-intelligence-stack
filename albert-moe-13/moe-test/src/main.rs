@@ -1166,6 +1166,7 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
         .style(Style::default().fg(Color::White))
         .wrap(Wrap { trim: true })
         .scroll((scroll_offset, 0));
+    f.render_widget(Clear, chunks[1]);
     f.render_widget(sandbox, chunks[1]);
 
     let input_title = if app.is_generating && app.bench_mode {
