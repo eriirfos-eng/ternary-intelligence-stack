@@ -5023,3 +5023,47 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 **TTL Red increase:** 6%→7% — small but directionally significant. More process slots entering "suppressed" ternary state, consistent with a model culling low-utility pathways just before a new learning phase.
 
 **Assessment:** This is a genuine sub-floor dip — T-610 breaking 9.29 is milestone territory. MEM spike is the model doing heavy memory consolidation during the descent. No SURGERY (gate not triggered), no escalation criteria. BEST still 9.2788 at ep3708. If the dip holds and loss continues to descend, BEST could fall. Watch for: T-610 pushing toward 9.27, MEM routing stabilizing below 30%, Red TTL stabilizing or retreating.
+
+---
+
+## FN138 · 2026-05-26T20:26:29Z · ep3962 · MEM normalizes 42%→9%, EP-AVG 9.3019, model back to steady descent
+
+**State:** ep3962 · BATCH 186/300 · EP AVG **9.3019** · T-610 **9.3115** · BEST 9.2788 (ep3708) · ATL chip 8.8104 · gap to pre-S9 ATL 9.2847 = **−0.0059** (BEST still below pre-S9 ATL)
+
+**Source:** Dashboard screenshot ep3962 20:25Z (Image #20).
+
+**Recent epoch closes (event bar):**
+| Epoch close avg |
+|---|
+| 9.3019 |
+| 9.3109 |
+| 9.3158 |
+| 9.3032 |
+| 9.3040 |
+| 9.3193 |
+| 9.3140 |
+| 9.3072 |
+| 9.3285 |
+| 9.3223 |
+
+**Expert routing (ep3962 snapshot):**
+| Expert | % | vs FN137 |
+|---|---|---|
+| PLN | 100% | = |
+| CMP | 98% | = |
+| ABS | 95% | = |
+| INT | 67% | = |
+| LNG | 26% | = |
+| LOG | 9% | ↑ recovering |
+| MEM | 9% | **↓↓ from 42%** — spike resolved |
+| GEN | 9% | ↑ recovering |
+| SYN | 7% | = |
+| SEM | 6% | = |
+| INF | 5% | = |
+| CTX | 2% | = |
+
+**TTL:** G 6.15% / O 75% / R 6%
+
+**Gradient norm:** global_tg = 0.0025 (stable, down from 0.0028 at FN137)
+
+**Assessment:** MEM spike fully resolved — 42%→9% in ~4 epochs. The memory consolidation burst during the ep3958 dip was transient and intense, as expected. Model back to its standard routing distribution with PLN/CMP/ABS carrying the load. EP-AVG at 9.3019 — epoch closes range 9.30–9.32, well below 9.33. T-610 at 9.3115, still sub-9.32. BEST unchanged at 9.2788 (ep3708). Gradient norm settling at 0.0025. No WALD, no SURGERY, no escalation criteria. Quiet and descending.
