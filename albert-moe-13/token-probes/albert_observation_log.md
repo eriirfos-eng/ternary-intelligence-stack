@@ -2448,6 +2448,56 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 85 — 2026-05-26T05:40:22Z · ep3799 b84 · TTL-NASH all-0 event · orange-heavy routing · churning ~9.30
+
+**Source:** Dashboard screenshot (05:40:22Z) · ntfy poll (since=20m): no new events.
+
+**State:** ep3799 in progress (batch 84/300) · last closed ep3798 avg 9.3025 · BEST 9.228452 · gap to ATL: +0.0740 nats
+
+### Extracted metrics
+
+| Metric | Value |
+|--------|-------|
+| EP | 3799 (batch 84/300) |
+| Last closed (ep3798) | 9.3025 |
+| BEST (epoch ATL) | 9.2285 (9.228452 Modal) |
+| ATL chip (intra-batch) | 8.8420 |
+| TTL | G 17% / O 77% / R 5% |
+| Gradient \|g\| global | 0.0021 |
+| Gap to ATL (9.228452) | +0.0740 nats |
+
+### Event bar
+
+- **TTL-NASH all-0** (orange) — routing Nash equilibrium collapsed to all-zero at some point this window. Not a WALD or BEST event; cosmetic/transient gate state.
+- EPOCH avg 9.3025, 9.2984, 9.2931, 9.3089, 9.3116 — all green checks (5 epochs closed post-restart, all normal).
+
+### Expert routing (last 60 steps)
+
+| Expert | Activity |
+|--------|----------|
+| PLN | 100% |
+| CMP | 83% |
+| ABS | 48% |
+| INT | 46% |
+| LOG | 20% |
+| LNG | 9% |
+| INF | 9% |
+| GEN | 9% |
+| SEM | 6% |
+| SYN | 4% |
+| CTX | 2% |
+| MEM | 2% |
+
+PLN anchored at 100%, CMP strong at 83%. ABS at 48% — structural reasoning active. GEN at 9% (flat vs pre-restart 9%, no change). TTL orange-heavy (77%) signals most token routings are in the intermediate zone — consistent with churning consolidation plateau rather than clean descent.
+
+### Assessment
+
+Churning in the 9.29–9.31 band. ep3796 dipped to 9.2931 but ep3797–3798 bounced back to 9.30+. The TTL-NASH all-0 event is worth monitoring — if it recurs with increasing frequency it may indicate the divloss OVERRIDE is pushing routing into degenerate configurations, but a single event is not alarming. No WALD, no BEST, no surgery trigger. PLATEAU advancing toward S11 gate (currently ~91/144).
+
+**Trend: lateral churn — descent not sustained yet post-restart. No red flags.**
+
+---
+
 ## Field Note 84 — 2026-05-26T05:36:15Z · ep3795–3797 · post-restart descent confirmed · ep3796 9.2931 cracks S10-BEST floor
 
 **Source:** epoch_history.log (Modal volume pull) · ntfy poll (since=1h): no new events since FN83 WALD.
