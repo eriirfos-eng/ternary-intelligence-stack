@@ -5138,3 +5138,49 @@ PLN 100% / CMP 96% / INT 67% / ABS 63% / LOG 22% / LNG 17% / INF 11% / GEN 6% / 
 **Source:** ntfy poll returned empty (no events in last 20 min). No fresh dashboard screenshot provided — user busy testing bare-metal kernel Phase 1 (keyboard + interrupts working).
 
 **Assessment:** 17-minute quiet window since FN138. No escalation events. Last known routing: PLN 100% / CMP 98% / ABS 95% / INT 67% / LNG 26%, MEM normalized to 9%. Model descending in the 9.30–9.32 band. No action required.
+
+---
+
+## FN143 · 2026-05-26T22:19:39Z · ep3986 · Plateau loosening — dormant experts reactivating, 9.3084 band broken
+
+**State:** ep3986 · batch 90/300 (mid-epoch) · EP-Avg running **9.3134** · T-610 9.3242 · ATL header 8.8104 · BEST 9.228452 (Modal) · gap to pre-S9 ATL 9.2847 = **+0.0287**
+
+**Source:** Dashboard screenshot (Image #30). TNS 1,522.
+
+**Event bar (recent epoch closes, oldest→newest, left→right):**
+| Epoch close | EP-Avg |
+|---|---|
+| recent-10 | 9.3226 |
+| recent-9  | 9.3275 |
+| recent-8  | 9.3171 |
+| recent-7  | 9.3136 |
+| recent-6  | 9.3135 |
+| recent-5  | 9.3149 |
+| recent-4  | 9.3165 |
+| recent-3  | 9.3150 |
+| recent-2  | 9.3320 |
+| latest    | 9.3134 (running, ep3986 mid) |
+
+**Expert routing (last 60 steps) — vs FN142:**
+| Expert | FN143 | FN142 | Δ |
+|---|---|---|---|
+| PLN | 87% | 100% | **−13%** |
+| CMP | 100% | 96% | +4% |
+| INT | 72% | 67% | +5% |
+| ABS | 65% | 63% | +2% |
+| LOG | 17% | 22% | −5% |
+| LNG | 17% | 17% | = |
+| MEM | 4% | 0% | **+4% (reactivated)** |
+| SEM | 6% | 2% | **+4% (reactivated)** |
+| CTX | 6% | 0% | **+6% (reactivated)** |
+| INF | 9% | 11% | −2% |
+| GEN | 6% | 6% | = |
+| SYN | 6% | 6% | = |
+
+**TTL:** G 17% / O 77% / R 6% (unchanged from FN142)
+
+**Gradient norm:** global |g| = 0.0021 (unchanged — gradient still compressed)
+
+**Events:** No WALD, no SURGERY. All events are EPOCH closes.
+
+**Assessment:** The four-consecutive 9.3084 plateau band from FN142 has broken — epoch closes now vary 9.31–9.33, with no lock at a single value. Three dormant experts reactivated: MEM 0%→4%, SEM 2%→6%, CTX 0%→6%. PLN pulled back from 100%→87%. This pattern (dormant experts waking, PLN yielding to CMP+INT) matches what was seen just before the ep3958 MEM spike — the model may be probing a new routing configuration. Gradient norm still compressed at 0.0021; no descent yet. Surgery gate remains armed. Monitoring continues.
