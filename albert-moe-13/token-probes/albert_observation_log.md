@@ -5274,4 +5274,50 @@ PLN 100% / CMP 96% / INT 67% / ABS 63% / LOG 22% / LNG 17% / INF 11% / GEN 6% / 
 
 **Assessment:** Running EP-Avg 9.3212 at 72% through ep3998 — uptick from FN144's completed 9.3049, but mid-epoch noise is normal. More notable: LNG +13pp, GEN +7pp, INF +7pp — three secondary experts all activating simultaneously. ABS pulled back 13pp. CMP reclaimed 100%. This diversification pattern (primaries yielding, secondaries waking) appeared before previous routing transitions. Gradient norm ticked up to 0.0028 — consistent with increased expert diversity. Gap widened to +0.0365 vs +0.0202 in FN144, but this is likely mid-epoch oscillation rather than regression. Watch next epoch close.
 
+---
+
+## FN146 · 2026-05-26T23:35:05Z · ep4002 · Plateau 9.3234 band + LOG surge — new epoch opens at 9.3031
+
+**State:** ep4002 · batch 29/300 (10% through) · Running EP-Avg **9.3031** · ATL header 8.8104 · BEST 9.228452 (Modal) · gap to pre-S9 ATL 9.2847 = **+0.0184**
+
+**Source:** Dashboard screenshot (Image #42). TNS 1,522. Time 23:35:05.
+
+**Event bar (recent completed epochs, left→right = oldest→newest):**
+| Position | EP-Avg |
+|---|---|
+| oldest visible | 9.3031 |
+| | 9.3144 |
+| | 9.3072 |
+| | 9.3234 |
+| | 9.3234 |
+| | 9.3234 |
+| | 9.3234 |
+| | 9.3234 |
+| | 9.3234 |
+| newest visible | 9.3234 |
+
+**Expert routing (last 60 steps) — vs FN145:**
+| Expert | FN146 | FN145 | Δ |
+|---|---|---|---|
+| CMP | 100% | 100% | 0 |
+| PLN | 97% | 91% | **+6%** |
+| INT | 51% | 49% | +2% |
+| ABS | 76% | 55% | **+21%** |
+| LOG | 23% | — | new/surge |
+| LNG | 21% | 26% | −5% |
+| SYN | 11% | 7% | +4% |
+| CTX | 11% | 9% | +2% |
+| GEN | 9% | 15% | **−6%** |
+| INF | 7% | 20% | **−13%** |
+| MEM | 7% | 7% | 0 |
+| SEM | 2% | 2% | 0 |
+
+**TTL:** G 15% / O 78% / R 4% (R down 1pp — marginal improvement, stable)
+
+**Gradient norm:** global |g| = 0.0023 (down from 0.0028 in FN145 — compression resuming)
+
+**Events:** No WALD, no SURGERY. All events are EPOCH closes.
+
+**Assessment:** Seven consecutive epoch closes at 9.3234 forming a hard plateau band — then the ep4001 close broke it at 9.3072/9.3144 before the plateau reasserted. ep4002 opens running at 9.3031 (29 batches, noisy) but directionally consistent with the pre-plateau closes. Key routing shifts: ABS recovered hard +21pp (was suppressed during FN145 secondary surge), PLN strengthened +6pp back toward 97%, INF collapsed −13pp. LOG at 23% is new — first significant LOG activation tracked at this epoch range (LOG surged to 28% at ep2920 pre-cliff-2; history rhymes). Gradient norm compressing back to 0.0023. The FN145 secondary-expert diversification wave (LNG+GEN+INF) is reversing; primaries reasserting with LOG as emerging secondary. Gap narrowed from +0.0365 (FN145 mid-epoch) to +0.0184 (current running) — watch if ep4002 close confirms sub-9.31.
+
 **Assessment:** The four-consecutive 9.3084 plateau band from FN142 has broken — epoch closes now vary 9.31–9.33, with no lock at a single value. Three dormant experts reactivated: MEM 0%→4%, SEM 2%→6%, CTX 0%→6%. PLN pulled back from 100%→87%. This pattern (dormant experts waking, PLN yielding to CMP+INT) matches what was seen just before the ep3958 MEM spike — the model may be probing a new routing configuration. Gradient norm still compressed at 0.0021; no descent yet. Surgery gate remains armed. Monitoring continues.
