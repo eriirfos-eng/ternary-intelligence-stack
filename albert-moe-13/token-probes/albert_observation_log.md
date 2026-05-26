@@ -3523,3 +3523,40 @@ Three complete epochs since FN69. The headline is the sub-9.0 batch floor: the m
 
 ep3823 closed 0.0021 nats above ep3821's 9.3057 close — oscillating tightly in the 9.305–9.320 band. Sub-9.10 count increased to 10 (up from 9 at FN70 partial read). No new events. Epoch boundary tick only; see FN70 for full analysis.
 
+---
+
+## Field Note 72 — 2026-05-26T08:02:09Z · ep3825 close / ep3826 partial · ep3825 FIRST SUB-9.30 CLOSE · new batch min 8.9560 · since_best ~119
+
+**Source:** batch_history.csv direct read · ntfy quiet (no events past hour)
+
+**State:** ep3826 (22L) · partial n=100 · running avg ~9.3110 · BEST **9.228452** · gap to BEST **+0.0826** · since_best **~119** · S11 gate at 144 (~25 epochs away)
+
+### Epoch closes since FN71
+
+| Epoch | Avg    | n   | Sub-9.10 | Batch min | Note |
+|-------|--------|-----|----------|-----------|------|
+| ep3823 | 9.3078 | 300 | 10 | 9.0232 | FN71 close |
+| ep3824 | 9.3109 | 300 | 10 | 9.0104 | +0.0031 from ep3823 |
+| **ep3825** | **9.2968** | 300 | 8 | **8.9560** | **first sub-9.30 close** |
+| ep3826 | ~9.3110 | 100 | 3 | 9.0796 | partial |
+
+### ep3825 — five lowest batches
+
+| Rank | Loss |
+|------|------|
+| 1 | **8.9560** (new record) |
+| 2 | 9.0285 |
+| 3 | 9.0374 |
+| 4 | 9.0507 |
+| 5 | 9.0587 |
+
+8.9560 beats the previous record of 8.9914 (ep3820, FN70). First time the model has touched 8.95 territory.
+
+### Expert routing / TTL
+
+No screenshot available. Routing and TTL carried from FN70 (G18% / O77% / R5%).
+
+### Assessment
+
+**ep3825 at 9.2968 is the headline.** This is the first epoch close below 9.30 since the post-S10 settling period — a meaningful threshold crossed. The five-epoch recent sequence (9.3057 → 9.3174 → 9.3078 → 9.3109 → **9.2968**) shows the model oscillating but with a clear downward step at ep3825. The 8.9560 batch minimum extends the sub-9.0 intra-epoch record. ep3826 opening back in the 9.31 range is normal post-dip variance. Gap to BEST 9.228452 remains +0.0826 — still well above, but the floor compression is measurable. No WALD, no surgery, no anomalies. Nightwatch holding.
+
