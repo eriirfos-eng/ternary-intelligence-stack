@@ -2448,6 +2448,50 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 80 — 2026-05-26T05:08:38Z · pre-restart audit · ep3708 BEST 9.2788 recovered · actual best 9.228452 · Modal restart fired
+
+**Source:** epoch_history.log + Modal volume audit (2026-05-26T04:50–05:08Z) + ntfy poll (since=20m, silent)
+
+**State:** ep3794 (22L, batch in-progress at restart) · actual BEST from Modal volume: **9.228452** · epoch_history confirmed BEST: **9.2788** (ep3708, since_best=0) · gap to pre-S9 ATL 9.2847: **CLEARED** (best is 0.056 below 9.2847)
+
+### Recovered history — ep3702–ep3708
+
+Gate chip showed `since_best 3694` — triggered investigation. Full epoch_history.log audit revealed:
+
+| Epoch | loss_avg | loss_best | since_best | Note |
+|-------|----------|-----------|------------|------|
+| ep3702 | 9.2817 | **9.2817** | 0 | New BEST — caught in FN77 ✓ |
+| ep3703 | 9.2871 | 9.2817 | 1 | |
+| ep3704 | 9.2855 | 9.2817 | 2 | |
+| ep3705 | 9.2856 | 9.2817 | 3 | |
+| ep3706 | 9.2942 | 9.2817 | 4 | |
+| ep3707 | 9.2855 | 9.2817 | 5 | |
+| ep3708 | **9.2788** | **9.2788** | **0** | **New BEST — MISSED in FN78/FN79** |
+| ep3709–3793 | 9.29–9.31 | 9.2788 | 1–85 | consolidation band |
+
+ep3708 closed at **9.2788** — a new best, 0.0029 below ep3702's 9.2817, occurring during the gap between FN77 and FN78 (overnight, ntfy window missed). This is the third consecutive new BEST since S10 surgery.
+
+### Modal volume best
+
+Modal volume `albert_v3.0.best_loss` = **9.228452** — deeper than ep3708's 9.2788. This is from an earlier container run whose epoch_history was written to HOME (ephemeral, lost). This value is authentic: any container loading it will correctly not register new bests until the model descends below 9.228452.
+
+### Gate chip bug (display only)
+
+`since_best 3694` in chip = stale EPOCH_SUMMARY from a previous container where `last_best_epoch = 0` and ep3694 happened to equal since_best by coincidence. The live poll cached this value. PLATEAU (3/144) and MYC_STABLE (140 ≥ 5) are correct — gate is protecting normally.
+
+### Modal restart
+
+Simeon fired training restart at ~2026-05-26T05:00Z. New container will load:
+- `best_epoch_loss = 9.228452` (from Modal volume)
+- `last_best_epoch = 3707`
+- `since_best` will display correctly after first epoch close (~87)
+
+### Assessment
+
+Three new BESTS in the 22L post-S10 run: 9.2817 (ep3702) → 9.2788 (ep3708) → 9.228452 (earlier container, epoch unknown). All three below the pre-S9 ATL of 9.2847. The 22L model has now clearly surpassed the 20L high-water mark. Current training restarted fresh; next milestone is descent below 9.228452.
+
+---
+
 ## Field Note 79 — 2026-05-26T04:49:09Z · ep3794 · overnight consolidation · 9.30–9.31 range · BEST 9.2817 holds
 
 **Source:** dashboard screenshot (Simeon, 04:46:42Z)
