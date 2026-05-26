@@ -4163,3 +4163,13 @@ Notable: ep3878's min of 9.0770 is the highest batch floor since the post-restar
 **loss_history ring:** ~18/144. S11 gate ~126 epochs out → revised estimate **~2026-05-27T02:30Z**.
 
 **Assessment:** Three-tick upward drift in 3-ep avg (cumulative +0.0066 since FN93). No individual epoch broke 9.33, so this stays within acceptable variance, but if the next 2–3 epochs sustain above 9.32 the trend will need flagging. BEST unchanged. Gap unchanged. No intervention yet. Nightwatch holding — monitoring for drift confirmation.
+
+---
+
+## Field Note 97 — 2026-05-26T13:03:11Z · ep3879 partial · tick overlap / no new closes
+
+**Source:** batch_history.csv · ntfy empty · 15-min tick (fired 52s after FN96)
+
+**State:** ep3879 partial (22L) · n=200 · avg=9.3226 · BEST **9.278839** · ring ~18/144 · gap −0.0059 — **no new epoch closes since FN96**
+
+ep3879 advanced from n=150 → n=200. 3-ep avg (3876–3878) unchanged at 9.3143. ntfy silent. State as FN96. Nightwatch holding.
