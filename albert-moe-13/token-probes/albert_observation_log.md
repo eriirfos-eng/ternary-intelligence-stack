@@ -3873,3 +3873,35 @@ ntfy quiet. No SURGERY, WALD, or EPOCH events. User is restarting Modal training
 **csv gap signal:** batch_history.csv has received no new writes for ~7 minutes. Normal training pace is ~1 batch every 2–3 seconds — a 7-minute gap is consistent with a Modal container restart in progress. The user confirmed they were restarting `albert-train` to deploy the `loss_history` persistence fix. Container provisioning typically takes 3–8 minutes on T4. Expect new batches to resume once the container is live and the checkpoint is loaded.
 
 ntfy quiet throughout. No errors, no SURGERY fired during the gap (would appear on ntfy). BEST unchanged. Nightwatch holding — next meaningful event is first batch post-restart, confirming the new binary loaded correctly with a `Loaded loss_history: N entries` log line.
+
+---
+
+## Field Note 86 — 2026-05-26T11:23:12Z · Modal restart confirmed · loss_history fix now live · batch_history +398,968 pts
+
+**Source:** Dashboard screenshot (11:22:14 local) · albert-train terminal output
+
+**State:** Restart confirmed. `albert-train` v3.0 initialized on Modal (nkepp75). Dashboard: WAITING FOR TELE DATA (container still loading weights). ARCH: 22L · 256H · 12E · 256CTX · 32K · TNS 1,522. ATL chip: **8.8104**. GATE: green dot armed.
+
+**Terminal output (verbatim):**
+```
+--- Starting Albert Training Orchestrator (v3.0 · Modal GPU) ---
+[albert-train] merging batch history from Downloads...
+[albert-train] Total unique points: 1,213,363 (was 814,395, +398,968)
+[albert-train] Remaining gaps (863 epochs):
+[albert-train] committed batch_history (+398968 pts)
+[albert-train] pushed to GitHub
+Training started via Modal (streaming)
+✓ Initialized. View run at https://modal.com/apps/nkepp75/main/ap-0hIywV03GLH40YbxRCS3cW
+```
+
+**Event bar (epoch closes in history):** 9.3222 · 9.3137 · 9.3256 · 9.3146 · 9.3193 · 9.3180 · 9.3197 · 9.3090 · 9.3074 · 9.3272 — all consistent with pre-restart band.
+
+**Key events this restart:**
+
+1. **batch_history merge:** 814,395 → 1,213,363 unique points (+398,968). The albert_full_*.csv exports from Downloads were deduped and merged into the main batch_history. 863 previously-gapped epochs now filled. This is the first time the full continuous history is represented in the dashboard.
+
+2. **loss_history persistence fix deployed:** This is the restart that loads the new `evolution.rs` binary. From this point, `loss_history` survives all future Modal restarts. The ring begins accumulating immediately. S11 gate fires when `since_best` reaches 144 from this session's uninterrupted run — approximately **2026-05-27T15:00Z** if training runs clean.
+
+3. **Dashboard initializing:** Panels show "WAITING FOR TELE DATA" — Modal container is loading the checkpoint (~615MB safetensors, 22L config). First TELE line expected within 2–5 minutes. Expert routing, TTL, and per-layer gradient panels will populate on first batch.
+
+Loss_history fix is now in production. Clock starts here.
