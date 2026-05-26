@@ -95,13 +95,13 @@ The `@sparseskip` primitive (Patent A50296/2026) is implemented in open-source L
 
 Built by [RFI-IRFOS](https://ternlang.com), Graz, Austria.
 
-| | |
-|---|---|
-| **Simeon Kepp** | Lead Architect |
-| **Nikoletta Csonka** | Strategic Outreach & EU Relations |
-| **Zabih Karimi** | Network & ML Infrastructure |
-| **Lisa Scharler** | Social Technology & Ecocentric Systems |
-| **Louis Ehrig** | Corporate Secretary, Press & Media |
+| | | |
+|---|---|---|
+| **Simeon Kepp** | Lead Architect | [LinkedIn](https://www.linkedin.com/in/simeon-kepp/) |
+| **Nikoletta Csonka** | Strategic Outreach & EU Relations | [LinkedIn](https://www.linkedin.com/in/csonikoletta/) |
+| **Zabih Karimi** | Network & ML Infrastructure | [LinkedIn](https://www.linkedin.com/in/zabih-karimi-3292ab349/) |
+| **Lisa Scharler** | Social Technology & Ecocentric Systems | [LinkedIn](https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/) |
+| **Louis Ehrig** | Corporate Secretary, Press & Media | [LinkedIn](https://www.linkedin.com/in/louis-ehrig-317941335/) |
 
 → [LEADERSHIP.md](LEADERSHIP.md)
 
