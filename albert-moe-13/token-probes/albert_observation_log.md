@@ -4126,3 +4126,13 @@ Three-epoch average (3871–3873): **9.3077** — marginal improvement from FN92
 **loss_history ring:** ~15/144. S11 gate ~129 epochs out at ~6 min/epoch → revised estimate **~2026-05-27T02:00Z**.
 
 **Assessment:** The gentle compression seen in FN91–FN93 (9.3151 → 9.3077) has stalled at ~9.310. Three-epoch avg ticked slightly upward this window (9.3077 → 9.3102). Not a regression — within noise — but the hoped-for descent has not materialized. ABS routing surge (76% at FN91) has not translated to epoch-level improvement yet. Ring accumulation clean. Nightwatch holding.
+
+---
+
+## Field Note 95 — 2026-05-26T12:48:03Z · ep3876 partial · quiet tick / no new data
+
+**Source:** batch_history.csv · ntfy empty · 15-min tick (fired 41s after FN94 — tick overlap)
+
+**State:** ep3876 partial (22L) · n=250 · avg=9.3183 · BEST **9.278839** · ring ~15/144 · gap −0.0059 — **unchanged from FN94**
+
+No new epochs closed since FN94. Batch history static. ntfy silent. State as reported in FN94. Nightwatch holding.
