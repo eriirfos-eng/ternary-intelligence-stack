@@ -5229,4 +5229,49 @@ PLN 100% / CMP 96% / INT 67% / ABS 63% / LOG 22% / LNG 17% / INF 11% / GEN 6% / 
 
 **Assessment:** EP-Avg dropped 0.0085 since FN143 (9.3134→9.3049). Gap to pre-S9 ATL narrowed from +0.0287 to +0.0202. PLN back to 100% dominance; INT retracted 19pp (consolidation after reactivation burst). Red TTL shrinking (8%→5%) confirms instability is resolving. Slow but clean descent.
 
+---
+
+## FN145 · 2026-05-26T23:18:57Z · ep3998 · Secondary experts activating — LNG+GEN+INF surge, CMP 100%
+
+**State:** ep3998 · batch 216/300 (72% through epoch) · EP-Avg running **9.3212** · ATL header 8.8104 · BEST 9.228452 (Modal) · gap to pre-S9 ATL 9.2847 = **+0.0365**
+
+**Source:** Dashboard screenshot (Image #40). TNS 1,522. Time 23:18:57.
+
+**Event bar (recent completed epochs, left→right = oldest→newest):**
+| Position | EP-Avg |
+|---|---|
+| oldest visible | 9.3212 |
+| | 9.3129 |
+| | 9.3124 |
+| | 9.3202 |
+| | 9.3153 |
+| | 9.3049 |
+| | 9.3196 |
+| | 9.3033 |
+| | 9.3206 |
+| newest visible | 9.3057 |
+
+**Expert routing (last 60 steps) — vs FN144:**
+| Expert | FN145 | FN144 | Δ |
+|---|---|---|---|
+| CMP | 100% | 90% | **+10%** |
+| PLN | 91% | 100% | −9% |
+| INT | 49% | 53% | −4% |
+| ABS | 55% | 68% | **−13%** |
+| LNG | 26% | 13% | **+13%** |
+| INF | 20% | 13% | +7% |
+| GEN | 15% | 8% | **+7%** |
+| SYN | 7% | 4% | +3% |
+| CTX | 9% | 8% | +1% |
+| MEM | 7% | 2% | +5% |
+| SEM | 2% | 2% | 0% |
+
+**TTL:** G 17% / O 77% / R 5% (G up 2pp from FN144 — marginal improvement)
+
+**Gradient norm:** global |g| = 0.0028 (up from 0.0022 — slight gradient expansion)
+
+**Events:** No WALD, no SURGERY. All events are EPOCH closes.
+
+**Assessment:** Running EP-Avg 9.3212 at 72% through ep3998 — uptick from FN144's completed 9.3049, but mid-epoch noise is normal. More notable: LNG +13pp, GEN +7pp, INF +7pp — three secondary experts all activating simultaneously. ABS pulled back 13pp. CMP reclaimed 100%. This diversification pattern (primaries yielding, secondaries waking) appeared before previous routing transitions. Gradient norm ticked up to 0.0028 — consistent with increased expert diversity. Gap widened to +0.0365 vs +0.0202 in FN144, but this is likely mid-epoch oscillation rather than regression. Watch next epoch close.
+
 **Assessment:** The four-consecutive 9.3084 plateau band from FN142 has broken — epoch closes now vary 9.31–9.33, with no lock at a single value. Three dormant experts reactivated: MEM 0%→4%, SEM 2%→6%, CTX 0%→6%. PLN pulled back from 100%→87%. This pattern (dormant experts waking, PLN yielding to CMP+INT) matches what was seen just before the ep3958 MEM spike — the model may be probing a new routing configuration. Gradient norm still compressed at 0.0021; no descent yet. Surgery gate remains armed. Monitoring continues.
