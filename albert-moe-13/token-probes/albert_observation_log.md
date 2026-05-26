@@ -2448,6 +2448,20 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 93 — 2026-05-26T07:02:19Z · quiet tick · ntfy silent · ep3815 est. · churn band holds
+
+**Source:** ntfy poll (since=2h): one result only — WALD ep3794 fill=6.2% (stale, ~70 min old). No dashboard screenshot this tick.
+
+**State (extrapolated):** ep3815 est. (~2 epochs at ~5 min/epoch since FN92 06:53Z) · last confirmed EP-Avg 9.3156 (ep3812 close, FN92) · BEST 9.228452 · since_best ~95 est. · PLATEAU ~95/144 · gap to ATL: +0.0872 nats est.
+
+No new WALD, no BEST, no SURGERY, no SUB-9.3 events on ntfy. Churn band 9.31–9.32 expected to hold. Routing and TTL carried from FN92: PLN 100%, CMP 92%, INT 53%, ABS 65%, TTL G 6.26% / O 77% / R 4%.
+
+At ~5 min/epoch, since_best ~95 → ~49 epochs remaining to S11 gate threshold (w=144). Surgery window: ~4 h from this tick if no new BEST.
+
+No intervention. Next signal to watch: ntfy BEST or SURGERY event.
+
+---
+
 ## Field Note 92 — 2026-05-26T06:53:09Z · ep3813 b110 · HOME-write drift RESOLVED · sideways churn · since_best 93/144
 
 **Source:** Dashboard screenshot (06:53:09Z) · ntfy poll (since=6h): one result only — WALD ep3794 (stale). Gate tooltip (surgery gate panel).
