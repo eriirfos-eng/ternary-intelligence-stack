@@ -5070,6 +5070,43 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 
 ---
 
+## FN142 · 2026-05-26T21:48:43Z · ep3979 · Plateau confirmed — surgery gate pending
+
+**State:** ep3979 · EP-Avg **9.3121** · ATL header 8.8104 (dashboard metric, possibly batch-level best) · EP-Avg gap to pre-S9 target 9.2847 = **+0.0274** (EP-Avg not there yet)
+
+**Source:** Dashboard screenshot (Image #26). TNS 1,522. Batch 250/300.
+
+**Event bar (recent epoch closes, oldest→newest):**
+| Epoch close | EP-Avg |
+|---|---|
+| recent-9 | 9.3171 |
+| recent-8 | 9.3276 |
+| recent-7 | 9.3226 |
+| recent-6 | 9.3210 |
+| recent-5 | 9.3084 |
+| recent-4 | 9.3084 |
+| recent-3 | 9.3084 |
+| recent-2 | 9.3084 |
+| recent-1 | 9.3293 |
+| latest    | 9.3270 |
+
+Four consecutive epochs at 9.3084 — clear plateau band.
+
+**Expert routing (last 60 steps):**
+PLN 100% / CMP 96% / INT 67% / ABS 63% / LOG 22% / LNG 17% / INF 11% / GEN 6% / SYN 6% / SEM 2% / CTX 0% / MEM 0%
+
+**vs FN141:** MEM remains 0% (fully dormant post-spike). SEM dropped to 2% (was ~6%). PLN/CMP/INT/ABS distribution stable.
+
+**TTL:** G 17% / O 77% / R 6%
+
+**Gradient norm:** global_tg = 0.0021 (down from 0.0025 at FN139 — gradient compression, plateau behaviour)
+
+**Events:** No WALD, no SURGERY. Only EPOCH closes in event bar.
+
+**Assessment:** Textbook plateau. Four back-to-back epoch closes at exactly 9.3084 — the model has found a local attractor and is spinning in it. EP-Avg 9.3121 is +0.027 above target. Gradient norm shrinking (0.0025 → 0.0021) confirms gradient compression, not descent. Surgery governor should detect this flat band and fire; Simeon's "wasting compute" read is correct. No escalation criteria met (no WALD, no spike above 9.40). Monitoring continues — wake only on SURGERY fire.
+
+---
+
 ## FN141 · 2026-05-26T21:02:48Z · ep3966± · Quiet tick — ntfy silent, user confirms proceed
 
 **State:** ep3966± (estimated) · EP-Avg last confirmed 9.3019 (FN138) · BEST 9.2788 (ep3708) · gap to pre-S9 ATL 9.2847 = **−0.0059** (ATL beaten)
