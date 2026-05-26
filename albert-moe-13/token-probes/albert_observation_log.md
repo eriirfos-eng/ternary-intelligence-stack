@@ -4669,3 +4669,21 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 **Recent event bar (epochs before interruption):** 9.3242, 9.3217, 9.3196, 9.3204, 9.3179, TTL-NASH all-0, 9.3201, 9.3148, 9.3184
 
 **Assessment:** Normal cold-start sequence. Cargo build complete, corpus loaded, tensors restored from ep3898. Training about to begin ep3899 again. All subsystems nominal. ATL display field should update to ~9.278 on first epoch close.
+
+---
+
+## FN116 · 2026-05-26T15:21:23Z · ep3900 · SURGERY GATE fired — plateau region, watching myc_stable
+
+**State:** ep3900 closed · EP-Avg **9.3160** · BEST ~9.2788 (ep3708, unchanged) · gap to pre-S9 ATL 9.2847 = **−0.0059**
+
+**ntfy events (last 20m):**
+| Event | ep | Value |
+|---|---|---|
+| WALD | 3900 | fill=6.2%, mass=9.318, dead_low=3.00–9.00(6.00), dead_high=9.75+(5.25) |
+| SURGERY GATE | 3900 | avg 9.3160 — plateau gate region, surgery depends on myc_stable |
+| SUB-9.4 EPOCH AVG | 3900 | 9.3160 (restart threshold artifact — reset on detached restart) |
+| SUB-10.0 / SURGERY ALERT ZONE | 3900 | restart artifacts — threshold tracking resets after checkpoint resume |
+
+**Expert routing / TTL:** Not available from ntfy; dashboard not provided this tick.
+
+**Assessment:** ep3900 (9.3160) is consistent with the 9.31–9.32 band seen before the Modal heartbeat interruption. WALD fill at 6.2% is healthy (threshold 15%). The SURGERY GATE signal is meaningful: the surgery governor is now in plateau-gate region and watching for `myc_stable` to authorize the next surgery. SUB-10.0 and SURGERY ALERT ZONE events are restart artifacts — the detached checkpoint resume resets some threshold accumulators, causing them to re-fire even though these levels were already achieved weeks ago. No wake-up warranted. BEST unchanged; gap to pre-S9 ATL holds at −0.0059.
