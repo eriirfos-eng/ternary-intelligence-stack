@@ -3277,6 +3277,42 @@ No WALD events visible in the event bar for this window.
 
 **TTL green surge is the headline.** G jumping from 6%→21% in ~40 minutes indicates L22 integration unlocking: gate decisions across the architecture are now high-confidence at 3× the prior rate. LOG resurgence (+11pp) and SYN emergence (+9pp) are consistent with syntactic/logical consolidation following the surge — the model is re-routing load from scaffolding experts (CTX, INF) into direct structure experts (LOG, SYN). ep3681 close at 9.2996 is the third sub-9.30 post-S10; floor established and holding. BEST 9.2933 not challenged this window, gap to pre-S9 ATL 9.2847 unchanged at 0.0086.
 
+## Field Note 69 — 2026-05-26T07:36:27Z · ep3820-3821 · ntfy quiet · ep3820 closes 9.3148 · 9.1388 intra-epoch low (new record)
+
+**Source:** batch_history.csv · ntfy poll (quiet)  
+**No screenshot this tick** — routing and TTL carried from FN68.
+
+**State:** ep3821 (22L) · batch ~49/300 (partial) · BEST 9.228452 · ep3820 close 9.3148 · gap to BEST +0.0864 nats · since_best ~113 · GATE not met (need 144, ~31 epochs)
+
+### Epoch closes since FN68 (batch_history.csv, complete epochs)
+
+| Epoch | Avg | n |
+|-------|-----|---|
+| 3818 | 9.3125 | 301 |
+| 3819 | 9.3157 | 301 |
+| 3820 | 9.3148 | 301 |
+| 3821 | 9.3265 | 100 (partial) |
+
+Oscillating band: 9.31–9.33. No systematic descent; post-restart plateau continues.
+
+### Intra-epoch batch lows — ep3821 (batches ~31–49)
+
+- **9.1388** (batch ~44) — new documented intra-epoch minimum (beats FN68 record 9.1783)
+- 9.1918 (batch ~33)
+- 9.2059 (batch ~31)
+
+The 9.1388 hit is 0.0897 nats below the epoch-average BEST of 9.228452. Epoch average still diluted by high-variance batches (9.5962 also visible in the same partial epoch window). Pattern from FN68 holds: model visits sub-9.20 pockets but cannot sustain them across 300 batches.
+
+### Expert routing / TTL
+
+Carried from FN68 (no screenshot): PLN 89% · CMP 100% · INT 75% · ABS 56% · SYN 12% · TTL G18%/O77%/R5%.
+
+### Assessment
+
+Quiet tick. Three complete epochs since FN68 (ep3818–3820), all landing 9.31–9.32 — the plateau band is consistent and narrow. The model is not descending. Sub-9.20 batch hits continue (9.1388 is the new intra-epoch floor) but have no visible effect on epoch averages. Since_best ~113, gate at 144, ~31 epochs to S11 potential. No WALD, SURGERY, or SUB-9.3 events on ntfy.
+
+---
+
 ## Field Note 68 — 2026-05-26T07:21:19Z · ep3817-3818 · gap bridge FN67→FN68 · ATL 9.228452 CONFIRMED · sub-9.20 intra-epoch batches · since_best ~110
 
 **Source:** dashboard screenshot (07:16:31Z) + batch_history.csv (ep3818 partial, n=250) + best_loss file  
