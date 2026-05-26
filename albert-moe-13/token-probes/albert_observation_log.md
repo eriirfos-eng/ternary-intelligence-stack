@@ -3731,3 +3731,22 @@ ep3846 confirmed closed at **9.3003** (was partial n=250 in FN77). Since_best ti
 
 ep3847 closed at **9.3176** — slightly above ep3846 (9.3003), no regression. ep3848 at n=250/300, projecting to close ~9.316. Since_best holds at 139 until ep3848 closes (→140). Band remains flat 9.300–9.318 over last 8 epochs; no new floor records this window. Nightwatch holding. No intervention needed.
 
+---
+
+## Field Note 80 — 2026-05-26T10:03:29Z · ep3849 partial · since_best 140 · S11 gate 4 epochs
+
+**Source:** batch_history.csv · ntfy quiet · 15-min tick
+
+**State:** ep3849 (22L) · partial n=50 · avg 9.3133 · last batch 9.2627 · BEST **9.278839** (ep3708) · since_best **140** · S11 gate at 144 (**~4 epochs away**)
+
+| Epoch | Avg | Min batch | n |
+|-------|-----|-----------|---|
+| ep3844 | 9.3077 | 8.9717 | 300 |
+| ep3845 | 9.3130 | 8.9673 | 300 |
+| ep3846 | 9.3003 | 8.9069 | 300 |
+| ep3847 | 9.3176 | 8.9629 | 300 |
+| ep3848 | **9.3198** | 8.9756 | 300 — closed |
+| ep3849 | ~9.3133 | 9.1056 | 50 — partial |
+
+ep3848 closed at **9.3198** — band still flat, no regression. Since_best ticked to **140** (gate 144 → **4 epochs to S11**). ep3849 early batches trending in-band. Gap to pre-S9 ATL 9.2847: BEST clears it by **−0.0059** (beaten). ntfy quiet, no WALD or EPOCH events. Nightwatch holding — surgery is the only next event of note.
+
