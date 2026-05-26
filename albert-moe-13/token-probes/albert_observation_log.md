@@ -2448,6 +2448,26 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 83 — 2026-05-26T05:32:08Z · ep3794 close · WALD 6.2% baseline · mass 9.314 · first epoch post-restart complete
+
+**Source:** ntfy poll (since=20m) — 1 event.
+
+**State:** ep3794 closed (22L) · BEST 9.228452 (Modal volume) · gap to pre-S9 ATL: CLEARED
+
+### ntfy event
+
+| Event | Detail |
+|-------|--------|
+| **WALD ep3794** | step=300 · fill=6.2% · mass=9.314 · dead_low=3.00–9.00 (6.00) · dead_high=9.75+ (5.25) · priority=4 |
+
+WALD fired at epoch end (step=300 = final batch). fill=6.2% — identical to WALD ep3656 baseline. mass=9.314 implies the epoch closed at approximately **9.31x**. Not alarming. The mass is consistent with the 9.30–9.31 consolidation band observed in FN79.
+
+### Assessment
+
+First epoch post-restart complete. WALD is clean (6.2% fill, baseline). ep3794 closed at ~9.31x — no new BEST (9.228452 stands). Training running normally with divloss OVERRIDE active. No intervention needed.
+
+---
+
 ## Field Note 82 — 2026-05-26T05:17:09Z · quiet tick · confirmed live from FN81 screenshot · ep3794 running
 
 **Source:** ntfy poll (since=20m) — silent. State confirmed from FN81 screenshot (05:15:17Z, 90s ago).
