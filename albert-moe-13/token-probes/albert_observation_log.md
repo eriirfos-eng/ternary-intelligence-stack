@@ -3513,3 +3513,13 @@ Carried from FN69: G18% / O77% / R5%
 
 Three complete epochs since FN69. The headline is the sub-9.0 batch floor: the model is touching 8.9914 on individual optimization steps, which is well below anything previously recorded. Epoch averages (9.31–9.32 range) are misleading — the variance is high and the floor is actively compressing. ep3821 closing at 9.3057 shows the average is also trending down. Since_best ~116, S11 gate at 144 — still ~28 epochs away. No WALD, no surgery, no anomalies. Nightwatch holding.
 
+---
+
+## Field Note 71 — 2026-05-26T07:51:13Z · ep3823 close / ep3824 boundary · avg 9.3078 · since_best ~116
+
+**Source:** batch_history.csv · ntfy quiet · 15-min tick fired immediately after FN70 (1 min gap)
+
+**State:** ep3823 CLOSED (22L) · n=300 · avg **9.3078** · min 9.0232 · sub-9.10 hits: 10 · BEST **9.228452** · gap **+0.0793** · since_best ~116 · ep3824 not yet started
+
+ep3823 closed 0.0021 nats above ep3821's 9.3057 close — oscillating tightly in the 9.305–9.320 band. Sub-9.10 count increased to 10 (up from 9 at FN70 partial read). No new events. Epoch boundary tick only; see FN70 for full analysis.
+
