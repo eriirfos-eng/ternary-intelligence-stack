@@ -4246,3 +4246,29 @@ ep3882 avg settling as more batches arrive (9.3434@n=50 → 9.3396@n=100). Drift
 **State:** ep3885 partial (22L) · n=50 · avg=9.3125 (provisional) · min=9.0511 · BEST **9.278839** · ring ~24/144 · gap −0.0059 — **no new closes since FN100**
 
 ep3885 opened cleanly (9.3125@n=50, though high variance). 3-ep avg (3882–3884) = 9.3174 — improved from FN100's 9.3223. Drift softening confirmed directionally. ntfy silent. Nightwatch holding.
+
+---
+
+## Field Note 102 — 2026-05-26T13:47:16Z · ep3887 partial · drift re-emerging, 9.31 floor not reasserting
+
+**Source:** batch_history.csv · ntfy empty (0 events, 20m poll) · nightwatch tick
+
+**State:** ep3887 partial (22L) · n=250 · avg=9.3312 · min=8.9957 · BEST **9.278839** (ep3708) · loss_history ring ~26/144 · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### Epoch closes since FN101
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3885 | 9.3162 | 9.0100 | closed (was partial n=50 at 9.3125) |
+| ep3886 | 9.3225 | 9.0142 | new close — uptick |
+| ep3887 | ~9.3312 | 8.9957 | partial n=250 — echoing ep3881 level |
+
+3-epoch average (3884–3886): **9.3185** — marginally up from FN101's 9.3174. The hoped-for 9.31 floor reassertion from FN100 has not materialised: ep3885 (9.3162) and ep3886 (9.3225) both stayed above 9.31. ep3887 at 9.3312 with n=250 is tracking toward another 9.33 close, similar to ep3881.
+
+**Pattern emerging:** oscillation with a higher ceiling than pre-drift. Post-ep3881, the range is 9.31–9.33 rather than 9.30–9.32. This is a ~0.01 structural upshift. Not catastrophic but persistent.
+
+**ntfy:** Silent. Tenth consecutive empty 20m poll.
+
+**loss_history ring:** ~26/144. S11 gate ~118 epochs → **~2026-05-27T03:15Z**.
+
+**Assessment:** Drift flag re-elevated to watch. The ep3881–ep3887 band (excluding ep3883 dip) is systematically higher than ep3872–ep3880. Three possible interpretations: (1) Fibonacci generational step creating temporary elevation before next descent phase; (2) ABS expert saturation stalling loss improvement; (3) model reaching a local energy minimum in this configuration. No alarm conditions — BEST stable, gap stable, no WALD/SURGERY. Watching ep3887 close and ep3888 to assess whether 9.33 is becoming the new ceiling or another transient spike. Nightwatch on elevated watch.
