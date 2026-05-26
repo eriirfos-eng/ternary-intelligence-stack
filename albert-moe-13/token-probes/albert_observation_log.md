@@ -3277,6 +3277,103 @@ No WALD events visible in the event bar for this window.
 
 **TTL green surge is the headline.** G jumping from 6%→21% in ~40 minutes indicates L22 integration unlocking: gate decisions across the architecture are now high-confidence at 3× the prior rate. LOG resurgence (+11pp) and SYN emergence (+9pp) are consistent with syntactic/logical consolidation following the surge — the model is re-routing load from scaffolding experts (CTX, INF) into direct structure experts (LOG, SYN). ep3681 close at 9.2996 is the third sub-9.30 post-S10; floor established and holding. BEST 9.2933 not challenged this window, gap to pre-S9 ATL 9.2847 unchanged at 0.0086.
 
+## Field Note 68 — 2026-05-26T07:21:19Z · ep3817-3818 · gap bridge FN67→FN68 · ATL 9.228452 CONFIRMED · sub-9.20 intra-epoch batches · since_best ~110
+
+**Source:** dashboard screenshot (07:16:31Z) + batch_history.csv (ep3818 partial, n=250) + best_loss file  
+**Gap bridged:** FN67 (ep3670, 2026-05-25T19:53Z) → FN68 (ep3817, 2026-05-26T07:21Z) — 17.4h, ~148 epochs
+
+**State:** ep3817-3818 (22L) · BEST **9.228452** (confirmed best_loss) · ep3817 avg 9.3116 · ep3818 partial avg 9.3127 (n=250/300) · gap to BEST +0.0832 nats · since_best ~110 · GATE not met (need 144, ~34 epochs)
+
+---
+
+### Gap bridge — what happened ep3670→ep3817
+
+| Milestone | Detail |
+|-----------|--------|
+| BEST break | 9.2933 → **9.228452** (Δ −0.0649 nats, ~ep3707) |
+| Pre-S9 ATL cleared | 9.2847 target broken; new territory |
+| Surgery S11 | NOT fired; since_best building |
+| Restart | 2026-05-26T05:00Z — AdamW buffer cleared |
+
+Pre-S9 ATL (9.2847) was cleared and a new epoch-average BEST established at 9.228452. Δ−0.0649 nats from FN67's floor (9.2933) is the most significant ATL break in the documented run.
+
+### Epoch averages ep3800–3818 (batch_history.csv)
+
+| Epoch | Avg |
+|-------|-----|
+| 3800 | 9.3064 |
+| 3801 | 9.3035 |
+| 3802 | 9.3031 |
+| 3803 | 9.3183 |
+| 3804 | 9.3215 |
+| 3805 | 9.3112 |
+| 3806 | 9.3146 |
+| 3807 | 9.3092 |
+| 3808 | 9.3237 |
+| 3809 | 9.3203 |
+| 3810 | 9.3128 |
+| 3811 | 9.3178 |
+| 3812 | 9.3156 |
+| 3813 | 9.3261 |
+| 3814 | 9.3169 |
+| 3815 | 9.3102 |
+| 3816 | 9.3139 |
+| 3817 | 9.3116 |
+| 3818 | 9.3127 (n=250, partial) |
+
+Post-restart (05:00Z), epoch averages oscillating around 9.31. The model is ~110 epochs past its best — typical post-best regression before surgery gate fires.
+
+### Sub-9.20 intra-epoch batch events — ep3818
+
+Within ep3818 (batches ~230–249):
+- **9.1783** (batch ~242) — lowest single-batch loss in documented run
+- **9.1868** (batch ~244)
+- 9.2382, 9.2491, 9.2591, 9.2603 — sub-9.28 cluster
+
+Epoch average diluted by high-variance batches (9.48–9.50 in same window). These sub-9.20 hits are what prompted Simeon's real-time reaction — the weight landscape contains attractor pockets well below the epoch-average floor. Whether the epoch average follows is the open question.
+
+### Expert routing delta — FN67 ep3670 b149 → FN68 ep3817 b221
+
+| Expert | FN67 | FN68 | Δ |
+|--------|------|------|---|
+| PLN | 100% | 89% | −11 |
+| CMP | 100% | 100% | 0 |
+| INT | 54% | **75%** | **+21** |
+| ABS | 54% | 56% | +2 |
+| SYN | 0% | **12%** | **+12** |
+| LNG | 34% | 10% | −24 |
+| LOG | 15% | 10% | −5 |
+| GEN | 13% | 8% | −5 |
+| INF | 9% | 4% | −5 |
+| CTX | 8% | 2% | −6 |
+| SEM | 2% | 2% | 0 |
+| MEM | 0% | 2% | +2 |
+
+Key: INT +21pp (interpretive reasoning expanded), SYN +12pp (syntactic expert newly active from 0%), LNG −24pp (surface-language load massively redistributed into INT/SYN). LNG→INT/SYN transition suggests move from surface-language modeling toward structural representation. CMP 100% throughout.
+
+### TTL — ep3817
+
+**G 18% / O 77% / R 5%**  
+vs FN67: G 6% / O 77% / R 5% — **+12pp green**
+
+L22 TTL unlock fully materialised. Gate confidence tripled (6%→18%) over 147 epochs. Predicted in FN67; magnitude confirms L22 is no longer under integration lock.
+
+### Events (ntfy — last 20 min)
+
+ntfy quiet. No WALD, SURGERY, SUB-9.3 events.
+
+### Assessment
+
+Two things happened in this gap:
+
+**1. ATL break: 9.228452.** The model descended past pre-S9 ATL (9.2847) and established a new epoch-average BEST. This is the deepest documented epoch-average loss — a clean 0.0649 nats improvement from FN67's floor. The descent was genuine, not noise.
+
+**2. Sub-9.20 intra-epoch batches.** 9.1783 and 9.1868 at ep3818 are the lowest single-batch losses observed. The epoch average stays ~9.31 due to high intra-epoch variance, but these hits show the weight landscape can produce sub-9.20 trajectories. The model is not stuck — it visits very low loss regions intra-epoch but cannot yet sustain them across a full epoch.
+
+Post-restart (05:00Z), no acceleration visible in epoch averages yet. Since_best ~110, gate at 144 → ~34 epochs to S11 potential. The model needs to either: (a) break the BEST before the gate fires, or (b) hit plateau+myc_stable and take the surgery. The sub-9.20 batch hits suggest option (a) is plausible if variance compresses.
+
+---
+
 ## Field Note 67 — 2026-05-25T19:53:09Z · ep3670 · CMP full recovery · ep3668 closes 9.2979 · gap 0.0086
 
 **Source:** dashboard screenshot (19:47:31) + ntfy stream poll (since=all)
