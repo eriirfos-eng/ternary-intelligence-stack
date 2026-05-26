@@ -4687,3 +4687,13 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 **Expert routing / TTL:** Not available from ntfy; dashboard not provided this tick.
 
 **Assessment:** ep3900 (9.3160) is consistent with the 9.31–9.32 band seen before the Modal heartbeat interruption. WALD fill at 6.2% is healthy (threshold 15%). The SURGERY GATE signal is meaningful: the surgery governor is now in plateau-gate region and watching for `myc_stable` to authorize the next surgery. SUB-10.0 and SURGERY ALERT ZONE events are restart artifacts — the detached checkpoint resume resets some threshold accumulators, causing them to re-fire even though these levels were already achieved weeks ago. No wake-up warranted. BEST unchanged; gap to pre-S9 ATL holds at −0.0059.
+
+---
+
+## FN117 · 2026-05-26T15:32:08Z · ep3900+ · Quiet tick — no new events since ep3900 close
+
+**State:** Last closed: ep3900 · EP-Avg **9.3160** · BEST ~9.2788 (ep3708) · gap to pre-S9 ATL 9.2847 = **−0.0059**
+
+**ntfy (last 20m):** No events beyond those logged in FN116. ep3901 in progress or recently closed without threshold changes. WALD deduplication likely suppressed re-fire if fill% held steady (~6.2%).
+
+**Assessment:** Quiet between epochs. Training proceeding normally in the 9.31–9.32 band. Surgery governor still watching myc_stable. No action required.
