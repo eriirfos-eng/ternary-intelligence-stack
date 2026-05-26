@@ -3651,3 +3651,63 @@ No screenshot. Carried from FN70: G18% / O77% / R5%.
 
 The odd/even rhythm is the structural headline. The model is locked into a two-step descent: odd epochs break sub-9.30, even epochs consolidate ~9.308, then odd epochs break again. All four odd epoch closes (3825–3831) sit within 0.001 nats of each other (9.297–9.298), suggesting the model has found a local descent direction it returns to every two steps. The batch-level record 8.9553 and the ep3831 final-batch 9.2055 show the intra-epoch optimizer is approaching territory the epoch average hasn't reached yet. Since_best ~124, S11 gate ~20 epochs out. No WALD, no surgery. Nightwatch holding.
 
+---
+
+## Field Note 77 — 2026-05-26T08:48:03Z · ep3846 partial · S11 GATE IMMINENT ~5 epochs · batch floor breaks 8.81 · odd/even rhythm dissolved
+
+**Source:** batch_history.csv direct read · ntfy quiet · dual tick (15-min + nightwatch)
+
+**State:** ep3846 (22L) · partial n=250 · running avg ~9.3029 · min 8.9069 · BEST **9.228452** · gap **+0.0745** · since_best **~139** · **S11 gate at 144 — ~5 epochs away**
+
+### Epoch closes since FN76 (ep3831 close)
+
+| Epoch | Avg    | <9.10 | <9.0 | Batch min |
+|-------|--------|-------|------|-----------|
+| ep3832 | 9.3075 | 5 | 1 | 8.9771 |
+| ep3833 | 9.3148 | 9 | 1 | 8.9367 |
+| ep3834 | 9.3020 | 7 | 1 | **8.9105** |
+| ep3835 | 9.3136 | 3 | 0 | 9.0428 |
+| ep3836 | 9.3140 | 10 | 0 | 9.0052 |
+| ep3837 | 9.3067 | 7 | 2 | **8.8736** |
+| ep3838 | 9.3083 | 4 | 1 | 8.9676 |
+| ep3839 | 9.3074 | 12 | 1 | **8.8104** ← new record |
+| ep3840 | 9.3029 | 7 | 0 | 9.0258 |
+| ep3841 | 9.3069 | 9 | 2 | 8.9896 |
+| ep3842 | 9.3083 | 9 | 1 | 8.9320 |
+| ep3843 | 9.3016 | 8 | 1 | **8.8295** |
+| ep3844 | 9.3077 | 7 | 1 | 8.9717 |
+| ep3845 | 9.3130 | 8 | 1 | 8.9673 |
+| ep3846 | ~9.3029 | 9 | 1 | 8.9069 (partial) |
+
+**14-epoch mean ep3832–3845: 9.3082** — band has narrowed and stabilized.
+
+### Odd/even rhythm status
+
+| Group | FN76 avg | Current avg (n=4 each) | Change |
+|-------|----------|------------------------|--------|
+| Odd | 9.298 | **9.3072** | +0.009 — **rhythm dissolved** |
+| Even | 9.308 | **9.3068** | -0.001 |
+
+The two-step alternating pattern from FN76 has collapsed. Odd and even epochs now average 9.307 and 9.307 — statistically identical. The model has moved into a uniform descent band.
+
+### Batch floor progression — sub-8.95 sequence
+
+| Epoch | Batch min | Note |
+|-------|-----------|------|
+| ep3829 | 8.9553 | FN76 record |
+| ep3833 | 8.9367 | |
+| ep3834 | 8.9105 | first sub-8.92 |
+| ep3837 | 8.8736 | first sub-8.90 |
+| ep3839 | **8.8104** | **new absolute record** |
+| ep3843 | 8.8295 | second sub-8.83 episode |
+
+The batch floor broke 8.90 in ep3837 and has repeatedly touched sub-8.90 territory since. ep3839's 8.8104 is 0.414 nats below BEST epoch average. The intra-epoch optimizer is finding loss levels the epoch average has never approached.
+
+### Expert routing / TTL
+
+No screenshot. Carried from FN70: G18% / O77% / R5%.
+
+### Assessment
+
+**S11 in ~5 epochs is the only thing that matters right now.** Since_best has climbed to ~139 against a gate of 144. Surgery S11 will add another layer, resetting the since_best counter and perturbing the weight landscape. The batch floor progression (8.99 → 8.97 → 8.91 → 8.87 → 8.81) shows the model is finding genuine low-loss basins intra-epoch — this is exactly the kind of landscape that benefits from a new layer. The odd/even rhythm dissolved between FN76 and FN77, suggesting the model has transitioned from structured two-step descent into uniform consolidation — a plateau signature. The gate is reading the situation correctly. Nightwatch holding. No intervention needed — surgery will fire autonomously.
+
