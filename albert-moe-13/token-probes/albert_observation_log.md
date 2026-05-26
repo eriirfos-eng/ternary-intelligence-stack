@@ -4945,3 +4945,49 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 **Elapsed since last event:** ~225 min · estimated current epoch ~3967–3971 (~59–63 epochs at 3–4 min/epoch)
 
 **Assessment:** 3h45m / ~61 epochs of silence. No change. Stable sub-9.3 plateau grind. SURGERY GATE watching myc_stable. No escalation criteria met.
+
+---
+
+## FN136 · 2026-05-26T19:49:51Z · ep3954 · Dashboard read — model drifted back to 9.31–9.33, routing shift LOG↓ CMP↑
+
+**State:** ep3954 · BATCH 283/300 · EP AVG running **9.3172** (T-610) · latest close ~9.3285 · BEST 9.2788 (ep3708) · ATL displayed 8.8104 (historical) · gap to pre-S9 ATL 9.2847 = **−0.0059**
+
+**Source:** Dashboard screenshot ep3954 19:48Z
+
+**Recent epoch closes (event bar):**
+| Epoch close | Avg |
+|---|---|
+| recent | 9.3285 |
+| recent | 9.3223 |
+| recent | 9.3256 |
+| recent | 9.3234 |
+| recent | 9.3159 |
+| recent | 9.3280 |
+| recent | 9.3134 |
+| recent | 9.3174 |
+| recent | 9.3071 |
+| recent | 9.3124 |
+
+**Expert routing (ep3954 snapshot):**
+| Expert | % | vs FN119 |
+|---|---|---|
+| SYN | 10% | ↓ from 20% |
+| SEM | 6% | = |
+| CTX | 8% | = |
+| INF | 10% | = |
+| MEM | 4% | = |
+| GEN | 4% | ↓ from 15% |
+| LOG | 23% | ↓ from 45% |
+| LNG | 23% | ↓ from 28% |
+| ABS | 60% | ↓ from 64% |
+| PLN | 100% | = |
+| CMP | 75% | ↑ from 65% |
+| INT | 56% | ↓ from 67% |
+
+**TTL:** G 6.17% / O 77% / R 6%
+
+**Per-layer gradient norm:** global_tg = 0.0019 (stable, no explosion)
+
+**Notable routing shifts vs FN119:** LOG collapsed 45%→23% (major), GEN 15%→4% (major), SYN 20%→10%, CMP rose 65%→75%. Model pulling away from generation/logic tokens toward pure comprehension (CMP↑, PLN stable at 100%). This routing shift is typical of a pre-surgery compression phase — the model is consolidating.
+
+**Assessment:** ep3954, batch 283/300. Running epoch averages back in the 9.31–9.33 band — the SUB-9.3 dip at ep3908 (9.2999) was a brief touch, not a new floor. Lowest recent epoch close is 9.3071. BEST unchanged at 9.2788 (ep3708). LOG and GEN routing collapsed significantly since ep3905 — model is in a consolidation phase. TTL Dormant at 77% (down from 83%), Red ticked up to 6% — slight increase in suppressed activity. GATE showing active (green). No escalation criteria met. SURGERY GATE watching myc_stable.
