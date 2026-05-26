@@ -5070,6 +5070,16 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 
 ---
 
+## FN140 · 2026-05-26T20:53:48Z · ep3964± · Quiet tick — ntfy empty, no escalation
+
+**State:** ep3964± (estimated) · last confirmed EP-AVG 9.3019 (FN138) · BEST 9.2788 (ep3708) · gap to pre-S9 ATL −0.0059
+
+**Source:** ntfy poll returned 0 bytes (no events in last hour). No new dashboard — user confirming bare-metal kernel auto-boot (Phase 1 complete, full TIS stack on metal, Image #24 confirmed).
+
+**Assessment:** 10-minute quiet window since FN139. Descending trend in 9.30–9.32 band holds. No SURGERY, no WALD, no TTL escalation. No action required.
+
+---
+
 ## FN139 · 2026-05-26T20:43:22Z · ep3962± · Quiet tick — ntfy silent, no new dashboard, last known state holds
 
 **State:** ep3962± (estimated ~ep3966 by now) · last confirmed EP-AVG 9.3019 (FN138) · T-610 9.3115 · BEST 9.2788 (ep3708) · gap to pre-S9 ATL 9.2847 = **−0.0059**
