@@ -4991,3 +4991,35 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 **Notable routing shifts vs FN119:** LOG collapsed 45%→23% (major), GEN 15%→4% (major), SYN 20%→10%, CMP rose 65%→75%. Model pulling away from generation/logic tokens toward pure comprehension (CMP↑, PLN stable at 100%). This routing shift is typical of a pre-surgery compression phase — the model is consolidating.
 
 **Assessment:** ep3954, batch 283/300. Running epoch averages back in the 9.31–9.33 band — the SUB-9.3 dip at ep3908 (9.2999) was a brief touch, not a new floor. Lowest recent epoch close is 9.3071. BEST unchanged at 9.2788 (ep3708). LOG and GEN routing collapsed significantly since ep3905 — model is in a consolidation phase. TTL Dormant at 77% (down from 83%), Red ticked up to 6% — slight increase in suppressed activity. GATE showing active (green). No escalation criteria met. SURGERY GATE watching myc_stable.
+
+---
+
+## FN137 · 2026-05-26T20:07:07Z · ep3958 · MASSIVE DIP — T-610 breaks 9.29, MEM routing spike 42%, TTL Red ticking up
+
+**State:** ep3958 · BATCH 243/300 · EP AVG running **9.3040** · T-610 **9.2923** (sub-9.29 — new floor!) · BEST 9.2788 (ep3708) · gap to pre-S9 ATL 9.2847 = **−0.0059** (unchanged)
+
+**Source:** Dashboard screenshot ep3958 20:07Z (Image #17). User confirmed: blue vertical line on chart = a DIP, not surgery.
+
+**T-610 rolling average:** 9.2923 — this is a significant new low for the rolling average, below 9.30 for the first time. The 600-step window is now fully sub-9.30.
+
+**Expert routing (ep3958 snapshot):**
+| Expert | % | vs FN136 |
+|---|---|---|
+| PLN | 100% | = |
+| ABS | 55% | ↓ from 60% |
+| CMP | 53% | ↓ from 75% |
+| INT | 53% | ↓ from 56% |
+| MEM | **42%** | **↑↑ from 4%** — SPIKE |
+| LOG | low | ↓ |
+| GEN | low | ↓ |
+| others | ~0–2% | collapsed |
+
+**TTL:** G ~6% / O ~76% / R ~7% — Red ticked UP from 6% to 7%. Orange down 1%. Green stable.
+
+**Gradient norm:** global_tg = 0.0028 (elevated vs 0.0019 at FN136, but not alarming)
+
+**Notable:** MEM routing jumped from 4% to 42% in ~4 epochs — a 10× spike. This is the model massively redirecting token-routing budget toward memory consolidation. CMP collapsed back 75%→53% simultaneously. The "dip" on the chart marks where loss spiked downward — a rapid descent event, not surgery. T-610 at 9.2923 represents the rolling average finally clearing the 9.30 ceiling.
+
+**TTL Red increase:** 6%→7% — small but directionally significant. More process slots entering "suppressed" ternary state, consistent with a model culling low-utility pathways just before a new learning phase.
+
+**Assessment:** This is a genuine sub-floor dip — T-610 breaking 9.29 is milestone territory. MEM spike is the model doing heavy memory consolidation during the descent. No SURGERY (gate not triggered), no escalation criteria. BEST still 9.2788 at ep3708. If the dip holds and loss continues to descend, BEST could fall. Watch for: T-610 pushing toward 9.27, MEM routing stabilizing below 30%, Red TTL stabilizing or retreating.
