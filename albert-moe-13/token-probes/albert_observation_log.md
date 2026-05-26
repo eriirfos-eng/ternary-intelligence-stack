@@ -4450,3 +4450,35 @@ TELE S: layers 20–21 show elevated scale (0.166, 0.172) vs. earlier layers (~0
 **Event bar:** TTL-NASH all-0 event (orange) fires as expected at restart — TTL will normalize after 50 warmup steps.
 
 **Assessment:** Clean restart from checkpoint. Optimizer momentum intact (fast early loss drop). Ring accumulation paused during restart, will resume from ~33/144 once ep3893 closes. S11 gate timeline unchanged. No alarm conditions. Standard watch — next meaningful read after ep3893 closes (~6 min from now).
+
+---
+
+## Field Note 110 — 2026-05-26T14:26:09Z · ep3893 batch 107/300 · routing in transition post-restart
+
+**Source:** dashboard screenshot (14:25:11 local) · ep3893 batch 107/300
+
+**State:** ep3893 (22L) · batch 107/300 · ATL 8.8104 · BEST **9.278839** · ring ~33/144 · gap −0.0059
+
+### Expert routing — ep3893 batch ~107 (post-restart, loading phase)
+
+| Expert | % | vs FN106 (pre-restart) | delta |
+|--------|---|------------------------|-------|
+| CMP | 100% | 89% | **+11%** |
+| INT | 84% | 68% | **+16%** |
+| PLN | 41% | 100% | **−59%** — major drop from saturation |
+| ABS | 33% | 68% | **−35%** — halved |
+| LNG | 16% | 9% | +7% |
+| LOG | 10% | 31% | **−21%** — LOG surge partially reversed |
+| MEM | 8% | 4% | +4% |
+| SYN/SEM/CTX/INF/GEN | 0% | 0–9% | dormant |
+
+**Routing is in transition.** Post-restart "loading" phase: PLN (100%→41%) and ABS (68%→33%) shed load, CMP/INT absorb it. LOG surge from FN106 (31%) partially reversed to 10%. This pattern at batch 107 may stabilize differently by epoch close as EMA fills over the first 50 steps.
+
+### TTL — ep3893 batch 107
+**G: 18% / O: 77% / R: 5%** — slightly more active than pre-restart (FN106: G16%/O80%/R4%). Small increase in suppressed (5% vs 4%).
+
+**Gradient norm:** global ggl = 0.0021. Per-layer chart shows activity concentrated in upper layers (L19–L21).
+
+**Chart view:** zoomed to ep3,777–4,107. Cyan diamonds cluster 9.31–9.33. Dotted floor line at 9.2833. Current loss band sitting ~40–50 points above floor.
+
+**Assessment:** Loading-phase routing — not stable yet. Expect routing to converge toward pre-restart signature (PLN recovering, ABS settling) by ep3895–3900. TTL slightly more active post-restart (18% vs 16%). Standard watch. ep3893 close ~3 min out will be the first post-restart epoch avg.
