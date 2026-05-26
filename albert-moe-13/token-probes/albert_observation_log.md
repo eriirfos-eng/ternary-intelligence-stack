@@ -2448,6 +2448,27 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 87 — 2026-05-26T06:02:10Z · quiet tick · epoch_history stalled at ep3798 · possible HOME-write drift
+
+**Source:** ntfy poll (since=20m): silent. epoch_history.log (Modal volume pull 06:02Z).
+
+**State:** epoch_history last entry ep3798 avg 9.3025 · BEST 9.2285 (9.228452) · since_best=91 · no new epochs visible · ep3799 expected to have closed ~05:46Z (15+ min ago)
+
+### epoch_history gap
+
+epoch_history has not advanced past ep3798 since the last pull at ~05:47Z. At T4 pace (~5 min/epoch), ep3799 and ep3800 should both be closed by now. Two likely causes:
+
+1. **HOME-write drift:** current container has `$HOME` available → train_bible.rs writes `~/.albert/training.log` (ephemeral) instead of `{root}/dashboard/training.log` (Modal volume). epoch_history on volume stops updating. This is the same drift that caused the gap before ep3794.
+2. **Training stall:** container died or GPU preempted. Less likely — no ntfy WALD or error event.
+
+ntfy is silent, which makes stall unlikely (a crash would produce no epoch closes, and WALD would not fire, but the absence of WALD is expected if still running). The HOME-write hypothesis is more consistent with the data.
+
+### Assessment
+
+Quiet tick. No WALD, no BEST, no surgery. Last confirmed epoch: ep3798 avg 9.3025, still in the 9.29–9.31 churn band. If HOME-write drift is confirmed, epoch_history will stay frozen on the volume until the next container restart. Training itself is likely continuing normally. No intervention — monitor ntfy for BEST or WALD events.
+
+---
+
 ## Field Note 86 — 2026-05-26T05:47:11Z · ep3799 in progress · quiet tick · ntfy silent · churn band 9.29–9.31 holds
 
 **Source:** ntfy poll (since=20m): silent. epoch_history.log (Modal volume). Screenshot data carried from FN85 (05:40:36Z, 7 min prior).
