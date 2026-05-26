@@ -3949,3 +3949,34 @@ PLN saturation has broken — the model is no longer routing every token through
 **Infrastructure:** `albert_v3.0.safetensors` downloaded to local: 648.9MB at 100%. Model weights synced from Modal volume.
 
 **loss_history ring:** Now accumulating from batch 1 of this session. Gate requires 144 full epochs of confirmed plateau — S11 clock started this restart. No intervention needed.
+
+---
+
+## Field Note 88 — 2026-05-26T11:32:28Z · ep3863 partial · WALD ep3862 6.2% · first post-restart epoch closed
+
+**Source:** ntfy WALD event · batch_history.csv · 15-min tick
+
+**State:** ep3863 (22L) · partial n=50 · avg 9.3143 · BEST **9.278839** (ep3708) · since_best accumulating (restart epoch 1/144) · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### WALD event — ep3862 close
+
+```
+WALD epoch=3862 step=300 fill=6.2% mass=9.319
+dead_low=3.00–9.00 (6.00 range)  dead_high=9.75+ (5.25 range)
+```
+
+Fill **6.2%** — well below 15% wake threshold. Mass 9.319 is in-band with recent epoch averages. Standard end-of-epoch WALD, no structural concern. This is the first full epoch post-restart (loss_history fix live).
+
+### Epoch table
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3825 | 9.2968 | 8.9560 | — merged from CSV |
+| ep3826 | 9.3095 | 8.9786 | — merged from CSV |
+| ep3827 | 9.3001 | 9.0011 | — merged from CSV |
+| ep3862 | **9.3234** | 9.0230 | first post-restart full epoch · WALD 6.2% |
+| ep3863 | ~9.3143 | 9.1116 | partial n=50 |
+
+ep3825–3827 are newly surfaced from the +398,968 point CSV merge — previously-gapped epochs now visible. ep3862 closed at 9.3234, consistent with pre-restart band (9.31–9.33). No regression from restart.
+
+**loss_history ring:** 1 epoch accumulated. 143 to go until S11 gate fires. ntfy quiet otherwise — no SURGERY, SUB-9.3, or escalating events. Nightwatch holding.
