@@ -371,7 +371,7 @@ impl EvolutionManager {
 
     /// Persist state to a sidecar file. Call after every checkpoint save and surgery.
     pub fn save_state(&self, path: &str) {
-        let content = format!(
+        let mut content = format!(
             "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{:.6}\n",
             self.fib_index,
             self.cooldown_remaining,
@@ -382,6 +382,15 @@ impl EvolutionManager {
             self.gen_epochs_no_surgery,
             self.plateau_threshold,
         );
+        // Persist loss_history so it survives restarts — without this the plateau ring
+        // resets to empty on every Modal restart, forcing a 144-epoch refill before the
+        // gate can ever fire (and if Modal restarts more often than that, it never fires).
+        if !self.loss_history.is_empty() {
+            let hist: Vec<String> = self.loss_history.iter()
+                .map(|v| format!("{:.6}", v))
+                .collect();
+            content.push_str(&format!("h:{}\n", hist.join(",")));
+        }
         if let Err(e) = fs::write(path, &content) {
             eprintln!("[evolution] Warning: could not save state to {}: {}", path, e);
         }
@@ -432,6 +441,20 @@ impl EvolutionManager {
         if let Some(thr) = lines.next().and_then(|s| s.trim().parse::<f32>().ok()) {
             self.plateau_threshold   = thr;
             self.gen_start_threshold = thr;
+        }
+
+        // Restore loss_history from the optional h: line — allows the plateau gate to
+        // resume mid-window across restarts instead of starting from scratch each time.
+        if let Some(hist_line) = lines.next() {
+            let trimmed = hist_line.trim();
+            if let Some(hist_str) = trimmed.strip_prefix("h:") {
+                self.loss_history.clear();
+                for tok in hist_str.split(',') {
+                    if let Ok(v) = tok.trim().parse::<f32>() {
+                        self.loss_history.push_back(v);
+                    }
+                }
+            }
         }
 
         println!(

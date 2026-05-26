@@ -1431,10 +1431,12 @@
         const fillTxt  = gGateWaldFill  !== null ? 'wald_fill ' + gGateWaldFill.toFixed(1) + '%' : 'wald_fill —';
         document.getElementById('ov-footer').textContent = sinceTxt + ' · ' + fillTxt;
 
-        // Overlay title — update if layer count known
-        if (gGateCurrentL !== null) {
+        // Overlay title — prefer gGateCurrentL (from ARCH line), fall back to lastNumLayers
+        // (from TELE, emitted every 10 steps) so the title is never stale after a restart.
+        const _titleL = gGateCurrentL !== null ? gGateCurrentL : lastNumLayers;
+        if (_titleL !== null) {
             document.getElementById('gate-overlay-title').textContent =
-                'Surgery Gate — ' + gGateCurrentL + 'L → ' + (gGateCurrentL + 1) + 'L';
+                'Surgery Gate — ' + _titleL + 'L → ' + (_titleL + 1) + 'L';
         }
     }
 
@@ -3223,6 +3225,7 @@
                         updateGateChip();
                     }
                     lastNumLayers = numLayers;
+                    gGateCurrentL = numLayers;  // keep gate title in sync with live TELE
                     lastTeleMs = Date.now();
                     latestTele = { numLayers, layerSparsity, expertActivity };
                     renderNeuralViz(latestTele);
