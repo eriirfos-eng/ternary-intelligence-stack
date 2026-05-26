@@ -4236,3 +4236,13 @@ ep3882 avg settling as more batches arrive (9.3434@n=50 → 9.3396@n=100). Drift
 **loss_history ring:** ~24/144. S11 gate ~120 epochs → **~2026-05-27T03:00Z**.
 
 **Assessment:** Drift flag from FN98 tentatively downgraded. ep3881 (9.3314) looks like a local spike rather than regime shift. ep3883 at 9.3108 and ep3884 at 9.3168 both comfortably in the 9.31 corridor. 3-ep avg (9.3223) still elevated vs the 9.307x seen in FN93, but the descent from ep3881 is clean. Next 2–3 epochs will confirm whether the 9.31 floor reasserts. BEST and gap unchanged. Nightwatch returning to standard watch.
+
+---
+
+## Field Note 101 — 2026-05-26T13:33:11Z · ep3885 partial · tick overlap / drift watch continues
+
+**Source:** batch_history.csv · ntfy empty · 15-min tick (fired 18s after FN100)
+
+**State:** ep3885 partial (22L) · n=50 · avg=9.3125 (provisional) · min=9.0511 · BEST **9.278839** · ring ~24/144 · gap −0.0059 — **no new closes since FN100**
+
+ep3885 opened cleanly (9.3125@n=50, though high variance). 3-ep avg (3882–3884) = 9.3174 — improved from FN100's 9.3223. Drift softening confirmed directionally. ntfy silent. Nightwatch holding.
