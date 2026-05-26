@@ -2448,6 +2448,39 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 86 — 2026-05-26T05:47:11Z · ep3799 in progress · quiet tick · ntfy silent · churn band 9.29–9.31 holds
+
+**Source:** ntfy poll (since=20m): silent. epoch_history.log (Modal volume). Screenshot data carried from FN85 (05:40:36Z, 7 min prior).
+
+**State:** ep3799 in progress (batch ~98/300 at 05:40Z) · last closed ep3798 avg 9.3025 · BEST 9.228452 · since_best=91 · PLATEAU 91/144 · gap to ATL: +0.0740 nats · pre-S9 ATL (9.2847): CLEARED
+
+### epoch_history summary (no new closes since FN85)
+
+Last closed: ep3798, avg=9.3025 (d+0.0041). Churn band since restart (ep3794–3798): 9.2931–9.3116. One dip to 9.2931 (ep3796), otherwise holding 9.30+.
+
+### Routing (from FN85 screenshot, 05:40:36Z — minor delta)
+
+| Expert | FN85 | FN86 delta |
+|--------|------|-----------|
+| PLN | 100% | — |
+| CMP | 87% | +4% |
+| ABS | 51% | +3% |
+| INT | 45% | -1% |
+| LOG | 20% | — |
+| LNG | 11% | +2% |
+| GEN | 7% | -2% |
+| INF | 9% | — |
+| SEM | 6% | — |
+| SYN | 4% | — |
+
+TTL: G 18% / O 77% / R 5%. Orange-heavy state persisting. CMP gain (+4%) and ABS gain (+3%) suggest structural pattern processing increasing — consistent with consolidation behaviour.
+
+### Assessment
+
+Quiet tick, 7 min after FN85. No new epoch closes, no ntfy events, no WALD. Model churning in 9.29–9.31 band post-restart. CMP and ABS routing increasing slightly, GEN pulling back — architecture tightening around structural experts. No intervention needed.
+
+---
+
 ## Field Note 85 — 2026-05-26T05:40:22Z · ep3799 b84 · TTL-NASH all-0 event · orange-heavy routing · churning ~9.30
 
 **Source:** Dashboard screenshot (05:40:22Z) · ntfy poll (since=20m): no new events.
