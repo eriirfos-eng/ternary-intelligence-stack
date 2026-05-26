@@ -3568,3 +3568,39 @@ No screenshot available. Routing and TTL carried from FN70 (G18% / O77% / R5%).
 
 **State:** ep3826 (22L) · partial n=100 · avg ~9.3110 · BEST **9.228452** · gap **+0.0826** · since_best ~119 — no change from FN72. Tick interval collision; state identical.
 
+---
+
+## Field Note 74 — 2026-05-26T08:17:10Z · ep3828 close / ep3829 start · band drops to 9.302 avg · sub-9.0 hits in ep3826 · since_best ~121
+
+**Source:** batch_history.csv direct read · ntfy quiet (no events past hour)
+
+**State:** ep3829 (22L) · just started (last entry ep3828.9967) · BEST **9.228452** · gap to BEST **+0.0740** · since_best **~121** · S11 gate at 144 (~23 epochs away)
+
+### Epoch closes since FN73
+
+| Epoch | Avg    | n   | Sub-9.10 | Sub-9.0 | Batch min | Note |
+|-------|--------|-----|----------|---------|-----------|------|
+| ep3826 | 9.3095 | 300 | 10 | 1 | **8.9786** | 2nd sub-9.0 batch hit |
+| ep3827 | **9.3001** | 300 | 6 | 0 | 9.0011 | sub-9.30 close |
+| ep3828 | **9.3024** | 300 | 6 | 0 | 9.0345 | sub-9.30 close |
+
+**4-epoch rolling avg ep3825–3828: 9.3022** — band shifted down from the 9.305–9.320 range observed through FN71.
+
+### Batch lows — sub-9.0 record sequence
+
+| Epoch | Lowest batch |
+|-------|-------------|
+| ep3820 | 8.9914 (FN70, first sub-9.0) |
+| ep3825 | 8.9560 (FN72, record) |
+| ep3826 | **8.9786** (second sub-9.0 in 2 epochs) |
+
+Sub-9.0 hits now occurring every 1–2 epochs. The intra-epoch optimizer is regularly touching territory well below any epoch average ever recorded.
+
+### Expert routing / TTL
+
+No screenshot. Carried from FN70: G18% / O77% / R5%.
+
+### Assessment
+
+The band shift is the headline. Three of the last four complete epochs closed below 9.305 (ep3825: 9.2968, ep3827: 9.3001, ep3828: 9.3024) with a 4-epoch rolling mean of 9.3022. This is a measurable step down from the 9.310–9.320 range that dominated FN68–FN73. Sub-9.0 batch hits appearing every 1–2 epochs confirms the loss landscape has genuine depth that epoch averages are slowly approaching. Since_best ~121, S11 gate ~23 epochs out. No WALD, no surgery. Nightwatch holding — Simeon and Zabih out on errands.
+
