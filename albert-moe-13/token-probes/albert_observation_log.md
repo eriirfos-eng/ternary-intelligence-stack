@@ -3854,3 +3854,22 @@ ep3861 closed at **9.3222** — in-band, no regression. ep3862 early batches sli
 
 ntfy quiet. No SURGERY, WALD, or EPOCH events. User is restarting Modal training to deploy the loss_history persistence fix — gate will begin counting from this restart. S11 expected ~144 epochs (~28h) after restart fires.
 
+---
+
+## Field Note 85 — 2026-05-26T11:19:43Z · ep3862 · csv static 7 min · Modal restart in progress
+
+**Source:** batch_history.csv · ntfy quiet · 15-min tick
+
+**State:** ep3862 (22L) · csv last modified 11:12:45Z (7 min ago) · last row 3862.130000 = n≈40 · BEST **9.278839** (ep3708) · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+| Epoch | Avg | Min batch |
+|-------|-----|-----------|
+| ep3858 | 9.3146 | 8.9473 |
+| ep3859 | 9.3256 | 9.0096 |
+| ep3860 | 9.3137 | 9.0239 |
+| ep3861 | **9.3222** | 8.9572 — closed |
+| ep3862 | (static at n=40) | 9.1120 — no new batches since 11:12Z |
+
+**csv gap signal:** batch_history.csv has received no new writes for ~7 minutes. Normal training pace is ~1 batch every 2–3 seconds — a 7-minute gap is consistent with a Modal container restart in progress. The user confirmed they were restarting `albert-train` to deploy the `loss_history` persistence fix. Container provisioning typically takes 3–8 minutes on T4. Expect new batches to resume once the container is live and the checkpoint is loaded.
+
+ntfy quiet throughout. No errors, no SURGERY fired during the gap (would appear on ntfy). BEST unchanged. Nightwatch holding — next meaningful event is first batch post-restart, confirming the new binary loaded correctly with a `Loaded loss_history: N entries` log line.
