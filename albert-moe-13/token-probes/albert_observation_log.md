@@ -4014,3 +4014,42 @@ Three full epochs closed without triggering ntfy WALD events — either fill% st
 **loss_history ring:** 4/144 accumulated (ep3863–3866 in progress). S11 gate tracking correctly since persistence fix. ~140 epochs to go (~2026-05-27T23:00Z estimate).
 
 **BEST unchanged.** Gap to pre-S9 ATL holds at −0.0059. No intervention needed. Nightwatch holding.
+
+---
+
+## Field Note 91 — 2026-05-26T12:02:51Z · ep3868 n=150 · slow descent · ABS surge to 76%
+
+**Source:** batch_history.csv · ntfy quiet (empty poll, 20m window) · dashboard screenshot (image#10 at 11:51:04 local, ep3866 batch 138) · 15-min tick
+
+**State:** ep3868 (22L) · partial n=150 · avg ~9.3136 · min 9.0599 · BEST **9.278839** (ep3708) · loss_history ring 6/144 · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### Epoch closes since FN90
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3866 | 9.3143 | 8.9775 | closed, no WALD via ntfy |
+| ep3867 | 9.3086 | 9.0003 | closed, slight improvement |
+| ep3868 | ~9.3136 | 9.0599 | partial n=150 |
+
+Three-epoch average (3866–3867): **9.3115** — marginal descent from FN90 band (9.3044–9.3223). Not breaking out yet, but directionally correct.
+
+### Expert routing — ep3866 batch 138 (dashboard screenshot)
+
+| Expert | % | vs FN87 (post-restart) |
+|--------|---|----------------------|
+| PLN | 100% | stable at saturation |
+| CMP | 83% | stable |
+| ABS | **76%** | **+43%** — strong surge vs FN87 33% |
+| INT | 59% | stable |
+| LOG | 17% | stable |
+| LNG | 15% | +15% vs FN87 0% |
+| GEN | 11% | stable |
+| SYN | 4% | new signal |
+| SEM | 2% | minimal |
+| CTX | 0% | dormant |
+
+ABS at 76% is the dominant shift since FN87. Abstraction expert nearly on par with CMP. Combined with LNG waking at 15%, this suggests the model is now routing more semantic/abstraction load away from pure planning, which may explain the gradual loss descent.
+
+**ntfy:** Completely silent — no WALD events for ep3863–3867. Either fill% consistently below notification threshold or ntfy delivery issue for routine epoch closes. No SURGERY, no SUB-9.3, no escalation.
+
+**loss_history ring:** 6/144. S11 gate ~138 epochs out (~2026-05-28T06:00Z estimate). Nightwatch holding.
