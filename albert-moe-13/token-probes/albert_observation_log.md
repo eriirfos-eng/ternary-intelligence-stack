@@ -4743,3 +4743,25 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 **Notable routing vs FN116:** PLN at 100% (dominant), ABS 64%, CMP 65%, INT 67% — reasoning/logic cluster fully active. LOG 45% elevated. GEN 15% (moderate). LNG 28% (language moderate). TTL heavily Dormant (O 83%) is expected in steady-state plateau.
 
 **Assessment:** ep3905–3908 closing quietly in the 9.31–9.33 range. No threshold crossings, no WALD re-fires, no new BEST. Gradient norm 0.0016 is clean — no instability. PLN at 100% confirms the model is driving hard on planning/reasoning tokens; this is typical plateau behavior before surgery governor fires. SURGERY GATE still live, watching myc_stable. Extended quiet is normal — WALD deduplication suppresses re-fires when fill% is stable. No wake required. Estimated current epoch: ~3909 (37 min at ~3.5 min/epoch from ep3900).
+
+---
+
+## FN120 · 2026-05-26T16:04:04Z · ep3908 · SUB-9.3 epoch avg — first running average below 9.3
+
+**State:** ep3908 closed · EP-Avg **9.2999** (new depth floor, first SUB-9.3) · BEST 9.2788 (ep3708) · gap to pre-S9 ATL 9.2847 = **−0.0059**
+
+**ntfy events (last 1h):**
+| Time (UTC) | Event | Detail |
+|---|---|---|
+| 15:20:38Z | SURGERY GATE | ep3900 avg 9.3160 — plateau gate region, watching myc_stable |
+| 15:20:38Z | WALD | ep3900 fill=6.2% mass=9.318 dead_low=3.00–9.00(6.00) dead_high=9.75+(5.25) |
+| 15:20:38Z | SUB-9.4 EPOCH AVG | ep3900 avg 9.3160 — new depth floor |
+| 16:02:51Z | **SUB-9.3 EPOCH AVG** | **ep3908 avg 9.2999 — new depth floor** |
+
+**Expert routing:** Last snapshot ep3905 — PLN 100% / ABS 64% / CMP 65% / INT 67% / LOG 45% / LNG 28% / GEN 15% (no new screenshot; routing assumed stable)
+
+**TTL:** G 6.14% / O 83% / R 3% (last known, ep3905)
+
+**WALD:** Still at fill=6.2% from ep3900 — no re-fire, deduplication holding; fill stable confirms no new dead experts.
+
+**Assessment:** ep3908 crossed the 9.3 boundary — epoch average 9.2999. This is the first time the running epoch average has dropped below 9.3 since training began in this generation. BEST is still 9.2788 (ep3708) so no new ATL from this epoch close, but the trend is a slow descent through the 9.31–9.32 plateau. Gap to pre-S9 ATL unchanged at −0.0059. SURGERY GATE remains live watching myc_stable. No BEST broken, no WALD spike, no loss explosion — no wake required. Next threshold to watch: sub-9.28 (would beat pre-S9 ATL) or SURGERY firing.
