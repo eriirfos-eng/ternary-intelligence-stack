@@ -2448,6 +2448,53 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 81 — 2026-05-26T05:16:08Z · ep3794 · post-restart nominal · divloss OVERRIDE · target: crack 9.2830 floor
+
+**Source:** dashboard screenshot (Simeon, 05:15:17Z) + terminal output (05:12:32Z)
+
+**State:** ep3794 (22L) · batch 143/300 · running (no closed epoch yet post-restart) · T-610 9.3107 · BEST 9.228452 (Modal volume) · ATL chip 8.8420 · TNS 1,384
+
+**Run flags (from terminal):**
+- `[lb] disabled` — LB gradient NOT flowing this run
+- `[divloss] OVERRIDE weight=1.00e-3` — diversity loss active at fixed weight, schedule bypassed
+
+### Expert routing (ep3794 batch 143) — post-restart
+
+| Expert | FN79 (pre-restart b155) | FN81 (post-restart b143) | Δ |
+|--------|------------------------|--------------------------|---|
+| PLN    | 95%                    | **100%**                 | +5 |
+| CMP    | 100%                   | **84%**                  | -16 |
+| ABS    | 61%                    | **66%**                  | +5 |
+| INT    | 57%                    | **33%**                  | -24 |
+| LOG    | 26%                    | **33%**                  | +7 |
+| INF    | 5%                     | **16%**                  | **+11** |
+| MEM    | 16%                    | 16%                      | 0 |
+| LNG    | 12%                    | **0%**                   | -12 |
+| GEN    | 19%                    | **0%**                   | **-19** |
+| SYN    | 9%                     | **0%**                   | -9 |
+| CTX    | 7%                     | 0%                       | -7 |
+| SEM    | 2%                     | 0%                       | -2 |
+
+PLN at 100% (anchor restored). GEN and SYN collapsed to 0% post-restart — generative and syntactic experts not yet engaged. INF emerged at 16% (+11pp). CMP and INT compressed. This is normal post-restart recalibration under divloss override.
+
+### TTL (ep3794 batch 143)
+
+**G 18% / O 77% / R 5%** — holding at the post-S10 green level (~18%). No warmup degradation visible at batch 143 (warmup period ended, gradient data flowing: gn=0.0026, L18 hottest layer).
+
+### Events
+
+No new epoch closes since restart. Event bar still shows pre-restart history (ep3793 last close, 9.3121). `TTL-NASH all-0` fired at restart step 0 (expected — all layers start at G0/O12/R0 at epoch boundary).
+
+### Target
+
+Simeon's target for today: crack the floor at **9.2830** (annotated on chart as "floor after 21L surgery + multiepoch consolidation"). Current actual BEST: 9.228452 (Modal volume) — already below this floor. The session goal is for consistent epoch closes below 9.2830 and ultimately sub-9.228452 descent.
+
+### Assessment
+
+Clean restart. divloss override (1e-3, fixed) should encourage routing diversity as the model re-establishes descent. Expert routing shows post-restart recalibration — GEN/SYN/LNG dormant, PLN anchored, INF active. No anomalies. Training running at expected batch pace (~874ms/batch at T4). Gap to floor: zero on paper (9.228452 is already through it); gap on current running avg: ~0.07 nats to re-establish.
+
+---
+
 ## Field Note 80 — 2026-05-26T05:08:38Z · pre-restart audit · ep3708 BEST 9.2788 recovered · actual best 9.228452 · Modal restart fired
 
 **Source:** epoch_history.log + Modal volume audit (2026-05-26T04:50–05:08Z) + ntfy poll (since=20m, silent)
