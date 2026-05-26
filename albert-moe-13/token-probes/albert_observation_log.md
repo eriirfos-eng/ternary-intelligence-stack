@@ -4200,3 +4200,13 @@ ep3879 advanced from n=150 → n=200. 3-ep avg (3876–3878) unchanged at 9.3143
 **loss_history ring:** ~21/144. S11 gate ~123 epochs → **~2026-05-27T03:00Z**.
 
 **Assessment:** Upward drift is now statistically real — not oscillation noise. The compression that peaked at 9.3060 (ep3872) has fully reversed. Possible causes: (1) ABS surge (76%, FN91) routing load away from loss-reducing experts; (2) natural oscillation before a descent step; (3) generational cycling entering a higher-energy phase. Not at the 9.40 alarm threshold. BEST and gap unchanged. No surgeon wake warranted yet. Next tick is the decision point: if ep3882 closes above 9.33, escalate note; if it reverts below 9.31, drift was transient. Nightwatch on elevated watch.
+
+---
+
+## Field Note 99 — 2026-05-26T13:18:18Z · ep3882 partial · tick overlap / drift watch
+
+**Source:** batch_history.csv · ntfy empty · 15-min tick (fired 20s after FN98)
+
+**State:** ep3882 partial (22L) · n=100 · avg=9.3396 (stabilising from 9.3434 at n=50) · BEST **9.278839** · ring ~21/144 · gap −0.0059 — **no new closes since FN98**
+
+ep3882 avg settling as more batches arrive (9.3434@n=50 → 9.3396@n=100). Drift watch active per FN98. ntfy silent. Nightwatch holding.
