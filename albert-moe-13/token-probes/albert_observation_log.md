@@ -4318,3 +4318,57 @@ ep3887 final: **9.3328** — marginally above ep3881's 9.3314, now the highest e
 **State:** ep3890 partial (22L) · n=200 · avg=9.3152 (was 9.3092@n=150) · BEST **9.278839** · ring ~29/144 · gap −0.0059 — **no new closes since FN104**
 
 ep3890 avg ticked up slightly as more batches arrived (9.3092@n=150 → 9.3152@n=200). Sub-9.31 close looking less likely but still plausible. ntfy silent. Standard watch.
+
+---
+
+## Field Note 106 — 2026-05-26T14:05:17Z · ep3890 batch 295/300 · dashboard screenshot · LOG surge / ABS cooling
+
+**Source:** dashboard screenshot (14:04:07 local) · batch_history.csv · ntfy empty · 15-min tick
+
+**State:** ep3890 (22L) · batch 295/300 · EP AVG 9.3153 (chart right axis) · batch ATL **8.8104** (batch-level, not epoch avg) · epoch avg BEST **9.278839** (ep3708, unchanged) · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### Event bar — recent epoch closes (dashboard)
+
+| Close | Avg | Note |
+|-------|-----|------|
+| ep3883 | 9.3108 | |
+| ep3884 | 9.3166 | |
+| ep3887 | 9.3328 | spike (confirmed) |
+| ep3886 | 9.3225 | |
+| ep3885 | 9.3162 | |
+| ep3888 | 9.3168 | post-spike reversion |
+| ep3889 | 9.3109 | |
+| ep3882 | 9.3245 | |
+| ep3880 | 9.3230 | |
+| ep3890 | 9.3153 | in progress |
+
+### Expert routing — ep3890 batch ~295 (dashboard)
+
+| Expert | % | vs FN91 (ep3868) | delta |
+|--------|---|------------------|-------|
+| PLN | 100% | 100% | — |
+| CMP | 89% | 83% | **+6%** |
+| ABS | 68% | 76% | **−8%** — cooling from surge |
+| INT | 68% | 59% | **+9%** |
+| LOG | 31% | 17% | **+14%** — significant new rise |
+| INF | 14% | n/a | new signal |
+| SYN | 9% | 4% | +5% |
+| LNG | 9% | 15% | −6% |
+| GEN | 9% | 11% | −2% |
+| MEM | 4% | n/a | new signal |
+| SEM | 4% | 2% | +2% |
+| CTX | 2% | 0% | +2% |
+
+### TTL (Traffic Light Routing)
+
+**G: 16% / O: 80% / R: 4%**
+
+80% dormant is the dominant signal — consistent with the flat loss band. Very few suppressed (4%), low active (16%). Model is conserving resources rather than pushing.
+
+**Chart annotation visible:** "floor @ 9.2830 after 21L surgery" (dotted line ~ep3650). Current band is ~30–50 points above this floor. The chart shows the model has been locked in a 9.30–9.33 corridor for ~20 epochs since the restart.
+
+**ntfy:** Silent. Twelfth consecutive empty poll.
+
+**loss_history ring:** ep3890 about to close → ~30/144. S11 gate ~114 epochs → **~2026-05-27T03:15Z**.
+
+**Assessment:** Simeon's read is accurate — "going sideways." The corridor has been 9.30–9.33 since ep3872 with two oscillatory spikes (ep3881, ep3887) that both resolved. Key routing shift: **LOG rose from 17% → 31%** while ABS cooled 76% → 68%. This is the most significant expert shift since FN91. Possible interpretation: the model is transitioning from pure abstraction-heavy routing toward logical inference, which may precede a descent phase (LOG handles deductive chaining, which typically improves loss in later training). The 80% dormant TTL suggests the model is in a consolidation phase. Combined with ring now at ~30/144, S11 gate still ~114 epochs out. No alarm conditions. No intervention warranted. Standard watch.
