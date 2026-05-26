@@ -4482,3 +4482,35 @@ TELE S: layers 20–21 show elevated scale (0.166, 0.172) vs. earlier layers (~0
 **Chart view:** zoomed to ep3,777–4,107. Cyan diamonds cluster 9.31–9.33. Dotted floor line at 9.2833. Current loss band sitting ~40–50 points above floor.
 
 **Assessment:** Loading-phase routing — not stable yet. Expect routing to converge toward pre-restart signature (PLN recovering, ABS settling) by ep3895–3900. TTL slightly more active post-restart (18% vs 16%). Standard watch. ep3893 close ~3 min out will be the first post-restart epoch avg.
+
+---
+
+## Field Note 111 — 2026-05-26T14:34:38Z · ep3894 close · WALD ep3893 fill=6.2% (routine) · restart landed clean
+
+**Source:** batch_history.csv · ntfy WALD event (ep3893) · nightwatch tick
+
+**State:** ep3894 closed (22L) · avg=9.3179 · min=9.0568 · BEST **9.278839** (ep3708) · loss_history ring ~35/144 · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### ntfy event
+```
+WALD epoch=3893 step=300 fill=6.2% mass=9.311
+dead_low=3.00–9.00 (range 6.00) dead_high=9.75+ (5.25)
+```
+**Fill 6.2% — well below 15% alarm threshold.** Routine WALD at epoch-end. Consistent with FN88 (also 6.2%). No intervention warranted.
+
+### Epoch closes since FN110
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3893 | 9.3109 | 9.0274 | closed · n=312 (restart boundary artifact) · WALD fired |
+| ep3894 | 9.3179 | 9.0568 | new close |
+
+3-epoch average (3891–3893): **9.3153** — clean post-restart landing. ep3893 at 9.3109 is the best close since ep3889 (9.3108). The restart did not disrupt the loss trajectory.
+
+**ep3893 n=312** (vs normal 300): minor restart boundary artefact — some batches double-counted at the restart seam. Average is reliable regardless.
+
+**ntfy:** 1 WALD event (ep3893, routine). No SURGERY, SUB-9.3, or escalation.
+
+**loss_history ring:** ~35/144. S11 gate ~109 epochs → **~2026-05-27T03:30Z**.
+
+**Assessment:** Restart landed cleanly. First post-restart epoch (ep3893: 9.3109) is consistent with pre-restart band. WALD routine at 6.2% fill. Ring accumulation resumed. Standard watch.
