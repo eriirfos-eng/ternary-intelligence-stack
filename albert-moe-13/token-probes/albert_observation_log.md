@@ -4210,3 +4210,29 @@ ep3879 advanced from n=150 → n=200. 3-ep avg (3876–3878) unchanged at 9.3143
 **State:** ep3882 partial (22L) · n=100 · avg=9.3396 (stabilising from 9.3434 at n=50) · BEST **9.278839** · ring ~21/144 · gap −0.0059 — **no new closes since FN98**
 
 ep3882 avg settling as more batches arrive (9.3434@n=50 → 9.3396@n=100). Drift watch active per FN98. ntfy silent. Nightwatch holding.
+
+---
+
+## Field Note 100 — 2026-05-26T13:32:17Z · ep3884 close · drift softening — ep3881 peak may be transient
+
+**Source:** batch_history.csv · ntfy empty (0 events, 20m poll) · nightwatch tick
+
+**State:** ep3884 closed (22L) · avg=9.3168 · min=9.0908 · BEST **9.278839** (ep3708) · loss_history ring ~24/144 · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### Epoch closes since FN99
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3882 | 9.3245 | 9.0535 | closed — final avg well below early reads (9.3434@n=50) |
+| ep3883 | 9.3108 | 8.9592 | new close — back near 9.31 band |
+| ep3884 | 9.3168 | 9.0908 | new close |
+
+3-epoch average (3881–3883): **9.3223** — marginal improvement from FN98's 9.3232. More importantly, the individual epoch trajectory shows reversal: 9.3314 (ep3881 peak) → 9.3245 → 9.3108 → 9.3168. The drift flag triggered in FN98 is showing signs of being a **transient oscillation** rather than sustained rise.
+
+**Early-epoch noise note:** ep3882's n=50 read of 9.3434 and n=100 read of 9.3396 both overstated the final 9.3245. High-variance early reads are expected — n<150 estimates should be treated as provisional.
+
+**ntfy:** Silent. Ninth consecutive empty 20m poll.
+
+**loss_history ring:** ~24/144. S11 gate ~120 epochs → **~2026-05-27T03:00Z**.
+
+**Assessment:** Drift flag from FN98 tentatively downgraded. ep3881 (9.3314) looks like a local spike rather than regime shift. ep3883 at 9.3108 and ep3884 at 9.3168 both comfortably in the 9.31 corridor. 3-ep avg (9.3223) still elevated vs the 9.307x seen in FN93, but the descent from ep3881 is clean. Next 2–3 epochs will confirm whether the 9.31 floor reasserts. BEST and gap unchanged. Nightwatch returning to standard watch.
