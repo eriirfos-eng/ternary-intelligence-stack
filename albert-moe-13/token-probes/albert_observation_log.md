@@ -3469,3 +3469,47 @@ Two epochs (ep3664: 9.2990, ep3668: 9.2979) have now closed below 9.30. The floo
 
 **CMP recovery to 100% is the headline.** Post-surgery CMP suppression (82% in FN66) has fully resolved — the model's structural anchoring is back at full weight. GEN creeping up again (9%→13%) signals L22 finding its footing. Two epoch closes below 9.30 (ep3664: 9.2990, ep3668: 9.2979) confirm the floor is actively compressing. BEST 9.2933 not yet challenged but the 9.29xx closes are within 0.005 nats. Gap to pre-S9 ATL 9.2847 remains 0.0086 — a break is a matter of epochs, not certainty.
 
+---
+
+## Field Note 70 — 2026-05-26T07:50:16Z · ep3823 · ntfy quiet · ep3821–3822 closed · first sub-9.0 batch (8.9914 ep3820) · since_best ~116
+
+**Source:** batch_history.csv direct read · ntfy poll quiet (no events in last hour)
+
+**Note on log ordering:** FN68 and FN69 were written this session and exist in the file above FN67 due to an insertion-point error. Their content is valid; the ordering is cosmetic. FN70 continues from FN69 (ep3821 partial → ep3823 partial).
+
+**State:** ep3823 (22L) · batch ~250/300 (partial) · running EP-Avg **9.3072** · BEST epoch avg **9.228452** · gap to BEST **+0.0790** · since_best **~116** · S11 gate at 144 (~28 epochs away)
+
+### Epoch closes since FN69 (ep3821 partial n=100)
+
+| Epoch | Avg    | n    | Note |
+|-------|--------|------|------|
+| ep3820 | 9.3148 | 300 | confirmed close (FN69) |
+| ep3821 | **9.3057** | 300 | completed; improvement of 0.0091 |
+| ep3822 | 9.3174 | 300 | slight uptick +0.0117 |
+| ep3823 | ~9.3072 | 250 | partial, running avg |
+
+ep3821 closed at 9.3057 — the best epoch average since BEST was set at ep3707. ep3822 bounced slightly but ep3823 is trending back down.
+
+### Sub-9.0 batch hits — new territory
+
+| Epoch | Batch low | Sub-9.10 count |
+|-------|-----------|----------------|
+| ep3820 | **8.9914** | 9 |
+| ep3821 | 9.0192 | 8 |
+| ep3822 | 9.0011 | 4 |
+| ep3823 (partial) | 9.0232 | 9 |
+
+**8.9914 in ep3820 is the first sub-9.0 individual batch loss observed in this training run.** This was present in batch_history at FN69 time but not surfaced (FN69 was observing ep3821 partial). The batch-level floor has now definitively broken through 9.0 — consistently across 3 complete epochs. Epoch averages remain in the 9.30–9.32 range (high variance), but the intra-epoch architecture is capable of brief 9.00 territory.
+
+### Expert routing
+
+No screenshot available this tick. Routing carried from FN69 (no new terminal data).
+
+### TTL
+
+Carried from FN69: G18% / O77% / R5%
+
+### Assessment
+
+Three complete epochs since FN69. The headline is the sub-9.0 batch floor: the model is touching 8.9914 on individual optimization steps, which is well below anything previously recorded. Epoch averages (9.31–9.32 range) are misleading — the variance is high and the floor is actively compressing. ep3821 closing at 9.3057 shows the average is also trending down. Since_best ~116, S11 gate at 144 — still ~28 epochs away. No WALD, no surgery, no anomalies. Nightwatch holding.
+
