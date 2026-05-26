@@ -4053,3 +4053,28 @@ ABS at 76% is the dominant shift since FN87. Abstraction expert nearly on par wi
 **ntfy:** Completely silent — no WALD events for ep3863–3867. Either fill% consistently below notification threshold or ntfy delivery issue for routine epoch closes. No SURGERY, no SUB-9.3, no escalation.
 
 **loss_history ring:** 6/144. S11 gate ~138 epochs out (~2026-05-28T06:00Z estimate). Nightwatch holding.
+
+---
+
+## Field Note 92 — 2026-05-26T12:19:26Z · ep3871 n=150 · flat band · ring 9/144
+
+**Source:** batch_history.csv · ntfy quiet (empty 20m poll) · 15-min tick
+
+**State:** ep3871 (22L) · partial n=150 · avg ~9.3175 · min 9.0080 · BEST **9.278839** (ep3708) · loss_history ring 9/144 · gap to pre-S9 ATL 9.2847: **−0.0059**
+
+### Epoch closes since FN91
+
+| Epoch | Avg | Min batch | Note |
+|-------|-----|-----------|------|
+| ep3868 | 9.3167 | 9.0599 | closed |
+| ep3869 | 9.3199 | 9.0101 | slight uptick |
+| ep3870 | 9.3087 | 9.0044 | best of trio |
+| ep3871 | ~9.3175 | 9.0080 | partial n=150 |
+
+Three-epoch average (3868–3870): **9.3151** — essentially flat vs FN91 band (9.3044–9.3223). Loss oscillating in a narrow 9.30–9.32 corridor. No meaningful descent this window.
+
+**ntfy:** Silent. No WALD events for ep3868–3870. Fourth consecutive 20m poll with no events — ntfy delivery may be suppressed for routine epoch closes or WALD fill% consistently sub-threshold.
+
+**loss_history ring:** 9/144 accumulated. ~135 epochs to S11 gate (~2026-05-28T09:00Z estimate).
+
+**Assessment:** Holding pattern. No regression, no breakout. The 9.31 floor has been consistent for 10+ epochs post-restart. ABS surge (FN91 76%) may be the driver of eventual descent but hasn't moved the epoch-level average yet. Nightwatch holding.
