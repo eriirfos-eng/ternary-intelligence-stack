@@ -3560,3 +3560,11 @@ No screenshot available. Routing and TTL carried from FN70 (G18% / O77% / R5%).
 
 **ep3825 at 9.2968 is the headline.** This is the first epoch close below 9.30 since the post-S10 settling period — a meaningful threshold crossed. The five-epoch recent sequence (9.3057 → 9.3174 → 9.3078 → 9.3109 → **9.2968**) shows the model oscillating but with a clear downward step at ep3825. The 8.9560 batch minimum extends the sub-9.0 intra-epoch record. ep3826 opening back in the 9.31 range is normal post-dip variance. Gap to BEST 9.228452 remains +0.0826 — still well above, but the floor compression is measurable. No WALD, no surgery, no anomalies. Nightwatch holding.
 
+---
+
+## Field Note 73 — 2026-05-26T08:03:29Z · ep3826 partial · same-state tick · 15-min check fired 1 min after FN72
+
+**Source:** batch_history.csv · ntfy quiet
+
+**State:** ep3826 (22L) · partial n=100 · avg ~9.3110 · BEST **9.228452** · gap **+0.0826** · since_best ~119 — no change from FN72. Tick interval collision; state identical.
+
