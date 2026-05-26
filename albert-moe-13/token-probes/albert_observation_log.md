@@ -4408,3 +4408,45 @@ Oscillation amplitude damping: the post-spike range is narrowing. ep3887 peak (9
 **State:** ep3893 partial (22L) · n=12 · avg=9.3315 (unreliable — n<50) · BEST **9.278839** · ring ~33/144 · gap −0.0059 — **no new closes since FN107**
 
 3-ep avg (3890–3892) = 9.3178. ep3893 at n=12 is too early for a meaningful read. ntfy silent. Standard watch.
+
+---
+
+## Field Note 109 — 2026-05-26T14:23:38Z · ep3893 batch 3/300 · RESTART — first tick captured
+
+**Source:** dashboard screenshot (14:23:02 local) · terminal first-tick output · restart event
+
+**State:** ep3893 (22L) · batch 3/300 · BEST **9.278839** · ring ~33/144 · gap −0.0059 · **TRAINING RESTARTED from checkpoint (TND=1,522)**
+
+### Restart configuration (from terminal)
+- Loaded: **1,522 tensors from checkpoint** (full optimizer state preserved)
+- LR: **3.00e-4** (unchanged)
+- `[lb] disabled` — LB gradient will NOT flow this run
+- `[divloss] enabled weight=1.00e-3` (OVERRIDE — schedule bypassed)
+- `[gate-diversity] scale=0.300` — fixed asymmetric logit bias active
+- `[ttlfreeze] enabled` — ema_alpha=0.02, burst_threshold=5x, freeze_steps=50
+
+### First three batches (terminal)
+| Batch | Loss | Note |
+|-------|------|------|
+| 1/300 | 9.3349 | 81.9s — init/JIT warmup delay |
+| 2/300 | 9.2580 | 825ms — settled batch time |
+| 3/300 | 9.1722 | 1154ms — optimizer momentum active |
+
+**Loss dropping fast on first batches** (9.33 → 9.26 → 9.17) — consistent with AdamW buffer restored from checkpoint providing immediate gradient direction. Not meaningful for epoch-level tracking but confirms checkpoint integrity.
+
+### Expert routing — step 0 (WARMUP phase)
+TTL at step 0: **all G0/O12/R0** — all 22 layers dormant (TTL EMA warms over 50 steps, showing as "WARMUP - STEP 0/50" on dashboard).
+
+Active experts at batch 2 (dashboard):
+- **ABS: 98%** · **CMP: 100%** · **INT: 100%**
+- All others (SYN, SEM, CTX, INF, MEM, GEN, LOG, LNG, PLN): 0%
+
+This matches the pre-restart routing signature (FN106: ABS=68%, CMP=89%, INT=68% dominant). The three active experts came online first — expected behavior when resuming from checkpoint.
+
+ROUTE step=0: `E=[0.077×12]` — all experts roughly equal utilization per the raw routing weights (pre-softmax concentration not yet visible in ROUTE).
+ENTR step=0: avg=2.3888 (moderate entropy — not fully collapsed routing).
+TELE S: layers 20–21 show elevated scale (0.166, 0.172) vs. earlier layers (~0.031–0.053) — upper layers more active on first step.
+
+**Event bar:** TTL-NASH all-0 event (orange) fires as expected at restart — TTL will normalize after 50 warmup steps.
+
+**Assessment:** Clean restart from checkpoint. Optimizer momentum intact (fast early loss drop). Ring accumulation paused during restart, will resume from ~33/144 once ep3893 closes. S11 gate timeline unchanged. No alarm conditions. Standard watch — next meaningful read after ep3893 closes (~6 min from now).
