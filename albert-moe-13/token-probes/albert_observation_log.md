@@ -4514,3 +4514,55 @@ dead_low=3.00–9.00 (range 6.00) dead_high=9.75+ (5.25)
 **loss_history ring:** ~35/144. S11 gate ~109 epochs → **~2026-05-27T03:30Z**.
 
 **Assessment:** Restart landed cleanly. First post-restart epoch (ep3893: 9.3109) is consistent with pre-restart band. WALD routine at 6.2% fill. Ring accumulation resumed. Standard watch.
+
+---
+
+## Field Note 112 — 2026-05-26T14:58:09Z · ep3898 batch 299/300 · routing converged post-restart; LNG elevated at 40%
+
+**Source:** dashboard screenshot (14:56:03 local) · ep3898 batch 299/300 (essentially at close)
+
+**State:** ep3898 (22L) · batch 299/300 · ATL 8.8104 · BEST **9.278839** (ep3708, unchanged) · gap to pre-S9 ATL 9.2847: **−0.0059** (unchanged)
+
+### Epoch closes since FN111 (ep3894 = 9.3179)
+
+| Epoch | Avg | Note |
+|-------|-----|------|
+| ep3895 | 9.3204 | closed |
+| ep3896 | 9.3196 | closed |
+| ep3897 | 9.3217 | closed |
+| ep3898 | ~9.3242 | batch 299/300 — closing |
+
+3-epoch avg ep3895–3897: **9.3206** (vs ep3892–3894: 9.3160 — +0.0046 upward drift).
+
+### Expert routing — ep3898 batch ~299
+
+| Expert | % | vs FN106 (pre-restart stable) | delta |
+|--------|---|-------------------------------|-------|
+| PLN | 100% | 100% | = |
+| CMP | 100% | 89% | **+11%** |
+| INT | 57% | 68% | −11% |
+| ABS | 62% | 68% | −6% |
+| LNG | 40% | 9% | **+31%** — notable post-restart elevation |
+| LOG | 21% | 31% | −10% (surge at restart boundary fully resolved) |
+| INF | 14% | — | — |
+| MEM | 9% | — | — |
+| GEN | 9% | — | — |
+| CTX | 7% | — | — |
+| SYN | 5% | — | — |
+| SEM | 2% | — | — |
+
+PLN fully recovered from the loading-phase dip (FN110: 41% → now 100%). ABS partially recovered (FN110: 33% → 62%, pre-restart: 68%). LNG is the outlier: 9% pre-restart → 40% now. This elevation has persisted across 5+ epochs post-restart. Either a loading artifact still normalizing or a genuine step-3/6 routing shift.
+
+### TTL — ep3898
+**G: 15% / O: 81% / R: 4%** — nearly identical to FN111 (G16%/O80%/R4%). Stable, slightly more dormant-weighted than pre-S9 baseline.
+
+### Event bar events since FN111
+- **TTL-NASH all-0** (amber) — fired between ep3892 and ep3893 during the post-restart loading phase. Nash equilibrium of TTL routing hit a degenerate all-zero solution. Single event, not persistent. No intervention warranted.
+- No SURGERY, WALD, SUB-9.3, or BEST-update events.
+
+### ntfy (last 1h)
+Quiet — only the ep3893 WALD (fill 6.2%, already logged FN111) visible in 1h window.
+
+**loss_history ring:** ~37/144 (estimate). S11 gate: ~107 epochs remaining → **~2026-05-27T03:30Z** (unchanged estimate).
+
+**Assessment:** Routing has converged post-restart. PLN recovered, ABS near pre-restart levels. The LNG elevation (40% vs 9% pre-restart) is the one open question — watching whether it normalizes by ep3910–3920 or locks in as a new step-3/6 signature. Epoch averages show gentle upward drift (+0.0046 over 3 epochs): ep3895–3897 sits 40–50bp above the floor at 9.2833. Still well inside oscillation band, no alarm. TTL-NASH was a one-time event during loading phase. Standard watch.
