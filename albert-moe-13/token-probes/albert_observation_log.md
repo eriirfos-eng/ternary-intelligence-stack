@@ -3612,3 +3612,42 @@ The band shift is the headline. Three of the last four complete epochs closed be
 
 **State:** ep3829 starting · BEST 9.228452 · gap +0.074 · since_best ~121 — identical to FN74. No new data.
 
+---
+
+## Field Note 76 — 2026-05-26T08:32:26Z · ep3831 close / ep3832 start · odd/even rhythm · new batch record 8.9553 · since_best ~124
+
+**Source:** batch_history.csv direct read · ntfy quiet · dual tick (15-min + nightwatch fired together)
+
+**State:** ep3832 (22L) · just started (last entry ep3831.9967) · BEST **9.228452** · gap **+0.0692** · since_best **~124** · S11 gate at 144 (~20 epochs away)
+
+### Epoch closes since FN75
+
+| Epoch | Avg    | Sub-9.10 | Sub-9.0 | Batch min | Note |
+|-------|--------|----------|---------|-----------|------|
+| ep3829 | **9.2975** | 8 | 2 | **8.9553** | new batch record · 2 sub-9.0 hits |
+| ep3830 | 9.3112 | 8 | 0 | 9.0147 | even epoch bounce |
+| ep3831 | **9.2976** | 10 | 1 | 8.9684 | last batch: 9.2055 |
+
+### Odd/even two-epoch rhythm
+
+| Group | Epochs | Avg |
+|-------|--------|-----|
+| Odd | 3825, 3827, 3829, 3831 | **9.2980** |
+| Even | 3826, 3828, 3830 | 9.3077 |
+
+A clear alternating pattern has emerged over the last 7 epochs: odd epochs consistently close sub-9.30 (~9.298), even epochs bounce to ~9.308. This is likely a two-step gradient rhythm — the model descends sharply, then consolidates, then descends again.
+
+### Notable batch events
+
+- ep3829 min **8.9553** — new absolute record (beats ep3825's 8.9560 by 0.0007 nats)
+- ep3829 had 2 sub-9.0 hits — highest single-epoch count yet
+- ep3831 final batch: **9.2055** — closest any individual batch has come to BEST epoch avg 9.228452 (gap 0.023 nats)
+
+### Expert routing / TTL
+
+No screenshot. Carried from FN70: G18% / O77% / R5%.
+
+### Assessment
+
+The odd/even rhythm is the structural headline. The model is locked into a two-step descent: odd epochs break sub-9.30, even epochs consolidate ~9.308, then odd epochs break again. All four odd epoch closes (3825–3831) sit within 0.001 nats of each other (9.297–9.298), suggesting the model has found a local descent direction it returns to every two steps. The batch-level record 8.9553 and the ep3831 final-batch 9.2055 show the intra-epoch optimizer is approaching territory the epoch average hasn't reached yet. Since_best ~124, S11 gate ~20 epochs out. No WALD, no surgery. Nightwatch holding.
+
