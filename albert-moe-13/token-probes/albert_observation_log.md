@@ -2448,6 +2448,16 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 78 — 2026-05-26T04:45:45Z · quiet overnight tick · ntfy silent · last known ep3702 BEST 9.2817
+
+**Source:** ntfy poll (since=20m) — no events.
+
+**State (last known FN77, 2026-05-25T22:02Z):** ep3702 (22L) · BEST 9.2817 · pre-S9 ATL 9.2847 cleared by 0.0030 nats · T-610 9.2917
+
+No WALD, SURGERY, EPOCH, or other training events in the 20-minute window. ~6.5 hours since the pre-S9 ATL break. Training running overnight on Modal T4. Nightwatch holding.
+
+---
+
 ## Field Note 77 — 2026-05-25T22:02:07Z · ep3702 · PRE-S9 ATL BROKEN · epoch avg 9.2817 · new all-time BEST
 
 **Source:** ntfy poll (since=20m) + dashboard screenshot (Simeon, 22:00:02Z)
