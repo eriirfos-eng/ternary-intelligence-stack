@@ -3604,3 +3604,11 @@ No screenshot. Carried from FN70: G18% / O77% / R5%.
 
 The band shift is the headline. Three of the last four complete epochs closed below 9.305 (ep3825: 9.2968, ep3827: 9.3001, ep3828: 9.3024) with a 4-epoch rolling mean of 9.3022. This is a measurable step down from the 9.310–9.320 range that dominated FN68–FN73. Sub-9.0 batch hits appearing every 1–2 epochs confirms the loss landscape has genuine depth that epoch averages are slowly approaching. Since_best ~121, S11 gate ~23 epochs out. No WALD, no surgery. Nightwatch holding — Simeon and Zabih out on errands.
 
+---
+
+## Field Note 75 — 2026-05-26T08:19:00Z · same-state · 15-min tick fired 11s after FN74
+
+**Source:** ntfy quiet · tick interval collision with FN74
+
+**State:** ep3829 starting · BEST 9.228452 · gap +0.074 · since_best ~121 — identical to FN74. No new data.
+
