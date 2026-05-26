@@ -4308,3 +4308,13 @@ ep3887 final: **9.3328** — marginally above ep3881's 9.3314, now the highest e
 **loss_history ring:** ~29/144. S11 gate ~115 epochs → **~2026-05-27T03:15Z**.
 
 **Assessment:** Drift flag downgraded to standard watch. The structural upshift hypothesis from FN102 is contradicted by ep3888–ep3890 data. Pattern is oscillatory: ~every 6–8 epochs, a 9.33 spike fires and resolves within 2 epochs. ep3890 at 9.3092 with n=150 is the most promising partial read since this session started — if it closes sub-9.31 it will be the lowest epoch avg since ep3872. BEST and gap unchanged. Nightwatch returning to standard watch.
+
+---
+
+## Field Note 105 — 2026-05-26T14:03:09Z · ep3890 partial · tick overlap
+
+**Source:** batch_history.csv · ntfy empty · 15-min tick (fired 19s after FN104)
+
+**State:** ep3890 partial (22L) · n=200 · avg=9.3152 (was 9.3092@n=150) · BEST **9.278839** · ring ~29/144 · gap −0.0059 — **no new closes since FN104**
+
+ep3890 avg ticked up slightly as more batches arrived (9.3092@n=150 → 9.3152@n=200). Sub-9.31 close looking less likely but still plausible. ntfy silent. Standard watch.
