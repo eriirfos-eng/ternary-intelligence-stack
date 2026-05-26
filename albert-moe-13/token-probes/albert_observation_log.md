@@ -4272,3 +4272,13 @@ ep3885 opened cleanly (9.3125@n=50, though high variance). 3-ep avg (3882–3884
 **loss_history ring:** ~26/144. S11 gate ~118 epochs → **~2026-05-27T03:15Z**.
 
 **Assessment:** Drift flag re-elevated to watch. The ep3881–ep3887 band (excluding ep3883 dip) is systematically higher than ep3872–ep3880. Three possible interpretations: (1) Fibonacci generational step creating temporary elevation before next descent phase; (2) ABS expert saturation stalling loss improvement; (3) model reaching a local energy minimum in this configuration. No alarm conditions — BEST stable, gap stable, no WALD/SURGERY. Watching ep3887 close and ep3888 to assess whether 9.33 is becoming the new ceiling or another transient spike. Nightwatch on elevated watch.
+
+---
+
+## Field Note 103 — 2026-05-26T13:48:11Z · ep3887 close · 9.3328 new local high since restart
+
+**Source:** batch_history.csv · ntfy empty · 15-min tick (fired 20s after FN102)
+
+**State:** ep3887 closed (22L) · avg=9.3328 · min=8.9957 · BEST **9.278839** · ring ~27/144 · gap −0.0059
+
+ep3887 final: **9.3328** — marginally above ep3881's 9.3314, now the highest epoch average since the post-restart period. Confirms the re-emerging drift pattern flagged in FN102. 3-ep avg (3884–3886) = 9.3185 unchanged (ep3887 not yet in window). ep3888 close will determine if 9.33+ is consolidating. ntfy silent. Elevated watch.
