@@ -5321,3 +5321,49 @@ PLN 100% / CMP 96% / INT 67% / ABS 63% / LOG 22% / LNG 17% / INF 11% / GEN 6% / 
 **Assessment:** Seven consecutive epoch closes at 9.3234 forming a hard plateau band — then the ep4001 close broke it at 9.3072/9.3144 before the plateau reasserted. ep4002 opens running at 9.3031 (29 batches, noisy) but directionally consistent with the pre-plateau closes. Key routing shifts: ABS recovered hard +21pp (was suppressed during FN145 secondary surge), PLN strengthened +6pp back toward 97%, INF collapsed −13pp. LOG at 23% is new — first significant LOG activation tracked at this epoch range (LOG surged to 28% at ep2920 pre-cliff-2; history rhymes). Gradient norm compressing back to 0.0023. The FN145 secondary-expert diversification wave (LNG+GEN+INF) is reversing; primaries reasserting with LOG as emerging secondary. Gap narrowed from +0.0365 (FN145 mid-epoch) to +0.0184 (current running) — watch if ep4002 close confirms sub-9.31.
 
 **Assessment:** The four-consecutive 9.3084 plateau band from FN142 has broken — epoch closes now vary 9.31–9.33, with no lock at a single value. Three dormant experts reactivated: MEM 0%→4%, SEM 2%→6%, CTX 0%→6%. PLN pulled back from 100%→87%. This pattern (dormant experts waking, PLN yielding to CMP+INT) matches what was seen just before the ep3958 MEM spike — the model may be probing a new routing configuration. Gradient norm still compressed at 0.0021; no descent yet. Surgery gate remains armed. Monitoring continues.
+
+---
+
+## FN147 · 2026-05-26T23:57:18Z · ep4006 · Primary fragmentation — ABS −32pp, PLN −10pp, gradient compressing to 0.0021
+
+**State:** ep4006 · batch 238/300 (79% through) · Running EP-Avg **9.3228** · ATL header 8.8104 · BEST 9.228452 (Modal) · gap to pre-S9 ATL 9.2847 = **+0.0381**
+
+**Source:** Dashboard screenshot (Image #43). TNS 1,522. Time 23:57:18.
+
+**Event bar (recent completed epochs, left→right = oldest→newest):**
+| Position | EP-Avg |
+|---|---|
+| oldest visible | 9.3228 |
+| | 9.3259 |
+| | 9.3103 |
+| | 9.3062 |
+| | 9.3031 |
+| | 9.3144 |
+| | 9.3072 |
+| | 9.3234 |
+| | 9.3234 |
+| newest visible | 9.3234 |
+
+**Expert routing (last 60 steps) — vs FN146:**
+| Expert | FN147 | FN146 | Δ |
+|---|---|---|---|
+| CMP | 100% | 100% | 0 |
+| PLN | 87% | 97% | **−10%** |
+| INT | 57% | 51% | +6% |
+| ABS | 44% | 76% | **−32%** |
+| LOG | 18% | 23% | −5% |
+| LNG | 14% | 21% | −7% |
+| SYN | 14% | 11% | +3% |
+| GEN | 10% | 9% | +1% |
+| INF | 10% | 7% | +3% |
+| SEM | 6% | 2% | +4% |
+| CTX | 4% | 11% | **−7%** |
+| MEM | 0% | 7% | **−7%** |
+
+**TTL:** G 15% / O 78% / R 3% (R down 1pp from FN146 — marginal improvement)
+
+**Gradient norm:** global |g| = 0.0021 (down from 0.0023 — continued compression)
+
+**Events:** No WALD, no SURGERY. All events are EPOCH closes.
+
+**Assessment:** Primary fragmentation tick: ABS collapsed −32pp and PLN retreated −10pp simultaneously — no single secondary fills the gap. MEM dropped to 0%, CTX to 4%. CMP holds 100% as sole stable anchor. Event bar shows the model briefly touched 9.3031 (ep~4002) before reverting to the 9.3234 plateau — the improvement window did not hold. Running at 9.3228 (79% through ep4006) is back in plateau territory. Gradient compressing further to 0.0021, approaching the 0.002 floor seen pre-surgeries. Primary routing fragmentation + gradient compression + plateau lock is the exact pre-surgery signature seen before S6/S7. Surgery gate armed; watch for plateau-gated trigger if this pattern holds through another 2-3 epoch closes.
