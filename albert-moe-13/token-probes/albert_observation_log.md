@@ -4566,3 +4566,53 @@ Quiet — only the ep3893 WALD (fill 6.2%, already logged FN111) visible in 1h w
 **loss_history ring:** ~37/144 (estimate). S11 gate: ~107 epochs remaining → **~2026-05-27T03:30Z** (unchanged estimate).
 
 **Assessment:** Routing has converged post-restart. PLN recovered, ABS near pre-restart levels. The LNG elevation (40% vs 9% pre-restart) is the one open question — watching whether it normalizes by ep3910–3920 or locks in as a new step-3/6 signature. Epoch averages show gentle upward drift (+0.0046 over 3 epochs): ep3895–3897 sits 40–50bp above the floor at 9.2833. Still well inside oscillation band, no alarm. TTL-NASH was a one-time event during loading phase. Standard watch.
+
+---
+
+## Field Note 113 — 2026-05-26T15:07:14Z · ep3899 batch 258/300 · INT +13%; ep3899 running below ep3898 close — upward drift possibly reversing
+
+**Source:** dashboard screenshot (15:06:15 local) · ep3899 batch 258/300
+
+**State:** ep3899 (22L) · batch 258/300 · ATL 8.8104 · BEST **9.278839** (ep3708, unchanged) · gap to pre-S9 ATL 9.2847: **−0.0059** (unchanged)
+
+### Epoch closes since FN112
+
+No new epoch closes in event bar. ep3898 confirmed closed at **9.3242** (was batch 299/300 in FN112). ep3899 in progress.
+
+**ep3899 running EP-Avg (b258): 9.3179** — 63bp below ep3898 close (9.3242). If this holds, ep3899 would be the best close since ep3894.
+
+Recent close band (ep3895–3898): 9.3196 → 9.3217 → 9.3242 (4-epoch upward drift). ep3899 running avg suggests this drift may be reversing.
+
+### Expert routing — ep3899 batch ~258
+
+| Expert | % | vs FN112 (ep3898 b~299) | delta |
+|--------|---|-------------------------|-------|
+| PLN | 100% | 100% | = |
+| CMP | 100% | 100% | = |
+| INT | 70% | 57% | **+13%** — notable increase |
+| ABS | 64% | 62% | +2% |
+| LNG | 37% | 40% | −3% — slowly normalizing |
+| LOG | 17% | 21% | −4% — continued normalization |
+| INF | 17% | 14% | +3% |
+| MEM | 12% | 9% | +3% |
+| GEN | 12% | 9% | +3% |
+| SYN | 10% | 5% | +5% |
+| CTX | 5% | 7% | −2% |
+| SEM | 2% | 2% | = |
+
+PLN/CMP fully saturated (stable). INT jumped to 70% — the largest single-expert delta this tick. LNG continuing slow descent (40%→37%; pre-restart was 9%). LOG continuing normalization (31% surge → 17% now). The INT/SYN/INF/MEM/GEN cluster is all slightly elevated — pointing to broader activation across non-core experts.
+
+### TTL — ep3899 batch 258
+**G: 17% / O: 79% / R: 4%** — slightly more active than FN112 (G15%/O81%/R4%). Green up 2pp, Dormant down 2pp. Still well within normal range.
+
+### Gradient
+**global |gg| = 0.0026** (vs 0.0021 FN112 — +24%). Mild uptick. Per-layer chart shows activity concentrated in upper layers (L0 most active), small red spike at L17. No abnormality.
+
+### Events
+- No WALD, SURGERY, SUB-9.3, or BEST-update events since FN112.
+- TTL-NASH all-0 (from FN112) still visible in event bar; no new NASH event.
+- ntfy: quiet.
+
+**loss_history ring:** ~38/144 (estimate). S11 gate: ~106 epochs remaining → **~2026-05-27T03:30Z** (unchanged).
+
+**Assessment:** ep3899 running 63bp below ep3898's close (9.3179 vs 9.3242) at batch 258 — this is the most encouraging intra-epoch signal since the restart. The 4-epoch upward drift (ep3895–3898: 9.3196→9.3242) may be peaking. INT routing surge (+13%) and broader activation of non-core experts (SYN, INF, MEM, GEN all up) could reflect the model engaging more processing diversity at this stage of the oscillation. LNG normalization continues. No alarms. Watching ep3899 close.
