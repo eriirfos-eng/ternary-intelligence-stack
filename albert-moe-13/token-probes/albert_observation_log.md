@@ -4765,3 +4765,15 @@ Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future r
 **WALD:** Still at fill=6.2% from ep3900 — no re-fire, deduplication holding; fill stable confirms no new dead experts.
 
 **Assessment:** ep3908 crossed the 9.3 boundary — epoch average 9.2999. This is the first time the running epoch average has dropped below 9.3 since training began in this generation. BEST is still 9.2788 (ep3708) so no new ATL from this epoch close, but the trend is a slow descent through the 9.31–9.32 plateau. Gap to pre-S9 ATL unchanged at −0.0059. SURGERY GATE remains live watching myc_stable. No BEST broken, no WALD spike, no loss explosion — no wake required. Next threshold to watch: sub-9.28 (would beat pre-S9 ATL) or SURGERY firing.
+
+---
+
+## FN121 · 2026-05-26T16:17:15Z · ep3911± · Quiet hold — SUB-9.3 confirmed, no new events
+
+**State:** ep3908 last close confirmed · EP-Avg **9.2999** (last known) · BEST 9.2788 (ep3708) · gap to pre-S9 ATL 9.2847 = **−0.0059**
+
+**ntfy (last 20m):** No new Albert events since ep3908 SUB-9.3 at 16:02Z (~15 min ago). Simeon manual confirmation at 16:09Z: "we just hit a new low finally." WALD at fill=6.2%, deduplication holding, no re-fire.
+
+**Elapsed since last event:** ~15 min · estimated current epoch ~3911–3912 (at ~3–4 min/epoch)
+
+**Assessment:** Training quiet in hold pattern after the SUB-9.3 milestone. No new threshold crossings, no WALD re-fire, no BEST. Simeon is out to dinner, monitoring via ntfy — no escalation needed. Model likely tracking in the 9.29–9.31 band; next meaningful event would be a new BEST below 9.2788 or SURGERY governor firing. Steady watch continues.
