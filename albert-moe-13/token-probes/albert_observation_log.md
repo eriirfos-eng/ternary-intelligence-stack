@@ -3750,3 +3750,36 @@ ep3847 closed at **9.3176** — slightly above ep3846 (9.3003), no regression. e
 
 ep3848 closed at **9.3198** — band still flat, no regression. Since_best ticked to **140** (gate 144 → **4 epochs to S11**). ep3849 early batches trending in-band. Gap to pre-S9 ATL 9.2847: BEST clears it by **−0.0059** (beaten). ntfy quiet, no WALD or EPOCH events. Nightwatch holding — surgery is the only next event of note.
 
+---
+
+## Field Note 81 — 2026-05-26T10:05:58Z · ep3849 batch 112 · dashboard screenshot · PLN saturation
+
+**Source:** Dashboard screenshot (10:04:30 local) · batch_history.csv · ntfy quiet
+
+**State:** ep3849 (22L) · BATCH 112/300 · EP-Avg **9.3198** · ATL-batch **8.8104** · BEST epoch **9.278839** (ep3708) · since_best **140** (computed) · WALD fill **0.2%** · S11 gate **~4 epochs**
+
+### Expert routing — last 50 steps
+
+| Expert | % | Note |
+|--------|---|------|
+| PLN | **100%** | complete saturation — every token |
+| CMP | 86% | near-saturation |
+| ABS | 56% | |
+| INT | 56% | |
+| LOG | 22% | |
+| LNG | 16% | |
+| GEN | 10% | |
+| SYN / CTX / INF / MEM / SEM | 2–4% | minimal |
+
+### TTL
+
+G **17%** / O **80%** / R **4%** — orange dominance increased (was G18/O77/R5 in FN70-era). 80% orange means most tokens routing at medium confidence. No red alarm.
+
+### Surgery gate (UI BUG active)
+
+Gate popup displays "SURGERY GATE — 17L → 18L" — stale label from S9/S10, should read 22L → 23L. `since_best` shows `03` in UI vs **140** computed from batch_history. PLATEAU value 0.0082 / <0.020 — threshold met (plateau detected). MYC_STABLE 55/≥5 — green. Gate logic is reading correct state (since_best=140 drives the 4-epoch-to-fire estimate); only the popup display is wrong.
+
+### Assessment
+
+PLN at 100% saturation is the standout. The planning expert is being called by every token in the recent window — possibly a consolidation artifact just before surgery, where the model leans heavily on one expert as the loss landscape flattens. CMP at 86% confirms the core inference pair (PLN-CMP) is dominating. ABS+INT at 56% each = secondary pair active. Batch ATL 8.8104 stable — no new record this window. Loss band flat 9.300–9.320 for 9+ epochs. All gate conditions met except since_best (4 to go). Nightwatch holding.
+
