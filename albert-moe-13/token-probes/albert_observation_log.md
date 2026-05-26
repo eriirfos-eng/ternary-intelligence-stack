@@ -4616,3 +4616,37 @@ PLN/CMP fully saturated (stable). INT jumped to 70% — the largest single-exper
 **loss_history ring:** ~38/144 (estimate). S11 gate: ~106 epochs remaining → **~2026-05-27T03:30Z** (unchanged).
 
 **Assessment:** ep3899 running 63bp below ep3898's close (9.3179 vs 9.3242) at batch 258 — this is the most encouraging intra-epoch signal since the restart. The 4-epoch upward drift (ep3895–3898: 9.3196→9.3242) may be peaking. INT routing surge (+13%) and broader activation of non-core experts (SYN, INF, MEM, GEN all up) could reflect the model engaging more processing diversity at this stage of the oscillation. LNG normalization continues. No alarms. Watching ep3899 close.
+
+---
+
+## Field Note 114 — 2026-05-26T15:10:29Z · ep3899 batch 259 · TRAINING INTERRUPTED — Modal gRPC heartbeat failure
+
+**Source:** terminal log paste (15:00:27–15:06:55 local)
+
+**State:** ep3899 (22L) · interrupted at batch 259/300 · last good checkpoint **ep3898** (avg 9.3242) · BEST 9.278839 unchanged
+
+### Incident timeline
+
+| Time (UTC) | Event |
+|------------|-------|
+| ~15:00:34 | Last training output received (ep3899 b259, loss 9.3601) |
+| 15:01:51 | First Modal heartbeat failure (`ConnectionError: Deadline exceeded`) |
+| 15:03:07 | 2nd heartbeat failure (+76s — exactly at gRPC HEARTBEAT_TIMEOUT) |
+| 15:04:23 | 3rd failure (+76s) |
+| 15:05:39 | 4th failure (+76s) |
+| 15:06:55 | 5th failure (+76s) — Modal backend evicts app |
+| ~15:10 | `modal app list` confirms both apps `stopped`, 0 tasks |
+
+### Root cause
+`modal run` (non-detached) requires a live gRPC stream from the local machine to Modal's control plane. A single network interruption at ~15:00:35 broke the stream. gRPC streams are not self-healing. Each heartbeat attempt hits the 76s HEARTBEAT_TIMEOUT and fails. After ~5 consecutive failures Modal evicts the app.
+
+ep3899 checkpoints are written at batch 300 (epoch end). Interrupted at batch 259 → **ep3899 not saved**. Loss at interruption: batches 252–259 range 9.2042–9.4399 (normal variance). Last visible batch avg for ep3899 (b252–259): ~9.354 — consistent with running avg 9.3179 from FN113.
+
+### What was lost
+- ep3899 batch 259–300 (41 batches, ~35 seconds of training)
+- ep3899 epoch close (would have been ~9.32-9.33 range based on FN113 running avg)
+
+### Recovery
+Restart from ep3898 checkpoint. **Use `albert-train --detach`** for all future runs — detached mode runs on Modal's infrastructure independently of local connectivity; ntfy still fires on all threshold events.
+
+**Assessment:** Routine connectivity incident. No data corruption, no WALD anomaly, no loss spike. ep3898 (9.3242) is a clean resume point. Gap to pre-S9 ATL unchanged at −0.0059.
