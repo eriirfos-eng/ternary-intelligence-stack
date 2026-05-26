@@ -3905,3 +3905,47 @@ Training started via Modal (streaming)
 3. **Dashboard initializing:** Panels show "WAITING FOR TELE DATA" — Modal container is loading the checkpoint (~615MB safetensors, 22L config). First TELE line expected within 2–5 minutes. Expert routing, TTL, and per-layer gradient panels will populate on first batch.
 
 Loss_history fix is now in production. Clock starts here.
+
+---
+
+## Field Note 87 — 2026-05-26T11:28:40Z · ep3862 batch 97/300 · training live · routing shift post-restart
+
+**Source:** Dashboard screenshot (11:27:17 local) · terminal stream
+
+**State:** ep3862 (22L) · BATCH 97/300 · live losses 9.25–9.49 · ATL chip **8.8104** · BEST epoch **9.278839** (ep3708) · GATE green · global gφ = **0.0019** (healthy) · gap to pre-S9 ATL: **−0.0059**
+
+**Live terminal (ep3862):**
+```
+93/300  Loss: 9.3555  LR: 2.77e-4
+94/300  Loss: 9.4898  LR: 2.77e-4
+95/300  Loss: 9.2495  LR: 2.76e-4
+96/300  Loss: 9.4088  LR: 2.76e-4
+97/300  Loss: 9.3616  LR: 2.75e-4
+98/300  Loss: 9.4517  LR: 2.75e-4
+99/300  Loss: 9.2653  LR: 2.74e-4
+```
+LR stepping down smoothly (~2.77e-4 → 2.74e-4 across 97 batches). DIVWD logged at step=95.
+
+**Expert routing — last 60 steps (significant shift vs FN81):**
+
+| Expert | Now | FN81 | Delta |
+|--------|-----|------|-------|
+| PLN | 49% | 100% | **−51%** — saturation broken |
+| CMP | 100% | 86% | +14% |
+| INT | 100% | 56% | +44% |
+| ABS | 33% | 56% | −23% |
+| LOG | 32% | ~5% | **+27%** — newly active |
+| INF | 16% | ~3% | +13% |
+| MEM | 16% | ~2% | +14% |
+| LNG | 0% | 16% | −16% |
+| GEN/SYN/SEM/CTX | 0% | 2–10% | gone dormant |
+
+PLN saturation has broken — the model is no longer routing every token through planning. CMP+INT are now the saturated pair. LOG woke up at 32% (was near-zero). Fresh optimizer state from restart may be allowing underused experts to compete.
+
+**TTL:** G **19%** / O **75%** / R **6%** — unchanged from pre-restart pattern.
+
+**Event bar:** Two **TTL-NASH all-0** events (orange) — Nash equilibrium alerts where expert routing collapsed momentarily. Worth monitoring; if they cluster or escalate to red, investigate router entropy.
+
+**Infrastructure:** `albert_v3.0.safetensors` downloaded to local: 648.9MB at 100%. Model weights synced from Modal volume.
+
+**loss_history ring:** Now accumulating from batch 1 of this session. Gate requires 144 full epochs of confirmed plateau — S11 clock started this restart. No intervention needed.
