@@ -2448,6 +2448,39 @@ GEN pulled back (14%→9%) — normal post-surgery settling. ABS also pulled bac
 
 ---
 
+## Field Note 84 — 2026-05-26T05:36:15Z · ep3795–3797 · post-restart descent confirmed · ep3796 9.2931 cracks S10-BEST floor
+
+**Source:** epoch_history.log (Modal volume pull) · ntfy poll (since=1h): no new events since FN83 WALD.
+
+**State:** ep3797 latest · BEST 9.2285 (9.228452 Modal, loaded correctly on restart) · since_best=90 · PLATEAU 90/144
+
+### epoch_history.log (Modal volume)
+
+| Epoch | avg loss | delta | since_best | WALD |
+|-------|----------|-------|------------|------|
+| 3794 | 9.3116 | +0.0831* | 87 | 6.2% |
+| 3795 | 9.3089 | -0.0027 | 88 | — |
+| 3796 | **9.2931** | **-0.0158** | 89 | — |
+| 3797 | 9.2984 | +0.0053 | 90 | — |
+
+*delta at ep3794 is restart artifact — comparing against divloss-override baseline, not previous epoch.
+
+### Key observations
+
+**ep3796 = 9.2931 — below S10 BEST 9.2933.** The pre-restart BEST before S10 fired was 9.2933 (ep3652). ep3796 has now cleared that marker by 0.0002 nats. This confirms the post-restart descent is real and the divloss OVERRIDE is not impeding convergence.
+
+**`since_best` display now correct.** New container loaded best_epoch=3707 correctly — since_best=87 at ep3794, 90 at ep3797, all consistent with last_best_epoch=3707. The stale display bug from the previous container (3694) is gone.
+
+**tns=1522 vs 1384 pre-restart.** The divloss OVERRIDE is increasing routing token diversity by ~10%. Expected effect: more uniform expert utilisation, potentially wider but smoother descent.
+
+**PLATEAU 90/144.** Surgery governor advancing. S11 would fire at ~ep3851 if no new BEST is set. Current descent suggests we will break BEST before then and reset the counter.
+
+### Assessment
+
+Post-restart descent nominal. ep3796 punch through 9.2933 is encouraging — the model is not stalling at the pre-S10 consolidation band. ep3797 uptick (+0.0053) is within normal noise. No intervention needed.
+
+---
+
 ## Field Note 83 — 2026-05-26T05:32:08Z · ep3794 close · WALD 6.2% baseline · mass 9.314 · first epoch post-restart complete
 
 **Source:** ntfy poll (since=20m) — 1 event.
