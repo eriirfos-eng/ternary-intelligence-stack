@@ -230,6 +230,11 @@ fn global_grad_norm(varmap: &VarMap, grads: &candle_core::backprop::GradStore) -
 /// gradients are near machine-zero (common in late F32 training).
 fn per_layer_grad_norm(varmap: &VarMap, grads: &candle_core::backprop::GradStore, num_layers: usize) -> Vec<f32> {
     let mut sq: Vec<f32> = vec![0.0; num_layers + 2];
+    // One-shot diagnostic: on first call print how many block/embed/lm vars have vs. lack grads.
+    static GRAD_DIAG_DONE: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+    let first_call = GRAD_DIAG_DONE.set(()).is_ok();
+    let (mut block_with, mut block_without) = (0usize, 0usize);
+    let (mut lm_with, mut lm_without) = (0usize, 0usize);
     let all_vars = varmap.data().lock().unwrap();
     for (name, var) in all_vars.iter() {
         let idx = if let Some(rest) = name.strip_prefix("blocks.") {
@@ -245,11 +250,19 @@ fn per_layer_grad_norm(varmap: &VarMap, grads: &candle_core::backprop::GradStore
         };
         if let Some(i) = idx {
             if let Some(g) = grads.get(var.as_tensor()) {
+                if first_call {
+                    if i < num_layers { block_with += 1; } else { lm_with += 1; }
+                }
                 if let Ok(s) = g.sqr().and_then(|t| t.sum_all()).and_then(|t| t.to_scalar::<f32>()) {
                     if s.is_finite() { sq[i] += s; }
                 }
+            } else if first_call {
+                if i < num_layers { block_without += 1; } else { lm_without += 1; }
             }
         }
+    }
+    if first_call {
+        println!("[GRAD-DIAG] blocks: {block_with} have grad / {block_without} None | lm+emb: {lm_with} have grad / {lm_without} None");
     }
     sq.iter().map(|&s| s.sqrt()).collect()
 }
