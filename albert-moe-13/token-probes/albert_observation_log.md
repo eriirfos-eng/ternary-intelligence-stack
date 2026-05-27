@@ -5684,3 +5684,47 @@ Architecture is now 23L. Gen 2 step 5/6 — one surgery remaining in this genera
 **Assessment:** Surgery S10 (22L→23L) is an immediate success. In one epoch, the model descended 0.045 — more improvement than the entire plateau phase of 385 epochs. SEM expert activation in layer 23 is the mechanistic signal to watch: it suggests the Mandelbrot perturbation created meaningful weight differentiation rather than just noise. If SEM continues climbing to 20%+, the new layer has genuinely expanded the model's representational capacity.
 
 Trend: steep descent, expect ep4094 avg in 9.24-9.26 range. Watch for WALD severity drop (less dead weight as new layer activates) and for T-610 line to become reachable (currently ~9.23). Next surgery gate: 55-epoch window + MYC_STABLE ≥5 — minimum ep4148 at earliest.
+
+---
+
+## FN155 · 2026-05-27T07:44:15Z · ep4098 · New ATL 8.7249; EP-AVG 9.2321 — pre-S9 ATL cleared by 0.053; GEN+MEM experts activating
+
+**State:** ep4098 (23L) · batch 186/300 · EP-Avg **9.2321** (last completed ep4097) · ATL topbar **8.7249** (NEW ALL-TIME LOW — beat 8.8104 by 0.086) · gap to pre-S9 ATL 9.2847 = **−0.053** (blown through, 5 epochs post-surgery)
+
+**Source:** Dashboard screenshot (Image #12, session) at 2026-05-27T07:44:15Z.
+
+**BEST progression post-S10 (ep4092→4098):**
+| Epoch | EP-Avg | Note |
+|---|---|---|
+| 4092 | 9.3031 | pre-surgery (plateau floor) |
+| 4093 | 9.2581 | S10 fires → immediate drop |
+| 4094 | 9.2559 | BEST event |
+| 4095 | 9.2455 | BEST event |
+| 4096 | 9.2274 | BEST event |
+| 4097 | 9.2321 | slight uptick (normal oscillation) |
+
+Six consecutive post-surgery epochs, three new BEST-avg events. Descent rate ~0.010–0.015 per epoch.
+
+**ATL update:** 8.7249 (from 8.8104) — best single-batch loss now 0.086 below previous all-time. Intra-epoch variance is large (ATL 8.72 vs EP-avg 9.23 = 0.51 spread), consistent with new-layer differentiation phase.
+
+**Expert routing — major shifts vs pre-surgery:**
+| Expert | pre-S10 | ep4098 |
+|---|---|---|
+| GEN | 2–9% | **14%** ↑↑ |
+| MEM | 0–2% | **9%** ↑↑ |
+| LNG | 17–25% | **37%** ↑ |
+| INT | 62–77% | **96%** ↑ |
+| PLN | 100% | **81%** ↓ |
+| ABS | 59–79% | **44%** ↓ |
+| CMP | 100% | **100%** stable |
+| SEM | 8–14% | **7%** ↓ |
+| CTX | 2% | **5%** ↑ |
+| LOG | 21% | **21%** stable |
+| INF | 6–11% | **2%** ↓ |
+| SYN | 4–5% | **2%** ↓ |
+
+GEN at 14% is the standout — was near-zero for entire pre-surgery history. Layer 23 appears to be activating generalization routing. MEM returning from 0%. ABS+PLN compressing slightly as INT saturates at 96%.
+
+**TTL:** G 18% / O 79% / R 3%
+
+**Assessment:** Surgery S10 delivering beyond expectation. EP-Avg cleared pre-S9 ATL in 4 epochs (predicted 20+). New batch-level ATL 8.7249 suggests the loss landscape has opened up substantially. GEN/MEM activation is mechanistically interesting — these experts were dormant for hundreds of epochs and the new layer appears to be routing them. Watch for GEN stabilizing above 10%: if it does, the model has genuinely expanded its representational strategy rather than just shifting load between existing experts. Next surgery gate check: 55-epoch window starts from ep4092, so earliest plateau candidate ~ep4147+.
