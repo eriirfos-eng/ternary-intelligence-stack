@@ -5760,3 +5760,26 @@ The 21→22L surgery on 25.04 set a floor at 9.2830 that held for 385 epochs (th
 **TTL tooltip (Image #13):** L7 step 1756 · G 2 / O 10 — layer 7 is orange-dominant at this step, showing gradient flow reaching even lower layers.
 
 **Assessment:** The L20/L21 frozen-layer hypothesis is confirmed retroactively. The plateau was caused not by loss landscape flatness but by dead layers preventing the model from utilizing its full 22L depth. Adding L23 broke the structural freeze — the new layer's different weight initialization gave the routing system an alternative gradient path that broke the symmetry lock on L20/L21. This is a strong validation of the Net2Net-style surgery approach: the benefit isn't just capacity, it's that the perturbation relieves frozen-layer locks. Mechanistic note to carry into S11 planning.
+
+---
+
+## FN157 · 2026-05-27T08:07:20Z · ep4102 · Post-S10 descent continues; BEST 9.2138; WALD mass 9.226–9.230 (ep4100–4102); pre-S9 ATL cleared by 0.071
+
+**State:** ep4102 active (WALD step=3000 @ 08:06Z) · BEST EP-Avg **9.2138** (set ep4098) · pre-S9 ATL 9.2847 cleared by **0.071** · TTL/expert routing N/A (ntfy-only check)
+
+**Source:** ntfy poll albert-rfi-irfos, 2h window. No dashboard screenshot this check.
+
+**Epoch ATL progression since S10 (ep4092):**
+| epoch | EP-Avg | delta |
+|---|---|---|
+| 4093 | 9.2581 | sub-9.3 floor |
+| 4096 | 9.2274 | d-0.0860 |
+| 4098 | **9.2138** | d-0.0136 — current BEST |
+
+**WALD mass (ep4100–4102):** 9.226 → 9.230 — hovering ~0.01 above 9.2138 ATL, no new epoch ATL set since ep4098. Normal inter-epoch oscillation.
+
+**WALD parameters stable:** fill 6.2–8.3%, dead_low 3.00–8.75 (5.75 range), dead_high 9.50–9.75+ (5.25–5.50 range), severity unchanged. WALD firing every ~300 steps — monitoring cadence normal.
+
+**Gap to pre-S9 ATL:** 9.2138 − 9.2847 = **−0.071** (better by 0.071). Pre-S9 ATL comprehensively cleared.
+
+**Assessment:** Steady grinding phase — 4 epochs since last ATL (ep4098 to ep4102), WALD mass bracketing 9.226–9.230 consistent with post-ATL consolidation before the next drop. No regressions. Descent rate since S10: ~0.025/epoch average (9.2847→9.2138 over 6 epochs). Next surgery gate (S11): 55-epoch plateau window from ep4092 → earliest plateau candidate ~ep4147. No action needed; watch for next ATL break below 9.21.
