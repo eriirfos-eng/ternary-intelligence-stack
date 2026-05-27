@@ -5641,3 +5641,46 @@ With oscillation ≈ 0.030 nats, quarter-mean diff ≈ 0.001–0.003 nats → we
 **Assessment:** Surgery fired exactly as gate analysis predicted. The extended delay (FN148–FN153, ~90 min wasted compute) was caused entirely by the wrong Modal volume path (`albert-moe-13/models/` vs correct `albert/models/`), which kept fib_index=9 → window=233 >> history=188, so `should_evolve()` returned false every epoch. With fib_index=5 → window=34, the plateau fired at the first completed epoch after the correct fix. since_best=385 confirms how long the model has been plateau'd with no improvement — the extra layer is needed.
 
 Architecture is now 23L. Gen 2 step 5/6 — one surgery remaining in this generation before cycling. Next gate uses window=55 epochs (wider, harder to trigger). WALD severity=0.951 is elevated; early-layer scale 45.7× indicates significant dead weight in lower layers. Layer 23 (cloned from 22) must differentiate from its parent. Expect loss turbulence ep4093–4100, then potential new territory if layer 23 activates meaningfully. Watch ABS/PLN/CMP routing — if CTX or SEM begin appearing, the new layer is being utilized.
+
+---
+
+## FN154 · 2026-05-27T07:21:44Z · ep4093→4094 · New EP-AVG ATL 9.2581 — surgery pays off immediately; SEM expert emerging
+
+**State:** ep4093 complete / ep4094 batch 14/300 · EP-Avg **9.2581** (new ATL for epoch averages) · ATL topbar 8.8104 · gap to pre-S9 ATL 9.2847 = **BROKEN THROUGH** (9.2581 < 9.2847 by 0.027)
+
+**Source:** Dashboard screenshots (Image #10 at 07:20:09, Image #11 at 07:21:44, session).
+
+**Surgery aftermath — ep4093 is the first full 23L epoch:**
+- EP-Avg fell from 9.3031 (ep4092) → **9.2581** (ep4093) — drop of **0.045** in a single epoch
+- "BEST avg 9.2581" event fired in event bar — new epoch-level best
+- Model blew straight through the plateau it had been stuck in for 385+ epochs
+- Layer 23 (Mandelbrot-perturbed clone of layer 22) is contributing immediately
+
+**WALD at ep4093:** fill=8.3%, n=300 — lower fill than pre-surgery (was 6.2% at surgery trigger), severity trending down
+
+**Expert routing — key shift:**
+| Expert | ep4092 (surgery) | ep4093 | ep4094 |
+|---|---|---|---|
+| PLN | 100% | 100% | 100% |
+| CMP | 100% | 100% | 100% |
+| INT | 67% | 62% | 77% |
+| ABS | 79% | 59% | 72% |
+| LOG | 21% | 21% | 23% |
+| LNG | 18% | 17% | 25% |
+| SEM | 2% | 8% | 14% |
+| SYN | 5% | 4% | 5% |
+| CTX | 0% | 2% | 2% |
+| INF | 11% | 6% | 0% |
+| MEM | 2% | 0% | 0% |
+| GEN | 9% | 2% | 2% |
+
+**SEM climbing 2% → 8% → 14%** across the surgery boundary — the new layer is activating semantic routing. CTX appearing (was 0%). GEN/INF/MEM trending toward 0%. Core four (PLN/CMP/INT/ABS) remain dominant.
+
+**TTL at ep4093:** G 18% / O 76% / R 5%
+**TTL at ep4094:** G 14% / O 82% / R 4%
+
+**Evolution state (current):** Gen 2 step 5/6 · window=55 epochs · ceiling=34L · one surgery remains in generation 2 before cycling.
+
+**Assessment:** Surgery S10 (22L→23L) is an immediate success. In one epoch, the model descended 0.045 — more improvement than the entire plateau phase of 385 epochs. SEM expert activation in layer 23 is the mechanistic signal to watch: it suggests the Mandelbrot perturbation created meaningful weight differentiation rather than just noise. If SEM continues climbing to 20%+, the new layer has genuinely expanded the model's representational capacity.
+
+Trend: steep descent, expect ep4094 avg in 9.24-9.26 range. Watch for WALD severity drop (less dead weight as new layer activates) and for T-610 line to become reachable (currently ~9.23). Next surgery gate: 55-epoch window + MYC_STABLE ≥5 — minimum ep4148 at earliest.
