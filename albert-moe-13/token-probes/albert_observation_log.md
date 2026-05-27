@@ -6376,3 +6376,28 @@ Step: ep4174=8100 → ep4176=8700 (+600=2ep) → ep4177=9000 (+300=1ep). Consist
 Mass 9.218→9.219→9.221 — essentially flat, ±0.003 oscillation. fill and dead_high flipping between states each epoch (8.3%/9.75+ ↔ 6.2%/9.50+) — routing toggling at the threshold boundary.
 
 **Interpretation:** Stabilization at 9.22. The exploration arc is done; model is finding its footing before descending. The fill oscillation between 6.2% and 8.3% is the routing sitting right at the dead-zone threshold — neither committed to widening nor narrowing. Watch for this to resolve in one direction. Descent phase expected soon.
+
+## FN175 · 2026-05-27T15:22Z · ep4182 · Second uptick to 9.228; oscillation pattern continuing; 24L not yet descending
+
+**State:** Active · EP 4182 (24L) · step=10500
+
+**Source:** ntfy poll, 30m window (one silent tick prior).
+
+**WALD:**
+```
+ep4182  step=10500  fill=8.3%  mass=9.228  dead_high=9.75+
+```
+Step: ep4177=9000 → ep4182=10500 (+1500=5 epochs).
+
+**Full post-S11 oscillation arc:**
+| Epoch | Mass | Note |
+|---|---|---|
+| ep4158 | 9.217 | floor |
+| ep4166 | 9.231 | peak 1 |
+| ep4174 | 9.218 | reversal |
+| ep4177 | 9.221 | flat |
+| ep4182 | 9.228 | peak 2 — second uptick |
+
+Model oscillating in 9.217–9.231 band. Floor hasn't broken lower; peaks haven't exceeded 9.231. fill=8.3% / dead_high=9.75+ on the uptick, normalizing on the downtick — same pattern each cycle.
+
+**Interpretation:** 24L settling oscillation continuing. Two peaks at ~9.23, two troughs at ~9.22. The model is not descending yet — it's cycling in a narrow band while the new layer integrates. This is longer than S10's post-surgery stabilization, consistent with a wider new-layer initialization window. No alarm. When descent begins it should be visible as a clean break below 9.217 floor. Gap to ATL 9.2045 still 0.024.
