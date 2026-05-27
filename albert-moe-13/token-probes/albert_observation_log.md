@@ -5453,3 +5453,52 @@ With oscillation ≈ 0.030 nats, quarter-mean diff ≈ 0.001–0.003 nats → we
 
 **Assessment:** Training is ready to restart. The plateau is real and confirmed. Surgery to 23L fires within minutes of restart. Recommend: `albert-train` (or equivalent restart command), do not re-pull weights.
 
+
+---
+
+## FN150 · 2026-05-27T05:22:19Z · ep4072 · Training restarted — corrected evo state loaded, surgery imminent
+
+**State:** ep4072 · batch 258/300 (86% through) · Running batch losses 9.15–9.45 (noisy mid-epoch) · ATL 8.8104 · BEST 9.228452 · gap to pre-S9 ATL 9.2847 = **−0.0014 (cleared)**
+
+**Source:** Dashboard screenshot (Image #4, session). Terminal visible — training active at 05:21:04Z.
+
+**Event bar (left→right, newest events at left):**
+| Event | Value |
+|---|---|
+| TTL-NASH all-0 | ⚠ new event type — routing Nash collapse detected |
+| EPOCH avg | 9.3183 |
+| EPOCH avg | 9.3172 |
+| EPOCH avg | 9.3185 |
+| EPOCH avg | 9.3265 |
+| EPOCH avg | 9.3030 |
+| EPOCH avg | 9.3195 |
+| EPOCH avg | 9.3196 |
+| EPOCH avg | 9.3240 |
+| EPOCH avg | 9.3250 |
+
+**Expert routing (last 60 steps):**
+| Expert | FN150 | FN147 | Δ |
+|---|---|---|---|
+| CMP | 100% | 100% | 0 |
+| INT | 70% | 57% | **+13%** |
+| ABS | 56% | 44% | +12% |
+| PLN | 56% | 87% | **−31%** |
+| LOG | 17% | 18% | −1% |
+| LNG | 17% | 14% | +3% |
+| GEN | 17% | 10% | +7% |
+| CTX | 8% | 4% | +4% |
+| MEM | 4% | 0% | +4% |
+| INF | 4% | 10% | −6% |
+| SYN | 0% | 14% | **−14%** |
+| SEM | 0% | 6% | −6% |
+
+**TTL:** G 15% / O 78% / R 3%
+
+**Gradient norm:** global |g| = 0.0028 (up from 0.0021 — gradient expansion on restart)
+
+**GATE:** ● ○ (one condition met — plateau check pending until epoch close)
+
+**Evo state at restart:** fib_index=5 (corrected from 9, pushed 05:19:49Z). History=172 entries. history_len=FIB_TARGETS[5]=34. 172 ≥ 34 → history check passes. Plateau check (quarter_mean diff ≈ 0.006 < 0.015) → surgery fires at end of ep4072.
+
+**Assessment:** Surgery expected within minutes of this screenshot. TTL-NASH all-0 is a new event — routing Nash equilibrium detected (all-expert activation momentarily zeroed, possibly at restart boundary). PLN collapsed −31pp from FN147, INT and ABS absorbing load. SYN and SEM fully dormant. This is consistent with a fresh restart state before routing re-stabilises. Primary concern is surgery firing before any momentum is wasted.
+
