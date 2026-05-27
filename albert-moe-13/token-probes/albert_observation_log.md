@@ -5424,3 +5424,32 @@ With oscillation ≈ 0.030 nats, quarter-mean diff ≈ 0.001–0.003 nats → we
 
 **FN148 Assessment:** The 291-epoch post-S9 plateau (ep3775–ep4066) was a gate malfunction, not a training stall. The model's loss floor is confirmed at 9.2833 (below pre-S9 ATL), capacity is exhausted at 22L, routing is healthy with PLN/ABS recovering to primary positions after FN147 fragmentation. Surgery to 23L should proceed without incident once gate fires.
 
+
+---
+
+## FN149 · 2026-05-27T05:19:49Z · ep~4059 · Training stopped — evo state redeployed, surgery imminent on restart
+
+**State:** ep~4059 · training stopped · EP-Avg (last known) **~9.310** · BEST 9.228452 · gap to pre-S9 ATL 9.2847 = −0.0014 (cleared)
+
+**Source:** ntfy poll (WALD ep4059 at 1779855314Z) + evo state file on Modal volume. No dashboard screenshot this tick. Training stopped ~60 min before this entry.
+
+**ntfy events (last 2h):**
+- WALD epoch=4051: fill=8.3%, mass=9.308, dead_low=3.00-8.75(5.75), dead_high=9.75+(5.25)
+- WALD epoch=4059: fill=6.2%, mass=9.302, dead_low=3.00-9.00(6.00), dead_high=9.75+(5.25)
+- No SURGERY, no EPOCH_SUMMARY events visible in 2h window
+
+**Evo state (from volume, post-stop):**
+- fib_index=9 (as saved by running process, overwrote earlier fix)
+- history_entries=172 / needs 233 → still 61 epochs short
+- gen_epochs=761, gen_epochs_no_surgery=346
+- plateau_threshold=0.015
+- first_mean=9.3129, last_mean=9.3068, quarter_mean diff=0.006141 < 0.015 ✓ (plateau clearly met)
+- first-vs-last diff=0.000012 (essentially zero — even OLD code would fire if window full)
+
+**Action taken:** Redeployed corrected evo state to Modal volume while training stopped:
+- fib_index: 9 → 5 (window 233→34 epochs)
+- 172 history entries satisfy window of 34 immediately
+- Surgery fires in epoch 1 after restart
+
+**Assessment:** Training is ready to restart. The plateau is real and confirmed. Surgery to 23L fires within minutes of restart. Recommend: `albert-train` (or equivalent restart command), do not re-pull weights.
+
