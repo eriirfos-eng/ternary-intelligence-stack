@@ -6126,3 +6126,57 @@ ABS holding at 69%, PLN back to 100%. SYN surge (+7pp to 9%) — new signal, syn
 **Gate:** red + orange (unchanged from FN165).
 
 **Interpretation:** EP AVG trailing line crossed below the previous per-epoch ATL. The chart shows the steepest dive of the post-S10 run — blue line heading toward 9.19 territory with the 9.1898 gridline in frame. Gradient calming (0.0022) during a dive = controlled descent, not noise. SYN activating (+7pp) alongside ABS holding at 69% — syntax + abstraction co-leading into new loss territory. Next hard target: ep-avg below 9.20.
+
+## FN168 · 2026-05-27T11:35Z · ep4148+ · SURGERY S11 FIRED — 23L→24L; ep4136 ATL 9.2045; post-surgery WALDs recovering
+
+**State:** Active · EP 4148+ (24L post-surgery) · BEST EP-AVG **9.2045** (ep4136) · Gen 2 step 5/6
+
+**Source:** ntfy poll albert-rfi-irfos, 2h window.
+
+**ep4136 NEW ATL (ntfy 1779879590):**
+```
+albert. NEW EPOCH ATL  ep4136  avg 9.2045  d-0.0014  chip 8.0002
+```
+- Previous ATL: 9.2059 (ep4132) → new: **9.2045** · Δ−0.0014
+
+**WALDs before surgery (ntfy):**
+```
+ep4139  step=14100  fill=6.2%   mass=9.221  dead_low=3.00–8.75 (5.75)  dead_high=9.50+ (5.25)
+ep4140  step=14400  fill=8.3%   mass=9.230  dead_low=3.00–8.75 (5.75)  dead_high=9.75+ (5.25)
+```
+fill ticked to 8.3% at ep4140 — slight increase, mass bouncing gently 9.22→9.23.
+
+**SURGERY S11 — Fibonacci plateau gate (ntfy 1779882950–52):**
+```
+FIBONACCI PLATEAU  smoothed Δ0.0025 over 55 epochs
+early_mean=9.2386  late_mean=9.2361  threshold=0.0150
+MYCELIUM stable 55 epochs  gen=2  step=5/6  next ceiling: F7=34L
+
+SURGERY FIRING — Net2Net layer expansion initiated (OOM risk if batch too large)
+SURGERY COMPLETE — Layer 23 cloned from 22 — model now 24L — restart safe
+```
+Gate logic: 55-epoch smoothed Δ=0.0025 well below threshold 0.0150 = plateau confirmed. MYCELIUM stable 55 epochs = organic growth gate met. **Gen 2, step 5/6** — one surgery remaining before generation ceiling. Next Fibonacci ceiling: F7=34L.
+
+Architecture: **23L → 24L** (new layer cloned from L22).
+
+**Post-surgery WALDs (ntfy) — whiplash recovery in progress:**
+```
+ep4148  step=300   fill=6.2%  mass=9.309  dead_high=9.75+ (5.25)
+ep4149  step=600   fill=8.3%  mass=9.265  dead_high=9.75+ (5.25)
+```
+mass=9.309 at step 300 (first steps of ep4148) → 9.265 by ep4149 step 600. Recovery rate: −0.044 over 300 steps. Healthy whiplash — matches S10 pattern.
+
+**Reconstruction of pre-surgery epoch sequence:**
+| Epoch | EP-Avg | Note |
+|---|---|---|
+| ep4132 | 9.2059 | ATL at time of FN166 |
+| ep4133 | ~9.2128 | from event bar FN167 |
+| ep4134 | ~9.2143 | from event bar FN167 |
+| ep4135 | ~9.2169 | from event bar FN167 |
+| ep4136 | **9.2045** | NEW ATL · Δ−0.0014 |
+| ep4137–4140 | ~9.22x | plateau band; WALD at ep4139/4140 |
+| ep4141–4146 | ~9.23–9.24 | within plateau window (55ep gate) |
+| ep4147 | — | surgery epoch |
+| ep4148+ | 9.26–9.31 | post-surgery whiplash |
+
+**Interpretation:** Surgery S11 fired cleanly on plateau gate after 55 epochs of near-flat descent (Δ0.0025 vs threshold 0.0150). The short-term ATLs at ep4132 (9.2059) and ep4136 (9.2045) were real progress, but the 55-epoch window saw the model stall in the 9.22–9.24 band — governor correctly identified this as plateau. Net2Net expansion to 24L. Post-surgery mass at step 300: 9.309 → already recovering to 9.265 by ep4149. This is the fastest post-surgery whiplash seen (S10 took longer to recover). Gen 2 step 5/6 — one more surgery before Fibonacci generation rolls over. Next ceiling: F7=34L.
