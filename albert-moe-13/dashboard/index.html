@@ -6570,6 +6570,14 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
         const _hotHistory = new Array(20).fill(-1);
         let _hotHistIdx = 0;
 
+        // ── Dual-stream B state (cord surgery) ──────────────────────
+        const FIBO_GATES = [2,3,5,8,13,21];
+        const Z_SPLIT = 3.5;
+        let _lpB = [], _lSpritesB = [], _lLabelsB = [], _lTrailSpritesB = [];
+        let _bezCtrlB = [], _bezEdgeGeoB = null;
+        let _ptGeoB = null, _ptPhaseB = null, _ptSpeedB = null;
+        let _gateSprites = [], _gateLineMats = [];
+
         // ── orbit state ──────────────────────────────────────────────
         let _theta = 0, _phi = Math.PI / 2, _radius = 24;
         const _camTgt = { x: 0, y: 0, z: 0 };
@@ -6675,6 +6683,10 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             _exrColArr = null; _allLayersMode = false;
             _allLayerExpertSprites = null; _allLayerGateConnMats = null;
             _alBezEdgeGeo = null; _ptGeo = null; _ptPhase = null; _ptSpeed = null;
+            _lpB=[]; _lSpritesB=[]; _lLabelsB=[]; _lTrailSpritesB=[];
+            _bezCtrlB=[]; _bezEdgeGeoB=null;
+            _ptGeoB=null; _ptPhaseB=null; _ptSpeedB=null;
+            _gateSprites=[]; _gateLineMats=[];
         }
 
         // ── build scene ──────────────────────────────────────────────
@@ -6881,6 +6893,151 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             });
             _scene.add(new THREE.Points(_ptGeo, ptMat));
 
+            // ── Stream B (dual-stream cord surgery) ───────────────
+            const _numStreams = (typeof gArchNumStreams !== 'undefined') ? gArchNumStreams : 1;
+            if (_numStreams > 1) {
+                const LHUE_B = Array.from({length:NL}, (_,i) => (LHUE[i] + 0.55) % 1.0);
+
+                // Stream B layer positions — same y, Z-offset behind stream A
+                for (let i=0;i<NL;i++)
+                    _lpB.push(new THREE.Vector3(LX, lp[i].y, lp[i].z - Z_SPLIT));
+                _scene.userData.lpB = _lpB;
+
+                // INPUT → stream B fan (cool blue)
+                const ioBPos=new Float32Array(NL*2*3), ioBCol=new Float32Array(NL*2*3);
+                for (let i=0;i<NL;i++) {
+                    const b=i*6;
+                    ioBPos[b]=INX; ioBPos[b+1]=0; ioBPos[b+2]=0;
+                    ioBPos[b+3]=_lpB[i].x; ioBPos[b+4]=_lpB[i].y; ioBPos[b+5]=_lpB[i].z;
+                    ioBCol[b]=0.05; ioBCol[b+1]=0.18; ioBCol[b+2]=0.5;
+                    ioBCol[b+3]=0.05; ioBCol[b+4]=0.18; ioBCol[b+5]=0.5;
+                }
+                const ioBGeo=new THREE.BufferGeometry();
+                ioBGeo.setAttribute('position',new THREE.BufferAttribute(ioBPos,3));
+                ioBGeo.setAttribute('color',new THREE.BufferAttribute(ioBCol,3));
+                _scene.add(new THREE.LineSegments(ioBGeo,new THREE.LineBasicMaterial({
+                    vertexColors:true,blending:THREE.NormalBlending,transparent:true,depthWrite:false,opacity:0.22
+                })));
+
+                // Stream B layer node sprites + labels
+                for (let i=0;i<NL;i++) {
+                    const s=_node(0.7, new THREE.Color(0.08,0.25,0.92));
+                    s.position.copy(_lpB[i]); _scene.add(s); _lSpritesB.push(s);
+                    const lb=_lbl('L'+i,'right');
+                    lb.position.set(_lpB[i].x-1.2,_lpB[i].y,_lpB[i].z);
+                    lb.material.opacity=0.32; _scene.add(lb); _lLabelsB.push(lb);
+                }
+
+                // Stream B bezier control points
+                for (let i=0;i<NL;i++) {
+                    _bezCtrlB[i]=[];
+                    for (let e=0;e<NE;e++) {
+                        const cz=Math.sin(i*0.7+e*0.4)*2.8 - Z_SPLIT*0.55;
+                        const cy=(_lpB[i].y+ep[e].y)/2+Math.cos(i*0.5+e*0.9)*0.35;
+                        _bezCtrlB[i][e]={x:0.5,y:cy,z:cz};
+                    }
+                }
+
+                // Stream B bezier edge geometry
+                const leBTotal=NL*NE*BEZ_SEGS;
+                const leBPos=new Float32Array(leBTotal*2*3), leBCol=new Float32Array(leBTotal*2*3);
+                for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
+                    const ctrl=_bezCtrlB[i][e];
+                    for (let s=0;s<BEZ_SEGS;s++) {
+                        const t0=s/BEZ_SEGS, t1=(s+1)/BEZ_SEGS;
+                        const u0=1-t0, u1=1-t1;
+                        const idx=(i*NE*BEZ_SEGS+e*BEZ_SEGS+s)*6;
+                        leBPos[idx]  =u0*u0*_lpB[i].x+2*u0*t0*ctrl.x+t0*t0*ep[e].x;
+                        leBPos[idx+1]=u0*u0*_lpB[i].y+2*u0*t0*ctrl.y+t0*t0*ep[e].y;
+                        leBPos[idx+2]=u0*u0*_lpB[i].z+2*u0*t0*ctrl.z+t0*t0*ep[e].z;
+                        leBPos[idx+3]=u1*u1*_lpB[i].x+2*u1*t1*ctrl.x+t1*t1*ep[e].x;
+                        leBPos[idx+4]=u1*u1*_lpB[i].y+2*u1*t1*ctrl.y+t1*t1*ep[e].y;
+                        leBPos[idx+5]=u1*u1*_lpB[i].z+2*u1*t1*ctrl.z+t1*t1*ep[e].z;
+                    }
+                }
+                _bezEdgeGeoB=new THREE.BufferGeometry();
+                _bezEdgeGeoB.setAttribute('position',new THREE.BufferAttribute(leBPos,3));
+                _bezEdgeGeoB.setAttribute('color',new THREE.BufferAttribute(leBCol,3));
+                _scene.add(new THREE.LineSegments(_bezEdgeGeoB,new THREE.LineBasicMaterial({
+                    vertexColors:true,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false
+                })));
+
+                // Anastomosis gate nodes at Fibonacci layers
+                for (const fi of FIBO_GATES) {
+                    if (fi>=NL) continue;
+                    const gz=(lp[fi].z+_lpB[fi].z)/2;
+                    const gSp=_node(1.2, new THREE.Color(1.0,0.72,0.04));
+                    gSp.position.set(LX, lp[fi].y, gz); _scene.add(gSp); _gateSprites.push(gSp);
+                    const glbl=_lbl('G'+fi,'left');
+                    glbl.position.set(LX+1.5,lp[fi].y,gz);
+                    glbl.material.opacity=0.5; _scene.add(glbl);
+                    // bridge line A→gate→B
+                    const bPts=new Float32Array([
+                        LX,lp[fi].y,lp[fi].z,   LX,lp[fi].y,gz,
+                        LX,lp[fi].y,gz,           LX,lp[fi].y,_lpB[fi].z
+                    ]);
+                    const bCol=new Float32Array([
+                        0.9,0.6,0.04, 1.0,0.75,0.05,
+                        1.0,0.75,0.05, 0.9,0.6,0.04
+                    ]);
+                    const bGeo=new THREE.BufferGeometry();
+                    bGeo.setAttribute('position',new THREE.BufferAttribute(bPts,3));
+                    bGeo.setAttribute('color',new THREE.BufferAttribute(bCol,3));
+                    const bMat=new THREE.LineBasicMaterial({
+                        vertexColors:true,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false,opacity:0.65
+                    });
+                    _scene.add(new THREE.LineSegments(bGeo,bMat));
+                    _gateLineMats.push(bMat);
+                }
+
+                // Stream B hot-trail sprites (blue tint)
+                for (let i=0;i<NL;i++) {
+                    const mat=new THREE.SpriteMaterial({
+                        map:_gTex(), color:new THREE.Color(0.05,0.3,0.95),
+                        blending:THREE.AdditiveBlending,transparent:true,depthWrite:false,opacity:0
+                    });
+                    const sp=new THREE.Sprite(mat);
+                    sp.position.copy(_lpB[i]); sp.scale.setScalar(1.8);
+                    _scene.add(sp); _lTrailSpritesB.push(sp);
+                }
+
+                // Stream B particle system (reuse same point texture)
+                const _NBP=NL*NE*NP_LG;
+                _ptPhaseB=new Float32Array(_NBP); _ptSpeedB=new Float32Array(_NBP);
+                for (let p=0;p<_NBP;p++) {
+                    _ptPhaseB[p]=Math.random();
+                    _ptSpeedB[p]=0.008+Math.random()*0.008;
+                }
+                const ptBPA=new Float32Array(_NBP*3), ptBCA=new Float32Array(_NBP*3);
+                _ptGeoB=new THREE.BufferGeometry();
+                _ptGeoB.setAttribute('position',new THREE.BufferAttribute(ptBPA,3));
+                _ptGeoB.setAttribute('color',new THREE.BufferAttribute(ptBCA,3));
+                const ptMatB=new THREE.PointsMaterial({
+                    map:new THREE.CanvasTexture(ptCvs), size:0.11,
+                    vertexColors:true,blending:THREE.AdditiveBlending,
+                    transparent:true,depthWrite:false,sizeAttenuation:true
+                });
+                _scene.add(new THREE.Points(_ptGeoB, ptMatB));
+
+                // Stream B annotation
+                {
+                    const aw=520,ah=30,dpr=Math.min(window.devicePixelRatio||1,2);
+                    const ac=document.createElement('canvas');
+                    ac.width=aw*dpr; ac.height=ah*dpr;
+                    const ax=ac.getContext('2d'); ax.scale(dpr,dpr);
+                    ax.font='11px monospace'; ax.fillStyle='rgba(80,140,255,0.38)';
+                    ax.textAlign='left'; ax.textBaseline='middle';
+                    ax.fillText('stream_b  c_im=-0.2212  ·  6 anastomosis gates [2,3,5,8,13,21]', 4, ah/2);
+                    const annoB=new THREE.Sprite(new THREE.SpriteMaterial({
+                        map:new THREE.CanvasTexture(ac),transparent:true,depthWrite:false
+                    }));
+                    const sh=0.55, sw=(aw/ah)*sh;
+                    annoB.scale.set(sw,sh,1);
+                    annoB.position.set(-sw/2+0.5,-10.8,-Z_SPLIT);
+                    _scene.add(annoB);
+                }
+            }
+
             new ResizeObserver(_resize).observe(canvas);
             _resize();
 
@@ -7077,6 +7234,98 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                 }
                 _ptGeo.attributes.position.needsUpdate=true;
                 _ptGeo.attributes.color.needsUpdate=true;
+            }
+
+            // ── Stream B tick — dual-stream ──────────────────────
+            if (_lpB.length && _lSpritesB.length) {
+                const LHUE_B=Array.from({length:NL},(_,i)=>(LHUE[i]+0.55)%1.0);
+                const _hslB=new THREE.Color();
+
+                // B layer sprites
+                for (let i=0;i<NL;i++) {
+                    if (!_lSpritesB[i]) continue;
+                    const g=_lg[i], pb=0.85+0.15*Math.sin(_t*1.1+i*0.42+1.9);
+                    _lSpritesB[i].scale.setScalar((0.28+1.1*g)*pb);
+                    _lSpritesB[i].material.color.setHSL(LHUE_B[i],0.9,0.08+0.52*g);
+                    _lSpritesB[i].material.opacity=Math.min(1,0.18+0.68*g);
+                    if (_lLabelsB[i]) _lLabelsB[i].material.opacity=0.22+0.28*g;
+                }
+
+                // B bezier arc colours
+                if (_bezEdgeGeoB) {
+                    const sortedEB=Array.from({length:NE},(_,e)=>e).sort((a,b)=>_rw[b]-_rw[a]);
+                    const top3B=new Set(sortedEB.slice(0,3));
+                    const ecB=_bezEdgeGeoB.attributes.color.array;
+                    for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
+                        const str=Math.min(1,_lg[i]*0.45+_rw[e]*0.6);
+                        const isActive=top3B.has(e)&&str>0.05;
+                        let cr=0,cg=0,cb=0;
+                        if (isActive) {
+                            _hslB.setHSL(LHUE_B[i],0.9,0.5);
+                            const a=Math.pow(str,1.3)*0.62;
+                            cr=_hslB.r*a; cg=_hslB.g*a; cb=_hslB.b*a;
+                        } else { cr=0.008; cg=0.008; cb=0.05; }
+                        for (let s=0;s<BEZ_SEGS;s++){
+                            const base=(i*NE*BEZ_SEGS+e*BEZ_SEGS+s)*6;
+                            ecB[base]=cr;ecB[base+1]=cg;ecB[base+2]=cb;
+                            ecB[base+3]=cr;ecB[base+4]=cg;ecB[base+5]=cb;
+                        }
+                    }
+                    _bezEdgeGeoB.attributes.color.needsUpdate=true;
+                }
+
+                // Anastomosis gate pulse (amber glow, slow breathe)
+                if (_gateSprites.length) {
+                    const gPulse=0.42+0.58*Math.sin(_t*1.6);
+                    for (const gs of _gateSprites) {
+                        gs.material.opacity=0.28+0.72*gPulse;
+                        gs.scale.setScalar(0.65+0.7*gPulse);
+                    }
+                    for (const gm of _gateLineMats) gm.opacity=0.28+0.52*gPulse;
+                }
+
+                // B hot-trail sprites
+                for (let i=0;i<NL;i++) {
+                    const sp=_lTrailSpritesB[i]; if (!sp) continue;
+                    let recency=-1;
+                    for (let k=0;k<20;k++) {
+                        const slot=(_hotHistIdx-1-k+20)%20;
+                        if (_hotHistory[slot]===i){recency=k;break;}
+                    }
+                    if (recency===0){sp.material.opacity=0.55+0.2*Math.sin(_t*2.8+i);sp.scale.setScalar(2.8+0.6*Math.sin(_t*2.0));}
+                    else if (recency>0){const fade=Math.pow(1-recency/20,2);sp.material.opacity=0.35*fade;sp.scale.setScalar(1.4+0.4*(1-recency/20));}
+                    else sp.material.opacity=0;
+                }
+
+                // B particles
+                if (_ptGeoB && _ptPhaseB) {
+                    const ppBPos=_ptGeoB.attributes.position.array;
+                    const ppBCol=_ptGeoB.attributes.color.array;
+                    const _hPB=new THREE.Color();
+                    const sortedE3B=Array.from({length:NE},(_,e)=>e).sort((a,b)=>_rw[b]-_rw[a]);
+                    const top3PB=new Set(sortedE3B.slice(0,3));
+                    let pB=0;
+                    for (let i=0;i<NL;i++) for (let e=0;e<NE;e++) {
+                        const str=Math.min(1,_lg[i]*0.5+_rw[e]*0.4);
+                        const dimP=top3PB.has(e)?1.0:0.08;
+                        const ctrl=_bezCtrlB[i]&&_bezCtrlB[i][e];
+                        for (let k=0;k<NP_LG;k++,pB++) {
+                            _ptPhaseB[pB]+=_ptSpeedB[pB]*str*1.8;
+                            if (_ptPhaseB[pB]>1) _ptPhaseB[pB]-=1;
+                            const t=_ptPhaseB[pB], u=1-t;
+                            if (ctrl&&_lpB[i]) {
+                                ppBPos[pB*3]  =u*u*_lpB[i].x+2*u*t*ctrl.x+t*t*ep[e].x;
+                                ppBPos[pB*3+1]=u*u*_lpB[i].y+2*u*t*ctrl.y+t*t*ep[e].y;
+                                ppBPos[pB*3+2]=u*u*_lpB[i].z+2*u*t*ctrl.z+t*t*ep[e].z;
+                            }
+                            const fade=Math.sin(Math.PI*t)*str*dimP;
+                            _hPB.setHSL(LHUE_B[i],0.9,0.65);
+                            ppBCol[pB*3]=_hPB.r*fade;ppBCol[pB*3+1]=_hPB.g*fade;ppBCol[pB*3+2]=_hPB.b*fade;
+                        }
+                    }
+                    _ptGeoB.attributes.position.needsUpdate=true;
+                    _ptGeoB.attributes.color.needsUpdate=true;
+                }
             }
 
             // FULL BRAIN 204 — drive each of the 204 individual module sprites + arc colours
