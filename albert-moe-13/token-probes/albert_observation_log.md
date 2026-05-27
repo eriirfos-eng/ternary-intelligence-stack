@@ -6045,3 +6045,35 @@ ABS surging again to 69% on the loss breakthrough epoch. Pattern: ABS leads on n
 **Per-layer gradient:** global |g|=0.0023 (unchanged — stable).
 
 **Interpretation:** The ep4130 WALD/uptick was a one-epoch hiccup. ep4131 came in at 9.2170, slicing 0.022 below ep4129's prior best in a single epoch. ABS routing surge (+8pp to 69%) co-occurred with the breakthrough — abstraction-led descent pattern consistent with prior new-territory epochs. Gate indicator state change worth monitoring but not alarming during active descent. If ep4132 holds below 9.22, next target is ATL 9.2138 and then open water below.
+
+## FN166 · 2026-05-27T10:44Z · ep4135+ · NEW ATL: ep4132 avg 9.2059 · Δ−0.0079 vs prior best
+
+**State:** Active · EP 4135+ · BEST **9.2059** (ep4132, NEW) · prev best 9.2138 (ep4098, held since pre-S10)
+
+**Source:** ntfy albert-rfi-irfos, messages at 1779878368 and 1779879281.
+
+**NEW EPOCH ATL confirmed (ntfy):**
+```
+albert. NEW EPOCH ATL  ep4132  avg 9.2059  d-0.0079  chip 8.0002
+```
+- Previous ATL: 9.2138 (ep4098, held through S10 surgery)
+- New ATL: **9.2059** — beaten by **0.0079**
+- chip=8.0002 (checkpoint marker)
+
+**Second WALD fired (ntfy, ~10:41Z):**
+```
+WALD epoch=4135  step=12900  fill=6.2%  mass=9.216
+dead_low=3.00–8.75 (span 5.75)  dead_high=9.50+ (span 5.50)  sever[truncated]
+```
+mass=9.216 implies ep4135 ep-avg in the 9.21–9.22 range — descent continuing past the ATL epoch. WALD reactive, not causal.
+
+**Descent sequence reconstructed:**
+| Epoch | EP-Avg | Note |
+|---|---|---|
+| ep4129 | 9.2393 | prior post-S10 best |
+| ep4130 | 9.2540 | WALD #1 uptick |
+| ep4131 | 9.2170 | new post-S10 best (FN165) |
+| ep4132 | **9.2059** | **NEW ALL-TIME LOW** |
+| ep4135 | ~9.21x | WALD #2 fired, descent continuing |
+
+**Interpretation:** ATL broken after holding since ep4098. S10 surgery cost ~34 epochs of recovery and then delivered new territory. The descent from 9.26 band to 9.2059 took ~6 epochs once it started moving. WALD #2 at ep4135 with mass=9.216 confirms the model is still descending past the ATL epoch — not bouncing. Open water below 9.2059. Next milestone: 9.20 barrier.
