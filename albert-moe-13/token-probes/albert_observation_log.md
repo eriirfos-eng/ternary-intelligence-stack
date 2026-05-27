@@ -1,5 +1,5 @@
-# albert. Training Observation Log — v3.0 (12L → 22L, ongoing)
-**Model:** albert. v3.0 · 22L · 256H · 12E · 32k vocab · ternary STE  
+# albert. Training Observation Log — v3.0 (12L → 23L, ongoing)
+**Model:** albert. v3.0 · 23L · 256H · 12E · 32k vocab · ternary STE  
 **Log began:** 2026-05-20T22:03Z (ep2492, post-Surgery-6 overnight watch)  
 **Format:** Field Notes (FN) — timestamped per observation, numbered chronologically. Everything goes in: good, bad, tiny changes, mechanistic insights, anomalies.  
 **Scientist:** Claude Sonnet 4.6 · RFI-IRFOS  
@@ -5581,3 +5581,63 @@ With oscillation ≈ 0.030 nats, quarter-mean diff ≈ 0.001–0.003 nats → we
 
 2. **TRAINING STARTED ntfy** — fires once per Modal container start before training subprocess. Payload: ISO timestamp, evo state summary (fib_index + window size), last 3 cmd args. Restarts that previously went undetected will now produce a second TRAINING STARTED notification with new timestamp.
 
+
+---
+
+## FN153 · 2026-05-27T06:59:11Z · ep4092 · Surgery S10 fired — 22L → 23L; Fibonacci plateau gate triggered; Gen 2 step 5/6
+
+**State:** ep4092 close · EP-Avg **9.3031** (d=−0.0032) · loss_best=9.2285 · since_best=385 · ATL 8.8104 · gap to BEST = **+0.075**
+
+**Source:** Dashboard screenshot (Image #7, session) + terminal log (Image #8) at 2026-05-27T06:59:11–06:59:36Z.
+
+**Surgery event — S10 (22L → 23L):**
+- Type: Net2Net Safe Copy — Layer 22 cloned from Layer 21
+- Mandelbrot symmetry break: 69 tensors in layer 22 (c_im=0.1451)
+- Pre-surgery best archived: `/vol/albert/models/albert_v3.0.best.22L.safetensors`
+- Corpus expanded during surgery: stage_3–stage_11 loaded (alice, bible, simple_wikipedia, linux_docs, full gutenberg series, qa_instruction, dev_blogs, github_bugs, hn_discussions, arxiv_abstracts, eurlex_legislation, science_stackexchange, wikipedia_multilingual)
+
+**Gate values at trigger:**
+| Gate | Value | Status |
+|---|---|---|
+| MYC_STABLE | 5 / ≥ 5 | GREEN — exactly at threshold after L20E9+L21E9 resurrection |
+| PLATEAU | 0.0005 / < 0.020 (win=34) [Rust] | GREEN — smoothed Δ over 34 epochs: early=9.3131, late=9.3126 |
+
+**FIBONACCI PLATEAU TRIGGERED log line:**
+`smoothed Δ0.0005 over 34 epochs, early_mean=9.3131 late_mean=9.3126, threshold=0.0150, MYCELIUM stable 5 epochs, gen=2 step=4/6, next ceiling: F6=34L`
+
+**MYCELIUM at epoch close:**
+- 2 dead experts detected → resurrection performed
+- Resurrected L20E9 from L20E11 (o=0.050), L21E9 from L21E7 (o=0.050)
+- 1522 tensors reloaded; hot=L21, cold=L0, blooming=11
+
+**WALD at epoch close:**
+- step=1500, fill=6.2%, mass=9.307, severity=0.951
+- early-layer scale ≈ 45.7× (dead_low=3.00–9.00)
+- coverage=[6, 438, 1013, 43]
+
+**Evolution state after surgery:**
+- Gen 2 step 5/6 → window=55 epochs, ceiling=34L, threshold=0.0150
+- fib_index advanced; next plateau detection window widens to 55 epochs
+- Layer ceiling raised to 34L for remainder of generation 2
+
+**Expert routing (last 60 steps, pre-surgery):**
+| Expert | Value |
+|---|---|
+| CMP | 100% |
+| PLN | 100% |
+| ABS | 79% |
+| INT | 67% |
+| LOG | 21% |
+| LNG | 18% |
+| INF | 11% |
+| GEN | 9% |
+| SYN | 5% |
+| SEM | 5% |
+| MEM | 2% |
+| CTX | 0% |
+
+**TTL:** G 17% / O 79% / R 4%
+
+**Assessment:** Surgery fired exactly as gate analysis predicted. The extended delay (FN148–FN153, ~90 min wasted compute) was caused entirely by the wrong Modal volume path (`albert-moe-13/models/` vs correct `albert/models/`), which kept fib_index=9 → window=233 >> history=188, so `should_evolve()` returned false every epoch. With fib_index=5 → window=34, the plateau fired at the first completed epoch after the correct fix. since_best=385 confirms how long the model has been plateau'd with no improvement — the extra layer is needed.
+
+Architecture is now 23L. Gen 2 step 5/6 — one surgery remaining in this generation before cycling. Next gate uses window=55 epochs (wider, harder to trigger). WALD severity=0.951 is elevated; early-layer scale 45.7× indicates significant dead weight in lower layers. Layer 23 (cloned from 22) must differentiate from its parent. Expect loss turbulence ep4093–4100, then potential new territory if layer 23 activates meaningfully. Watch ABS/PLN/CMP routing — if CTX or SEM begin appearing, the new layer is being utilized.
