@@ -1,6 +1,8 @@
 # Albert MoE-13
 
-**Ternary-native Mixture-of-Experts language model** — weights constrained to {-1, 0, +1}, trained from scratch with real-time dashboard telemetry. GPU training via Modal (T4).
+**Ternary-native dual-stream Mixture-of-Experts language model** — weights constrained to {-1, 0, +1}, trained from scratch with real-time dashboard telemetry. GPU training via Modal (T4).
+
+**Architecture milestone (2026-05-27):** Single-stream architecture autonomously bifurcated into dual-stream 2×256H via cord surgery — the first documented instance of a live ternary MoE growing from one stream to two mid-training. No prior art.
 
 Part of the [Ternary Intelligence Stack](https://github.com/eriirfos-eng/ternary-intelligence-stack) | RFI-IRFOS, Graz · Patent Pending A50296/2026
 
@@ -69,23 +71,44 @@ The architecture combines:
 
 ---
 
-## Current Architecture (v3.0)
+## Current Architecture (v3.0 — dual-stream)
 
 | Parameter | Value |
 |-----------|-------|
-| Hidden size | 256 |
-| Layers | **21** (v2.0.0: 3L→12L over 9-10 surgeries; v3.0: ep511 12L→13L, ep547 13L→14L, ep611 14L→15L, ep645 15L→16L, ep701 16L→17L, ep2487 17L→18L, ep3325 18L→19L, ep3383 19L→20L, ep3470 20L→21L) |
-| Attention heads | 4 |
-| Experts | 12 |
+| **Streams** | **2 (dual-stream — cord surgery 2026-05-27)** |
+| Hidden size | **2×256H** (256H per stream) |
+| Layers | **25** (12 Net2Net surgeries: 12L→25L; see surgery log below) |
+| Anastomosis gates | **6** — at Fibonacci layers [2,3,5,8,13,21]; `Linear(512,2)`, F32; cross-stream fusion soft-gated by gradient |
+| Attention heads | 4 per stream |
+| Experts | 12 per stream |
 | Context length | 256 tokens |
 | Vocabulary | 32,000 tokens (ByteLevel BPE — EN/DE/FR/ES/PT/IT/NL/PL) |
 | Routing | Top-3 sparse — @sparseskip, 75% experts skipped per step |
-| TTL routing | EMA-based trit states: Green (+logit boost) · Orange (scaled output) · Red (suppressed + skipped) |
+| TTL routing | EMA-based trit states per stream per layer — **50 TTL rows** (L0–L24 stream A, L25–L49 stream B) |
 | Quantization | STE with gamma-scaled ternary, gamma cached every 20 steps |
-| LB loss | Switch Transformer load-balancing, λ = 0.03 |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
+| **Total parameters** | **187,449,868 (~187.5M)** |
+| **Safetensors** | **1,966 tensors · 715.3 MB** |
+| Corpus | **451,418,681 tokens** (stages 1–13, cache-loaded) |
 
-**Training state (2026-05-25):** Global Epoch 3499 · epoch-ATL **9.2826** (ep3460) · chip-ATL **8.8540** · 9 Net2Net surgeries complete (12L→21L) · surgery #9 fired ep3470 (20L→21L, autonomous overnight) · post-surgery rebound in progress
+**Surgery log — 12 Net2Net surgeries + 1 cord surgery:**
+
+| Surgery | Epoch | Layers | Note |
+|---------|-------|--------|------|
+| S1–S5 | ep511–ep702 | 12L→17L | Fibonacci + Mandelbrot windows |
+| S6 | ep2487 | 17L→18L | First under full Fibonacci+Mandelbrot+Gen cycling |
+| S7 | ep3325 | 18L→19L | 2026-05-24T13:47Z |
+| S8 | ep3383 | 19L→20L | 58 epochs after S7 |
+| S9 | ep3470 | 20L→21L | Anomalous spike, resolved ep3522 |
+| S10 | ep~3652 | 21L→22L | BEST 9.2933 pre-surgery |
+| S11 | ep~4098 | 22L→23L | 2026-05-27 morning |
+| S11b | ep~4140 | 23L→24L | 2026-05-27 |
+| S12 | ep4202 | 24L→25L | 2026-05-27T16:43Z · Gen3 plateau triggered |
+| **CORD** | **ep4202** | **25L → 2×25L** | **2026-05-27T16:44Z · autonomous · first ever** |
+
+**Evolution state:** Gen 3 step 0/6 · ceiling F7=55L · window=55 epochs · threshold=0.0113
+
+**Training state (2026-05-27T17:26Z):** Global Epoch 4203+ · epoch-ATL **9.3241** (ep4203, first post-cord epoch) · chip-ATL **8.7123** (new all-time low, set ep4203) · dual-stream training live on Modal T4 · batch=1
 
 ---
 
