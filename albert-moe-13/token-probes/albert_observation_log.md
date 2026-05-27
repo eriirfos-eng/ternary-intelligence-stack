@@ -6569,6 +6569,55 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN192 · 2026-05-27T18:12:53Z · ep4211 BATCH 292/300 · NEW ATL 8.6852 · ep4210=9.3438 WORSE · LNG 31% recovery · GEN first activation · tail-chase active
+
+**State:** EP 4211 (26L) · BATCH 292/300 (closing) · ATL **8.6852** · GATE orange
+
+**Source:** Dashboard screenshot, 18:12:53Z.
+
+### NEW CHIP ATL: 8.6852
+
+Previous: 8.6955. New: **8.6852** — Δ −0.0103. Three consecutive chip ATL breaks since cord surgery (8.7123 → 8.7090 → 8.6955 → 8.6852). The 26L architecture is finding new individual batch minima every epoch while epoch averages remain elevated. Chip ATL and epoch ATL are diverging — sign of high within-epoch variance.
+
+### EPOCH AVERAGES — CONFIRMED SEQUENCE
+
+| Epoch | EP AVG | Δ vs prior | Notes |
+|-------|--------|-----------|-------|
+| 4207 | 9.3122 | — | Last 25L epoch |
+| 4208 | 9.3300 | +0.0178 | First 26L epoch, regression |
+| 4209 | 9.3206 | −0.0094 | Slight recovery |
+| 4210 | **9.3438** | **+0.0232** | WORSE — new post-cord high |
+| 4211 | closing | — | ep at batch 292/300 |
+
+**Tail-chase: ACTIVE.** ep4210 at 9.3438 is the worst epoch average since the cord surgery spike. The 89-epoch window for S14 is now filling: [ep4207 9.3122, ep4208 9.3300, ep4209 9.3206, ep4210 9.3438, ...]. All above 9.30. At this rate, early_mean will be below late_mean by the time the window is full, and the plateau gate fires again. S14 (26L→27L) is likely within 80–85 epochs unless there's a sharp descent soon.
+
+### EXPERT ROUTING — LNG RECOVERY + GEN FIRST ACTIVATION
+
+| Expert | % | vs FN191 |
+|--------|---|---------|
+| PLN | 97% | −3pp |
+| CMP | 100% | stable |
+| INT | 88% | −5pp |
+| ABS | 49% | +2pp |
+| **LNG** | **31%** | **+19pp — strong recovery** |
+| LOG | 6% | −4pp |
+| **GEN** | **2%** | **first activation ever** |
+| SYN/SEM/CTX/INF/MEM | 0% | still collapsed |
+
+Two developments: LNG jumped from 12% → 31% in one epoch — linguistic expert strongly recovering as the new stage 13 literary corpus (gutenberg_books 152MB) routes through it. GEN at 2% is the first activation of the generative expert since cord surgery. Both signal stream B beginning to contribute routing signal.
+
+### CHART
+
+EP AVG line on right edge: 9.3438 (ep4210). T-610 trailing average: **9.3214**. Y-axis floor 9.2888 still out of reach at epoch-average level. Individual batch lows visible in chart dipping to ~9.20 range (matching chip ATL behavior). Post-cord cluster clearly visible; surgery annotations legible. No new W (WALD) markers visible yet in recent range.
+
+### TTL: G 6.17% · O 79% · R 4%
+
+Essentially unchanged from FN191. Stable warmup-dominant state. The new L26 layers contributing incrementally.
+
+**Interpretation:** ep4210 regressing to 9.3438 is the most concerning number this session — not catastrophic, but it confirms the 89-epoch window is being poisoned by consistently high post-cord/post-S13 averages. S14 is likely incoming. On the positive side: chip ATL at 8.6852 shows descent capacity at the batch level, and LNG 31% + GEN 2% are the first clear signs of stream B expert differentiation. ep4211 is closing as of screenshot (batch 292/300) — its average is the next key number.
+
+---
+
 ## FN191 · 2026-05-27T18:06:34Z · ep4210 (26L) BATCH 67 · NEW ATL 8.6955 · ep4208=9.3300 ep4209=9.3206 · TTL-NASH · DIVWD zeros · tail-chase risk confirmed
 
 **State:** RUNNING · EP 4210 (26L) · BATCH 67/300 · ATL **8.6955** · GATE red×2
