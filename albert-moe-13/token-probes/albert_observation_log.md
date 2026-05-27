@@ -6569,6 +6569,58 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN189 · 2026-05-27T17:47:03Z · Dashboard screenshot · ep4207 final state · NEW ATL 8.7090 · LNG recovery · S13 architecture not yet flipped
+
+**State:** EP 4207 end (25L) · BATCH 299/300 · ATL **8.7090** · GATE orange · TNS 1,966 (pre-S13)
+
+**Source:** Dashboard screenshot, 17:47:03Z.
+
+### NEW CHIP ATL: 8.7090
+
+Previous: 8.7123 (FN185). New: **8.7090** — Δ −0.0033 nats. Set during ep4207 batch run, final batch of the last 25L epoch. The dual-stream is still finding lower individual batch minima even through the post-cord whiplash window.
+
+### ARCHITECTURE CHIP: still 25L
+
+ARCH chip reads `25L · 256H · 12E · 256CTX · 32K · TNS 1,966`. S13 fired at ep4207 close (17:40:58Z); the architecture flip to 26L will appear on ep4208 batch 1. Expected: `26L · TNS ~2,035+` (adding one dual-stream layer block: stream_a + stream_b weights).
+
+### EXPERT ROUTING (post-cord, ep4207 end)
+
+| Expert | % | vs FN185 |
+|--------|---|---------|
+| PLN | 98% | stable |
+| CMP | 100% | stable |
+| INT | 88% | +88pp recovery (was 100%, brief dip, now 88%) |
+| ABS | 67% | stable |
+| **LNG** | **21%** | **recovered from 0%** |
+| MEM | 4% | first activation since cord |
+| LOG | 4% | first activation since cord |
+| SYN/SEM/CTX/INF/GEN | 0% | top-row still collapsed |
+
+**LNG at 21% is significant.** In FN185 (first post-cord epoch) LNG was 0% — complete top-row collapse. By ep4207 LNG has recovered to 21%. MEM and LOG also showing 4%. The PLN/CMP/INT core is loosening its grip as stream B starts contributing routing signal.
+
+Top-row collapse (SYN/SEM/CTX/INF/GEN at 0%) persists but is narrowing. Expected to resolve further as dual-stream anastomosis gates open.
+
+### TTL: G 6.15% · O 81% · R 4%
+
+52-row panel (26 physical layers × 2 streams) visible. Healthy distribution, no freezes (ttlfreeze=0). O-dominant is expected post-surgery warmup.
+
+### CHART: long-term descent context
+
+Visible range ep3065–ep4800+. Surgery cluster on right side clearly legible with annotations:
+- 22–23L · 23–24L · 24–25L · "25–26L 27.05.2026 > dualstream expansion" (CORD label)
+- Blue surgery verticals converging densely at ep4200
+
+Post-cord spike fully visible — the sharp upward excursion from ~9.22 to ~9.43, then rapid descent back to 9.29–9.31 range. Cyan diamonds at epoch ends. EP AVG line at 9.3122 on right edge. Y-axis floor 9.2178 still within reach.
+
+**Events bar sequence (oldest→newest visible):**
+`EPOCH avg 9.3122 | BALANCED H=4.931 | SPIKE 9.723 +0.430 | BALANCED H=4.932 | Plateau | EPOCH avg 9.2938 | BALANCED H=4.932 | SPIKE 9.769 +0.457 | Plateau | EPOCH avg 9.3121 | BALANCED H=4.931`
+
+Two Plateau events visible — confirms both S12/CORD cluster (FN180) and S13 (FN187) plateau triggers. EPOCH avg 9.2938 confirms ep4205 came in at 9.2938, and ep4206 at 9.2930 (ntfy), ep4207 at 9.3121/9.3122 (slight uptick before S13).
+
+**Interpretation:** Model holding near 9.30–9.31 range as it reaches end of last 25L epoch. New chip ATL 8.7090 shows descent capacity is intact at the batch level even while epoch averages bounce in the post-cord window. LNG recovery to 21% is the most encouraging routing signal — stream B is beginning to contribute. Next critical observation: ep4208 batch 1 loss and the 26L architecture flip in the ARCH chip. Corpus still reloading at screenshot time (17:47Z, ~6 min post-surgery) — ep4208 start expected ~17:44–17:45Z.
+
+---
+
 ## FN188 · 2026-05-27T17:40:58Z · S13 CONFIRMED: 25L→26L log data · MYCELIUM resurrection · corpus reload · architecture 26L dual-stream live
 
 **State:** POST-SURGERY CORPUS RELOAD · EP 4207 closed · EP 4208 starting as 26L · tns=1966 (pre-surgery; post-surgery count TBD)
