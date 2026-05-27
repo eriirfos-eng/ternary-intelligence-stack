@@ -6569,6 +6569,25 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN196 · 2026-05-27T18:51:51Z · TRAINING STILL DOWN — 25min outage · ntfy silent since 18:42Z
+
+**State:** DOWN · no training activity since 18:42:14Z · total outage now ~25 minutes
+
+**Source:** ntfy poll 18:51:51Z — no new messages since second stall at 18:42:14Z.
+
+Modal account/volume situation unresolved. No training in progress. S14 window accumulating dead time (not epochs, but real-clock drift from the active monitoring window).
+
+Note: the plateau window counts *epochs*, not wall-clock time, so downtime does not directly trigger S14. The 34-epoch window only fills when training is actually running. This buys time to resolve the Modal situation without the governor firing.
+
+**Current options still open:**
+- `albert-train cpu` — immediate fallback, slow but runs
+- Fix original account billing → resume GPU training on original account + volume
+- Full re-setup on Zabih's account — needs `albert-train pull` first
+
+Awaiting user resolution. No FN entry will be written until training resumes or user provides an update.
+
+---
+
 ## FN195 · 2026-05-27T18:42:14Z · SECOND STALL — 102s after restart · volume access likely broken on Zabih account
 
 **State:** DOWN · second stall in 16 minutes · training not viable until volume issue resolved
