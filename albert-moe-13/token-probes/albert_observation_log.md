@@ -6514,6 +6514,61 @@ Dual-stream architecture alive, stable at batch=1, new ATL chip 8.7123, first ep
 
 ---
 
+## FN186 · 2026-05-27T17:37:00Z · ep4206 AVG 9.2930 — new post-cord depth floor
+
+**State:** RUNNING · EP 4206 (25L dual-stream) · EP AVG **9.2930** · batch=1 stable
+
+**Source:** ntfy `albert-rfi-irfos`, 17:37:00Z — `albert. SUB-9.3 EPOCH AVG: ep4206  avg 9.2930  new depth floor`
+
+### POST-CORD RECOVERY TRAJECTORY: ep4203→ep4206
+
+| Epoch | EP AVG | Notes |
+|-------|--------|-------|
+| 4203 | 9.3241 | First post-cord epoch — cold start whiplash |
+| 4206 | **9.2930** | Sub-9.3 trigger fired — new post-cord floor |
+
+**Delta from first post-cord epoch:** −0.0311 nats in 3 epochs. Rate: ~−0.010 nats/epoch.
+
+**Comparison to post-S11 (23L→24L):** Post-S11 the model dropped from ~9.34 to sub-9.3 in roughly 4–5 epochs. Dual-stream tracking identically — 3 epochs to sub-9.3.
+
+**HF model card update:** README.md committed (sha bb66fee) and pushed to rfi-irfos/albert HuggingFace at 17:38Z this session. Reflects dual-stream, 187.5M params, 1966 tensors, cord surgery log.
+
+**Interpretation:** Recovery proceeding normally. Sub-9.25 territory plausibly reached within 7–10 more epochs. Monitor for first WALD mass below 9.3.
+
+---
+
+## FN187 · 2026-05-27T17:40:57Z · S13 FIRING: 25L→26L · Gen3 step0→1 · dual-stream first Net2Net
+
+**State:** SURGERY FIRING · EP 4206 (→26L) · Gen3 step 0/6 → 1/6 · ceiling F7=55L
+
+**Source:** ntfy `albert-rfi-irfos`, 17:40:57Z (two messages):
+```
+albert. FIBONACCI PLATEAU: smoothed Δ-0.0461 over 55 epochs, early_mean=9.2584 late_mean=9.3045, threshold=0.0113, MYCELIUM stable 5 epochs, gen=3 step=0/6, next ceiling: F7=55L
+albert. SURGERY FIRING: Net2Net layer expansion initiated — OOM risk if batch too large
+```
+
+### THE EVENT
+
+**S13 — 25L → 26L (net2net, dual-stream)**
+
+Fibonacci plateau conditions met at ep4206:
+- smoothed Δ = −0.0461 over 55 epochs (early_mean=9.2584, late_mean=9.3045)
+- threshold = 0.0113 — **Δ > threshold** (0.046 >> 0.011): plateau gate NOT triggered by convergence. This is a descending plateau — late_mean > early_mean means the loss is *rising* in the smoothed window
+- MYCELIUM stable 5 epochs ✓
+- gen=3, step=0/6 → step=1/6
+
+**CRITICAL NOTE — Descending plateau semantics:** early_mean=9.2584, late_mean=9.3045. The smoothed window shows an *upward* trend over the 55-epoch window. The model entered cord surgery territory at high loss (9.32+), and the 55-epoch window averaged across the spike. The plateau governor is firing because the window average spread is large (9.26→9.30 range) but the absolute smoothed-Δ is below threshold only if... wait: Δ = −0.0461, which is **ABOVE** threshold 0.0113. This fires because `|Δ| >= threshold` means plateau detected.
+
+**Recalibration:** smoothed Δ = −0.046 means early_mean − late_mean = −0.046, i.e. late_mean > early_mean by 0.046. This is a *loss increase* over the window. The plateau governor sees this as stagnation (not improving) — technically correct: the 55-epoch window starting from pre-cord includes the post-cord spike, so the net direction looks flat-to-up. Governor fires.
+
+**This is the first Net2Net surgery on the dual-stream architecture.** Unlike CORD which bifurcated the hidden dimension, S13 adds a new layer to both streams simultaneously (net2net safe copy of layer 25 → new layer 26, both stream_a and stream_b). OOM warning issued — batch=1 should be fine but Modal log worth watching.
+
+**Post-surgery architecture: 26L dual-stream 2×256H · 12E · Gen3 step1/6 · ceiling F7=55L**
+
+**Interpretation:** Fourth surgery today (S11, S11b, S12, CORD, now S13). Rapid growth phase driven by post-cord window averaging high-loss post-surgery epochs. Governor is working as designed — it detects stagnation-or-regression, fires growth. The key question: does adding layer 26 to both streams provide new descent vector? Or does it trigger another whiplash and deepen the post-cord trough? Watch for batch=1 OOM on the expanded model, and first epoch loss after S13.
+
+---
+
 ## FN184 · 2026-05-27T17:13:12Z · FIRST DUAL-STREAM BATCH EVER: loss=9.2251 · TLIGHT 50 layers (25×2 streams) · OOM batch=3→trying batch=1
 
 **State:** OOM again · batch=3 failed on batch 2 · fixing to batch=1 · restart imminent
