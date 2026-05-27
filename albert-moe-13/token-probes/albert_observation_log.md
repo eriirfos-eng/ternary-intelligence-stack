@@ -6437,6 +6437,47 @@ Mass now 0.010 above previous oscillation ceiling. Not alarming in isolation —
 
 No new WALD events in 30 minutes since ep4188 (15:37Z). Training assumed continuing; WALD silence could mean mass stabilized below WALD trigger thresholds or routing normalizing. Last known mass 9.241 (FN176). No escalation — silent periods of this length have occurred before (e.g., FN159/160 false alarm). Awaiting screenshot or next ntfy event.
 
+## FN182 · 2026-05-27T17:08:34Z · TRAINING DOWN — post-cord OOM; batch 6→3 fix committed; restart firing now
+
+**State:** Training NOT running · ntfy silent 15m+ · albert-train being restarted now
+
+**Source:** ntfy poll (empty), user confirmed restart firing at 17:08Z.
+
+**Timeline since FN181:**
+- 16:59:55Z — gate resets fired (stream_a + stream_b MoE gate weights → kaiming-uniform std=0.0884), gate-diversity scale=0.300, ttlfreeze config printed
+- 16:59:55Z — ARCH 25L 256H 12E 256CTX 32000V confirmed in log
+- 16:59:55Z — `CUDA_ERROR_OUT_OF_MEMORY` — Modal run ended before first batch
+- batch_size=6 + dual-stream 2×256H activation memory exceeded T4 16GB
+
+**Fix applied and committed:**
+- `train_modal.py`: `--batch-size=6` → `--batch-size=3`
+- `train_bible.rs`: one-shot grad-diag added (prints block/lm grad coverage on first backward)
+- Volume paths verified: all `/albert/models/` — no dead-path risk
+- Binary rebuilt clean (0 errors, 11 warnings)
+- Commit: "training: halve batch size 6→3 for dual-stream VRAM fit; add grad-diag"
+
+**Expected behavior on restart:**
+- Corpus reload (stage_13 is large — budget 8–10 min for full load)
+- Gate resets will fire again (stream_a + stream_b MoE gates)
+- GRAD-DIAG line on first backward: `[GRAD-DIAG] blocks: N have grad / M None`
+- First post-cord EPOCH_SUMMARY — the historic data point
+
+**Restart confirmed — screenshot 17:08:27Z:**
+- `albert-train --detach` fired
+- Batch history merged: 1,359,489 total points (was 915,229, +444,260 from Downloads)
+- Remaining gaps: 867 epochs — batch history continuity maintained
+- Modal app initialized: ap-A5A8FcMKtB2G4hBZ57iLFN
+- Dashboard ARCH chip: **25L · 256H · 12E · 256CTX · 32K** — first time 25L shown in header
+- All panels in WAITING FOR TELE DATA / LOADING HISTORY state — corpus loading on Modal
+- No immediate OOM — batch=3 appears to have cleared the init crash
+
+**What to watch:**
+1. First batch data arriving — clears OOM at batch=3 definitively
+2. GRAD-DIAG line: `[GRAD-DIAG] blocks: N have grad / M None` on first backward
+3. Post-cord EP AVG regression depth
+
+---
+
 ## FN181 · 2026-05-27T16:53:43Z · ep4202 · BATCH 299/300 — one batch before first post-cord epoch close; corpus stage 13 still loading
 
 **State:** Active · EP 4202 (24L label, 25L dual-stream in memory) · BATCH 299/300 · EP AVG 9.2349 · ATL 8.8022
