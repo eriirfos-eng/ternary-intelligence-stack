@@ -6437,6 +6437,54 @@ Mass now 0.010 above previous oscillation ceiling. Not alarming in isolation —
 
 No new WALD events in 30 minutes since ep4188 (15:37Z). Training assumed continuing; WALD silence could mean mass stabilized below WALD trigger thresholds or routing normalizing. Last known mass 9.241 (FN176). No escalation — silent periods of this length have occurred before (e.g., FN159/160 false alarm). Awaiting screenshot or next ntfy event.
 
+## FN183 · 2026-05-27T17:11:09Z · DUAL-STREAM TRAINING LIVE · batch=3 cleared OOM · 451M token corpus · evolution restored gen=3 step=0/6 ceiling F7=55L
+
+**State:** TRAINING LIVE · 25L dual-stream · batch=3 · corpus loaded · first batches imminent
+
+**Source:** ntfy TRAINING STARTED 17:10:25Z + user terminal paste 17:10:26–41Z.
+
+### BATCH=3 CLEARED OOM — dual-stream training is running.
+
+Full startup log:
+```
+[modal] build OK — /tmp/cargo-target/release/train_bible
+[modal] cmd: --batch-size=3 --gate-diversity=0.3 --lb-weight=0.0 --div-weight=0.001
+[evo-guard] OK — fib_index=6 window=21 entries=8
+[17:10:26] Device: CUDA
+[evolution] Calibrated to 25L — ceiling F6=34L, window=34 epochs gen=1 step=0/6 threshold=0.0200
+[evolution] Restored — F7=55L, window=55 epochs, cooldown=1, gen=3 step=0/6, threshold=0.0113
+[17:10:41] Corpus cache hit — 451418681 tokens loaded instantly
+[17:10:41] Total corpus: 451418681 tokens (stages ≤25)
+[17:10:41] Arch: 25L · 256H · 12E · 256CTX | Vocab: 32000
+```
+
+### Evolution state — cord surgery promoted Fibonacci ceiling:
+- S12 reported Gen 3 step 1/6, ceiling=34L, window=89 at surgery time
+- Restored from checkpoint: **gen=3 step=0/6, ceiling F7=55L, window=55 epochs**, cooldown=1, threshold=0.0113
+- Cord surgery reset step counter (0/6) and advanced ceiling: 34L → **55L**
+- Next depth surgery won't fire until 25L plateaus over 55 consecutive epochs
+- Path to 55L = 30 more 1-layer surgeries — Fibonacci governor will pace these
+
+### Corpus expansion confirmed — 451M tokens:
+- Pre-cord corpus was ~stages 1–10
+- Post-cord stages 11–13 added: wikipedia_en_full (438M chars), pubmed (84M), arxiv_abstracts, eurlex, science_stackexchange, wikisource, gutenberg_books (152M), instruction_dialogue (42M)
+- Total tokens jumped from ~7M (pre-cord estimate) to **451,418,681** — roughly 64× expansion
+- Cache hit means tokenization was done during the long load window (16:44–17:10Z)
+- First dual-stream run sees a fundamentally different data distribution than any previous training
+
+### Training config active:
+- lb_weight=0.0 (LB gradient disabled)
+- div_override=1.00e-3 (diversity loss active, schedule bypassed)
+- gate-diversity=0.3 (asymmetric logit bias)
+- ttlfreeze: ema_alpha=0.02 (~50-step window), burst_threshold=5×, freeze_steps=50
+
+### What arrives next:
+1. First batch loss numbers — will be high (dual-stream cold start)
+2. `[GRAD-DIAG]` line showing stream_b gradient coverage
+3. First EPOCH_SUMMARY — the historic first post-cord epoch avg
+
+---
+
 ## FN182 · 2026-05-27T17:08:34Z · TRAINING DOWN — post-cord OOM; batch 6→3 fix committed; restart firing now
 
 **State:** Training NOT running · ntfy silent 15m+ · albert-train being restarted now
