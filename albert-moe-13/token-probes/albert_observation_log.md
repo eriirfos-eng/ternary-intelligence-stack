@@ -1,5 +1,5 @@
-# albert. Training Observation Log — v3.0 (12L → 21L, ongoing)
-**Model:** albert. v3.0 · 21L · 256H · 12E · 32k vocab · ternary STE  
+# albert. Training Observation Log — v3.0 (12L → 22L, ongoing)
+**Model:** albert. v3.0 · 22L · 256H · 12E · 32k vocab · ternary STE  
 **Log began:** 2026-05-20T22:03Z (ep2492, post-Surgery-6 overnight watch)  
 **Format:** Field Notes (FN) — timestamped per observation, numbered chronologically. Everything goes in: good, bad, tiny changes, mechanistic insights, anomalies.  
 **Scientist:** Claude Sonnet 4.6 · RFI-IRFOS  
@@ -5367,3 +5367,60 @@ PLN 100% / CMP 96% / INT 67% / ABS 63% / LOG 22% / LNG 17% / INF 11% / GEN 6% / 
 **Events:** No WALD, no SURGERY. All events are EPOCH closes.
 
 **Assessment:** Primary fragmentation tick: ABS collapsed −32pp and PLN retreated −10pp simultaneously — no single secondary fills the gap. MEM dropped to 0%, CTX to 4%. CMP holds 100% as sole stable anchor. Event bar shows the model briefly touched 9.3031 (ep~4002) before reverting to the 9.3234 plateau — the improvement window did not hold. Running at 9.3228 (79% through ep4006) is back in plateau territory. Gradient compressing further to 0.0021, approaching the 0.002 floor seen pre-surgeries. Primary routing fragmentation + gradient compression + plateau lock is the exact pre-surgery signature seen before S6/S7. Surgery gate armed; watch for plateau-gated trigger if this pattern holds through another 2-3 epoch closes.
+
+---
+
+## FN148 · 2026-05-27T02:44:19Z · ep4066 · Surgery gate stalled — root cause found and fixed
+
+**State:** ep4066 · batch 31/300 · EP-Avg (running) **9.2900** · ATL header 8.8104 · BEST 9.228452 (Modal) · gap to pre-S9 ATL 9.2847 = **−0.0014 (cleared)**
+
+**Source:** Dashboard screenshot (Image #1, session). TNS 1,522. Time 02:44:19.
+
+**Expert routing (last 60 steps) — vs FN147:**
+| Expert | FN148 | FN147 | Δ |
+|---|---|---|---|
+| PLN | 100% | 87% | **+13%** |
+| CMP | 78% | 100% | **−22%** |
+| INT | 66% | 57% | +9% |
+| ABS | 68% | 44% | **+24%** |
+| LNG | 40% | 14% | **+26%** |
+| LOG | 14% | 18% | −4% |
+| GEN | 18% | 10% | +8% |
+| CTX | 13% | 4% | +9% |
+| INF | 4% | 10% | −6% |
+| MEM | 4% | 0% | +4% |
+| SYN | 2% | 14% | −12% |
+| SEM | 0% | 6% | −6% |
+
+**TTL:** G 6.18% / O 78% / R 5%
+
+**Gradient norm:** global |g| = 0.0021 (continued compression)
+
+**Surgery gate:** MYC_STABLE ✓(160) · PLATEAU ✓(0.0114 / < 0.020) · since_best 291 · wald_fill 6.2%
+
+**Events:** No SURGERY fired despite both gate conditions green. Investigation triggered.
+
+---
+
+### Root Cause: Plateau Detection Bug (2026-05-27 — fixed this session)
+
+**What broke:** `should_evolve()` in `evolution.rs` compared `first_in_window − latest` (single oldest vs single newest epoch loss). The model oscillates ±0.030 nats (9.30–9.33 range). The plateau threshold in Generation 2 is 0.015 (decayed from 0.020 × 0.75). Any two single-point endpoints 34 epochs apart in an oscillating loss landscape will routinely differ by > 0.015 — so the gate could **never fire** regardless of how long the plateau ran.
+
+**Why the dashboard showed PLATEAU ✓:** Dashboard hardcodes 0.020 as the display threshold. It doesn't read the actual generational threshold from the evo state. It also smooths the comparison internally. The dashboard was right that the plateau is real; the EvolutionManager was computing it differently and always getting blocked.
+
+**The fix (evolution.rs `should_evolve`):** Replaced point-to-point comparison with quarter-window means:
+- `first_mean` = mean of the oldest ¼ of the window (noise-averaged)
+- `last_mean` = mean of the most recent ¼ of the window
+- `diff = first_mean − last_mean`
+- Fire when `diff < plateau_threshold` (not `diff.abs() < threshold`)
+
+With oscillation ≈ 0.030 nats, quarter-mean diff ≈ 0.001–0.003 nats → well below 0.015 → surgery fires next eligible epoch.
+
+**Verification:** All 12 evolution unit tests pass with the new logic. Flat-loss `fill_flat` tests: diff=0 → still fires. Descending-loss test: diff≈0.20 → correctly suppressed.
+
+**Deploy:** Fix committed and pushed. Training restarted with new binary. Surgery expected to fire within 1–2 epochs of this restart.
+
+---
+
+**FN148 Assessment:** The 291-epoch post-S9 plateau (ep3775–ep4066) was a gate malfunction, not a training stall. The model's loss floor is confirmed at 9.2833 (below pre-S9 ATL), capacity is exhausted at 22L, routing is healthy with PLN/ABS recovering to primary positions after FN147 fragmentation. Surgery to 23L should proceed without incident once gate fires.
+

@@ -184,8 +184,9 @@ impl EvolutionManager {
     /// Returns true if the architecture should grow by one layer.
     ///
     /// Mastery fires immediately at any depth.
-    /// Plateau fires when: (1) full Fibonacci window filled, (2) loss delta within threshold,
-    /// AND (3) MYCELIUM hot-layer has been stable for ≥ mycelium_stability_threshold epochs.
+    /// Plateau fires when: (1) full Fibonacci window filled, (2) smoothed loss delta within
+    /// threshold (quarter-window means, noise-resistant), AND (3) MYCELIUM hot-layer stable
+    /// ≥ mycelium_stability_threshold epochs.
     pub fn should_evolve(&self, current_layers: usize, mycelium_stable_epochs: usize) -> bool {
         if current_layers >= self.max_layers { return false; }
 
@@ -217,25 +218,39 @@ impl EvolutionManager {
             return false;
         }
 
-        let first = *self.loss_history.front().unwrap();
-        let diff  = first - latest;
+        // Robust plateau: compare the mean of the earliest quarter of the window against
+        // the mean of the most recent quarter. Single-point first-vs-last was too sensitive
+        // to epoch-to-epoch oscillation (~0.030 nats) relative to the plateau threshold
+        // (~0.015 after gen-2 decay), causing the gate to stall indefinitely on a true
+        // structural plateau. Quarter-means smooth the noise while still detecting genuine
+        // descent (model actually improving → first_mean << last_mean → diff > threshold).
+        let quarter = (self.loss_history.len() / 4).max(1);
+        let first_mean: f32 = self.loss_history.iter().take(quarter).sum::<f32>()
+            / quarter as f32;
+        let last_mean: f32 = self.loss_history.iter().rev().take(quarter).sum::<f32>()
+            / quarter as f32;
+        // diff > 0 → improvement (older was worse); diff < 0 → model got worse (also plateau).
+        let diff = first_mean - last_mean;
 
-        if diff.abs() < self.plateau_threshold {
+        if diff < self.plateau_threshold {
             if mycelium_stable_epochs < self.mycelium_stability_threshold {
                 println!(
-                    "[evolution] Plateau detected (Δ{:.4} over {} epochs) but MYCELIUM \
+                    "[evolution] Plateau detected (smoothed Δ{:.4} over {} epochs, \
+                     early_mean={:.4} late_mean={:.4}) but MYCELIUM \
                      hot-layer only stable {}/{} epochs — routing hierarchy not yet \
                      crystallised. Surgery suppressed.",
-                    diff.abs(), history_len,
+                    diff, history_len, first_mean, last_mean,
                     mycelium_stable_epochs, self.mycelium_stability_threshold,
                 );
                 return false;
             }
             println!(
-                "--- FIBONACCI PLATEAU TRIGGERED (Δ{:.4} over {} epochs, \
+                "--- FIBONACCI PLATEAU TRIGGERED (smoothed Δ{:.4} over {} epochs, \
+                 early_mean={:.4} late_mean={:.4}, threshold={:.4}, \
                  MYCELIUM stable {} epochs, gen={} step={}/{}, \
                  next ceiling: F{}={}L) ---",
-                diff.abs(), history_len, mycelium_stable_epochs,
+                diff, history_len, first_mean, last_mean, self.plateau_threshold,
+                mycelium_stable_epochs,
                 self.generation, self.gen_step, ARC_LENGTH,
                 self.fib_index + 1, self.max_layers,
             );
