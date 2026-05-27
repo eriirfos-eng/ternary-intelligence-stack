@@ -5858,3 +5858,46 @@ No new epoch ATL fired. WALD mass range 9.226–9.230 over 5 epochs = tight cons
 - Per-layer gradient: L22 leading (top layer, recently added in S10 = expected)
 
 **Lesson:** ntfy is a secondary monitoring channel, not ground truth. Dashboard first.
+
+## FN162 · 2026-05-27T09:03:56Z · ep4114 · Post-S10 exploration band 9.24–9.26; LNG+INT surge in new layers
+
+**State:** Active · EP 4114 (23L) · BATCH 74/300 (early in epoch) · BEST 9.2138 (ep4098, unchanged) · ATL batch 8.7249 (10.97%)
+
+**Source:** Dashboard screenshot localhost:8888, 09:03:56Z.
+
+**Epoch avg sequence (event bar, newest→oldest):**
+| Epoch | EP-Avg |
+|-------|--------|
+| ep4113 (last completed) | 9.2609 |
+| ep4112 | 9.2612 |
+| ep~4111-4112 | 9.2534 |
+| ep4111 | 9.2417 (confirmed FN161) |
+
+**EP TAVG (chart trailing avg):** 9.2609 — above BEST 9.2138 by +0.047; below pre-S9 ATL 9.2847 by −0.024.
+
+**Gap to pre-S9 ATL 9.2847:** EP TAVG cleared by −0.024 · BEST cleared by −0.071.
+
+**TTL:** G=6.15% · O=80% · R=5%  
+R% crept from 3% (ep4111) to 5% — minor noise increase, well within normal post-surgery range.
+
+**Expert routing (major shifts since ep4111):**
+| Expert | ep4111 | ep4114 | Δ |
+|--------|--------|--------|---|
+| CMP    | 100%   | 100%   | stable |
+| PLN    | 82%    | 94%    | +12pp |
+| INT    | 70%    | 95%    | +25pp ↑↑ |
+| LNG    | 36%    | 70%    | +34pp ↑↑ |
+| ABS    | 53%    | 52%    | stable |
+| LOG    | 13%    | 29%    | +16pp ↑ |
+| SEM    | 10%    | 5%     | −5pp |
+| INF    | 4%     | 0%     | dormant |
+| CTX    | 0%     | 10%    | re-engaged |
+| MEM    | 8%     | 8%     | stable |
+
+LNG and INT surging together is the S10 signature: the new L22/L23 layers are routing heavy language-integration traffic. CTX re-engaging (was 0% at ep4111) suggests the new capacity is being used for context-sensitive processing.
+
+**Per-layer gradient:** global |g|=0.0026 (up from 0.0023 at ep4111). L18 leading, L22 secondary — gradient distribution spreading down from top layers into mid-network.
+
+**Gate:** CLOSED (red). Plateau gate not yet triggered. Normal post-surgery — model needs to plateau before next surgery can fire.
+
+**Interpretation:** Post-S10 exploration. The model climbed from ep4111's 9.2417 to ~9.26 band over ep4112–4114 — temporary rebound after the surgery low, classic whiplash recovery pattern. LNG and INT routing surge (+34pp, +25pp) is the new layer pair specializing: language-integration pathway is the dominant new capacity. BEST 9.2138 holds. Next watch: does EP-avg resume descent from 9.26 band, or does it consolidate here before next dive?
