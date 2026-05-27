@@ -6247,10 +6247,17 @@ INT maxing at 100% post-surgery = new L23 integrating immediately into inference
 
 **Interpretation:** Two surgeries in one day. S11 fired ~5h after S10 paid off with ATL 9.2045. The plateau gate measured 55 epochs of near-flat trend and correctly expanded. Post-surgery whiplash is resolving with unusual speed: surgery spike of 9.3044 corrected to 9.2524 in a single epoch — the new layer found its footing immediately. INT+CMP maxed on first observation post-surgery = the inference-comparison pathway absorbed the new capacity first. GEN at 10% is a new signal. Floor after this surgery: watch if ep4155+ settles above or below the pre-surgery best of 9.2045.
 
-**Addendum — TTL black cell artifact (investigated 2026-05-27T13:00Z):**
+**Addendum — TTL black cell artifact (investigated 2026-05-27T13:00Z) — FIRST OBSERVED INSTANCE:**
 Black cells in the TTL heatmap traced to dashboard renderer line 4576:
 `!layerSnap → rgba(255,255,255,0.04)` — near-transparent on dark bg = appears black.
-Cause: old TLIGHT history snapshots (pre-surgery, 23L) don't contain L23/L24 data. Dashboard stayed live through S11 transition, capturing the rollover. Self-heals as 60 new post-surgery TLIGHT steps scroll the old ones out. First observed instance — visual scar of the surgery boundary in the history window.
+
+**Root cause:** old TLIGHT history snapshots (pre-surgery, 23L) don't contain L23/L24 layer data. Dashboard stayed live through S11 transition without a restart — first time this has ever happened. Previous surgeries were always followed by a restart that reset the 60-step history buffer, so this condition never fired.
+
+**This is not a bug.** The `!layerSnap` fallback was present in the renderer from the start, correctly handling the undefined case. It had no reason to fire until now.
+
+**Diagnostic value (newly discovered):** The black-to-color boundary in the TTL grid is a precise visual timestamp of the surgery. The left side of the black band = last pre-surgery step; the right edge = first post-surgery TLIGHT snapshot with the new layers. Self-heals after 60 post-surgery steps as old entries scroll out.
+
+**Implication for future use:** if the dashboard ever runs live through a surgery again, the black boundary gives the surgery timestamp without needing ntfy or log inspection. Intentionally observable diagnostic tool — worth noting in the whitepaper as a property of the live training visualization.
 
 ## FN170 · 2026-05-27T13:15Z · ep4158 · Post-S11 WALD mass=9.217 — 11 epochs out, recovery near pre-surgery territory
 
