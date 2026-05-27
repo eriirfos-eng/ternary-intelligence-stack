@@ -44,7 +44,7 @@ You cited loss reaching ~9.79 at epoch ~1553 from an old `convergence_log.md`. C
 - WALD self-calibration event documented: dead_low threshold 9.25 → 9.00
 
 **5. `@sparseskip` — not incremental MoE sparsity.**  
-The report classifies @sparseskip as *"likely incremental relative to MoE."* @sparseskip is a **patent-pending** sparse matmul primitive (Austrian Patent Office, application A50296/2026) that operates at the hardware instruction level — zero-weight positions in ternary tensors are never loaded into the execution pipeline. It is not the same as top-k routing gates. The 83 tok/s CPU inference figure is benchmarked against this primitive, not against standard MoE routing. This is the core inference efficiency claim and the subject of active IP protection.
+The report classifies @sparseskip as *"likely incremental relative to MoE."* @sparseskip is a **patent-pending** sparse matmul primitive (Austrian Patent Office, application A50296/2026 — TIS platform patent covering 10 claims; @sparseskip = Claim 3) that operates at the hardware instruction level — zero-weight positions in ternary tensors are never loaded into the execution pipeline. It is not the same as top-k routing gates. The 83 tok/s CPU inference figure is benchmarked against this primitive, not against standard MoE routing. This is the core inference efficiency claim and the subject of active IP protection.
 
 ---
 

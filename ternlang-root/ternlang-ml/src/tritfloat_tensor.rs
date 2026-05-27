@@ -583,7 +583,7 @@ mod tests {
     /// predicts 32 × (0.25 + 0.25 × 0.75) = 14 skips. Any implementation drift
     /// that changes how zeros are detected or counted will break this test.
     ///
-    /// Patent reference: @sparseskip combined activation+weight variant, A50296/2026.
+    /// Patent reference: A50296/2026 (TIS platform patent, 10 claims); @sparseskip combined activation+weight variant = Claim 3.
     #[test]
     fn sparseskip_formula_invariant() {
         use crate::{TritMatrix, Trit};

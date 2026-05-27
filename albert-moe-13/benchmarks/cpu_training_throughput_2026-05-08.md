@@ -173,4 +173,4 @@ The batch timing field (`TTTms`) gives per-batch wall-clock duration inclusive o
 - AdamW optimizer step
 - LR scheduler step
 
-**Patent:** @sparseskip sparse routing — A50296/2026 (pending)
+**Patent:** A50296/2026 pending — TIS platform patent, 10 claims; @sparseskip (Claim 3) sparse routing demonstrated here

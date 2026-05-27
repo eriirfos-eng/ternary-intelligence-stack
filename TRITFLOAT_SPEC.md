@@ -3,7 +3,7 @@
 **Author:** RFI-IRFOS  
 **Date:** 2026-05-21  
 **Status:** Confidential — IP Protection Record  
-**Patent reference:** see A50296/2026 (@sparseskip, parent application)
+**Patent reference:** see A50296/2026 (TIS platform patent, 10 claims; @sparseskip = Claim 3, parent application)
 
 ---
 
@@ -49,7 +49,7 @@ Quantized formats reduce bit-width for memory efficiency but carry no uncertaint
 
 ### 2.6 BitNet b1.58 and ternary weight quantization
 
-BitNet b1.58 (arxiv 2402.17764) quantizes weights to {-1, 0, +1} and applies a scalar beta = mean(|W|) to restore activation scale. The @sparseskip optimization (RFI-IRFOS, patent A50296/2026) skips zero-weight positions at the matrix-multiply level for linear time savings proportional to weight sparsity.
+BitNet b1.58 (arxiv 2402.17764) quantizes weights to {-1, 0, +1} and applies a scalar beta = mean(|W|) to restore activation scale. The @sparseskip optimization (RFI-IRFOS, patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3) skips zero-weight positions at the matrix-multiply level for linear time savings proportional to weight sparsity.
 
 **TritFloat extends this:** @sparseskip is applied at the **activation level** (not only weight level) via the TritFloat phase field. A zero-phase activation skips its MAC regardless of the weight. Additionally, the confidence field gates MoE routing decisions, removing the need for a learned gating network.
 
@@ -192,7 +192,7 @@ effective_skip_rate = 1 − (1 − weight_sparsity) × (1 − activation_sparsit
 
 At 60% weight sparsity and 40% activation sparsity: skip rate ≈ 76%.
 
-### 5.3 Relation to parent @sparseskip patent (A50296/2026)
+### 5.3 Relation to parent application A50296/2026 (@sparseskip = Claim 3, TIS platform patent)
 
 The parent application covers weight-level zero-skip in the TritMatrix sparse matmul kernel. The present contribution extends the mechanism:
 

@@ -1,6 +1,6 @@
 # @sparseskip — Benchmark Methodology & Measured Results
 
-**Patent Pending A50296/2026 | RFI-IRFOS | 2026-05-09**
+**Patent Pending A50296/2026 — TIS platform, 10 claims; @sparseskip = Claim 3 | RFI-IRFOS | 2026-05-09**
 
 ---
 
@@ -96,4 +96,4 @@ Historical benchmark results are archived in `benchmarks/bench_v3.0_*.txt` (28+ 
 
 ## Patent Reference
 
-**A50296/2026** covers the `@sparseskip` annotation and `TSPARSE_MATMUL` opcode as a method for zero-overhead sparse execution in ternary neural network inference. The expert-level skip demonstrated here is one application. Element-level and layer-level skip are additional claims within the same filing.
+**A50296/2026** is a TIS platform patent covering 10 claims filed with the Austrian Patent Office. The `@sparseskip` annotation and `TSPARSE_MATMUL` opcode (Claim 3) cover zero-overhead sparse execution in ternary neural network inference. The expert-level skip demonstrated here is one application of Claim 3. Element-level and layer-level skip are additional aspects of Claim 3 within the same filing. Other claims cover ternary data processing (Claim 1), BET encoding (Claim 2), MoE-13 routing (Claim 5), Axis-6 safety veto (Claim 6), and more.

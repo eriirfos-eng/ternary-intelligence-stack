@@ -177,5 +177,5 @@ This is the industrial research argument: @sparseskip doesn't just make training
 
 The CPU result is measurement. The GPU result is the forecast that measurement implies.
 
-**Patent:** @sparseskip sparse routing primitive — A50296/2026 (pending)  
+**Patent:** A50296/2026 pending — TIS platform patent, 10 claims; @sparseskip (Claim 3) sparse routing primitive demonstrated here  
 **Contact:** RFI-IRFOS · contact@ternlang.com · ternlang.com

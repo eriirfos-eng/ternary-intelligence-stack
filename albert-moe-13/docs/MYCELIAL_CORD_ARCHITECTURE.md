@@ -4,7 +4,7 @@
 **Prepared by:** RFI-IRFOS  
 **Date:** 2026-05-14  
 **Status:** Implemented (commit 9c1cc8e23, 2026-05-14) — not yet activated; awaiting width wall signal  
-**Patent basis:** Extension of A50296/2026 (@sparseskip method); cord architecture is a distinct novel contribution
+**Patent basis:** Extension of A50296/2026 (TIS platform patent, 10 claims; @sparseskip = Claim 3); cord architecture is a distinct novel contribution
 
 ---
 

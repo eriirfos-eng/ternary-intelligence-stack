@@ -13,7 +13,7 @@
 //   Both sparsity sources are handled by the same zero-contributes-nothing property
 //   of the dot product. No branching, no index indirection in the hot path.
 //
-// @sparseskip element-level innovation: patent pending A50296/2026, whitepaper §5.2
+// @sparseskip element-level innovation: patent pending A50296/2026 (TIS platform, 10 claims; @sparseskip = Claim 3), whitepaper §5.2
 
 use candle_core::{Result, Tensor};
 use candle_nn::VarBuilder;

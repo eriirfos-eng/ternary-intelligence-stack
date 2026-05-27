@@ -51,7 +51,7 @@ ternlang my_program.tern    # run a .tern file
 
 **albert. is an existence proof wearing the shape of a language model.**
 
-A ternary Mixture-of-Experts language model trained natively from scratch — not quantized from float. Every weight is in `{−γ, 0, +γ}` throughout training. The architecture expands itself autonomously via Net2Net surgery when it plateaus. The `@sparseskip` primitive (Patent A50296/2026) delivers 83 tok/s on CPU by skipping zero-weight operations exactly, not approximately.
+A ternary Mixture-of-Experts language model trained natively from scratch — not quantized from float. Every weight is in `{−γ, 0, +γ}` throughout training. The architecture expands itself autonomously via Net2Net surgery when it plateaus. The `@sparseskip` primitive (patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3) delivers 83 tok/s on CPU by skipping zero-weight operations exactly, not approximately.
 
 **Current state:** 20L · 256H · 12E · Top-3 · 256CTX · 32k vocab · ep3414+ · epoch ATL **9.3182** (ep3326) · chip ATL **8.8540** (ep3412) · 8 surgeries complete · 20L→21L armed
 
@@ -87,7 +87,7 @@ albert-cli    # launch immediately
 | Industrial | BSL-1.1 · €349/mo | QNN, SEC, T-HAL, TernAudit, Tier 3 modules |
 | Enterprise | Proprietary · from €2,500/mo | On-premise, FPGA, custom SLA, unlimited API |
 
-The `@sparseskip` primitive (Patent A50296/2026) is implemented in open-source LGPL files — the patent covers the method; the code is freely readable and modifiable.
+The `@sparseskip` primitive (patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3) is implemented in open-source LGPL files — the patent covers the full TIS platform; the code is freely readable and modifiable.
 
 ---
 

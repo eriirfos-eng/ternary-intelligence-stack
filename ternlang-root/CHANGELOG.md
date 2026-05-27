@@ -37,7 +37,7 @@ All notable changes to the Ternary Intelligence Stack (TIS) will be documented i
 
 ### SPRIND
 - Full application submitted 2026-05-16 (Stage 1: 10 teams / €3M)
-- `@sparseskip` patent pending A50296/2026 referenced throughout submission
+- Patent pending A50296/2026 (TIS platform, 10 claims; @sparseskip = Claim 3) referenced throughout submission
 - EU AI Act compliance mapping complete: `docs/compliance/eu_ai_act_mapping.md`
 
 ### Codebase

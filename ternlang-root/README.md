@@ -180,7 +180,7 @@ Demonstrate that ternary-native training — weights constrained to {−1, 0, +1
 
 - **From-scratch ternary training** — STE-based end-to-end training with no float32 weight baseline required; weights constrained to {−1, 0, +1} throughout via STE
 - **Auto-evolutionary depth** — `EvolutionManager` grows transformer layers autonomously via Net2Net safe-copy surgery; 3L→12L in v2.0.0; 12L→18L across 6 surgeries in v3.0 (ep511, ep547, ep611, ep645, ep701, ep2487); no hard layer cap
-- **`@sparseskip` expert routing** (Patent A50296/2026) — 9/12 experts not executed per decode step at Top-3; 4.58× throughput multiplier; 83 tok/s measured on CPU
+- **`@sparseskip` expert routing** (patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3) — 9/12 experts not executed per decode step at Top-3; 4.58× throughput multiplier; 83 tok/s measured on CPU
 - **Ternary Traffic Light Routing (TTL)** — EMA-based G/O/R trit states per expert per layer; anti-stagnation burst rotates via offset 7 (coprime to 12); cycling-reds self-resolve autonomously
 - **Mycelium expert health monitor** — 20-epoch rolling gradient pressure window; resurrects stagnant experts via neighbour weight copy + σ=0.02 perturbation; dead=0 across full v3.0 run through 18L
 - **Layer crystallization** — L0–L3 gradient norms ~0.00022 (frozen); L8–L11 at 0.013–0.022 (hot); structural internal differentiation emerging from training alone

@@ -60,7 +60,7 @@ This is not a failure mode. It is a measurable intermediate state between "knowi
 The architecture combines:
 - **Straight-Through Estimation (STE)** for end-to-end ternary training
 - **Mixture-of-Experts (MoE)** routing with 12 domain experts and Top-3 selection
-- **@sparseskip** — 9 of 12 experts are skipped per decode step at the routing level, compounding weight-level sparsity savings *(patent pending A50296/2026)*
+- **@sparseskip** — 9 of 12 experts are skipped per decode step at the routing level, compounding weight-level sparsity savings *(patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3)*
 - **Expert seed biases** — learnable F32 [256] bias per expert (Uniform[-0.01, 0.01] init) breaks routing Nash equilibria; weights persist and amplify expert specialisation over training
 - **Ternary Traffic Light Routing (TTL)** — per-expert trit execution budget (Green / Orange / Red) based on rolling EMA utilization, with anti-stagnation burst mechanism
 - **WALD module** — Wald-inspired loss-space coverage analysis; detects dead zones in the loss histogram and drives early-layer gradient amplification; self-disables when the dead zone is structural

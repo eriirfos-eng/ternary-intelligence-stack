@@ -96,7 +96,7 @@ x → LayerNorm → MultiHeadAttention → residual
 3. Top-3 experts are selected via sequential argmax-and-mask
 4. **Asymmetric safety gating** — Experts 0–3 are suppressed to zero when their gate value is below 0.05 (low-confidence guard)
 5. Selected expert outputs are weighted by softmax over the top-3 gate values and summed
-6. **`@sparseskip`** (Patent A50296/2026) — 9/12 experts not executed per decode step at Top-3 routing; 4.58× throughput multiplier at 75% sparsity
+6. **`@sparseskip`** (patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3) — 9/12 experts not executed per decode step at Top-3 routing; 4.58× throughput multiplier at 75% sparsity
 
 ---
 

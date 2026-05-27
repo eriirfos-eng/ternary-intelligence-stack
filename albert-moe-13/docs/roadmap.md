@@ -5,7 +5,7 @@
 ## Completed — v2.0.0 (Global Ep454, 12L, best loss 6.8821)
 
 *   [x] Straight-Through Estimator (STE) ternary training from random init — weights constrained to `{-γ, 0, +γ}` throughout
-*   [x] MoE architecture — 12 experts, Top-3 routing, @sparseskip (patent pending A50296/2026)
+*   [x] MoE architecture — 12 experts, Top-3 routing, @sparseskip (patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3)
 *   [x] Ternary Traffic Light Routing (TTL) — EMA-based trit states (G/O/R) per expert per layer, anti-stagnation burst mechanism
 *   [x] EvolutionManager — autonomous Net2Net surgery, 4L→12L (max_layers=12 cap enforced on both plateau and COLLAPSE→SURGERY paths)
 *   [x] Mycelium — 20-epoch rolling gradient pressure monitor; dead=0 throughout entire 12L run

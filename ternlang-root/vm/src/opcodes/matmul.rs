@@ -3,7 +3,7 @@
 // Copyright (C) 2026 RFI-IRFOS. All rights reserved.
 // Commercial tier. See LICENSE-COMMERCIAL in the repository root.
 // Unauthorized use, copying, or distribution is prohibited.
-// Reference Patent Pending A50296/2026.
+// Reference Patent Pending A50296/2026 (TIS platform patent, 10 claims; TSPARSE_MATMUL/@sparseskip = Claim 3).
 
 use ternlang_core::trit::Trit;
 

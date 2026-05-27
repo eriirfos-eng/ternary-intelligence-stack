@@ -78,7 +78,7 @@ This document tracks what is needed to be taken seriously by the global ML resea
 ## What We Have That Nobody Else Has
 
 - Auto-evolutionary ternary MoE training from scratch (3L→6L autonomous surgery, live)
-- @sparseskip patent pending A50296/2026 — element-level sparse matmul primitive
+- Patent pending A50296/2026 (TIS platform, 10 claims) — @sparseskip element-level sparse matmul primitive = Claim 3
 - 83-125 tok/s on laptop CPU with no GPU — proven live, not projected
 - Full Rust implementation (candle) with ternary STE training
 - EU AI Act compliance mapped article by article

@@ -4,7 +4,7 @@
 **Last Updated:** 2026-05-22
 **Status:** ACTIVE — PHASE 20/21: TRAINING · PHASES 22-23 COMPLETE
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack
-**Patent Pending:** A50296/2026 (@sparseskip sparse matmul primitive)
+**Patent Pending:** A50296/2026 (TIS platform, 10 claims; @sparseskip sparse matmul primitive = Claim 3)
 
 ---
 
@@ -143,7 +143,7 @@ ProgramBench exposes the gap between "code assistance" and "systems engineering"
 | Inference speed | **38.7–84.4 tok/s** CPU (bench 2026-05-25, 21L) | KV-cache + @sparseskip; 84.4 tok/s peak on HP ZBook 15 i7-4800MQ (2013, CPU only) |
 | Routing sparsity | 9/12 experts skipped per decode step | Expert-level @sparseskip — 75% routing skip; entropy H=2.466 (stable) |
 | Corpus (active) | **1.6 GB** total · stages [3,6,7,8,9,10,11,12,13] active | EN/DE/FR/HU/ZH/AR/KO/SV/FI + 15-language Wikipedia · 10% chaos layer invariant |
-| Patent | A50296/2026 | @sparseskip sparse matmul primitive — Patent Pending (Austria) |
+| Patent | A50296/2026 | TIS platform patent, 10 claims — Patent Pending (Austria); @sparseskip sparse matmul primitive = Claim 3 |
 | Crates published | 38 crates at v1.3.7 | crates.io, all open-core LGPL |
 | MCP tools | 34 tools | All free tier via Smithery + HTTP |
 | Training epochs | ep3503+ (2026-05-25) | Modal T4 GPU · uninterrupted run since 2026-05-14 |
