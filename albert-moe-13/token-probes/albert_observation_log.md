@@ -6314,3 +6314,21 @@ Step counter confirms: ep4158=3300 → ep4162=4500 (+1200 = 4 epochs × 300) →
 Mass upticking slightly (9.217→9.224→9.227) and dead_high widening back to 9.75+ at ep4163. Model oscillating in 9.22–9.23 band. Not alarming — this is the 24L exploration phase, routing patterns consolidating on new layer.
 
 **Interpretation:** Post-surgery settling, not descent. The 9.217 floor at ep4158 was not the start of a new dive — the model is exploring the 24L landscape in the 9.22–9.23 band. dead_high widening back to 9.75+ at ep4163 suggests routing variance increasing slightly as new capacity gets tested. Consistent with early post-surgery behavior seen after S10. Watch for the mass to stabilize and begin descending toward 9.20 territory.
+
+## FN172 · 2026-05-27T13:52Z · ep4166 · Slow upward drift continues; dead_high normalized to 9.50+
+
+**State:** Active · EP 4166 (24L) · step=5700
+
+**Source:** ntfy poll, 15m window.
+
+**WALD:**
+```
+ep4166  step=5700  fill=6.2%  mass=9.231  dead_high=9.50+ (5.50)
+```
+Step: ep4163=4800 → ep4166=5700 (+900 = 3 epochs). Consistent.
+
+**Mass drift post-S11:** 9.217 → 9.224 → 9.227 → 9.231 — slow upward creep, +0.014 over 8 epochs.
+
+dead_high back to 9.50+ (normalized from 9.75+ spike at ep4163). fill stable at 6.2%. Routing variance settling.
+
+**Interpretation:** Continued 24L exploration. Slow mass drift is normal post-surgery behavior — model adjusting to new capacity before descending. No alarm. Watch for drift to flatten and reverse.
