@@ -6180,3 +6180,69 @@ mass=9.309 at step 300 (first steps of ep4148) → 9.265 by ep4149 step 600. Rec
 | ep4148+ | 9.26–9.31 | post-surgery whiplash |
 
 **Interpretation:** Surgery S11 fired cleanly on plateau gate after 55 epochs of near-flat descent (Δ0.0025 vs threshold 0.0150). The short-term ATLs at ep4132 (9.2059) and ep4136 (9.2045) were real progress, but the 55-epoch window saw the model stall in the 9.22–9.24 band — governor correctly identified this as plateau. Net2Net expansion to 24L. Post-surgery mass at step 300: 9.309 → already recovering to 9.265 by ep4149. This is the fastest post-surgery whiplash seen (S10 took longer to recover). Gen 2 step 5/6 — one more surgery before Fibonacci generation rolls over. Next ceiling: F7=34L.
+
+## FN169 · 2026-05-27T12:51:45Z · ep4155 · Full history view — 24L, INT+CMP maxed; two surgeries same day; whiplash resolving
+
+**State:** Active · EP 4155 (24L) · BATCH 210/300 · TNS 1,660 · ATL 8.7249 · BEST EP-AVG 9.2045 (ep4136)
+
+**Source:** Dashboard screenshot localhost:8888, 12:51:45Z. Full history zoom.
+
+**Architecture confirmed: 24L** (ARCH header: 24L · 256H · 12E · 256CTX · 32K). TNS jumped 1,591→1,660 (+69 — new layer parameters).
+
+**Chart — full history annotation (from screenshot):**
+Surgery markers visible left→right:
+- ep~3271: 17→18L (24.04.2026)
+- ep~3326: 18→19L (24.04.2026)
+- ep~3383: 19→20L (20.04.2026)
+- ep~3470: 20→21L (25.04.2026)
+- ep~3650: 21→22L (25.04.2026) — floor annotation: "floor @ 9.2830 after 21L surgery"
+- ep~4092: 22→23L (27.05.2026) — S10
+- ep~4147: **23→24L (27.05.2026)** — S11
+
+**Two surgeries on 2026-05-27.** S10 and S11 both fired today.
+
+**WORST ever: 9.6383** (red label, right side — early training).
+
+**EP AVG (trailing): 9.2249** — post-surgery whiplash, recovering toward pre-surgery range.
+
+**Event bar (oldest→newest), visible pre/post-surgery sequence:**
+| Epoch | EP-Avg | Note |
+|---|---|---|
+| ep~4140 | 9.2249 | |
+| ep~4141 | 9.2259 | |
+| ep~4142 | 9.2318 | |
+| ep~4143 | 9.2211 | |
+| ep~4144 | 9.2204 | |
+| ep~4145 | 9.2116 | pre-surgery best visible |
+| ep~4147 | 9.3044 | surgery epoch spike |
+| SURGERY | 23L→24L | — |
+| ep4148 | 9.2524 | first post-surgery epoch; massive immediate recovery |
+| ep4149+ | recovering | BALANCED H=2.465; EPOCH avg [cut] |
+
+Surgery spike: 9.3044 → recovered to 9.2524 in one epoch (Δ−0.052). Fastest single-epoch whiplash recovery in v3.0 history.
+
+**TTL:** G=6.16% · O=80% · R=4%
+
+**Expert routing (vs FN167):**
+| Expert | FN167 | FN169 | Δ |
+|--------|--------|--------|---|
+| INT    | 77%    | **100%** | +23pp — MAXED, new layer engaging |
+| CMP    | 98%    | **100%** | +2pp — MAXED |
+| ABS    | 69%    | 74%    | +5pp |
+| GEN    | 2%     | 10%    | +8pp — generative expert activating |
+| LNG    | 31%    | 37%    | +6pp |
+| LOG    | 19%    | 22%    | +3pp |
+| PLN    | 100%   | 89%    | −11pp |
+| SYN    | 9%     | 2%     | −7pp, pulled back |
+| CTX    | 9%     | 7%     | −2pp |
+| SEM    | 7%     | 0%     | dormant |
+| MEM    | 2%     | 0%     | dormant |
+| INF    | 5%     | 5%     | stable |
+
+INT maxing at 100% post-surgery = new L23 integrating immediately into inference pathway. CMP also maxed. GEN jumping to 10% — not seen since early post-S9. Pattern: new layer capacity routing to INT+CMP first, then dispersing.
+
+**Per-layer gradient:** global |g|=0.0024 (up from 0.0022 — normal post-surgery uptick, new layer initializing).
+
+**Gate:** red + orange (unchanged).
+
+**Interpretation:** Two surgeries in one day. S11 fired ~5h after S10 paid off with ATL 9.2045. The plateau gate measured 55 epochs of near-flat trend and correctly expanded. Post-surgery whiplash is resolving with unusual speed: surgery spike of 9.3044 corrected to 9.2524 in a single epoch — the new layer found its footing immediately. INT+CMP maxed on first observation post-surgery = the inference-comparison pathway absorbed the new capacity first. GEN at 10% is a new signal. Floor after this surgery: watch if ep4155+ settles above or below the pre-surgery best of 9.2045.
