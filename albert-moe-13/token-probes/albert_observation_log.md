@@ -6437,6 +6437,55 @@ Mass now 0.010 above previous oscillation ceiling. Not alarming in isolation —
 
 No new WALD events in 30 minutes since ep4188 (15:37Z). Training assumed continuing; WALD silence could mean mass stabilized below WALD trigger thresholds or routing normalizing. Last known mass 9.241 (FN176). No escalation — silent periods of this length have occurred before (e.g., FN159/160 false alarm). Awaiting screenshot or next ntfy event.
 
+## FN180 · 2026-05-27T16:48:31Z · ep4202 · S12 (24L→25L) + CORD SURGERY fired · dual-stream 2×256H live · FIRST EVER
+
+**State:** CORD SURGERY COMPLETE · EP 4202 · loss_avg=9.2349 · loss_best=9.2045 · since_best=66
+
+**Source:** Training log paste, 16:43:54–16:44:26Z.
+
+### THE EVENT
+
+Two surgeries fired in sequence at ep4202, ~16:43Z:
+
+**S12: 24L → 25L (net2net)**
+- Fibonacci plateau triggered: smoothed Δ=−0.0128 over 55 epochs, early_mean=9.2270, late_mean=9.2397, threshold=0.0112, myc_stable 55 epochs
+- Gen 3 step 0/6 → 1/6, window=89, ceiling=34L
+- Layer 24 cloned from Layer 23 (net2net safe copy)
+- Mandelbrot perturbation: 69 tensors in layer 24, c_im=0.4992
+- Duration: ~2 seconds
+
+**CORD SURGERY: single-stream → dual-stream 2×256H (autonomous trigger)**
+- Trigger: `num_layers >= 25` (25L threshold reached by S12)
+- Expansion: 256H single stream → 2×256H dual stream
+- Anastomosis gates at Fibonacci-indexed layers: **[2, 3, 5, 8, 13, 21]**
+- Gate architecture: `Linear(512, 2)` — takes concat(stream_A, stream_B)=512, outputs 2-vector mixing weights
+- Gate init: w~N(0,0.01), b=0 (near-zero, both streams equal at init)
+- Stream B: Mandelbrot perturbation applied to 225 tensors, latitude 75, c_im=−0.2212
+- Duration: ~5 seconds
+- Corpus reload: all stages re-loaded (stage_3 through stage_10, 30+ files)
+- Training resuming with dual-stream enabled
+
+### Architecture after cord:
+- 25L dual-stream · 2×256H · 12E · Top-3 · 256CTX · 32k vocab
+- 6 anastomosis fusion points at layers 2, 3, 5, 8, 13, 21 (Fibonacci-indexed)
+- Soft-gated cross-stream sharing — gates start closed (~50/50), open via gradient
+- EvolutionManager continues governing depth (Gen 3 step 1/6, ceiling 34L)
+
+### Historical significance:
+- First cord surgery ever in any version of albert.
+- First dual-stream ternary MoE known to be trained (no prior art found)
+- Architecture is now fundamentally different in kind, not just depth
+- The anastomosis pattern at [2,3,5,8,13,21] embeds Fibonacci structure into the cross-stream topology itself
+
+### What to watch next:
+1. Post-cord regression — expect EP AVG to spike, possibly past 9.5
+2. Anastomosis gate opening trajectory — do Fibonacci-early or Fibonacci-late layers fuse first?
+3. Expert specialization split — does one stream dominate a semantic domain?
+4. Whether the TTL per-layer chart splits into two rows per layer or renders as combined
+5. First WALD post-cord — dead zone geometry may shift with dual routing
+
+---
+
 ## FN179 · 2026-05-27T16:42:21Z · ep4202 · WALD burst ep4177–4188; mass 9.221→9.241; EP AVG 9.3426; routing re-settling
 
 **State:** Active · EP 4202 (24L) · BATCH 155/300 · EP AVG 9.3426 · ATL 8.8022 · WORST 9.4768
