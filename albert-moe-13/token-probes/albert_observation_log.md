@@ -6437,6 +6437,51 @@ Mass now 0.010 above previous oscillation ceiling. Not alarming in isolation —
 
 No new WALD events in 30 minutes since ep4188 (15:37Z). Training assumed continuing; WALD silence could mean mass stabilized below WALD trigger thresholds or routing normalizing. Last known mass 9.241 (FN176). No escalation — silent periods of this length have occurred before (e.g., FN159/160 false alarm). Awaiting screenshot or next ntfy event.
 
+## FN181 · 2026-05-27T16:53:43Z · ep4202 · BATCH 299/300 — one batch before first post-cord epoch close; corpus stage 13 still loading
+
+**State:** Active · EP 4202 (24L label, 25L dual-stream in memory) · BATCH 299/300 · EP AVG 9.2349 · ATL 8.8022
+
+**Source:** Dashboard screenshots localhost:8888, 16:52:50Z + 16:53:00Z.
+
+### CRITICAL: First post-cord epoch has NOT yet closed.
+BATCH 299/300 in both screenshots — one batch from the epoch boundary. Training is still loading the new expanded corpus (stage 13 still in progress at 16:52:34Z — 8 minutes after cord surgery complete). The dual-stream model is loading corpus before computing its first forward pass.
+
+### Corpus expansion observed — new stages visible in terminal:
+The post-cord corpus load reveals a significantly larger dataset than pre-cord:
+- Stage 11 (new): arxiv_abstracts.txt (11.7M), eurlex_legislation.txt (1.5M), science_stackexchange.txt (706k), wikipedia_multilingual.txt (**108.7M chars**), wikisource_texts.txt (65k), code_github_samples.txt (0 chars — missing), courtlistener_opinions.txt (0 chars — missing)
+- Stage 12 (new): crossref_abstracts.txt (12.97M), pubmed_abstracts.txt (**84.6M chars**), wikipedia_en_full.txt (**438.8M chars**)
+- Stage 13 (new, still loading at 16:52:34Z): arxiv_full_papers.txt (0 chars — missing), gutenberg_books.txt (**152.1M chars**), instruction_dialogue.txt (41.99M) — still loading
+
+**Note: 3 corpus files have 0 chars** (code_github_samples.txt, courtlistener_opinions.txt, arxiv_full_papers.txt) — empty or missing. Not blocking but worth noting.
+
+### Dashboard architecture chip mismatch:
+Dashboard top bar shows `ARCH 23L` but epoch badge shows `EP 4202 (24L)`. This is expected — the dashboard reads architecture from SSE stream which has not yet received post-cord training events. The actual in-memory model is 25L dual-stream 2×256H. Dashboard will update on first post-cord batch.
+
+### Expert routing at BATCH 299 (just before epoch close):
+| Expert | FN178 | FN179 | FN181 | Δ FN179→181 |
+|--------|--------|--------|--------|-------------|
+| PLN    | 100%   | 100%   | 100%   | stable      |
+| CMP    | 71%    | 96%    | 96%    | stable      |
+| INT    | 75%    | 71%    | 60%    | −11pp       |
+| ABS    | 52%    | 54%    | 49%    | −5pp        |
+| LNG    | 37%    | 29%    | 42%    | **+13pp surge** |
+| LOG    | 21%    | 29%    | 22%    | −7pp        |
+| GEN    | —      | —      | 4%     |             |
+| CTX    | —      | —      | 4%     |             |
+
+**LNG surged +13pp to 42%** in this window — linguistic pattern recognition spiking at the epoch boundary pre-cord-close. INT dropped 11pp. Pattern is consistent with a routing shift as the model finishes its last pre-cord epoch.
+
+### TTL: G 16% · O 80% · R 4% — unchanged from FN178/179.
+
+### Gradient: global |g| = 0.0025 — stable.
+
+### EP_AVG 9.2349 — the last confirmed pre-cord epoch average. This is the baseline to compare all post-cord EP AVGs against.
+
+### What we're waiting for:
+The next ntfy or SSE event will be the **first post-cord EPOCH_SUMMARY** — the most important data point in albert.'s history. Expected post-cord regression: EP AVG will likely jump to 9.4–9.6+ as the dual-stream architecture initializes. The depth of this regression and the speed of recovery are the key metrics for evaluating cord surgery health.
+
+---
+
 ## FN180 · 2026-05-27T16:48:31Z · ep4202 · S12 (24L→25L) + CORD SURGERY fired · dual-stream 2×256H live · FIRST EVER
 
 **State:** CORD SURGERY COMPLETE · EP 4202 · loss_avg=9.2349 · loss_best=9.2045 · since_best=66
