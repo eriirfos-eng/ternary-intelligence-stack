@@ -1373,6 +1373,7 @@
     let gGateWaldFill   = null;
     let gGateWaldSev    = null;
     let gGateCurrentL   = null;    // current layer count from ARCH line
+let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set from config.json
     let gGateFibWin        = 144;  // plateau window epochs — updated live from [evolution] log lines
     let gGatePlateauThresh = 0.020; // plateau delta threshold — updated live from [evolution] log lines
     let gLossRing          = [];   // rolling epoch avg losses for plateau delta check
@@ -3206,8 +3207,10 @@
                 // ARCH metadata line — update topbar only; session detection is epoch-based below
                 const am = line.match(/^ARCH\s+(\d+)L\s+(\d+)H\s+(\d+)E\s+(\d+)CTX\s+(\d+)V/);
                 if (am) {
-                    document.getElementById('v-arch').textContent =
-                        `${am[1]}L · ${am[2]}H · ${am[3]}E · ${am[4]}CTX · ${Math.round(am[5]/1000)}K`;
+                    const dual = gArchNumStreams > 1;
+                    document.getElementById('v-arch').textContent = dual
+                        ? `2×${am[1]}L · 2×${am[2]}H · ${am[3]}E · ${am[4]}CTX · ${Math.round(am[5]/1000)}K`
+                        : `${am[1]}L · ${am[2]}H · ${am[3]}E · ${am[4]}CTX · ${Math.round(am[5]/1000)}K`;
                     gGateCurrentL = parseInt(am[1]);
                     continue;
                 }
@@ -5405,9 +5408,12 @@
     fetch('/models/albert_v3.0.config.json?t=' + Date.now())
         .then(r => r.json())
         .then(cfg => {
+            gArchNumStreams = cfg.num_streams || 1;
+            const dual = gArchNumStreams > 1;
             const el = document.getElementById('v-arch');
-            el.textContent =
-                `${cfg.num_layers}L · ${cfg.hidden_size}H · ${cfg.num_experts}E · ${cfg.max_seq_len}CTX · ${Math.round(cfg.vocab_size/1000)}K`;
+            el.textContent = dual
+                ? `2×${cfg.num_layers}L · 2×${cfg.hidden_size}H · ${cfg.num_experts}E · ${cfg.max_seq_len}CTX · ${Math.round(cfg.vocab_size/1000)}K`
+                : `${cfg.num_layers}L · ${cfg.hidden_size}H · ${cfg.num_experts}E · ${cfg.max_seq_len}CTX · ${Math.round(cfg.vocab_size/1000)}K`;
         })
         .catch(() => {}); // graceful fallback — log-based ARCH line still works
 
