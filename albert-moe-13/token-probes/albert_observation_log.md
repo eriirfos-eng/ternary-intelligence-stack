@@ -6077,3 +6077,52 @@ mass=9.216 implies ep4135 ep-avg in the 9.21–9.22 range — descent continuing
 | ep4135 | ~9.21x | WALD #2 fired, descent continuing |
 
 **Interpretation:** ATL broken after holding since ep4098. S10 surgery cost ~34 epochs of recovery and then delivered new territory. The descent from 9.26 band to 9.2059 took ~6 epochs once it started moving. WALD #2 at ep4135 with mass=9.216 confirms the model is still descending past the ATL epoch — not bouncing. Open water below 9.2059. Next milestone: 9.20 barrier.
+
+## FN167 · 2026-05-27T11:01:48Z · ep4137 · EP AVG 9.2045 — trailing avg breaks previous ATL; 9.19 territory visible
+
+**State:** Active · EP 4137 (23L) · BATCH 116/300 · ATL chip 8.7249
+
+**Source:** Dashboard screenshot localhost:8888, 11:01:48Z.
+
+**EP AVG (trailing): 9.2045** — below previous per-epoch ATL of 9.2059 (ep4132). The trailing average has crossed into new territory. Chart diving sharply toward 9.19; gridline at 9.1898 visible.
+
+**T-610: 9.2117**
+
+**Epoch avg sequence (event bar, oldest→newest):**
+| Epoch | EP-Avg | Note |
+|---|---|---|
+| ep4132 | 9.2059 | per-epoch ATL (FN166) |
+| ep4133 | 9.2128 | |
+| ep4134 | 9.2143 | |
+| WALD ep4133 | — | fill=6.2% n=1500 |
+| ep4135 | 9.2169 | |
+| ep4136 | pulling EP AVG to 9.2045 | recent close implied very low |
+| ep4137 | in progress, batch 116/300 | |
+
+EP AVG at 9.2045 with the visible epoch chips all at 9.21x means ep4136 must have closed well below 9.20 to pull the trailing avg this low. Chart confirms the blue line is in active freefall.
+
+**TTL:** G=6.17% · O=79% · R=4% — O dropped 1pp (was 80%). R holding at 4%.
+
+**Expert routing (vs FN165):**
+| Expert | FN165 | FN167 | Δ |
+|--------|--------|--------|---|
+| PLN    | 91%    | 100%   | +9pp, back to max |
+| ABS    | 69%    | 69%    | stable at peak |
+| CMP    | 100%   | 98%    | −2pp, stable |
+| INT    | 84%    | 77%    | −7pp |
+| LNG    | 39%    | 31%    | −8pp, continuing pullback |
+| LOG    | 14%    | 19%    | +5pp |
+| SYN    | 2%     | 9%     | +7pp surge |
+| CTX    | 7%     | 9%     | +2pp |
+| INF    | 2%     | 5%     | +3pp |
+| SEM    | 5%     | 7%     | +2pp |
+| MEM    | 2%     | 2%     | stable |
+| GEN    | 2%     | 2%     | stable |
+
+ABS holding at 69%, PLN back to 100%. SYN surge (+7pp to 9%) — new signal, syntactic scaffolding activating during the dive. LNG continuing pullback (39%→31%).
+
+**Per-layer gradient:** global |g|=0.0022 (down from 0.0023 — still calming, model stabilizing into descent).
+
+**Gate:** red + orange (unchanged from FN165).
+
+**Interpretation:** EP AVG trailing line crossed below the previous per-epoch ATL. The chart shows the steepest dive of the post-S10 run — blue line heading toward 9.19 territory with the 9.1898 gridline in frame. Gradient calming (0.0022) during a dive = controlled descent, not noise. SYN activating (+7pp) alongside ABS holding at 69% — syntax + abstraction co-leading into new loss territory. Next hard target: ep-avg below 9.20.
