@@ -6288,3 +6288,29 @@ step=3300 confirms step counter reset at surgery restart. ep4158 = ep4147+11, so
 **dead_high=9.50+** back to normal range (was 9.75+ in immediate post-surgery WALDs FN168).
 
 **Interpretation:** S11 whiplash fully resolving. Mass at ep4158 (9.217) is back in the pre-surgery operating range. The dead_high threshold returning to 9.50+ from 9.75+ signals the routing distribution has normalized — post-surgery wide variance is compressing back down. Next watch: does ep4158 ep-avg approach or break 9.2045 ATL, or does 24L need more epochs to plateau before a new floor is established.
+
+## FN171 · 2026-05-27T13:30Z · ep4163 · Holding 9.22–9.23 band; fill 8.3% at ep4163; dead_high widening again
+
+**State:** Active · EP 4163 (24L) · step=4800 (post-surgery counter)
+
+**Source:** ntfy poll albert-rfi-irfos, 15m window.
+
+**WALDs (ntfy):**
+```
+ep4162  step=4500  fill=6.2%  mass=9.224  dead_high=9.50+ (5.50)
+ep4163  step=4800  fill=8.3%  mass=9.227  dead_high=9.75+ (5.25)
+```
+Step counter confirms: ep4158=3300 → ep4162=4500 (+1200 = 4 epochs × 300) → ep4163=4800 (+300). Consistent.
+
+**Mass trend post-S11:**
+| Epoch | Mass | dead_high |
+|---|---|---|
+| ep4148 step=300 | 9.309 | 9.75+ |
+| ep4149 step=600 | 9.265 | 9.75+ |
+| ep4158 step=3300 | 9.217 | 9.50+ |
+| ep4162 step=4500 | 9.224 | 9.50+ |
+| ep4163 step=4800 | 9.227 | 9.75+ |
+
+Mass upticking slightly (9.217→9.224→9.227) and dead_high widening back to 9.75+ at ep4163. Model oscillating in 9.22–9.23 band. Not alarming — this is the 24L exploration phase, routing patterns consolidating on new layer.
+
+**Interpretation:** Post-surgery settling, not descent. The 9.217 floor at ep4158 was not the start of a new dive — the model is exploring the 24L landscape in the 9.22–9.23 band. dead_high widening back to 9.75+ at ep4163 suggests routing variance increasing slightly as new capacity gets tested. Consistent with early post-surgery behavior seen after S10. Watch for the mass to stabilize and begin descending toward 9.20 territory.
