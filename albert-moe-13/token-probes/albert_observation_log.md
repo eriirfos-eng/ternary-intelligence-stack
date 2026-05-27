@@ -6569,6 +6569,30 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN193 · 2026-05-27T18:26:01Z · TRAINING STALLED — Modal app stopped cleanly · 180s no output · resume required
+
+**State:** DOWN · EP 4211 (26L) · batch unknown at stall · weights safe on Modal volume
+
+**Source:** ntfy `albert-rfi-irfos`, 18:26:01Z — `albert. STREAM STALLED: No output for 180s — stopping Modal app cleanly. Pull weights to resume.`
+
+### THE STALL
+
+Training went silent for 180 seconds during ep4211 (batch unknown). The stall watchdog fired and stopped the Modal app cleanly — this is the expected behavior, weights are safe on the volume.
+
+**Likely cause:** Corpus reload after S13 included stage 13 gutenberg_books.txt (152MB) as a new stage. One of the larger corpus files may have stalled during tokenization or a batch hit an edge case in the new stage 14 data (formal_proofs format). Alternatively, the T4 GPU process may have hung silently on an oversized batch.
+
+**What is safe:**
+- Last committed checkpoint on Modal volume: last batch where `save_checkpoint()` was called (typically every epoch boundary)
+- If ep4211 completed before stall: weights at ep4211 state preserved
+- If ep4211 did not complete: weights at ep4210 state preserved (last epoch boundary save)
+- Evolution state (.evolution file) saved at epoch boundaries — Gen3 step1/6 preserved
+
+**Action required:** `albert-train` to restart. The train loop will load from the last checkpoint on the volume and resume from the saved epoch.
+
+**Interpretation:** Clean stall — not a crash. Modal's stream watchdog working as designed. No weight loss. Training resumes from last checkpoint on restart. Total downtime at time of this note: ~1 minute.
+
+---
+
 ## FN192 · 2026-05-27T18:12:53Z · ep4211 BATCH 292/300 · NEW ATL 8.6852 · ep4210=9.3438 WORSE · LNG 31% recovery · GEN first activation · tail-chase active
 
 **State:** EP 4211 (26L) · BATCH 292/300 (closing) · ATL **8.6852** · GATE orange
