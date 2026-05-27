@@ -944,6 +944,15 @@
                 <line id="muteLine" x1="8" y1="4" x2="11" y2="9" style="display:none"/>
             </svg>
         </button>
+        <button id="annotToggleBtn" title="Manual annotations ON — click to hide" style="background:none;border:none;cursor:pointer;padding:3px 5px;display:flex;align-items:center;color:#22d3ee;">
+            <svg viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="2" y1="10" x2="5" y2="7"/>
+                <line x1="5" y1="7" x2="9.5" y2="2.5"/>
+                <line x1="9.5" y1="2.5" x2="11" y2="4"/>
+                <line x1="11" y1="4" x2="6.5" y2="8.5"/>
+                <line x1="6.5" y1="8.5" x2="2" y2="10"/>
+            </svg>
+        </button>
         <button id="waldToggleBtn" title="Toggle WALD markers" style="background:none;border:none;cursor:pointer;padding:3px 5px;display:flex;align-items:center">
             <svg viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="6,1 10.5,8 1.5,8" fill="currentColor" stroke="none" opacity="0.85"/>
@@ -1320,6 +1329,7 @@
     let spikeFiredEp  = -1;
     let waldEvents       = [];   // permanent dead-zone markers — never capped
     let waldVisible      = localStorage.getItem('waldVisible') !== '0'; // default on
+    let annotVisible     = true; // manual drawing annotations — reset to visible on page load
     let lastWaldDeadLow  = '';   // dead_low string of last fired Wald event
     let lastWaldDeadHigh = '';   // dead_high string of last fired Wald event
     let sporeEvents      = [];   // permanent spore ingestion markers
@@ -1928,7 +1938,7 @@
             c2.rect(a.left, a.top, a.width, a.height);
             c2.clip();
 
-            for (let i = 0; i < trendlines.length; i++) {
+            if (annotVisible) { for (let i = 0; i < trendlines.length; i++) {
                 const ln  = trendlines[i];
                 const px1 = scales.x.getPixelForValue(ln.x1);
                 const py1 = scales.y.getPixelForValue(ln.y1);
@@ -1972,7 +1982,7 @@
                     c2.textAlign = 'center';
                     c2.fillText('drag handles · Del to remove', mx, my);
                 }
-            }
+            } }
 
             // Ghost line while drawing first→second point
             if (pendingLine && crosshairPos) {
@@ -1993,7 +2003,7 @@
             }
             // H-Lines — horizontal support/resistance (cyan dashed, single click to place)
             c2.setLineDash([6, 3]);
-            for (let i = 0; i < hlines.length; i++) {
+            if (annotVisible) { for (let i = 0; i < hlines.length; i++) {
                 const hl = hlines[i];
                 const hpy = scales.y.getPixelForValue(hl.y);
                 if (hpy < a.top || hpy > a.bottom) continue;
@@ -2012,7 +2022,7 @@
                     c2.fillStyle = 'rgba(34,211,238,0.55)'; c2.textAlign = 'left';
                     c2.fillText('click to remove', a.left + 4, hpy - 3);
                 }
-            }
+            } }
             // H-line preview guide (dashed ghost before placing)
             if (drawTool === 'hline' && hoveredHlineIdx === null && crosshairPos &&
                     crosshairPos.y >= a.top && crosshairPos.y <= a.bottom) {
@@ -2025,7 +2035,7 @@
             }
             // V-Lines — vertical epoch markers (violet dashed, single click to place)
             c2.setLineDash([6, 3]);
-            for (let i = 0; i < vlines.length; i++) {
+            if (annotVisible) { for (let i = 0; i < vlines.length; i++) {
                 const vl = vlines[i];
                 const vpx = scales.x.getPixelForValue(vl.x);
                 if (vpx < a.left || vpx > a.right) continue;
@@ -2041,7 +2051,7 @@
                 c2.textAlign = 'left';
                 c2.fillText(`ep ${Math.round(vl.x)}`, vpx + 3, a.top + 10);
                 if (isHov) c2.fillText('click to remove', vpx + 3, a.top + 22);
-            }
+            } }
             // V-line preview guide
             if (drawTool === 'vline' && hoveredVlineIdx === null && crosshairPos &&
                     crosshairPos.x >= a.left && crosshairPos.x <= a.right) {
@@ -2054,7 +2064,7 @@
             }
             c2.setLineDash([]);
             // Text notes — amber pin dot + label with dark background
-            for (let i = 0; i < tnotes.length; i++) {
+            if (annotVisible) { for (let i = 0; i < tnotes.length; i++) {
                 const tn  = tnotes[i];
                 const npx = scales.x.getPixelForValue(tn.x);
                 const npy = scales.y.getPixelForValue(tn.y);
@@ -2085,7 +2095,7 @@
                     c2.textBaseline = 'top';
                     c2.fillText('drag · dbl-click to edit · Del', npx, npy + 7);
                 }
-            }
+            } }
             // Pending arrow preview
             if (pendingArrow && crosshairPos) {
                 const _ax1 = scales.x.getPixelForValue(pendingArrow.x1);
@@ -2100,7 +2110,7 @@
                 c2.restore();
             }
             // Committed arrows
-            for (let _ai = 0; _ai < arrows.length; _ai++) {
+            if (annotVisible) { for (let _ai = 0; _ai < arrows.length; _ai++) {
                 const _ar = arrows[_ai];
                 const _ax1 = scales.x.getPixelForValue(_ar.x1);
                 const _ay1 = scales.y.getPixelForValue(_ar.y1);
@@ -2147,7 +2157,7 @@
                     });
                 }
                 c2.restore();
-            }
+            } }
             c2.restore();
         }
     };
@@ -5714,6 +5724,19 @@
         localStorage.setItem('waldVisible', waldVisible ? '1' : '0');
         applyWaldToggleUI();
         // Force a full canvas repaint so afterDraw re-runs with the new waldVisible state
+        requestAnimationFrame(() => chart.render());
+    });
+
+    const annotToggleBtn = document.getElementById('annotToggleBtn');
+    function applyAnnotToggleUI() {
+        annotToggleBtn.style.color   = annotVisible ? '#22d3ee' : '#374151';
+        annotToggleBtn.style.opacity = annotVisible ? '1' : '0.45';
+        annotToggleBtn.title = annotVisible ? 'Manual annotations ON — click to hide' : 'Manual annotations OFF — click to show';
+    }
+    applyAnnotToggleUI();
+    annotToggleBtn.addEventListener('click', () => {
+        annotVisible = !annotVisible;
+        applyAnnotToggleUI();
         requestAnimationFrame(() => chart.render());
     });
 
