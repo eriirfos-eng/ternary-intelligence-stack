@@ -5836,3 +5836,25 @@ No new epoch ATL fired. WALD mass range 9.226–9.230 over 5 epochs = tight cons
 **WALD mass at halt:** 9.226–9.230 band, stable for 3+ consecutive epochs. No deterioration. Model was in consolidation phase when job died.
 
 **Action required:** Zabih to check Modal job log and relaunch. `modal run albert_train.py`. Volume state (BEST 9.2138, ep4098 checkpoint) is intact — restart will resume cleanly from last checkpoint.
+
+## FN161 · 2026-05-27T08:51:07Z · ep4111 · CORRECTION: FN159+FN160 WRONG — training never halted; ntfy silence was delivery failure
+
+**FN159 and FN160 are retracted.** Training was running the entire time.
+
+**Dashboard proof (screenshot, 08:51:07Z):**
+- EP 4111 (23L) · BATCH 223/300 · ATL 8.7249 (0.97%) · EP AVG 9.2417
+- Batch losses visible: 9.2859, 9.3948, 9.0698, 9.0566 — active, varying, normal
+- DIVWD step=5523 — internal divergence watch running
+- Events bar: EPOCH avg 9.2417 confirmed · BALANCED H=2.465 events active
+
+**Root cause of ntfy silence:** ntfy delivery failure. WALD events for ep4103–ep4110 (expected 8 fires over 40min) simply never arrived at the ntfy endpoint. Training was computing normally on Modal. The dashboard at localhost:8888 is the authoritative source — not ntfy.
+
+**Current state at ep4111:**
+- EP AVG 9.2417 — above BEST 9.2138 (ep4098), model is still exploring post-S10
+- Expert routing: CMP=100% · PLN=82% · INT=70% · ABS=53% — strong cognitive cluster
+- LNG=36%, LOG=13% — language and logic secondaries active
+- SYN/SEM/GEN/CTX/INF very low — expected post-surgery redistribution
+- GATE: red (closed) — plateau gate not yet triggered post-S10, normal
+- Per-layer gradient: L22 leading (top layer, recently added in S10 = expected)
+
+**Lesson:** ntfy is a secondary monitoring channel, not ground truth. Dashboard first.
