@@ -6359,3 +6359,20 @@ Drift peaked at ep4166 (9.231) and reversed. ep4174 at 9.218 is essentially back
 **fill stable 6.2%, dead_high 9.50+** — routing fully normalized.
 
 **Interpretation:** Post-surgery exploration arc complete. The model oscillated +0.014 above floor, now returned. If this pattern matches S10 post-surgery behavior, the next phase should be genuine descent beginning. ep4174 at 9.218 is 0.027 above the pre-S11 ATL of 9.2045 — descent toward and through that level is the next target.
+
+## FN174 · 2026-05-27T14:52Z · ep4177 · Mass flat at 9.22 band; fill oscillating 8.3↔6.2%; stabilizing
+
+**State:** Active · EP 4177 (24L) · step=9000
+
+**Source:** ntfy poll, 15m window.
+
+**WALDs:**
+```
+ep4176  step=8700  fill=8.3%  mass=9.219  dead_high=9.75+
+ep4177  step=9000  fill=6.2%  mass=9.221  dead_high=9.50+
+```
+Step: ep4174=8100 → ep4176=8700 (+600=2ep) → ep4177=9000 (+300=1ep). Consistent.
+
+Mass 9.218→9.219→9.221 — essentially flat, ±0.003 oscillation. fill and dead_high flipping between states each epoch (8.3%/9.75+ ↔ 6.2%/9.50+) — routing toggling at the threshold boundary.
+
+**Interpretation:** Stabilization at 9.22. The exploration arc is done; model is finding its footing before descending. The fill oscillation between 6.2% and 8.3% is the routing sitting right at the dead-zone threshold — neither committed to widening nor narrowing. Watch for this to resolve in one direction. Descent phase expected soon.
