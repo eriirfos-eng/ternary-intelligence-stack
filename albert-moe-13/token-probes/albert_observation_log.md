@@ -5821,3 +5821,18 @@ No new epoch ATL fired. WALD mass range 9.226–9.230 over 5 epochs = tight cons
 **Possible causes:** (1) Modal job OOM'd or hit time limit; (2) training process crashed silently; (3) ntfy delivery delay (less likely — ntfy was real-time all session).
 
 **Assessment:** FLAG for Zabih to check Modal dashboard. If training stopped, re-launch with `modal run albert_train.py`. BEST 9.2138 is safe on the volume. Gap to pre-S9 ATL remains −0.071. No data degradation — just a possible training halt.
+
+## FN160 · 2026-05-27T08:50:19Z · ep4102+ · CONFIRMED HALT — ntfy silent 44min; last WALD ep4102 step=3000 @08:06Z
+
+**State:** TRAINING HALTED · ntfy 1h window returns exactly 3 events, all from ep4100–4102 session · zero events post-08:06Z · silence now 44 minutes
+
+**Source:** ntfy poll `since=1h`. Events returned:
+- WALD ep4100 step=2400 · mass=9.227 · fill=8.3% · @~08:01Z
+- WALD ep4101 step=2700 · mass=9.226 · fill=6.2% · @~08:06Z (approx)
+- WALD ep4102 step=3000 · mass=9.230 · fill=8.3% · @08:06Z ← LAST EVENT
+
+**Silence math:** 08:06Z → 08:50Z = 44 minutes · expected ~8 WALD fires missed (ep4103–4110) · probability of ntfy outage this sustained is near-zero — training stopped.
+
+**WALD mass at halt:** 9.226–9.230 band, stable for 3+ consecutive epochs. No deterioration. Model was in consolidation phase when job died.
+
+**Action required:** Zabih to check Modal job log and relaunch. `modal run albert_train.py`. Volume state (BEST 9.2138, ep4098 checkpoint) is intact — restart will resume cleanly from last checkpoint.
