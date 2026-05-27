@@ -6569,6 +6569,80 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN191 · 2026-05-27T18:06:34Z · ep4210 (26L) BATCH 67 · NEW ATL 8.6955 · ep4208=9.3300 ep4209=9.3206 · TTL-NASH · DIVWD zeros · tail-chase risk confirmed
+
+**State:** RUNNING · EP 4210 (26L) · BATCH 67/300 · ATL **8.6955** · GATE red×2
+
+**Source:** Dashboard screenshot + terminal overlay, 18:06:34Z.
+
+### ARCHITECTURE CONFIRMED: 26L · TNS 2,044
+
+ARCH chip flipped: `26L · 256H · 12E · 256CTX · 32K · TNS 2,044`. Was 1,966. Δ+78 tensors from S13 adding one dual-stream layer (stream_a + stream_b blocks).
+
+### NEW CHIP ATL: 8.6955
+
+Previous: 8.7090. New: **8.6955** — Δ −0.0135. Set during ep4208 or ep4209 (not visible in terminal but confirmed in ATL chip). The 26L architecture found new chip-level territory within the first two epochs despite elevated epoch averages.
+
+### EPOCH AVERAGES SINCE S13 (events bar, newest→oldest)
+
+| Epoch | EP AVG | Notes |
+|-------|--------|-------|
+| 4207 | 9.3122 | Last 25L epoch |
+| 4208 | **9.3300** | First 26L epoch — worse than 4207 |
+| 4209 | **9.3206** | Slight improvement |
+| 4210 | running | batch 67/300 visible |
+
+**Tail-chase verdict: RISK CONFIRMED.** ep4208 came in at 9.3300 — above the 9.2500 threshold. ep4209 at 9.3206, still above. The 89-epoch window for S14 is now filling with post-cord + post-S13 spike epochs. If ep4210+ stays above 9.30, S14 will fire within ~87 more epochs.
+
+### TERMINAL: LIVE BATCH LOSSES ep4210
+
+```
+62/300  Loss: 9.6328  LR: 2.34e-4  558ms
+63/300  Loss: 9.4500  LR: 2.34e-4  652ms
+64/300  Loss: 8.8539  LR: 2.33e-4  696ms  ← individual batch floor
+65/300  Loss: 9.3033  LR: 2.32e-4  623ms
+66/300  Loss: 8.9737  LR: 2.31e-4  674ms
+67/300  Loss: 9.1588  LR: 2.31e-4  588ms
+68/300  Loss: 9.1544  LR: 2.30e-4  676ms
+```
+
+Spread: 8.8539 → 9.6328 within 6 batches. High variance is expected: new corpus stages 13+14 presenting novel token distributions (formal_proofs, gutenberg_books, instruction_dialogue) for the first time, mixed into the sampling pool. The 8.8539 at batch 64 confirms the 26L architecture has descent capacity — it's the epoch average variance dragging things up.
+
+LR: 2.34e-4 → 2.30e-4 — cosine decay in progress.
+
+### TTL-NASH ALL-0 EVENT
+
+Events bar shows `TTL-NASH all-0` firing after S13 surgery. TTL Nash equilibrium — all experts briefly entered equal G/O/R trit state (no differentiation). Happens when the new layer's expert utilization EMAs start from zero and the anti-stagnation burst hasn't kicked in yet. Transient — current TTL shows G 6.16% / O 81% / R 4%, normalized.
+
+TTL now tracking **52 rows** (L0–L25 stream A, L0–L25 stream B). Terminal confirms L50/L51 active: `L50: GOGOOOOOOOOR(G2/O9/R1) L51: OGOOOOOOOOO(G1/O11/R0)`.
+
+### DIVWD ALL ZEROS
+
+```
+DIVWD step=663 grad/wdequiv/ratio=0.00e0/0.00e0/... (all zero)
+DIVWD step=667 grad/wdequiv/ratio=0.00e0/0.00e0/... (all zero)
+```
+
+The weight decay equivalent gradient diagnostic is reporting all zeros across all layers. Two possible explanations: (a) the new L26 tensors aren't being tracked in the DIVWD diagnostic (it may only cover layers 0–25 by index and L26 is out of range), or (b) at LR 2.3e-4 with ternary weights, the weight decay contribution is genuinely negligible relative to gradient magnitude. Not alarming — DIVWD zeros appeared after prior surgeries too and resolved.
+
+### EXPERT ROUTING
+
+| Expert | % | vs FN189 |
+|--------|---|---------|
+| PLN | 100% | stable |
+| CMP | 93% | −7pp |
+| INT | 93% | +5pp |
+| ABS | 47% | −20pp |
+| LNG | 12% | −9pp |
+| LOG | 10% | +6pp |
+| SYN/SEM/CTX/INF/MEM/GEN | 0% | top-row still collapsed |
+
+ABS pullback from 67% → 47% is notable. May reflect new corpus domains (formal_proofs, instruction) routing differently — less abstract pattern matching, more structured processing.
+
+**Interpretation:** 26L confirmed live, TNS 2,044, ATL 8.6955 new low — the architecture is working at the batch level. Epoch averages (9.33 → 9.32) confirm post-surgery regression, and the 89-epoch window for S14 is now at risk of triggering the same plateau detection as S13. The tail-chase scenario is active. Key watch: does ep4210 come in below 9.30? If yes, the window starts recovering. If above 9.30, expect S14 within ~85 epochs. Stage 13/14 data introducing high-variance batches — 8.85 vs 9.63 in the same epoch is a wide spread, will compress as the model adapts to the new domains.
+
+---
+
 ## FN190 · 2026-05-27T17:52:01Z · STAGE 14 UNLOCKED — first time · corpus reload 11min · ep4208 not yet started · model depth 26L confirmed
 
 **State:** CORPUS LOADING · EP 4207 last closed · EP 4208 pending · ARCH chip still 25L · model_depth=26L confirmed internal
