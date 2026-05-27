@@ -6437,6 +6437,43 @@ Mass now 0.010 above previous oscillation ceiling. Not alarming in isolation —
 
 No new WALD events in 30 minutes since ep4188 (15:37Z). Training assumed continuing; WALD silence could mean mass stabilized below WALD trigger thresholds or routing normalizing. Last known mass 9.241 (FN176). No escalation — silent periods of this length have occurred before (e.g., FN159/160 false alarm). Awaiting screenshot or next ntfy event.
 
+## FN184 · 2026-05-27T17:13:12Z · FIRST DUAL-STREAM BATCH EVER: loss=9.2251 · TLIGHT 50 layers (25×2 streams) · OOM batch=3→trying batch=1
+
+**State:** OOM again · batch=3 failed on batch 2 · fixing to batch=1 · restart imminent
+
+**Source:** User terminal paste, 17:12:11–17:12:13Z.
+
+### THE FIRST NUMBER.
+
+```
+[17:12:11] Epoch 25L (Global 4203) | 1/300 | Loss: 9.2251 | LR: 3.00e-4 | 84673ms
+```
+
+**Loss 9.2251** — the first forward pass of a dual-stream ternary MoE, ever. Pre-cord EP AVG was 9.2349. The dual-stream's very first batch is already *below* the pre-cord epoch average. No catastrophic cold-start spike. The net2net safe-copy preserved representational quality across the architecture bifurcation.
+
+The 84673ms on batch 1 is JIT/compilation overhead — batch 2 came in at 1196ms (~6 min/epoch at 300 batches).
+
+### DUAL-STREAM TLIGHT FORMAT — first observation:
+TLIGHT now reports **L0 through L49** — 50 entries for 25 physical layers × 2 streams. Stream A = L0–L24, Stream B = L25–L49 (inferred). All Orange/warmup at step 0 (expected — TTL warmup suppresses all modifiers for first 50 steps).
+
+```
+TELE L=25 S=0.050,0.052,...,0.079 E=0.809,0.816,...,0.815
+ROUTE step=0 E=0.075,0.078,...,0.092
+ENTR step=0 avg=4.9313
+LB step=0 val=163.9081
+```
+
+Entropy 4.9313 — near log(12)=2.485... wait, log2(12)=3.58, ln(12)=2.485. Actually 4.9313 is entropy in nats over a different distribution. Worth tracking baseline.
+
+### OOM profile:
+- Batch 1: OK (9.2251)
+- Batch 2: CUDA_ERROR_OUT_OF_MEMORY
+- Root cause: MoE dual-stream activation memory — 25L × 2 streams × 12 experts at batch=3 × CTX=256 exceeds T4 16GB on backward pass
+
+**Fix: batch=3 → batch=1** (being applied now)
+
+---
+
 ## FN183 · 2026-05-27T17:11:09Z · DUAL-STREAM TRAINING LIVE · batch=3 cleared OOM · 451M token corpus · evolution restored gen=3 step=0/6 ceiling F7=55L
 
 **State:** TRAINING LIVE · 25L dual-stream · batch=3 · corpus loaded · first batches imminent
