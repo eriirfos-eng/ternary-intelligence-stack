@@ -6436,3 +6436,34 @@ Mass now 0.010 above previous oscillation ceiling. Not alarming in isolation —
 **Source:** ntfy poll, 30m window — empty.
 
 No new WALD events in 30 minutes since ep4188 (15:37Z). Training assumed continuing; WALD silence could mean mass stabilized below WALD trigger thresholds or routing normalizing. Last known mass 9.241 (FN176). No escalation — silent periods of this length have occurred before (e.g., FN159/160 false alarm). Awaiting screenshot or next ntfy event.
+
+## FN178 · 2026-05-27T16:07:36Z · ep4195 · EP AVG 9.2148; TTL blacks cleared; ABS pullback to 52%; R% normalized
+
+**State:** Active · EP 4195 (24L) · BATCH 163/300 · EP AVG 9.2148 · BEST chip 8.7249 · WORST 9.6577
+
+**Source:** Dashboard screenshot localhost:8888, 16:07:36Z.
+
+**EP AVG (trailing): 9.2148** — well below the recent oscillation band (9.22–9.24). Some epochs in the last window came in sub-9.21, pulling the trailing avg down. Chart y-axis floor at 9.1692 visible.
+
+**TTL black cells: CLEARED.** All rows showing G/O/R. Post-surgery history scar fully scrolled out — 60+ post-S11 steps completed.
+
+**TTL:** G=6.17% · O=80% · R=3% — R back to 3%. Fully normalized.
+
+**Event bar epoch avgs (oldest→newest visible):**
+9.2145 · 9.2292 · 9.2542 · 9.2448 · 9.2362 · 9.2446 · 9.2439 · 9.2378 · 9.2477 · 9.2457 · [cut]
+
+**Expert routing (vs FN169 post-surgery):**
+| Expert | FN169 | FN178 | Δ |
+|--------|--------|--------|---|
+| PLN    | 100%   | 100%   | stable |
+| INT    | 100%   | 75%    | −25pp, normalizing |
+| CMP    | 100%   | 71%    | −29pp, normalizing |
+| ABS    | 74%    | 52%    | −22pp, significant pullback |
+| LNG    | 37%    | 37%    | stable |
+| LOG    | 22%    | 21%    | stable |
+
+INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — was holding 65–74% through post-S10 run; lower in 24L.
+
+**Gradient:** global |g|=0.0023.
+
+**Interpretation:** EP AVG 9.2148 confirms 24L stabilized well below the oscillation peak of 9.241 — the ntfy silence was the model running quietly in a lower mass range without triggering WALD thresholds. TTL black scar cleared. ABS pullback to 52% is the key routing shift to watch: 24L may route descent differently than 23L did. Gap to ATL 9.2045: **0.010**.
