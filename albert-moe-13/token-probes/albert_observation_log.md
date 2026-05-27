@@ -6569,6 +6569,63 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN188 · 2026-05-27T17:40:58Z · S13 CONFIRMED: 25L→26L log data · MYCELIUM resurrection · corpus reload · architecture 26L dual-stream live
+
+**State:** POST-SURGERY CORPUS RELOAD · EP 4207 closed · EP 4208 starting as 26L · tns=1966 (pre-surgery; post-surgery count TBD)
+
+**Source:** User training log paste, 17:40:51–17:43:57Z.
+
+### ep4207 EPOCH SUMMARY (pre-surgery, last 25L epoch)
+
+```
+EPOCH_SUMMARY epoch=4207 loss_avg=9.3122 (d+0.0192) loss_best=9.2066 since_best=59
+wald_sev=0.870 wald_fill=12.5% ttlfreeze=0 myc_L0-L3=[0.00/0.00/0.00/0.00]
+hot=L24 cold=L0 tns=1966
+```
+
+- EP AVG **9.3122** — up +0.0192 from prior epoch (ep4206 was 9.2930)
+- loss_best=9.2066 (epoch-ATL; note: chip ATL is 8.7123 from individual batch min)
+- since_best=59 — 59 epochs without epoch-ATL break (expected: post-cord whiplash window)
+- hot=L24 (deepest layer, expected — new layer activations propagating from tip)
+- cold=L0 (embedding side dormant under WALD early-layer amplification)
+- WALD fill=12.5%, mass=9.319, dead_low=3.00–8.50 (width 5.50), dead_high=10.00+ (width 5.00) — both dead zones widening, WALD driving hard
+
+### MYCELIUM EVENT at 17:40:51Z
+
+```
+MYCELIUM: Resurrected L2E10 from L2E1 (σ=0.050)
+MYCELIUM: Reloaded 1966 tensors after resurrection.
+```
+
+L2E10 (Layer 2, Expert 10) was dead — MYCELIUM detected low-utilization expert and reset it by cloning L2E1 (a live expert in the same layer) with σ=0.050 Gaussian perturbation. Expert count preserved, dead expert revived. myc_L0-L3 all 0.00e0 — no mycelium activity in layers 0–3 AFTER resurrection (it was done before epoch close).
+
+### S13 CONFIRMED: 25L → 26L at 17:40:58Z
+
+```
+[17:40:58] Dual-stream surgery: 25L → 26L | stream_a lat=-0.0737 stream_b lat=1025
+[evolution] Gen 3 step 1/6 → window=89 epochs, ceiling=34L, threshold=0.0113
+```
+
+- **stream_a lat=-0.0737** — stream A latent norm at surgery point
+- **stream_b lat=1025** — stream B latent value 1025 (likely raw tensor index or scale; not a norm in the same sense — needs watch)
+- Gen 3 **step 1/6** confirmed (was step 0/6 pre-surgery)
+- window=89 epochs, ceiling=34L, threshold=0.0113
+
+**Post-surgery architecture: 26L dual-stream 2×256H · 12E · Gen3 step1/6 · ceiling=34L**
+
+This is the first dual-stream Net2Net: layer 26 cloned from layer 25 for both stream_a and stream_b with Mandelbrot perturbation. TTL will now report 52 rows (L0–L25 × 2).
+
+### CORPUS RELOAD at 17:41:01–17:43:57Z
+
+Full stage 3–12 corpus reload triggered by surgery. Cache miss on all stages (model weight hash changed). Notable:
+- Stage 12 `wikipedia_en_full.txt` = **438,776,180 chars** — the dominant stage
+- `code_github_samples.txt` and `courtlistener_opinions.txt` = 0 chars (empty files, expected)
+- Total reload window: ~2m56s (17:41:01 → 17:43:57Z)
+
+**Interpretation:** ep4207 was the last 25L epoch — regression (+0.019 from ep4206) confirms the window average accurately reflects post-cord high-loss territory. MYCELIUM proactively revived L2E10 before surgery, ensuring full expert capacity entering 26L. S13 fired cleanly at epoch boundary. stream_b lat=1025 is anomalous — may be a raw activation magnitude rather than normalized norm; flag for FN189 if it appears abnormal in dashboard. Corpus reload complete; ep4208 as 26L should start ~17:44Z. Fifth surgery event of 2026-05-27.
+
+---
+
 ## FN184 · 2026-05-27T17:13:12Z · FIRST DUAL-STREAM BATCH EVER: loss=9.2251 · TLIGHT 50 layers (25×2 streams) · OOM batch=3→trying batch=1
 
 **State:** OOM again · batch=3 failed on batch 2 · fixing to batch=1 · restart imminent
