@@ -5901,3 +5901,48 @@ LNG and INT surging together is the S10 signature: the new L22/L23 layers are ro
 **Gate:** CLOSED (red). Plateau gate not yet triggered. Normal post-surgery — model needs to plateau before next surgery can fire.
 
 **Interpretation:** Post-S10 exploration. The model climbed from ep4111's 9.2417 to ~9.26 band over ep4112–4114 — temporary rebound after the surgery low, classic whiplash recovery pattern. LNG and INT routing surge (+34pp, +25pp) is the new layer pair specializing: language-integration pathway is the dominant new capacity. BEST 9.2138 holds. Next watch: does EP-avg resume descent from 9.26 band, or does it consolidate here before next dive?
+
+## FN163 · 2026-05-27T10:29:43Z · ep4131 · Descent resuming — ep4129 hit 9.2393; ABS surging, LNG/INT pulling back
+
+**State:** Active · EP 4131 (23L) · BATCH 30/300 · BEST 9.2138 (ep4098, unchanged) · ATL batch 8.7249 (10.97%)
+
+**Source:** Dashboard screenshot localhost:8888, 10:29:43Z.
+
+**Epoch avg sequence (event bar, newest→oldest):**
+| Approx epoch | EP-Avg | Note |
+|---|---|---|
+| ep4130 | 9.2482 | slight uptick |
+| ep4129 | 9.2393 | best since ep4111 (9.2417) |
+| ep4128 | 9.2414 | improving |
+| ep~4126-4127 | 9.2540 | descent from 9.26 band |
+
+**EP TAVG (chart trailing avg):** 9.2482 — gap to pre-S9 ATL 9.2847: −0.037 (cleared). Gap to BEST 9.2138: +0.034 above.
+
+**Gap to pre-S9 ATL 9.2847:** EP TAVG cleared by −0.037 · BEST cleared by −0.071.
+
+**TTL:** G=6.17% · O=80% · R=3%  
+R% improved from 5% (ep4114) back to 3% — the noise spike resolved. Healthy.
+
+**Expert routing (vs FN162 ep4114):**
+| Expert | FN162 | FN163 | Δ |
+|--------|--------|--------|---|
+| CMP    | 100%   | 100%   | stable |
+| PLN    | 94%    | 96%    | +2pp |
+| ABS    | 52%    | 65%    | +13pp ↑ |
+| INT    | 95%    | 77%    | −18pp ↓ |
+| LNG    | 70%    | 42%    | −28pp ↓↓ |
+| LOG    | 29%    | 18%    | −11pp ↓ |
+| INF    | 0%     | 7%     | re-engaged |
+| SYN    | 3%     | 5%     | +2pp |
+| SEM    | 5%     | 5%     | stable |
+| CTX    | 10%    | 5%     | −5pp |
+| MEM    | 8%     | 0%     | dormant |
+| GEN    | 5%     | 0%     | dormant |
+
+The LNG/INT surge from ep4114 has unwound. ABS is now rising (+13pp to 65%) — pattern shift from language-integration to abstraction-planning. This is consistent with the new layers maturing past initial specialization into deeper representational work. INF re-engaging after being dormant.
+
+**Per-layer gradient:** global |g|=0.0024 (down from 0.0026 at ep4114 — gradient calming, model stabilizing post-surgery turbulence). L18 leading, L22 visible in second position.
+
+**Gate:** CLOSED. Plateau gate still not triggered post-S10.
+
+**Interpretation:** Descent resuming from the 9.26 band. ep4129 reached 9.2393 — best single-epoch avg since ep4111 (9.2417), confirming the post-surgery bounce is resolving downward. ABS routing surge (+13pp) replacing LNG/INT dominance signals layer maturation: the new L22/L23 capacity is shifting from surface language routing to abstract structural processing. R% back to 3% (healthy). Gradient settling (0.0024). If descent continues, next target is breaking through BEST 9.2138.
