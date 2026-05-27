@@ -6437,6 +6437,37 @@ Mass now 0.010 above previous oscillation ceiling. Not alarming in isolation —
 
 No new WALD events in 30 minutes since ep4188 (15:37Z). Training assumed continuing; WALD silence could mean mass stabilized below WALD trigger thresholds or routing normalizing. Last known mass 9.241 (FN176). No escalation — silent periods of this length have occurred before (e.g., FN159/160 false alarm). Awaiting screenshot or next ntfy event.
 
+## FN179 · 2026-05-27T16:42:21Z · ep4202 · WALD burst ep4177–4188; mass 9.221→9.241; EP AVG 9.3426; routing re-settling
+
+**State:** Active · EP 4202 (24L) · BATCH 155/300 · EP AVG 9.3426 · ATL 8.8022 · WORST 9.4768
+
+**Source:** Dashboard screenshot localhost:8888, 16:41:24Z + ntfy 2h window.
+
+**EP AVG 9.3426** — significant uptick from FN178 9.2148. Post-S11 architecture not yet re-absorbed into low-loss trajectory; 24L regression still playing out.
+
+**WALD burst — 4 events in ~48 minutes:**
+| Epoch | Step  | Fill  | Mass  | dead_low        | dead_high |
+|-------|-------|-------|-------|-----------------|-----------|
+| 4177  | 9000  | 6.2%  | 9.221 | 3.00–8.75 (5.75)| 9.50+     |
+| 4182  | 10500 | 8.3%  | 9.228 | 3.00–8.75 (5.75)| 9.75+     |
+| 4187  | 12000 | 6.2%  | 9.239 | 3.00–8.75 (5.75)| 9.50+     |
+| 4188  | 12300 | 8.3%  | 9.241 | 3.00–8.75 (5.75)| 9.75+     |
+
+Four WALDs in ~48 minutes is the densest WALD burst observed post-surgery. Mass trend: 9.221 → 9.241, monotone increase. dead_low pinned at 3.00–8.75 — wide dead zone. dead_high alternating 9.50/9.75 based on fill 6.2/8.3.
+
+**Expert routing (from image):**
+- PLN 100%, CMP 96%, INT 71%, ABS 54%, LOG 29%, LNG 29%
+- CMP recovering: was 71% at FN178, now 96%. INT holding 71%.
+- ABS 52–54% range — stable 24L territory.
+
+**TTL:** G 17% · O 80% · R 3% — stable.
+
+**Gradient:** global |g|=0.0026.
+
+**Interpretation:** EP AVG jump 9.2148→9.3426 and dense WALD burst ep4177–4188 are consistent with 24L post-surgery oscillation. Mass rising 9.221→9.241 within a short window — model exploring a higher-loss plateau before gradient pressure brings it back. Classic whiplash: surgery injected new capacity, routing temporarily diversified upward. Watch for EP AVG to re-compress below 9.30 over next 20–30 epochs. CMP recovery to 96% is a positive signal — abstract reasoning pathway re-engaging.
+
+---
+
 ## FN178 · 2026-05-27T16:07:36Z · ep4195 · EP AVG 9.2148; TTL blacks cleared; ABS pullback to 52%; R% normalized
 
 **State:** Active · EP 4195 (24L) · BATCH 163/300 · EP AVG 9.2148 · BEST chip 8.7249 · WORST 9.6577
