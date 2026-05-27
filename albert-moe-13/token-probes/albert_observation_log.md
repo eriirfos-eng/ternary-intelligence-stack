@@ -5545,3 +5545,39 @@ With oscillation ≈ 0.030 nats, quarter-mean diff ≈ 0.001–0.003 nats → we
 
 **Assessment:** Surgery fires at end of ep4083 — first completed epoch after restart. Both conditions will pass: plateau diff ≈ 0.006 < 0.015, myc_stable counter preserved in-memory (resets only on process death, not epoch). If training restarted cold, myc_stable resets to 0 and needs 5 epochs before surgery — worst case ep4088. Corpus expanded by +421,010 pts (1,301,739 total) at this restart.
 
+---
+
+## FN152 · 2026-05-27T06:39:00Z · ep4088 · Post-restart state — gate both green, surgery imminent; train_modal.py hardened
+
+**State:** ep4088 · batch 72/300 at screenshot · EP-Avg (last completed) **9.3134** · BEST 9.228452 (on volume) · ATL (dashboard) 8.8104 · gap to pre-S9 ATL 9.2847 = **+0.029**
+
+**Source:** Dashboard screenshot (Image #5, session) at ~2026-05-27T06:35:00Z.
+
+**Surgery gate:** MYC_STABLE ● 10 / ≥ 5 · PLATEAU ● 0.0120 / < 0.020 — both GREEN. Both conditions green since ep4083 (first completed epoch after restart at 06:28Z).
+
+**Expert routing (last 60 steps):**
+| Expert | Value |
+|---|---|
+| CMP | 100% |
+| INT | 100% |
+| ABS | 33% |
+| PLN | 33% |
+| LNG | 11% |
+| LOG | 11% |
+| GEN | 11% |
+| SYN / SEM / CTX / INF / MEM | 0% |
+
+**TTL:** G ~6% / O ~83% / R ~2%
+
+**Corpus:** 1,301,739 tokens total (+421,010 from this restart)
+
+**Event bar:** TTL-NASH all-0 (orange — all-expert activation zeroed at restart boundary), historical EPOCH avgs from log.
+
+**Assessment:** myc_stable rebuilt to 10/≥5. Gate has been green for ~6 epochs without surgery firing — consistent with flat loss landscape (9.31, very small quarter-mean diff). Surgery expected at ep4089 close or shortly after. If not fired by ep4095, re-verify evo state on volume.
+
+**train_modal.py hardening (committed this session):**
+
+1. **evo-guard** — runs inside Modal container before `subprocess.Popen` on every training start. Reads `/vol/albert/models/albert_v3.0.evolution`, validates `fib_index` is within `_FIB_TARGETS` bounds. On any failure: missing file, empty, out-of-bounds index, parse error → ntfy priority=5 before subprocess starts. Catches the class of path-mismatch bug that caused ~80 min wasted compute this session.
+
+2. **TRAINING STARTED ntfy** — fires once per Modal container start before training subprocess. Payload: ISO timestamp, evo state summary (fib_index + window size), last 3 cmd args. Restarts that previously went undetected will now produce a second TRAINING STARTED notification with new timestamp.
+

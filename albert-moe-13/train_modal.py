@@ -14,6 +14,7 @@ Run all commands from the albert-moe-13/ directory.
 import os
 import subprocess
 import sys
+import urllib.request
 
 # ---------------------------------------------------------------------------
 # CLI commands (setup / pull) — handled before Modal imports so they work
@@ -150,6 +151,21 @@ vol = modal.Volume.from_name(_VOL, create_if_missing=True)
 
 app = modal.App("albert-training")
 
+_NTFY_TOPIC = "albert-rfi-irfos"
+_FIB_TARGETS = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987]
+
+
+def _ntfy(title: str, msg: str, priority: str = "3") -> None:
+    try:
+        req = urllib.request.Request(
+            f"https://ntfy.sh/{_NTFY_TOPIC}",
+            data=msg.encode(),
+            headers={"Title": title, "Priority": priority},
+        )
+        urllib.request.urlopen(req, timeout=5)
+    except Exception:
+        pass
+
 
 @app.function(
     image=image,
@@ -266,6 +282,53 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: i
                     if proc.poll() is not None:
                         break
                     time.sleep(0.05)
+
+    # --- evo-guard: validate evolution state before training starts ---
+    _evo_path = "/vol/albert/models/albert_v3.0.evolution"
+    _evo_ok = False
+    _evo_warn = ""
+    try:
+        with open(_evo_path) as _ef:
+            lines = _ef.readlines()
+        if not lines:
+            _evo_warn = "evolution file is empty"
+        else:
+            _fib_idx = int(lines[0].strip())
+            if _fib_idx < 0 or _fib_idx >= len(_FIB_TARGETS):
+                _evo_warn = (
+                    f"fib_index={_fib_idx} out of bounds "
+                    f"(valid 0–{len(_FIB_TARGETS)-1}); surgery gate will never fire"
+                )
+            else:
+                _history_len = _FIB_TARGETS[_fib_idx]
+                _evo_ok = True
+                print(
+                    f"[evo-guard] OK — fib_index={_fib_idx} "
+                    f"window={_history_len} entries={len(lines)-1}"
+                )
+    except FileNotFoundError:
+        _evo_warn = f"evolution file missing at {_evo_path}"
+    except (ValueError, IndexError) as _e:
+        _evo_warn = f"evolution file parse error: {_e}"
+
+    if _evo_warn:
+        print(f"[evo-guard] WARNING: {_evo_warn}", flush=True)
+        _ntfy(
+            "albert. EVO-GUARD WARNING",
+            f"Evolution file problem before training start:\n{_evo_warn}\nSurgery gate may not fire.",
+            priority="5",
+        )
+
+    # --- ntfy: announce training start ---
+    import time as _t
+    _ts = _t.strftime("%Y-%m-%dT%H:%M:%SZ", _t.gmtime())
+    _evo_status = f"fib_index={_fib_idx} window={_history_len}" if _evo_ok else f"EVO WARN: {_evo_warn}"
+    _ntfy(
+        "albert. TRAINING STARTED",
+        f"Modal container running — {_ts}\n{_evo_status}\ncmd: {' '.join(cmd[-3:])}",
+        priority="3",
+    )
+    print(f"[modal] training started — ntfy sent ({_ts})", flush=True)
 
     proc = subprocess.Popen(cmd, env=env)
     tailer = threading.Thread(target=tail_log, args=(proc,), daemon=True)
