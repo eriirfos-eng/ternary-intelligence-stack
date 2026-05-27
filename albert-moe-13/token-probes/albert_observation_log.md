@@ -5502,3 +5502,46 @@ With oscillation ≈ 0.030 nats, quarter-mean diff ≈ 0.001–0.003 nats → we
 
 **Assessment:** Surgery expected within minutes of this screenshot. TTL-NASH all-0 is a new event — routing Nash equilibrium detected (all-expert activation momentarily zeroed, possibly at restart boundary). PLN collapsed −31pp from FN147, INT and ABS absorbing load. SYN and SEM fully dormant. This is consistent with a fresh restart state before routing re-stabilises. Primary concern is surgery firing before any momentum is wasted.
 
+---
+
+## FN151 · 2026-05-27T06:22:00Z · ep4082 · Third fix attempt — wrong volume path identified and corrected; training restarted
+
+**State:** ep4082 · batch 141/300 at screenshot · EP-Avg (last completed) **9.3134** · BEST 9.228452 · ATL (dashboard) 8.8104 · gap to pre-S9 ATL 9.2847 = **+0.029** (9.3134 − 9.2847)
+
+**Source:** Dashboard screenshot (Image #1, session) at 2026-05-27T06:10:00Z + live Modal volume evo state read.
+
+**Surgery gate (from dashboard):** MYC_STABLE ●  10 / ≥ 5 · PLATEAU ● 0.0120 / < 0.020 — both GREEN for 10 consecutive epochs since restart. Zero surgeries fired.
+
+**Expert routing (last 60 steps, from screenshot):**
+| Expert | Value |
+|---|---|
+| PLN | 100% |
+| CMP | 84% |
+| ABS | 67% |
+| INT | 48% |
+| LNG | 27% |
+| INF / LOG | 10% each |
+| SYN / GEN / MEM | 2–4% |
+| SEM / CTX | 0% |
+
+**TTL:** G 17% / O 79% / R 5%
+
+**Root cause (confirmed):** Both previous fix attempts in this session (FN149, FN150) pushed the corrected evo state to `albert-moe-13/models/albert_v3.0.evolution` on the Modal volume. The training container reads from `albert/models/albert_v3.0.evolution` — an entirely different directory. The wrong push silently succeeded (Modal created the path), training never read the fix, and continued running with fib_index=9 (window=233 epochs) for all 10 post-restart epochs. With 184 entries vs 233 required, `should_evolve()` returned false on every epoch. Both gate indicators on the dashboard showed GREEN because the dashboard computes its own smoothed plateau value independently — it does not read the evo state directly.
+
+**Fix applied (third attempt, correct path):**
+1. Downloaded live evo state from `albert/models/albert_v3.0.evolution` — confirmed fib_index=9, 184 entries, gen_epochs_no_surgery=358
+2. Stopped training container (ap-bwv5pB4q4Z4SMuPQzmwLRY)
+3. Fixed local evo file: fib_index 9 → 5
+4. Pushed to `albert/models/albert_v3.0.evolution` ← correct path
+5. Verified volume shows fib_index=5 (round-trip get confirmed)
+6. User pulled weights from volume (`albert-train --detach` pull phase) — local evo file would have re-downloaded fib_index=9 from volume
+7. Fixed local evo file again (fib_index 9 → 5) and re-pushed to correct volume path
+8. Final verification: volume fib_index=5, 188 entries, gate passes, cooldown=0
+9. Training restarted: ap-C1cNSbMLCNUwJtjQN9X8Qm · 2026-05-27T06:28Z
+
+**Evo state at restart:** fib_index=5 · window=FIB_TARGETS[5]=34 · history=188 entries ≥ 34 ✓ · cooldown=0 · plateau_threshold=0.015 · gen_epochs_no_surgery=358 · generation=2 · gen_step=4
+
+**Memory update:** `feedback_modal_volume_paths.md` written to persistent memory with full canonical volume path map. Will not recur.
+
+**Assessment:** Surgery fires at end of ep4083 — first completed epoch after restart. Both conditions will pass: plateau diff ≈ 0.006 < 0.015, myc_stable counter preserved in-memory (resets only on process death, not epoch). If training restarted cold, myc_stable resets to 0 and needs 5 epochs before surgery — worst case ep4088. Corpus expanded by +421,010 pts (1,301,739 total) at this restart.
+
