@@ -6332,3 +6332,30 @@ Step: ep4163=4800 → ep4166=5700 (+900 = 3 epochs). Consistent.
 dead_high back to 9.50+ (normalized from 9.75+ spike at ep4163). fill stable at 6.2%. Routing variance settling.
 
 **Interpretation:** Continued 24L exploration. Slow mass drift is normal post-surgery behavior — model adjusting to new capacity before descending. No alarm. Watch for drift to flatten and reverse.
+
+## FN173 · 2026-05-27T14:28Z · ep4174 · Drift reversed — mass back to 9.218, near ep4158 floor
+
+**State:** Active · EP 4174 (24L) · step=8100
+
+**Source:** ntfy poll, 45m window (3 silent ticks).
+
+**WALD:**
+```
+ep4174  step=8100  fill=6.2%  mass=9.218  dead_high=9.50+ (5.50)
+```
+Step: ep4166=5700 → ep4174=8100 (+2400 = 8 epochs). ntfy was quiet during this window — no new WALDs fired between ep4166 and ep4174.
+
+**Post-S11 mass arc:**
+| Epoch | Mass | Δ |
+|---|---|---|
+| ep4158 | 9.217 | floor |
+| ep4162 | 9.224 | +0.007 |
+| ep4163 | 9.227 | +0.003 |
+| ep4166 | 9.231 | +0.004 ← peak |
+| ep4174 | **9.218** | −0.013 ↓ reversed |
+
+Drift peaked at ep4166 (9.231) and reversed. ep4174 at 9.218 is essentially back to the ep4158 floor. This is the exploration oscillation completing — the 24L model tried the upper range and came back down.
+
+**fill stable 6.2%, dead_high 9.50+** — routing fully normalized.
+
+**Interpretation:** Post-surgery exploration arc complete. The model oscillated +0.014 above floor, now returned. If this pattern matches S10 post-surgery behavior, the next phase should be genuine descent beginning. ep4174 at 9.218 is 0.027 above the pre-S11 ATL of 9.2045 — descent toward and through that level is the next target.
