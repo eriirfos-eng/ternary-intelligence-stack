@@ -6246,3 +6246,38 @@ INT maxing at 100% post-surgery = new L23 integrating immediately into inference
 **Gate:** red + orange (unchanged).
 
 **Interpretation:** Two surgeries in one day. S11 fired ~5h after S10 paid off with ATL 9.2045. The plateau gate measured 55 epochs of near-flat trend and correctly expanded. Post-surgery whiplash is resolving with unusual speed: surgery spike of 9.3044 corrected to 9.2524 in a single epoch — the new layer found its footing immediately. INT+CMP maxed on first observation post-surgery = the inference-comparison pathway absorbed the new capacity first. GEN at 10% is a new signal. Floor after this surgery: watch if ep4155+ settles above or below the pre-surgery best of 9.2045.
+
+**Addendum — TTL black cell artifact (investigated 2026-05-27T13:00Z):**
+Black cells in the TTL heatmap traced to dashboard renderer line 4576:
+`!layerSnap → rgba(255,255,255,0.04)` — near-transparent on dark bg = appears black.
+Cause: old TLIGHT history snapshots (pre-surgery, 23L) don't contain L23/L24 data. Dashboard stayed live through S11 transition, capturing the rollover. Self-heals as 60 new post-surgery TLIGHT steps scroll the old ones out. First observed instance — visual scar of the surgery boundary in the history window.
+
+## FN170 · 2026-05-27T13:15Z · ep4158 · Post-S11 WALD mass=9.217 — 11 epochs out, recovery near pre-surgery territory
+
+**State:** Active · EP 4158 (24L) · BEST EP-AVG 9.2045 (ep4136) · step counter reset post-surgery
+
+**Source:** ntfy poll albert-rfi-irfos, 15m window.
+
+**WALD (ntfy 1779887302):**
+```
+epoch=4158  step=3300  fill=6.2%  mass=9.217
+dead_low=3.00–8.75 (5.75)  dead_high=9.50+ (5.50)  severi[truncated]
+```
+step=3300 confirms step counter reset at surgery restart. ep4158 = ep4147+11, so 11 epochs post-surgery × 300 steps = 3300. Consistent.
+
+**Recovery trajectory:**
+| Epoch | Mass/Avg | Source |
+|---|---|---|
+| ep4147 | surgery epoch | — |
+| ep4148 | 9.3044 | surgery spike (event bar FN169) |
+| ep4148 step=300 | 9.309 | WALD ntfy FN168 |
+| ep4149 step=600 | 9.265 | WALD ntfy FN168 |
+| ep4155 | EP AVG ~9.22 | FN169 dashboard |
+| ep4158 step=3300 | **9.217** | this WALD |
+
+9.217 at ep4158 = 11 epochs post-surgery, 0.008 above pre-surgery ATL 9.2045. Recovery pace is faster than S10 (which took ~19 epochs to stabilize). The 24L model found its footing on the new layer quickly.
+
+**fill=6.2% unchanged** — dead zone fraction stable, no routing collapse.
+**dead_high=9.50+** back to normal range (was 9.75+ in immediate post-surgery WALDs FN168).
+
+**Interpretation:** S11 whiplash fully resolving. Mass at ep4158 (9.217) is back in the pre-surgery operating range. The dead_high threshold returning to 9.50+ from 9.75+ signals the routing distribution has normalized — post-surgery wide variance is compressing back down. Next watch: does ep4158 ep-avg approach or break 9.2045 ATL, or does 24L need more epochs to plateau before a new floor is established.
