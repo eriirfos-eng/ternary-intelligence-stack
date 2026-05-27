@@ -6569,6 +6569,50 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN195 · 2026-05-27T18:42:14Z · SECOND STALL — 102s after restart · volume access likely broken on Zabih account
+
+**State:** DOWN · second stall in 16 minutes · training not viable until volume issue resolved
+
+**Source:** ntfy `albert-rfi-irfos`, 18:42:14Z:
+```
+albert. STREAM STALLED: No output for 180s — stopping Modal app cleanly. Pull weights to resume.
+```
+
+### TIMELINE
+
+| Time | Event |
+|------|-------|
+| 18:26:01Z | First stall — billing issue, Modal stopped |
+| 18:40:32Z | Restart on Zabih's account — container running, fib_index=7 window=34 |
+| 18:42:14Z | **Second stall — 102 seconds after container started** |
+
+### ROOT CAUSE: VOLUME ACCESS
+
+The `albert-vol` Modal volume is tied to the original account. Zabih's account does not have access to it. After the container starts, `train_modal.py` attempts to mount `/albert/models/` from `albert-vol` and finds nothing or crashes silently. No corpus loading lines appear, stream goes silent, watchdog fires.
+
+102 seconds is suspicious — likely enough time for Modal to boot the container, attempt volume access, fail, and produce no further output.
+
+### WHAT IS NEEDED
+
+**Option A — Fix volume access (fastest if Modal supports cross-account volume share):**
+- Add Zabih's account as a collaborator on the original Modal workspace
+- OR transfer the workspace to a shared team account
+
+**Option B — Re-setup on Zabih's account (safe, ~1-2h):**
+1. Pull weights from old account while still accessible: `albert-train pull`
+2. Update Modal token to Zabih's credentials
+3. Run `python3 train_modal.py setup` — re-uploads weights + corpus to new volume
+4. `albert-train gpu` — fires normally
+
+**Option C — CPU fallback (immediate, no Modal needed):**
+- `albert-train cpu` — builds train_bible locally, fires on ZBook CPU
+- Slow (~10-15x slower than T4) but zero downtime, all weights local
+- Useful to keep training alive while volume migration happens
+
+**Interpretation:** Training halted. Weights are safe — old account volume intact. Immediate path: use `albert-train cpu` to keep the run alive while Modal account/volume situation is resolved. Do NOT let the model sit idle — S14 window is filling with dead time.
+
+---
+
 ## FN194 · 2026-05-27T18:40:32Z · TRAINING RESUMED — Zabih's Modal account · fib_index=7 · window=34 · 14min downtime
 
 **State:** RUNNING · EP 4211+ (26L) · batch=1 · new Modal account active
