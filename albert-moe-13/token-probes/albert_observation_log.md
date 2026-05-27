@@ -5946,3 +5946,57 @@ The LNG/INT surge from ep4114 has unwound. ABS is now rising (+13pp to 65%) — 
 **Gate:** CLOSED. Plateau gate still not triggered post-S10.
 
 **Interpretation:** Descent resuming from the 9.26 band. ep4129 reached 9.2393 — best single-epoch avg since ep4111 (9.2417), confirming the post-surgery bounce is resolving downward. ABS routing surge (+13pp) replacing LNG/INT dominance signals layer maturation: the new L22/L23 capacity is shifting from surface language routing to abstract structural processing. R% back to 3% (healthy). Gradient settling (0.0024). If descent continues, next target is breaking through BEST 9.2138.
+
+## FN164 · 2026-05-27T10:32:46Z · ep4131 · WALD fired ep4130; INT recovering; intra-epoch descent healthy
+
+**State:** Active · EP 4131 (23L) · BATCH 213/300 · BEST 9.2138 (ep4098, unchanged) · ATL batch 8.7249
+
+**Source:** Dashboard screenshot localhost:8888 + ntfy poll, 10:32:46Z.
+
+**WALD event (ntfy, ~10:29Z):**
+```
+epoch=4130  step=11400  fill=6.2%  mass=9.248
+dead_low=3.00–8.75 (span 5.75)  dead_high=9.50+ (span 5.50)
+message truncated at "sever..." — severity level or connection sever unknown
+```
+WALD reactive to ep4130 uptick (9.2540 > ep4129's 9.2393). No gate action — WALD is detector not trigger.
+
+**Epoch avg sequence (event bar, oldest→newest):**
+| Approx epoch | EP-Avg | Note |
+|---|---|---|
+| ep4127 | 9.2482 | |
+| ep4128 | 9.2393 | best recent (confirmed FN163) |
+| ep4129 | 9.2414 | |
+| ep4130 | 9.2540 | uptick — WALD reactive to this |
+| ep4131 | in progress | batch 213/300, intra-epoch loss ~9.09 ↓ |
+
+**Within-epoch loss (ep4131, 10:32:42–46Z):**
+batch 209→9.1907 · 210→9.1228 · 211→9.1650 · 212→9.0906 · 213→9.0859 — descending, healthy.
+
+**TTL:** G=6.17% · O=80% · R=3% — unchanged from FN163. Stable.
+
+**Expert routing (vs FN163):**
+| Expert | FN163 | FN164 | Δ |
+|--------|--------|--------|---|
+| PLN    | 96%    | 100%   | +4pp |
+| CMP    | 100%   | 97%    | −3pp, stable |
+| INT    | 77%    | 88%    | +11pp ↑ recovering |
+| ABS    | 65%    | 61%    | −4pp, slight pullback |
+| LNG    | 42%    | 39%    | −3pp, continuing pullback |
+| LOG    | 18%    | 19%    | stable |
+| INF    | 7%     | 7%     | stable |
+| CTX    | 5%     | 10%    | +5pp, re-engaging |
+| SYN    | 5%     | 7%     | +2pp |
+| SEM    | 5%     | 7%     | +2pp |
+| MEM    | 0%     | 2%     | trace re-engagement |
+| GEN    | 0%     | 0%     | dormant |
+
+INT recovering hard (+11pp to 88%) after the FN163 dip. ABS pulling back slightly from 65% peak. CTX re-engaging (+5pp).
+
+**Routing internals (step=11610):** ENTR avg=2.4656 (moderate diversity) · LB val=71.5354 · ROUTE E-spread=0.080–0.089 (even, no collapse).
+
+**Per-layer gradient:** global |g|=0.0023 (down from 0.0024 FN163 — gradient still calming). L18 leading.
+
+**Gate:** CLOSED (red). No change post-S10.
+
+**Interpretation:** ep4130 upticked to 9.2540 (from ep4129's 9.2393), triggering WALD — detector reacting to the local max, not a structural alarm. Intra-epoch loss for ep4131 is tracking well below 9.10 by batch 213, suggesting ep4131 avg should recover below ep4130. INT routing recovered +11pp, consistent with it being transient specialization churn rather than permanent loss. Gradient calming continues (0.0023). The ABS/INT interplay from FN163 is normalizing: ABS slight pullback, INT back up — both the core four holding strong. Next: watch ep4131 final avg — if it clears 9.2393, descent resumes toward BEST 9.2138.
