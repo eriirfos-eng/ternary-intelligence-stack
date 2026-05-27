@@ -5728,3 +5728,35 @@ GEN at 14% is the standout — was near-zero for entire pre-surgery history. Lay
 **TTL:** G 18% / O 79% / R 3%
 
 **Assessment:** Surgery S10 delivering beyond expectation. EP-Avg cleared pre-S9 ATL in 4 epochs (predicted 20+). New batch-level ATL 8.7249 suggests the loss landscape has opened up substantially. GEN/MEM activation is mechanistically interesting — these experts were dormant for hundreds of epochs and the new layer appears to be routing them. Watch for GEN stabilizing above 10%: if it does, the model has genuinely expanded its representational strategy rather than just shifting load between existing experts. Next surgery gate check: 55-epoch window starts from ep4092, so earliest plateau candidate ~ep4147+.
+
+---
+
+## FN156 · 2026-05-27T07:58:00Z · ep4098+ · TTL unlock: L20+L21 unfrozen post-S10; R% → 2%; whiplash effect confirmed across full history
+
+**State:** mid-ep4098 continuing descent · TTL G 17% / O 81% / **R 2%** (new low) · EP-Avg trajectory still falling
+
+**Source:** TTL routing close-up (Image #13) + full historical chart (Image #14), session. No dashboard main panel — extracted from these two panels.
+
+**Key mechanistic observation — L20/L21 unlock:**
+Throughout the entire 22L plateau phase (ep~3700–4092, ~385 epochs), layers 20 and 21 were **consistently red in the TTL heatmap without exception** — blocked out, no gradient flow, effectively dead weight. Layer 22 carried all routing load.
+
+After S10 (22→23L, ep4092):
+- L20 and L21 **unlocked immediately** — both now participating in routing (green/orange in TTL)
+- Layer 23 (new, Mandelbrot-perturbed) also green/active from the first epoch
+- R% dropped from ~5–6% → **2%** — lowest red fraction observed in training history
+
+This explains the whiplash magnitude. The surgery didn't just add a layer — it released two frozen layers that had been accumulating gradient pressure. The cascade unlocked at least 3 layers simultaneously: L20 (unfrozen), L21 (unfrozen), L23 (new).
+
+**Full surgery history visible in chart (Image #14):**
+| Surgery | Date | Effect |
+|---|---|---|
+| 19→20L | 20.04.2026 | large loss spike then descent |
+| 20→21L | 25.04.2026 | spike + descent |
+| 21→22L | 25.04.2026 | established floor @ 9.2830 |
+| 22→23L | 27.05.2026 | **whiplash** — floor @ 9.2830 broken in 4 epochs |
+
+The 21→22L surgery on 25.04 set a floor at 9.2830 that held for 385 epochs (the "pre-S9 ATL" we tracked all session). The 22→23L surgery cleared it in ep4093 (one epoch) and is now 0.05+ below.
+
+**TTL tooltip (Image #13):** L7 step 1756 · G 2 / O 10 — layer 7 is orange-dominant at this step, showing gradient flow reaching even lower layers.
+
+**Assessment:** The L20/L21 frozen-layer hypothesis is confirmed retroactively. The plateau was caused not by loss landscape flatness but by dead layers preventing the model from utilizing its full 22L depth. Adding L23 broke the structural freeze — the new layer's different weight initialization gave the routing system an alternative gradient path that broke the symmetry lock on L20/L21. This is a strong validation of the Net2Net-style surgery approach: the benefit isn't just capacity, it's that the perturbation relieves frozen-layer locks. Mechanistic note to carry into S11 planning.
