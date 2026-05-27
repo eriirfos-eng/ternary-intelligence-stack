@@ -6569,6 +6569,59 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN190 · 2026-05-27T17:52:01Z · STAGE 14 UNLOCKED — first time · corpus reload 11min · ep4208 not yet started · model depth 26L confirmed
+
+**State:** CORPUS LOADING · EP 4207 last closed · EP 4208 pending · ARCH chip still 25L · model_depth=26L confirmed internal
+
+**Source:** Dashboard screenshot + terminal overlay, 17:52:01Z.
+
+### STAGE 14 — FIRST EVER UNLOCK
+
+```
+Active corpus stages: [3, 6, 7, 8, 9, 10, 11, 12, 13, 14] (model depth: 26L)
+```
+
+26L depth crossed the stage-14 unlock threshold. Stage 14 files (from terminal):
+- `formal_proofs.txt` — 1,762,805 chars (~formal mathematical reasoning)
+- `news_archives.txt` — 867,850 chars
+- `stackexchange_full.txt` — 703,838 chars
+
+**Albert has never trained on stage 14 data before.** This is the first epoch it will see formal proofs, full news archives, and the extended StackExchange corpus. The curriculum gate opened exactly as designed.
+
+Stage 13 also confirmed newly active (was not in prior stage list):
+- `gutenberg_books.txt` — 152,108,278 chars (152MB — largest new addition)
+- `instruction_dialogue.txt` — 41,989,338 chars (42MB)
+- `wikidata_facts.txt` — 1,717,572 chars
+- `wikipedia_multilingual_full.txt` — 11,600,792 chars
+
+### CORPUS RELOAD TIMELINE
+
+| Time | Event |
+|------|-------|
+| 17:40:58Z | S13 fires — corpus invalidated |
+| 17:41:01Z | Stage 3 reload begins |
+| 17:43:57Z | `wikipedia_en_full.txt` (438MB) starts loading |
+| 17:49:33Z | Stage 13 begins (first time) |
+| 17:51:38Z | Stage 14 begins (first time ever) |
+| 17:51:41Z | Active stages confirmed: [3,6,7,8,9,10,11,12,13,14] |
+| ~17:52Z | Corpus load complete — ep4208 imminent |
+
+Total reload: ~11 minutes. Dominated by wikipedia_en_full.txt (438MB) + gutenberg_books.txt (152MB) + pubmed_abstracts.txt (85MB) + instruction_dialogue.txt (42MB).
+
+### WHAT THIS MEANS FOR EP4208
+
+The first 26L epoch will train on a meaningfully larger and richer corpus than any prior epoch. Formal proofs introduce strict logical structure; StackExchange introduces Q&A reasoning chains; gutenberg_books (152MB) is a massive new narrative/literary domain.
+
+Expected effect: routing disruption as experts encounter new token distributions, potentially driving WALD dead-zone expansion before stabilization. This could push ep4208 EP AVG above 9.31 even if 26L architecture otherwise helps — new data domains always cause a brief loss bump.
+
+### ARCH CHIP: still 25L
+
+Dashboard still shows `25L · 256H · 12E · 256CTX · 32K · TNS 1,966`. Will flip to `26L` and new tensor count on first ep4208 batch. Model internally already 26L (confirmed by depth=26L corpus selector output).
+
+**Interpretation:** The 11-minute corpus reload was dominated by two new stage unlocks (13 + 14), both loading for the first time. ep4208 starts with the richest corpus yet — 451M+ tokens plus gutenberg_books (152MB) and formal_proofs. Stage 14 formal_proofs is particularly interesting for a model with PLN at 98% routing dominance — logical structure may reinforce the PLN specialization. Watch ep4208 EP AVG carefully: the combined effect of 26L architecture + new corpus stages could go either way for the tail-chase question.
+
+---
+
 ## FN189 · 2026-05-27T17:47:03Z · Dashboard screenshot · ep4207 final state · NEW ATL 8.7090 · LNG recovery · S13 architecture not yet flipped
 
 **State:** EP 4207 end (25L) · BATCH 299/300 · ATL **8.7090** · GATE orange · TNS 1,966 (pre-S13)
