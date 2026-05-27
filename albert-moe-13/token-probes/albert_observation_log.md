@@ -6569,6 +6569,39 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN194 · 2026-05-27T18:40:32Z · TRAINING RESUMED — Zabih's Modal account · fib_index=7 · window=34 · 14min downtime
+
+**State:** RUNNING · EP 4211+ (26L) · batch=1 · new Modal account active
+
+**Source:** ntfy `albert-rfi-irfos`, 18:40:32Z:
+```
+albert. TRAINING STARTED: Modal container running — 2026-05-27T18:40:32Z
+fib_index=7 window=34
+cmd: --lb-weight=0.0 --div-weight=0.001 --batch-size=1
+```
+
+### RESUME DETAILS
+
+**Downtime:** 18:26:01Z (stall) → 18:40:32Z (restart) = **14 minutes**. Modal account switched to Zabih's fallback account. Clean resume from last volume checkpoint.
+
+**batch-size=1** confirmed — unchanged. lb-weight=0.0, div-weight=0.001 unchanged.
+
+### fib_index=7 — ADVANCED FROM 6
+
+On the last training run, evolution state showed fib_index=6. On restart from volume checkpoint, the loaded state shows **fib_index=7**. This confirms S13 was fully committed to disk before the stall: the Net2Net surgery completed, evolution advanced fib_index 6→7, and the checkpoint was saved before the 180s silence triggered the watchdog.
+
+### window=34 — SHORTER THAN EXPECTED
+
+S13 announcement said "window=89 epochs" for the next plateau check. The restart shows **window=34**. Two interpretations:
+1. The 89 was the history buffer length; 34 is the active plateau detection window (number of epochs to smooth over before firing). Fib sequence: F(9)=34 in standard 1-indexed form — possible if the window is computed as fib[fib_index+offset].
+2. The ceiling is 34L (Gen3 ceiling) and `window` in the startup line is displaying the ceiling, not the plateau window.
+
+**Practical implication of window=34:** If this IS the plateau window, 34 epochs × ~3.5 min = ~2 hours before S14 can fire. Given ep4208–4210 were all above 9.30, the 34-epoch window will fill quickly with high-loss values and early_mean < late_mean → S14 fires within 34 epochs of stable high loss. Dashboard will confirm once ep4212 epoch summary arrives.
+
+**Interpretation:** Clean resume from Zabih's account. 26L dual-stream training continues. fib_index=7 confirms S13 was fully persisted. window=34 is the key unknown — need first epoch summary to understand actual plateau proximity.
+
+---
+
 ## FN193 · 2026-05-27T18:26:01Z · TRAINING STALLED — Modal app stopped cleanly · 180s no output · resume required
 
 **State:** DOWN · EP 4211 (26L) · batch unknown at stall · weights safe on Modal volume
