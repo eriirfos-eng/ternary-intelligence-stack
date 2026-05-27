@@ -3,12 +3,11 @@ language:
 - en
 - de
 - fr
-- hu
-- zh
-- ar
-- ko
-- sv
-- fi
+- es
+- pt
+- it
+- nl
+- pl
 - multilingual
 license: lgpl-3.0
 tags:
@@ -22,6 +21,9 @@ tags:
 - federated-learning
 - low-precision
 - sprind
+- dual-stream
+- cord-surgery
+- net2net
 pipeline_tag: text-generation
 ---
 
@@ -31,8 +33,8 @@ pipeline_tag: text-generation
 **Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
-**Last updated:** 2026-05-24  
-**Training status:** Active — ep3412 · **20L** · 8 surgeries complete. EP_AVG ATL **9.3182** (ep3326). Chip ATL **8.8540** (ep3412, new record). Two surgeries fired today: 18L→19L (ep3325, 13:47Z) and 19L→20L (ep3383, ~20:00Z, 58 epochs apart). Surgery gate 20L→21L armed, w=144, since_best=16.
+**Last updated:** 2026-05-27  
+**Training status:** Paused (Modal billing ceiling, ep4234) — **26L dual-stream** · 13 depth surgeries + 1 cord surgery complete. Cord surgery fired autonomously ep4202, 2026-05-27T16:44Z — first documented single-to-dual-stream bifurcation mid-training. S13 (25L→26L) fired ep~4207. Chip ATL **8.6852** (post-S13). EP_AVG ATL **9.2847** (ep3456, 20L). fib_index=7 · window=34 · Gen3 step1/6. Resuming on Vertex AI T4 (GCP).
 
 ---
 
@@ -46,18 +48,21 @@ weights, targeting inference on edge hardware and low-power devices.
 
 | Property | Value |
 |----------|-------|
-| Architecture | Ternary MoE (Mixture of Experts) |
-| Layers | 20 |
-| Hidden size | 256 |
-| Experts | 12 (Top-3 routing per token) |
+| Architecture | **Dual-stream** Ternary MoE (Mixture of Experts) |
+| Streams | **2** (bifurcated via cord surgery ep4202, 2026-05-27) |
+| Layers | **26** per stream |
+| Hidden size | **2×256H** (256H per stream) |
+| Anastomosis gates | **6** — bidirectional F32 cross-stream fusion at Fibonacci layers [2,3,5,8,13,21] |
+| Experts | 12 per stream (Top-3 routing; shared FFN weights, independent routing gates) |
 | Context length | 256 tokens |
-| Vocabulary | 32,000 tokens (custom BPE) |
+| Vocabulary | 32,000 tokens (ByteLevel BPE — EN/DE/FR/ES/PT/IT/NL/PL) |
 | Weight representation | Ternary {-1, 0, +1} with STE training |
 | Gate linear | F32 |
 | Positional encoding | RoPE (rotate_half) |
-| Optimizer | AdamW, cosine LR decay |
-| Parameters (total stored) | ~58M ternary |
-| Parameters (active per token) | ~13M effective (Top-3 of 12 experts) |
+| Optimizer | AdamW, cosine LR decay, BATCH=1 (post-cord) |
+| Parameters (total) | **~194.4M** |
+| Safetensors | **2,044 tensors · 741.4 MB** |
+| Surgeries | **13 depth (S1–S13)** + **1 cord surgery** = 14 total surgical events |
 
 The central technical innovation is the **@sparseskip** primitive — a
 learned sparse-skip layer that dynamically bypasses computation paths
@@ -137,6 +142,21 @@ noisy inputs.
 | Ep2109 | 9.7975 | **9.7975** (ep2109) | 9.6380 (ep1445) | pending |
 | Ep2114 | 9.7891 | 9.7891 (ep2114) | **9.6235** (ep2114) ← batch ATL | pending |
 | Ep2116 | **9.7884** | **9.7884** ← epoch ATL | **9.6235** (ep2114) | pending |
+| Ep2487 | S6 fired | 18L→19L surgery | — | 2026-05-20T21:33Z; Gen1 step1/6 |
+| Ep2922 | **9.4992** | **9.4992** ← first sub-9.50 | 9.1370 (chip) | 2026-05-22; LOG expert 0%→28% awakening |
+| Ep3263 | **9.3651** | ← epoch ATL | **9.0095** (chip) | Broke 139-epoch plateau |
+| Ep3325 | S7 fired | 18L→19L surgery | — | 2026-05-24T13:47Z; 1315 tensors |
+| Ep3326 | **9.3182** | ← epoch ATL (first 19L ep) | **8.9190** (chip) | +0.047 nat improvement over prior best |
+| Ep3383 | S8 fired | 19L→20L surgery | — | Only 58 epochs after S7 |
+| Ep3456 | **9.2847** | ← epoch ATL (20L) | **8.8540** (chip) | WALD ep3454 INT 91% cliff |
+| Ep~3470 | S9 fired | 20L→21L surgery | — | Largest post-surgery spike in history (+0.14 nat) |
+| Ep~3652 | S10 fired | 21L→22L surgery | — | Pre-surgery best 9.2933 |
+| Ep~4098 | S11 fired | 22L→23L surgery | — | 2026-05-27 morning |
+| Ep~4140 | S11b fired | 23L→24L surgery | — | Rapid plateau ~42 ep after S11 |
+| Ep4202 | S12 fired | 24L→25L surgery | — | 2026-05-27T16:43Z; Gen3 plateau |
+| **Ep4202** | **CORD surgery** | **25L → 2×25L dual-stream** | — | **2026-05-27T16:44Z — first ever autonomous single→dual-stream bifurcation** |
+| Ep~4203 | 9.3241 | ← first post-cord epoch avg | **8.7123** (chip, new ATL) | Dual-stream live |
+| Ep~4207 | S13 fired | 25L→26L surgery (both streams) | **8.6852** (chip, new ATL) | 2026-05-27T17:40Z; fib_index 6→7 |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
@@ -205,8 +225,11 @@ oversight mechanisms are in place:
    by the RFI-IRFOS team.
 2. **Surgery governor:** Architectural growth (layer addition via net2net)
    is fully autonomous — the `EvolutionManager` fires on a Fibonacci-gated
-   plateau detector with no human intervention required. Five surgeries
-   (12L→17L) have been executed autonomously to date.
+   plateau detector with no human intervention required. **13 depth surgeries
+   (12L→26L) + 1 cord surgery (single→dual-stream bifurcation)** have been
+   executed autonomously to date. The cord surgery (ep4202, 2026-05-27) is the
+   first documented autonomous single-to-dual-stream bifurcation in a live
+   ternary MoE.
 3. **SPORE federated training (live):** Collaborators contribute CPU-trained
    checkpoints as weight spores via the `albert-spores` private repository.
    The `SporeManager` blends accepted spores at α=0.08 each epoch boundary
