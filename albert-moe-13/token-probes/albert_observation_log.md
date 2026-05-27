@@ -6437,6 +6437,83 @@ Mass now 0.010 above previous oscillation ceiling. Not alarming in isolation —
 
 No new WALD events in 30 minutes since ep4188 (15:37Z). Training assumed continuing; WALD silence could mean mass stabilized below WALD trigger thresholds or routing normalizing. Last known mass 9.241 (FN176). No escalation — silent periods of this length have occurred before (e.g., FN159/160 false alarm). Awaiting screenshot or next ntfy event.
 
+## FN185 · 2026-05-27T17:25:01Z · ep4203 BATCH 186/300 · NEW ATL 8.7123 · TTL 50 layers live · routing top-row collapse · batch=1 stable
+
+**State:** RUNNING · EP 4203 (25L dual-stream) · BATCH 186/300 · ATL **8.7123** · GATE orange
+
+**Source:** Dashboard screenshots 17:23:53Z + 17:24:02Z (TTL fullscreen panel).
+
+### NEW ALL-TIME LOW CHIP: 8.7123
+Previous ATL chip: 8.7249 (23L era). New: **8.7123** — set during the first post-cord epoch, within 186 batches of the dual-stream architecture going live. The net2net safe-copy preserved the single-stream representation quality AND the dual-stream immediately found lower-loss territory. Δ = −0.0126 nats below prior ATL.
+
+### batch=1 RUNNING STABLE — no OOM.
+Terminal confirms batches 182–188/300 processing cleanly:
+| Batch | Loss   | LR       | ms/batch |
+|-------|--------|----------|----------|
+| 182   | 9.1075 | 2.19e-4  | 689      |
+| 183   | 9.3444 | 2.18e-4  | 658      |
+| 184   | 9.5784 | 2.17e-4  | 769      |
+| 185   | 9.6604 | 2.16e-4  | 785      |
+| 186   | 9.6246 | 2.16e-4  | 636      |
+| 187   | 9.0758 | 2.15e-4  | 750      |
+| 188   | 9.6602 | 2.14e-4  | 708      |
+
+Batch losses oscillating 9.07–9.66 — dual-stream is in active exploration, not a smooth descent. ~700ms/batch × 300 = ~3.5 min/epoch at batch=1. ETA 02:22 = minutes remaining in epoch.
+
+### DUAL-STREAM TTL — 50 LAYERS LIVE (first documented observation):
+Full-screen TTL panel (17:24:02Z) confirms **L0–L49 all active** with G/R/O states. Stream B layers (L25–L49) are NOT stuck all-Orange — they show green and red cells already. The TTL is independently governing both streams. G 16% · O 81% · R 3%.
+
+Stream B sample from terminal:
+- `L47: GOGOOOOOOOROR` (G2/O8/R2) — stream B layer 22: bimodal G+R already
+- `L48: GGGOOOOOOOOR` (G3/O8/R1) — stream B layer 23: predominantly green (underloaded)
+- `L49: GOGOOOOOOROR` (G2/O8/R2) — stream B layer 24
+
+Stream B has differentiated TTL state from step 1. The two streams are routing differently already.
+
+### EXPERT ROUTING — TOP ROW COLLAPSE (dramatic post-cord shift):
+| Expert | Pre-cord (FN181) | FN185 (post-cord) | Δ |
+|--------|-----------------|-------------------|---|
+| SYN    | 11%             | **0%**            | −11pp |
+| SEM    | 9%              | **0%**            | −9pp  |
+| CTX    | 4%              | **0%**            | −4pp  |
+| INF    | 0%              | **0%**            | stable |
+| MEM    | 2%              | **0%**            | −2pp  |
+| GEN    | 4%              | **0%**            | −4pp  |
+| LOG    | 22%             | 5%                | −17pp |
+| LNG    | 29%             | 23%               | −6pp  |
+| ABS    | 49%             | 37%               | −12pp |
+| PLN    | 100%            | 56%               | −44pp |
+| CMP    | 96%             | 90%               | −6pp  |
+| INT    | 60%             | **100%**          | +40pp |
+
+The entire top row (SYN/SEM/CTX/INF/MEM/GEN) collapsed to 0%. INT surged to 100%. PLN dropped 44pp. This routing pattern is qualitatively different from all pre-cord observations — the dual-stream architecture is distributing load differently at the expert level. May be transient (early-epoch routing) or may indicate a genuine specialization shift.
+
+### Event bar new events:
+- `TTL-NASH all-0` appearing twice — all-Orange Nash equilibrium detected, anti-stagnation burst fired
+- `BALANCED H=4.931` — higher entropy than pre-cord H=2.465 baseline
+
+### Gradient: global |g| = 0.0035 — slightly elevated vs pre-cord 0.0025.
+
+### TNS: 1,966 — up from 1,660. New tensors from cord surgery (anastomosis gates + stream B weights).
+
+### FIRST POST-CORD EPOCH CLOSED — 17:25:24Z
+
+**ep4203 EP AVG: 9.3241** — the first epoch average in the dual-stream era.
+
+ntfy cascade at epoch close:
+- `WALD ep4203 step=300 fill=10.4% mass=9.329 dead_low=3.00-8.75(5.75) dead_high=10.00+(5.00)` — WALD fired at the epoch boundary. dead_high extended to 10.00+ (width 5.00, wider than pre-cord 9.50–9.75 range), reflecting higher-loss distribution in the dual-stream cold start.
+- `SUB-10.0 EPOCH AVG: avg 9.3241 — first time below 10.0` — ntfy gate reset on new architecture; treating dual-stream as fresh run from high loss
+- `SURGERY ALERT ZONE: avg 9.3241` — below 9.9801 threshold
+- `SURGERY GATE: avg 9.3241 — plateau gate region` — myc_stable check active
+- `SUB-9.4 EPOCH AVG: avg 9.3241 — new depth floor` — immediately below 9.4 on epoch 1
+
+Post-cord regression assessment: EP AVG 9.3241 vs pre-cord BEST 9.2045 — gap = **0.1196 nats**. This is the post-surgery whiplash depth. For reference, post-S11 (23L→24L) the regression was ~9.34. Dual-stream is tracking similarly — good sign.
+
+### Interpretation:
+Dual-stream architecture alive, stable at batch=1, new ATL chip 8.7123, first epoch 9.3241. Top-row expert collapse (SYN/SEM/CTX/INF/MEM/GEN all 0%) is the most striking routing observation — model routing all abstract and integrative work through PLN/CMP/INT while linguistic experts reset. TTL 50-layer panel fully operational. The post-cord whiplash depth (0.12 nats) is consistent with prior major surgeries. Recovery to sub-9.25 EP AVG expected within 20–30 epochs.
+
+---
+
 ## FN184 · 2026-05-27T17:13:12Z · FIRST DUAL-STREAM BATCH EVER: loss=9.2251 · TLIGHT 50 layers (25×2 streams) · OOM batch=3→trying batch=1
 
 **State:** OOM again · batch=3 failed on batch 2 · fixing to batch=1 · restart imminent
