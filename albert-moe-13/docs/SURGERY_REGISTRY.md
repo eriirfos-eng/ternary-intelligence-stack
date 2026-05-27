@@ -49,9 +49,9 @@ Surgeries S1–S3 documented in `EVOLUTION_EVIDENCE.md`. S4–S9 individually un
 ## Version 3.0 — Multilingual Ternary (32k vocab, ternary STE from ep1)
 
 **Architecture start:** 12L · 256H · 12E · 32k vocab (weights transferred from v2.0.0 ep=best, loss 6.8821; embed + lm_head re-initialized for 32k)  
-**Architecture current:** 21L (as of 2026-05-25)
+**Architecture current:** 26L dual-stream (as of 2026-05-27 — 13 depth surgeries + 1 cord surgery)
 
-All 8 surgeries documented in `convergence_log.md`.
+All surgeries documented in `convergence_log.md`.
 
 | # | v3 epoch | Global epoch | Transition | Date (UTC) | Fibonacci window | Mandelbrot c_im | Plateau Δ / epochs | Tensors | Pre-surgery EP_AVG | Post-surgery first ATL | Result |
 |---|----------|-------------|-----------|------------|-----------------|----------------|-------------------|---------|------------------|-----------------------|--------|
@@ -64,8 +64,14 @@ All 8 surgeries documented in `convergence_log.md`.
 | S7 | 3325 | ~3360 | 18L→19L | 2026-05-24T13:47Z | — | — | 36+ ep (9.42–9.46) | 1315 | 9.3651 | **9.3182** (ep3326) | Success; [ttlfreeze] + [divloss] armed; ATL broke in first 19L epoch |
 | S8 | 3383 | ~3418 | 19L→20L | 2026-05-24T~20:00Z | — | — | 58 ep (plateau at 19L floor) | 1384 | 9.3182 | **9.2862** (ep3383) | Success; fastest post-surgery plateau in v3 history |
 | S9 | ~3437 | ~3472 | 20L→21L | 2026-05-25T~00:00Z | — | — | 54 ep (since_best accumulating) | 1453 | 9.2862 | **9.3930** (ep3503, still descending) | Success; largest post-surgery spike in v3 history (~9.43); fastest descent rate in v3 history (bullmarket); TTL hard stops (see note) |
+| S10 | ~3652 | ~3687 | 21L→22L | 2026-05-25–26 | — | — | plateau at 21L floor | 1522 | 9.2933 | — | Success |
+| S11 | ~4098 | ~4133 | 22L→23L | 2026-05-27 morning | — | — | plateau at 22L floor | 1591 | — | — | Success |
+| S11b | ~4140 | ~4175 | 23L→24L | 2026-05-27 | — | — | rapid plateau (~42 ep after S11) | 1660 | — | — | Success |
+| S12 | 4202 | ~4237 | 24L→25L | 2026-05-27T16:43Z | 34 | — | Gen3 plateau triggered | 1729 | — | — | Success; Gen3 plateau gate fired |
+| **CORD** | **4202** | **~4237** | **25L → 2×25L dual-stream** | **2026-05-27T16:44Z** | — | Mandelbrot stream_index=1 | autonomous (width wall) | **1966→2044** | — | — | **CORD SURGERY — first ever. Net2Net stream bifurcation. 6 anastomosis gates at Fibonacci layers [2,3,5,8,13,21].** |
+| S13 | ~4207 | ~4242 | 25L→26L | 2026-05-27T17:40Z | 34 | — | first post-cord plateau (fib_index advanced 6→7) | 2044 | — | **8.6852** (chip ATL) | Success; fib_index=7 confirmed; dual-stream depth expansion working; Gen3 step1/6 |
 
-**v3.0 confirmed surgeries:** 9 (12L→21L, all documented)
+**v3.0 confirmed surgeries:** 13 depth surgeries (S1–S13) + 1 cord surgery (2×25L) = 14 total surgical events · Architecture arc: 12L→26L dual-stream
 
 ### Surgery S9 — Observations (2026-05-25)
 
@@ -87,17 +93,17 @@ Green surge = existing layers routing with high confidence. Red surge = new laye
 |---------|-----------|-----------------|---------------|
 | v1.x | 1 failed | 3L (no net change) | No records |
 | v2.0.0 | 9 confirmed (10 per README) | 3L→12L | S1–S3 in EVOLUTION_EVIDENCE.md; S4–S9 undocumented |
-| v3.0 | 9 confirmed | 12L→21L | All 9 in convergence_log.md |
-| **Total** | **18–19 surgical events** | **3L→21L** | |
+| v3.0 | 13 depth + 1 cord | 12L→26L dual-stream | All in convergence_log.md |
+| **Total** | **~23–24 surgical events** | **3L→26L dual-stream** | |
 
-**For SPRIND pitch (Q1):** "albert. has undergone approximately 18 Net2Net surgical depth expansions across its lifetime — 9–10 in v2.0.0 (3L→12L, individual epochs not preserved) and 8 in v3.0 (12L→20L, all precisely logged in convergence_log.md with timestamps, Mandelbrot perturbation parameters, and loss trajectories). One additional failed surgery in v1.x was the discovery event for the checkpoint-deletion bug that was subsequently fixed."
+**For SPRIND pitch:** "albert. has undergone 13 autonomous Net2Net depth expansions (12L→26L) plus one cord surgery (bifurcation to dual-stream 2×256H) in its v3.0 run alone — all precisely logged in convergence_log.md with timestamps, Fibonacci plateau windows, Mandelbrot perturbation parameters, and loss trajectories. The cord surgery on 2026-05-27 is the first documented instance of a live ternary MoE autonomously bifurcating from single-stream to dual-stream architecture mid-training."
 
 **README discrepancy fixed 2026-05-24:** README previously listed ep2802/ep3160 for v3 surgeries 7–8. Correct epochs are ep3325/ep3383 (from convergence_log.md). README has been corrected.
 
 ---
 
-## Surgery 10 — Next expected event
+## Surgery S14 — Next expected event
 
-**Current state (ep3508):** 21L · EP_AVG best post-S9 9.3930 · descending (bullmarket)  
-**Gate:** PLATEAU gate — since_best will begin accumulating once descent stalls below 9.2862  
-**Projection:** Surgery 10 (21L→22L) not imminent; model must first break pre-S9 ATL of 9.2862, then plateau again.
+**Current state (ep4234):** 26L dual-stream · chip ATL **8.6852** (set ep~4203 post-cord) · fib_index=7 · window=34 · Gen3 step1/6 · training paused (Modal billing ceiling — resuming on Vertex AI T4)  
+**Gate:** PLATEAU gate — since_best will accumulate once descent stalls; fib_index=7 → window=34 epochs required  
+**Projection:** S14 (26L→27L, both streams) when plateau gate fires on dual-stream architecture.

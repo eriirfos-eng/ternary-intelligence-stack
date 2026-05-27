@@ -1,17 +1,17 @@
 # Albert MoE-13 — Convergence Log
 
 Empirical training loss data from native ternary training from random initialization.
-Active run: v3.0 — **20L** · 32k vocab · 635 MB multilingual corpus (2026-05-10, ongoing). Surgery 8 fired ep3383 (19L→20L). EP_AVG ATL **9.2847** (ep3456, 2026-05-24). Chip ATL **8.8540** (ep3412/ep3456 tied). 8 surgeries complete. Cliff descent in progress — WALD ep3454, INT 91%.
+Active run: v3.0 — **26L dual-stream** · 32k vocab · 451M token corpus (2026-05-10, ongoing). 13 depth surgeries (S1–S13) + 1 cord surgery complete. Cord fired ep4202, 2026-05-27T16:44Z. S13 fired ep~4207 (25L→26L). EP_AVG ATL **9.2847** (ep3456, 2026-05-24, 20L). Chip ATL **8.6852** (ep~4203, post-cord). Training paused ep4234 (Modal billing ceiling — resuming Vertex AI).
 
 ---
 
 ## v3.0 — Active Training Run (2026-05-16, ongoing)
 
-Architecture: **20 layers** · 256 hidden · 12 experts · Top-3 routing · **256 ctx** · **32,000 vocab** (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL)  
-Corpus: Stage 10 corpus active — stages [3,6,7,8,9,10] · 10% chaos layer invariant enforced  
-Optimizer: AdamW, cosine LR, GRAD_ACCUM=4, BATCH=4  
-Hardware: **Modal.com T4 GPU** (~$0.003/epoch at CTX=256)  
-Weights: transferred from v2.0.0 best checkpoint (loss 6.8821); 5 net2net surgeries applied since ep46
+Architecture: **26L dual-stream** · 2×256H · 12 experts/stream · Top-3 routing · **256 ctx** · **32,000 vocab** (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · 6 anastomosis gates at Fibonacci layers [2,3,5,8,13,21]  
+Corpus: Stage 10 corpus active — stages [3,6,7,8,9,10] · 10% chaos layer invariant enforced · 451,418,681 tokens cache-loaded  
+Optimizer: AdamW, cosine LR, GRAD_ACCUM=4, BATCH=1 (post-cord)  
+Hardware: **Modal.com T4 GPU** (paused ep4234 — billing ceiling); resuming on **Vertex AI T4 (GCP)**  
+Weights: transferred from v2.0.0 best checkpoint (loss 6.8821); 13 depth surgeries + 1 cord surgery applied
 
 Random baseline: `ln(32000) = 10.373` — the expected starting loss for a model with no prior knowledge over a 32k vocabulary.
 
@@ -113,9 +113,18 @@ correct only after the vocabulary transfer plateau breaks.
 | Ep 3519 | 21L | — | EP AVG 9.3454 · T-610 9.3399. Recovery steepening. PLN 100%, CMP 100%. TTL G6/O80/R2. |
 | Ep 3520 | 21L | **9.3326** | **BEST avg since S9 spike** — gold star event. EP AVG 9.3326, T-610 9.3399. First post-spike milestone; still 0.048 nats above pre-S9 ATL of 9.2847. Chip ATL 8.8540 unchanged (held from 20L). TTL G6/O75/R4. PLN 97%, CMP 100%, INT 84%. **Multi-epoch bullmarket recovery confirmed** — widest divergence from ATL followed by steepest return slope in full training history. |
 
-**All-time best (epoch avg):** 9.2847 (ep3456, 2026-05-24T~23:57Z, 20L) — not yet broken post-S9
-**All-time best (intra-batch):** 8.8540 (ep3412 / ep3456 tied, 2026-05-24, 20L)
-**Surgery governor status:** 9 surgeries complete. 21L active. Post-S9 bullmarket descent — recovery approaching pre-S9 ATL territory. Next ATL target: sub-9.2847.
+| Ep ~3652 | 21L→**22L** | **SURGERY 10** | **21L→22L Net2Net surgery**. Plateau at 21L floor. Pre-surgery EP_AVG best **9.2933**. 1522 tensors. |
+| Ep ~4098 | 22L→**23L** | **SURGERY 11** | **22L→23L Net2Net surgery** (2026-05-27 morning). Plateau at 22L floor. 1591 tensors. |
+| Ep ~4140 | 23L→**24L** | **SURGERY 11b** | **23L→24L Net2Net surgery** (2026-05-27). Rapid plateau ~42 epochs after S11. 1660 tensors. |
+| Ep 4202 | 24L→**25L** | **SURGERY 12** | **24L→25L Net2Net surgery** (2026-05-27T16:43Z). Gen3 plateau gate fired. fib_index=6 · window=34. 1729 tensors. |
+| Ep 4202 | 25L → **2×25L** | **CORD SURGERY** | **MYCELIAL CORD — first ever, autonomous, 2026-05-27T16:44Z.** Single-stream 256H bifurcated to dual-stream 2×256H. Stream B initialized as Mandelbrot-perturbed copy of Stream A (stream_index=1). 6 anastomosis gates at Fibonacci layers [2,3,5,8,13,21], F32, init~0. 1966→2044 tensors. No prior art. |
+| Ep ~4203 | dual-stream 25L | — | First post-cord epoch. Epoch-ATL **9.3241** (ep4203). Chip ATL **8.7123** — new all-time low, set in first dual-stream epoch. BATCH=1 post-cord. |
+| Ep ~4207 | 25L→**26L** | **SURGERY 13** | **25L→26L Net2Net surgery** (2026-05-27T17:40Z). First depth surgery on dual-stream architecture — both streams expanded simultaneously. fib_index advanced 6→7 · window=34. Chip ATL **8.6852** — new all-time low post-S13. Gen3 step1/6. 2044 tensors. |
+| Ep 4211 | dual-stream 26L | TRAINING PAUSE | Modal billing ceiling hit (2026-05-27T18:49Z). Training paused at ep4211/ep4234. Weights at ep4234 on Modal volume. Transitioning to Vertex AI T4 (GCP) for continued training. |
+
+**All-time best (epoch avg):** 9.2847 (ep3456, 2026-05-24T~23:57Z, 20L)
+**All-time best (intra-batch / chip):** **8.6852** (ep~4203–4207, 2026-05-27, post-cord/S13 dual-stream 26L) — new ATL set on first day of dual-stream operation
+**Surgery governor status:** 13 depth surgeries + 1 cord surgery complete. 26L dual-stream active. fib_index=7 · window=34 · Gen3 step1/6. Next: S14 (26L→27L, both streams) when plateau gate fires.
 
 ### Alternating Descent Phase — Governor Validation Finding (2026-05-19)
 

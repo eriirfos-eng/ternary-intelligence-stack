@@ -77,21 +77,21 @@ The architecture combines:
 |-----------|-------|
 | **Streams** | **2 (dual-stream — cord surgery 2026-05-27)** |
 | Hidden size | **2×256H** (256H per stream) |
-| Layers | **25** (12 Net2Net surgeries: 12L→25L; see surgery log below) |
+| Layers | **26** (13 Net2Net surgeries + 1 cord surgery: 12L→26L dual-stream; see surgery log below) |
 | Anastomosis gates | **6** — at Fibonacci layers [2,3,5,8,13,21]; `Linear(512,2)`, F32; cross-stream fusion soft-gated by gradient |
 | Attention heads | 4 per stream |
 | Experts | 12 per stream |
 | Context length | 256 tokens |
 | Vocabulary | 32,000 tokens (ByteLevel BPE — EN/DE/FR/ES/PT/IT/NL/PL) |
 | Routing | Top-3 sparse — @sparseskip, 75% experts skipped per step |
-| TTL routing | EMA-based trit states per stream per layer — **50 TTL rows** (L0–L24 stream A, L25–L49 stream B) |
+| TTL routing | EMA-based trit states per stream per layer — **52 TTL rows** (L0–L25 stream A, L26–L51 stream B) |
 | Quantization | STE with gamma-scaled ternary, gamma cached every 20 steps |
-| Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps |
-| **Total parameters** | **187,449,868 (~187.5M)** |
-| **Safetensors** | **1,966 tensors · 715.3 MB** |
+| Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps · BATCH=1 (post-cord) |
+| **Total parameters** | **~194.4M** |
+| **Safetensors** | **2,044 tensors · 741.4 MB** |
 | Corpus | **451,418,681 tokens** (stages 1–13, cache-loaded) |
 
-**Surgery log — 12 Net2Net surgeries + 1 cord surgery:**
+**Surgery log — 13 Net2Net surgeries + 1 cord surgery:**
 
 | Surgery | Epoch | Layers | Note |
 |---------|-------|--------|------|
@@ -105,10 +105,11 @@ The architecture combines:
 | S11b | ep~4140 | 23L→24L | 2026-05-27 |
 | S12 | ep4202 | 24L→25L | 2026-05-27T16:43Z · Gen3 plateau triggered |
 | **CORD** | **ep4202** | **25L → 2×25L** | **2026-05-27T16:44Z · autonomous · first ever** |
+| **S13** | **ep~4207** | **25L→26L (both streams)** | **2026-05-27T17:40Z · first post-cord depth surgery · fib_index 6→7** |
 
-**Evolution state:** Gen 3 step 0/6 · ceiling F7=55L · window=55 epochs · threshold=0.0113
+**Evolution state:** Gen 3 step **1**/6 · fib_index=7 · window=34 · chip ATL **8.6852**
 
-**Training state (2026-05-27T17:26Z):** Global Epoch 4203+ · epoch-ATL **9.3241** (ep4203, first post-cord epoch) · chip-ATL **8.7123** (new all-time low, set ep4203) · dual-stream training live on Modal T4 · batch=1
+**Training state (2026-05-27T18:49Z):** Global Epoch **4234** (S13 complete) · epoch-ATL **9.3241** (ep4203) · chip-ATL **8.6852** (post-S13) · training paused — Modal billing ceiling · resuming on Vertex AI T4 (GCP) · batch=1
 
 ---
 

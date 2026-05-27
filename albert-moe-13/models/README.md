@@ -13,14 +13,16 @@ Training artifacts for the Albert MoE-13 ternary language model.
 | Format | `.safetensors` (float32 weights, HuggingFace standard) |
 | Config | `albert_v3.0.config.json` |
 | Epoch counter | `albert_v3.0.meta` (plain text integer) |
-| Architecture | 256H · **12L** · 4H · 12E · 128CTX · 32000V |
-| Global Epoch | **127** (2026-05-12, live on Modal T4 GPU) |
-| Local copy | ep107 — run `albert-train pull` to sync latest checkpoint |
-| Best loss | **10.3262** (all-time low, ep115; Modal-side) |
-| Nash routing | Resolved — expert seed biases active, BALANCED H=2.43–2.46 |
-| Corpus | Multilingual: Wikipedia CC BY-SA + Europarl + Gutenberg + chaos layer (EN/DE/FR/ES/PT/IT/NL/PL) |
-| Tensors | 689 (blocks.0–11: 684 · ln_f: 2 · pos_embed: 1 · embed: 1 · lm_head: 1) |
-| Weights transferred | 687 vocabulary-agnostic tensors from v2.0.0 (blocks.*, ln_f.*, pos_embed.weight); embed + lm_head rebuilt at 32k vocab |
+| Architecture | **Dual-stream 2×256H** · **26L** · 4H/stream · 12E/stream · 6 anastomosis gates (Fibonacci [2,3,5,8,13,21]) · 256CTX · 32000V |
+| Global Epoch | **4234** (2026-05-27, paused — Vertex AI handover) |
+| Sync | run `albert-train vertex pull` or `albert-train modal pull` to sync checkpoint |
+| Best chip loss | **8.6852** (post-S13, 2026-05-27) |
+| Best epoch avg | **9.2847** (ep3456, 2026-05-24, 20L) |
+| Evolution state | fib_index=7 · window=34 · Gen3 step1/6 |
+| Corpus | 451,418,681 tokens — multilingual: Wikipedia CC BY-SA + Europarl + Gutenberg + chaos layer (EN/DE/FR/ES/PT/IT/NL/PL) |
+| Tensors | **2,044** (dual-stream blocks: stream_a/stream_b per layer; shared experts; 6 anastomosis gates; embed; lm_head) |
+| Parameters | **~194.4M** |
+| Safetensors size | **741.4 MB** |
 
 The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` file stores the global epoch count across all training sessions. Training runs on Modal T4 GPU; use `albert-train pull` to sync the latest checkpoint back to local `models/`.
 
@@ -32,15 +34,17 @@ The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` f
 ```json
 {
   "hidden_size": 256,
-  "num_layers": 12,
+  "num_layers": 26,
   "num_heads": 4,
-  "max_seq_len": 128,
+  "max_seq_len": 256,
   "num_experts": 12,
-  "vocab_size": 32000
+  "vocab_size": 32000,
+  "num_streams": 2,
+  "fusion_layers": [2, 3, 5, 8, 13, 21]
 }
 ```
 
-`num_layers` is updated in-place by the `EvolutionManager` when Net2Net surgery fires. The training binary reads this file on each `train_cycle` start, so the growing architecture is always picked up correctly.
+`num_layers` is updated in-place by the `EvolutionManager` when Net2Net surgery fires. `num_streams: 2` and `fusion_layers` were added by cord surgery (ep4202). Single-stream checkpoints (`num_streams` absent or `1`) are backwards-compatible. The training binary reads this file on each `train_cycle` start, so the growing architecture is always picked up correctly.
 
 ---
 
@@ -48,7 +52,9 @@ The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` f
 
 | Version | Architecture | Key Event | Global Epoch |
 |---------|-------------|-----------|--------------|
-| v3.0 | 256H · **12L** · 4H · 12E · 32000V | Multilingual launch; 12L weights transferred from v2.0.0; 32k ByteLevel BPE vocab | 0→current |
+| v3.0 current | **2×256H dual-stream · 26L** · 4H/stream · 12E/stream · 6 anastomosis gates | S13 complete (25L→26L); cord active; chip ATL 8.6852; training on Vertex AI T4 | 4234 (paused 2026-05-27) |
+| v3.0 cord | **2×256H dual-stream · 25L** | Cord surgery ep4202 — first ever autonomous bifurcation to dual-stream; Stream B Mandelbrot-perturbed | ep4202 (2026-05-27T16:44Z) |
+| v3.0 | 256H · **12L→25L** · 4H · 12E · 32000V | Multilingual launch; 12L weights transferred from v2.0.0; 32k ByteLevel BPE vocab; 13 depth surgeries | 0→4202 |
 | v2.0.0 · 12L | 256H · **12L** · 4H · 12E · 8000V | Max depth reached; layer crystallization (L0-L3 frozen, L11 hot); TTL cycling reds self-resolving | 454→477 (archived) |
 | v2.0.0 · 5L–11L | 256H · 5L→11L · 4H · 12E | Autonomous surgery chain; EvolutionManager max_layers=12 cap enforced on all paths | ~385–454 |
 | v2.0.0 · 5L | 256H · **5L** · 4H · 12E | Net2Net surgery 4L→5L; TTL routing + anti-stagnation burst; lb_lambda=0.03 | ~381–385 |
@@ -62,16 +68,30 @@ Archived snapshots in `models/registry/` include config, report, and evolution m
 
 ## Surgery Log
 
+### v3.0 (current)
+
 | Event | Global Epoch | From | To | Notes |
 |-------|-------------|------|----|-------|
-| 11L → 12L | ~454 | 256H · 11L | 256H · 12L | Max depth reached; training continues at 12L floor |
+| S13 | ~4242 | 2×256H · 25L | 2×256H · **26L** | First post-cord depth surgery; both streams; fib_index 6→7; chip ATL 8.6852 |
+| CORD | ~4237 | 256H · 25L | **2×256H dual-stream · 25L** | Autonomous cord surgery — single-stream bifurcation; 6 anastomosis gates; 1966→2044 tensors |
+| S12 | ~4237 | 256H · 24L | 256H · **25L** | Gen3 plateau triggered 2026-05-27T16:43Z |
+| S11b | ~4175 | 256H · 23L | 256H · **24L** | 2026-05-27; rapid plateau ~42ep after S11 |
+| S11 | ~4133 | 256H · 22L | 256H · **23L** | 2026-05-27 morning |
+| S10 | ~3687 | 256H · 21L | 256H · **22L** | Best 9.2933 pre-surgery |
+| S9 | ~3472 | 256H · 20L | 256H · **21L** | Largest post-surgery spike in v3 history; TTL hard-column stops |
+| S8 | ~3418 | 256H · 19L | 256H · **20L** | Only 58 epochs after S7 |
+| S7 | ~3360 | 256H · 18L | 256H · **19L** | 2026-05-24T13:47Z; 1315 tensors |
+| S6 | ~2522 | 256H · 17L | 256H · **18L** | 2026-05-20T21:33Z; Gen1 step1/6 |
+| S1–S5 | ep511–702 | 256H · 12L | 256H · **17L** | Fibonacci + Mandelbrot windows |
+
+### v2.0.0 (archived)
+
+| Event | Global Epoch | From | To | Notes |
+|-------|-------------|------|----|-------|
+| 11L → 12L | ~454 | 256H · 11L | 256H · 12L | Max depth reached; transferred to v3.0 at ep477 |
 | 10L → 11L | ~445 | 256H · 10L | 256H · 11L | Autonomous plateau surgery |
-| 9L → 10L | ~435 | 256H · 9L | 256H · 10L | Autonomous plateau surgery |
-| 8L → 9L | ~425 | 256H · 8L | 256H · 9L | Autonomous plateau surgery |
-| 7L → 8L | ~415 | 256H · 7L | 256H · 8L | Autonomous plateau surgery |
-| 6L → 7L | ~405 | 256H · 6L | 256H · 7L | Autonomous plateau surgery |
-| 5L → 6L | ~395 | 256H · 5L | 256H · 6L | Autonomous plateau surgery |
-| 4L → 5L | ~381 | 256H · 4L | 256H · 5L | Net2Net layer copy + σ=0.01 symmetry break |
+| 5L → 6L through 9L→10L | ~395–435 | — | — | Autonomous surgery chain |
+| 4L → 5L | ~381 | 256H · 4L | 256H · 5L | Net2Net layer copy |
 | 3L → 4L | ~340 | 256H · 3L | 256H · 4L | First 256H surgery |
 | 128H → 256H | ~200 | 128H · 3L | 256H · 3L | Hidden size expansion |
 

@@ -3,7 +3,7 @@
 **Project:** Albert-MoE-13 / Ternary Intelligence Stack  
 **Prepared by:** RFI-IRFOS  
 **Date:** 2026-05-14  
-**Status:** Implemented (commit 9c1cc8e23, 2026-05-14) — not yet activated; awaiting width wall signal  
+**Status:** ACTIVATED — cord surgery fired autonomously ep4202, 2026-05-27T16:44Z. First post-cord depth surgery (S13: 25L→26L) fired ep~4207, 2026-05-27T17:40Z. Dual-stream 26L training underway.  
 **Patent basis:** Extension of A50296/2026 (TIS platform patent, 10 claims; @sparseskip = Claim 3); cord architecture is a distinct novel contribution
 
 ---

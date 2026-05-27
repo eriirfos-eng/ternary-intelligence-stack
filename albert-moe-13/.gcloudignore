@@ -1,0 +1,22 @@
+# Exclude large data/model files from Cloud Build context
+# Cloud Build reads .gcloudignore, not .dockerignore
+.gcloudignore
+.git/
+data/
+models/
+dashboard/batch_history.csv
+dashboard/training.log
+dashboard/epoch_history.log
+token-probes/
+benchmarks/
+exports/
+reports/
+training_lab/
+lofty/
+albert-training/
+*.safetensors
+*.bin
+*.csv
+__pycache__/
+*.pyc
+target/
