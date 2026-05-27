@@ -5804,3 +5804,20 @@ No new epoch ATL fired. WALD mass range 9.226–9.230 over 5 epochs = tight cons
 **Gap to pre-S9 ATL:** 9.2138 − 9.2847 = **−0.071** (unchanged from FN157).
 
 **Assessment:** Consolidation plateau forming at 9.226–9.230 after the rapid post-surgery whiplash (ep4092→4098 dropped 0.071 in 6 epochs). Normal recovery dynamics — the model is integrating the new layer's weight structure before the next descent step. Not a concern at 5 epochs; plateau gate requires 55 epochs of flat loss. Watch for WALD mass to resume downward trend below 9.22 or a new epoch ATL event.
+
+---
+
+## FN159 · 2026-05-27T08:34:59Z · ep4102+ · ⚠ NTFY SILENCE 28min — last event ep4102@08:06Z; training may have stopped
+
+**State:** UNKNOWN — no ntfy events since ep4102 WALD@08:06Z · 28 minutes of silence (normal cadence: 1 event per ~5 min) · BEST still 9.2138
+
+**Source:** ntfy poll, 2h window. No dashboard screenshot.
+
+**Silence analysis:**
+- Expected events since 08:06Z: ep4103 (~08:11Z), ep4104 (~08:16Z), ep4105 (~08:21Z), ep4106 (~08:26Z), ep4107 (~08:31Z) — 5 missed epochs
+- WALD step pattern was cumulative: ep4102 step=3000 → each epoch +300 steps
+- 28-minute gap = 5–6 missing WALD fires = abnormal
+
+**Possible causes:** (1) Modal job OOM'd or hit time limit; (2) training process crashed silently; (3) ntfy delivery delay (less likely — ntfy was real-time all session).
+
+**Assessment:** FLAG for Zabih to check Modal dashboard. If training stopped, re-launch with `modal run albert_train.py`. BEST 9.2138 is safe on the volume. Gap to pre-S9 ATL remains −0.071. No data degradation — just a possible training halt.
