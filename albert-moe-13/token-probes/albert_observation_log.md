@@ -6000,3 +6000,48 @@ INT recovering hard (+11pp to 88%) after the FN163 dip. ABS pulling back slightl
 **Gate:** CLOSED (red). No change post-S10.
 
 **Interpretation:** ep4130 upticked to 9.2540 (from ep4129's 9.2393), triggering WALD — detector reacting to the local max, not a structural alarm. Intra-epoch loss for ep4131 is tracking well below 9.10 by batch 213, suggesting ep4131 avg should recover below ep4130. INT routing recovered +11pp, consistent with it being transient specialization churn rather than permanent loss. Gradient calming continues (0.0023). The ABS/INT interplay from FN163 is normalizing: ABS slight pullback, INT back up — both the core four holding strong. Next: watch ep4131 final avg — if it clears 9.2393, descent resumes toward BEST 9.2138.
+
+## FN165 · 2026-05-27T10:35:53Z · ep4132 · ep4131 avg 9.2170 — new post-S10 best; 0.003 from ATL; gate changed
+
+**State:** Active · EP 4132 (23L) · BATCH 89/300 · BEST 9.2138 (ep4098, unchanged) · ATL batch 8.7249
+
+**Source:** Dashboard screenshot localhost:8888, 10:35:53Z.
+
+**ep4131 COMPLETED avg: 9.2170** — new post-S10 best. Previous post-S10 best was ep4129 at 9.2393. Gap to ATL 9.2138: **+0.003**. Descent is live and accelerating.
+
+**Epoch avg sequence (event bar, oldest→newest):**
+| Epoch | EP-Avg | Note |
+|---|---|---|
+| ep4128 | 9.2482 | |
+| ep4129 | 9.2393 | prior post-S10 best |
+| ep4130 | 9.2414 | |
+| ep4131 | 9.2170 | NEW post-S10 best; gap to ATL = 0.003 |
+| ep4132 | in progress | batch 89/300 |
+
+**Chart:** EP AVG line at 9.2170 · T-610 at 9.2279 · 9.2034 gridline visible (next landmark). Chart shows sharp descent resuming after the 9.26 band oscillation.
+
+**TTL:** G=6.17% · O=80% · R=4% — R% ticked up 1pp to 4% (was 3%). Minor, watch next tick.
+
+**GATE:** Green + orange dots (was solid red in FN163/FN164). State changed. Not full open — orange suggests transitional or monitoring state. Descent is active so plateau condition not met; gate change may reflect entropy/balance metric crossing a threshold, not surgery imminent.
+
+**Expert routing (vs FN164):**
+| Expert | FN164 | FN165 | Δ |
+|--------|--------|--------|---|
+| CMP    | 97%    | 100%   | +3pp |
+| ABS    | 61%    | 69%    | +8pp ↑ surging |
+| PLN    | 100%   | 91%    | −9pp |
+| INT    | 88%    | 84%    | −4pp, slight pullback |
+| LNG    | 39%    | 39%    | stable |
+| LOG    | 19%    | 14%    | −5pp |
+| CTX    | 10%    | 7%     | −3pp |
+| INF    | 7%     | 2%     | pulling back |
+| SYN    | 7%     | 2%     | pulling back |
+| SEM    | 7%     | 5%     | −2pp |
+| MEM    | 2%     | 2%     | stable |
+| GEN    | 0%     | 2%     | trace |
+
+ABS surging again to 69% on the loss breakthrough epoch. Pattern: ABS leads on new loss territory. Core four all above 84%.
+
+**Per-layer gradient:** global |g|=0.0023 (unchanged — stable).
+
+**Interpretation:** The ep4130 WALD/uptick was a one-epoch hiccup. ep4131 came in at 9.2170, slicing 0.022 below ep4129's prior best in a single epoch. ABS routing surge (+8pp to 69%) co-occurred with the breakthrough — abstraction-led descent pattern consistent with prior new-territory epochs. Gate indicator state change worth monitoring but not alarming during active descent. If ep4132 holds below 9.22, next target is ATL 9.2138 and then open water below.
