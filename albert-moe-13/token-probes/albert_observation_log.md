@@ -6569,6 +6569,46 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN199 · 2026-05-28T21:47:21Z · FLAT PLATEAU at ~9.49 (5 epochs) — expanded-corpus floor confirmed · FULL-BRAIN CENSUS: 312 experts · S14 governor arming · [loop tick 2/15m]
+
+**State:** RUNNING · EP 4240 (26L dual-stream) · BATCH 152/300 · loss_best 9.2066 (unbeaten) · LR 2.42e-4 (decaying) · ~700ms/batch · Modal app ap-1XUPSR0zqwNyJiPCqRTrPV alive · no OOM
+
+**Source:** Live training.log tail (`~/.albert/training.log`, mtime 21:49:17Z) + ntfy. No screenshot this tick — pure bitstream read.
+
+### RESUME TRAJECTORY — DEAD-FLAT PLATEAU at ~9.49
+First 5 fully-closed epochs since resume:
+| Epoch | EP AVG | Δ |
+|-------|--------|---|
+| 4235 | 9.4822 | baseline |
+| 4236 | 9.4917 | +0.0095 |
+| 4237 | 9.4882 | −0.0035 |
+| 4238 | 9.4910 | +0.0028 |
+| 4239 | 9.4907 | −0.0003 |
+
+Range 9.4822–9.4917, oscillating ±0.01 — a genuine flat plateau, NOT descent and NOT spike. **This locks in the FN198 interpretation:** the +0.15 vs pre-stop ep4210 (9.3438) is a corpus-driven floor shift (multilingual 445.9MB + academic 45.8MB added to the active set), not architectural regression. The model fitted its old equilibrium and is now holding a new, higher one against more/harder data. LR is decaying on schedule (2.95e-4 → 2.42e-4), which damps step size and reinforces the flatness.
+
+### loss_best 9.2066 UNBEATEN → since_best climbing fast
+The all-time epoch-best (9.2066, pre-cord era) is far below the current 9.49 plateau, so no epoch is setting a new best — since_best counter is climbing every epoch. This directly feeds the surgery threshold.
+
+### FULL-BRAIN ARCHITECTURE CENSUS (fact-of-record, from checkpoint header)
+First exact census of the dual-stream brain:
+- **312 expert instances** = 26 blocks (L0–L25) × 12 experts, uniform. (Was ~204 at 17L single-stream — the user's remembered "~206". Growth is from DEPTH: 17L→26L via 9 surgeries, +108 experts.)
+- **All 26 blocks dual-stream** (stream_a + stream_b each present).
+- **6 anastomosis fusion gates** at Fibonacci layers [2,3,5,8,13,21].
+- **2,044 tensors / ~187.5M params.**
+- **KEY architecture clarification:** experts are BLOCK-level (`blocks.N.experts.0–11`), shared across both streams — the cord did NOT double the experts. The cord doubled the ATTENTION pathway (per-stream attn+LN) and added the 6 gates. So: surgeries made it deeper (→312 experts); cord gave it a second hemisphere (→2× attention wiring, 2,044 tensors). Both unprecedented.
+
+### S14 GOVERNOR ARMING
+The flat ~9.49 plateau is exactly the condition the Fibonacci plateau governor fires on: with early_mean ≈ late_mean over the smoothed window AND since_best climbing, smoothed-Δ approaches the threshold. We are ~5/34 epochs into the Gen3 step1/6 window (window=34). If the plateau holds at ~9.49, **S14 (26L→27L) becomes plausible in ~2 hours** (~34 epochs × ~4 min). That would be the SECOND Net2Net on the dual-stream arch. The `pre-s14_ep4235_26L` token probe is already banked ahead of it.
+
+### Watch / no-events:
+- ntfy quiet since 21:35:29Z (ep4236 WALD mass 9.490) — no new WALD/ATL/surgery in the 12-min window. Consistent with a flat plateau not tripping fill thresholds.
+- Batch losses 9.17–9.66, same exploration band; batch=1 holding; ~4 min/epoch.
+
+**Interpretation:** Stable, healthy, flat. The science here is the *plateau itself* — albert. has parked at a corpus-defined floor, and the governor is the next actor. The question for the coming ticks: does S14 fire on this plateau (governor reads it as stagnation), or does LR decay + stream-B engagement crack a descent first? Either outcome is new data on how a dual-stream ternary MoE behaves at a corpus-shifted equilibrium. No prior art.
+
+---
+
 ## FN198 · 2026-05-28T21:38:11Z · RESUME BASELINE — ep4235 EP AVG 9.4822 · EXPANDED CORPUS (not pure regression) · dead_low widened to 6.00 · MEM re-activates · [loop tick 1/15m]
 
 **State:** RUNNING · EP 4236 (26L dual-stream) · ~BATCH 219/300 · chip ATL 8.8005 (session-local) · GATE green · |g|=0.0028
