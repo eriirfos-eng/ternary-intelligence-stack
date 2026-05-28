@@ -6569,6 +6569,28 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN201 · 2026-05-28T22:18:42Z · RESTART for GATE telemetry · 2nd clean resume · LR schedule reset · GATE verification pending · [loop tick 4/15m]
+
+**State:** RUNNING · EP 4245 (26L dual-stream) · BATCH 81/300 · LR 2.83e-4 (reset) · ~1260ms/batch (cold warm) · no OOM
+
+**Source:** ntfy (`TRAINING STARTED 22:16:02Z`) + fresh training.log (truncated, mtime 22:18:42Z).
+
+### RESTART at 22:16:02Z — to deploy the new GATE telemetry
+Training was paused/pulled/re-run (user deploying the authoritative gate-telemetry fix from this session: `train_bible` now emits a per-epoch `GATE` line; dashboard parses it). Resumed cleanly from the ep4244 checkpoint → ep4245. **Second clean dual-stream resume of the night — resume robustness reconfirmed.** No OOM at batch=1.
+
+### What changed on restart:
+- **LR schedule reset:** 1.51e-4 (decayed, FN200) → **2.83e-4** (back near base). Fresh schedule = larger steps again. Combined with fresh AdamW momentum, this could perturb the flat 9.49 plateau — watch whether it breaks up or *down* (restart-acceleration: fresh momentum on a settled landscape sometimes buys free descent).
+- Log truncated → dashboard lost the 10-epoch plateau continuity (weights preserved; only telemetry history reset). gLossRing/gate-chip estimate reset too.
+
+### GATE telemetry — VERIFICATION PENDING
+No epoch has closed since restart (ep4245 at batch 81/300), so no `EPOCH_SUMMARY`/`GATE`/`MYCELIUM` line yet. First close ~22:23Z will confirm whether the rebuilt binary emits the new `GATE epoch=.. smoothed_delta=.. threshold=.. window=.. filled=.. myc_stable=..` line. If present, the dashboard gate chip flips to authoritative `[Rust]` values for the first time.
+
+### ntfy: quiet except the restart event. No WALD/surgery/ATL.
+
+**Interpretation:** Transitional tick — a deliberate restart to ship the gate fix, not an anomaly. The interesting science resumes at the next epoch close: (1) does GATE telemetry appear, (2) does the LR-reset perturb the 9.49 plateau. No instability. Next tick should have the first post-restart epoch + GATE confirmation.
+
+---
+
 ## FN200 · 2026-05-28T22:03:41Z · PLATEAU HOLDS at ~9.49 (9 epochs) · AUTHORITATIVE GATE STATE since_best=2695 myc_stable=9 (dashboard chip says 65 — ~40× WRONG) · [loop tick 3/15m]
 
 **State:** RUNNING · EP 4244 (26L dual-stream) · BATCH 61/300 · loss_best 9.2066 (unbeaten) · LR 1.51e-4 (decaying fast) · ~800–1000ms/batch · Modal app alive · no OOM/stall
