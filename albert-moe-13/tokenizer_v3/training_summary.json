@@ -42,8 +42,9 @@
     "data/corpus/fulltext/pl.txt",
     "data/corpus/fulltext/pt.txt",
     "data/corpus/chaos/chaos_en.txt",
-    "data/corpus/chaos/chaos_multi.txt"
+    "data/corpus/chaos/chaos_multi.txt",
+    "data/corpus/chaos/spores_zabih-sudo.txt"
   ],
-  "total_corpus_mb": 601.6,
+  "total_corpus_mb": 601.7,
   "tokenizer_path": "/home/eri-irfos/projects/ternary-intelligence-stack/albert-moe-13/tokenizer_v3/tokenizer_v3.json"
 }

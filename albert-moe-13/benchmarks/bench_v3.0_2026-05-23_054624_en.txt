@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-23_054624.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  aca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca
+  [B]  aca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca father�يicallyaca
+       58.8 tok/s  17ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  ══acaley 2007 among earlyshacaschized early�ati young[ began.        ward $�,دEx� ══,�══uth�The long� began,        ION Il ══�ward him� muchThe pod few�,�,�wayر line�aca beingION*Se�ero
+  [B]  ══acaley 2007 among earlyshacaschized early�ati young[ began.        ward $�,دEx� ══,�══uth�The long� began,        ION Il ══�ward him� muchThe pod few�,�,�wayر line�aca beingION*Se�ero
+       76.9 tok/s  13ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  о� *IT name� EN 13 � dans�[�IT began 13 became�nie duringious ══Ex 28� became� 28 On� la never� IN original�we� was lastaca قا� la �ley EnglishEL muchley.AR uitн 13 century�li EN severalARу�
+  [B]  о *IT name EN 13 in [ IT began 13 became nie duringious ══Ex 28 became 28 On the never IN original we was lastaca qa the law EnglishEL muchley.AR uitн 13 century li EN severalARу
+       66.7 tok/s  15ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  origin centuryOR duringт IN�leyacaтTheEL ال�,в� na��atedUC come FrenchIT� orderION zijnido ال�ath light�ni��ERل� podدleyIONу allyو* period ownley living� thoseically�The aireneThezm including
+  [B]  origin centuryOR duringт IN leyacaтTheEL al ,в na atedUC come FrenchIT orderION zijnido al ath light is ERl poddeleyIONу allyu* period ownley living thoseically The aireneThezm including
+       71.4 tok/s  14ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  She══uth� Die�ا re number much ══فni _ much �*� War ══�� beganized फ�* Em� since von $�Ex�,tainley.� living ══ began, yearтExida� design�. Br, children� began ra[к head*
+  [B]  She══uth� Die�ا re number much ══فni _ much �*� War ══�� beganized फ�* Em� since von $�Ex�,tainley.� living ══ began, yearтExida� design�. Br, children� began ra[к head*
+       66.7 tok/s  15ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  � designION� sua� ══,uth,وтExر populationown $ ══ake ؞Exدación originalION sp� just called� ══iniا� ══� livingland year� beganliر naن atedtain� IN,ick cellION X sua during * IN�ación began ══�
+  [B]  � designION� sua� ══,uth,وтExر populationown $ ══ake ؞Exدación originalION sp� just called� ══iniا� ══� livingland year� beganliر naن atedtain� IN,ick cellION X sua during * IN�ación began ══�
+       66.7 tok/s  15ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  nie� light War�ally during tookف sontaniaSe population�ures� homeفinessch, during�ATbr beganAR�* home� began� Atized ══ati itsIONacaفatini� ownER began On since year, ال� inc name�,,ION à ال� Theyк’ year
+  [B]  nie� light War�ally during tookف sontaniaSe population�ures� homeفinessch, during�ATbr beganAR�* home� began� Atized ══ati itsIONacaفatini� ownER began On since year, ال� inc name�,,ION à ال� Theyк’ year
+       55.6 tok/s  18ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  � EN 100ranuthExY� Nederlands dans ال�و its --� To[, ��ä process ال�IONistsley� never�ن nel good ENland processرton.� ══ق became light processт ENken year Hisignni,��ically muchد alongbr ENious
+  [B]  � EN 100ranuthExY� Nederlands dans ال�و its --� To[, ��ä process ال�IONistsley� never�ن nel good ENland processرton.� ══ق became light processт ENken year Hisignni,��ically muchد alongbr ENious
+       83.3 tok/s  12ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  theIONтley,�IONack, la few ══ INious the began dell’�On States York’� eine ══� short the � headver* countryRION* la began�к laR,� 100*uth wasign come periodatedEx� May mainION�ف became humanيION
+  [B]  theIONтley,�IONack, la few ══ INious the began dell’�On States York’� eine ══� short the � headver* countryRION* la began�к laR,� 100*uth wasign come periodatedEx� May mainION�ف became humanيION
+       66.7 tok/s  15ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  last beganats. among began� comever century light ══.ا�ill�Ex� father�к justatt became near dans INوEx period��ION began ال� children� becameSe dans became�hip order ge�tainhip series head boEx periodIT�� فق University Shhip La
+  [B]  last beganats. among began� comever century light ══.ا�ill�Ex� father�к justatt became near dans INوEx period��ION began ال� children� becameSe dans became�hip order ge�tainhip series head boEx periodIT�� فق University Shhip La
+       66.7 tok/s  15ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  headا� early*ر zijnا� EN〈� began Marا�age Die� model bo together smallق OnameExد $�R.м ال� short.ف head,overleden deathف 13av,zm〷uc,ف bo� revisا� On nel Nederlands duringдleyzm,
+  [B]  heada early*r zijna EN〈 began Mara age The model bo together smallq OnameExd $ R.м al short.
+       47.6 tok/s  21ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  during beganited*AS� modelatiional beganف becameatiley� zijn,� duringOMIONadasExTheuthOR nel, began.ANbr the series, ال�к TheyAC�rom re last Maradas� living headに кوton� deathIONAN� the beganida
+  [B]  during beganited*AS� modelatiional beganف becameatiley� zijn,� duringOMIONadasExTheuthOR nel, began.ANbr the series, ال�к TheyAC�rom re last Maradas� living headに кوton� deathIONAN� the beganida
+       71.4 tok/s  14ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  �Ex�ique best� began several, public, much maisatedION INAston 13 ══uth justattу� earlyuthru living IN head.�atedIK headattуER being� systemر� lightattو duringف head� sobreuth everytainو dansuth headniي ══[�
+  [B]  �Ex�ique best� began several, public, much maisatedION INAston 13 ══uth justattу� earlyuthru living IN head.�atedIK headattуER being� systemر� lightattو duringف head� sobreuth everytainو dansuth headniي ══[�
+       66.7 tok/s  15ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  �[رEx ال�        himtain,�ternran�Exن, centuryAs ال�'t century headIONni� little May�The,As came several� schoolton.� na few�R, الؖaca�Exк dansated short ال� light eine�� head 100 Bar yearу
+  [B]  �[رEx ال�        himtain,�ternran�Exن, centuryAs ال�'t century headIONni� little May�The,As came several� schoolton.� na few�R, الؖaca�Exк dansated short ال� light eine�� head 100 Bar yearу
+       55.6 tok/s  18ms/tok
+
+[P15] the meaning of life according to
+  [A]  т beingل�сnie�.��ton Londonise began Die much��د began aus. began living YorkAC� began home,�Rدر IN ══ father�ized series,� $ك auxono They own�� beganited� head early�к� dans began,menт�
+  [B]  т beingل�сnie�.��ton Londonise began Die much��د began aus. began living YorkAC� began home,�Rدر IN ══ father�ized series,� $ك auxono They own�� beganited� head early�к� dans began,menт�
+       76.9 tok/s  13ms/tok

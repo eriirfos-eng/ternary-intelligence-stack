@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-22_065502.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  �yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl� Shious�onoION� mainوole beganا�'s oper
+  [B]  �yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl�yl� Shious�onoION� mainوole beganا�'s oper
+       17.9 tok/s  56ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  near� à�ni age” water life� deland� fatherر history knownadas ال� only�кDeION home ist large�Tit being coт� entre� tookThe father�Tit large ال� becameо� IN��ítain* took name att another ال� became $í� ra�
+  [B]  near� à�ni age” water life� deland� fatherر history knownadas ال� only�кDeION home ist large�Tit being coт� entre� tookThe father�Tit large ال� becameо� IN��ítain* took name att another ال� became $í� ra�
+       18.9 tok/s  53ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  "ically� history These� 2008�leyLeores His� ال�Theí� ال�kt�و Sheom �oresر ال�ker's� � largeES�ono�Al|ا� Sh real century These� TheseION area large�its]� becameLe � century death�uth in are father
+  [B]  "ically� history These� 2008�leyLeores His� ال�Theí� ال�kt�و Sheom �oresر ال�ker's� � largeES�ono�Al|ا� Sh real century These� TheseION area large�its]� becameLe � century death�uth in are father
+       24.4 tok/s  41ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  ��Ex� world largeION are during�uthThe bandíation� whenoldsí�tonION now givenESTheEL –о�� took historyо� headо�'s �*On fatherル� * de These��ient large haveс more� given head� His children��Tit
+  [B]  ��Ex� world largeION are during�uthThe bandíation� whenoldsí�tonION now givenESTheEL –о�� took historyо� headо�'s �*On fatherル� * de These��ient large haveс more� given head� His children��Tit
+       23.8 tok/s  42ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  pas� began cap's maTitmanт� became� Sh�ero�� are ال� HeIS research real�Q now began aus�� children � given secondton His childrenION�ient found�* side pod large began sont�Leن fatherient cell� : ON]�ib
+  [B]  pas� began cap's maTitmanт� became� Sh�ero�� are ال� HeIS research real�Q now began aus�� children � given secondton His childrenION�ient found�* side pod large began sont�Leن fatherient cell� : ON]�ib
+       13.9 tok/s  72ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  �ified largeION� 2007 aux headン$ She    ال� sontced $Ex ال�ional * musicION population became�UTí country�Ex INо� father� since severalт's फ się three��manо� father�– 21��ive�í during��”� line ال�
+  [B]  �ified largeION� 2007 aux headン$ She    ال� sontced $Ex ال�ional * musicION population became�UTí country�Ex INо� father� since severalт's फ się three��manо� father�– 21��ive�í during��”� line ال�
+       29.4 tok/s  34ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  head*� EN These�í water ال�ack during*uthو ARв in�ute began ال� :ION_ often –� ap�ley� himо�ology Dieality�The anotheromو ap in took डazione She lightni� began Thisк far�]о� began
+  [B]  head*� EN These�í water ال�ack during*uthو ARв in�ute began ال� :ION_ often –� ap�ley� himо�ology Dieality�The anotheromو ap in took डazione She lightni� began Thisк far�]о� began
+       23.3 tok/s  43ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  OnExzm         fatherт* She another� �uth ENAT*tonION ال� film� fatherт*�ا�� beganTitton� Les still 13Titidesم*� real drSe*uth�ا�* anotheratt pas's*ling HoweverTit –о�ores HisionalomTit
+  [B]  OnExzm         fatherт* She another� �uth ENAT*tonION ال� film� fatherт*�ا�� beganTitton� Les still 13Titidesم*� real drSe*uth�ا�* anotheratt pas's*ling HoweverTit –о�ores HisionalomTit
+       29.4 tok/s  34ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  و tookو*� aux────────────────────────────────────────────────────────────────────────Exкا�� ap*Tit�'s O��weк town process�*� history'sSe*�í� de ida († father*م bo began� deOR vol � parte* age / �وton�uth� Sh�ityс
+  [B]  and tooko*� aux───────────────────────────────────── ──────────────────────────────────── ap*Tit�'s O��wek town process�*� history'sSe*�í� de ida († father*m bo began� deOR vol � parte* age / �uton uth� Sh�ityс
+       37.0 tok/s  27ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  � school took� deт� school home �ley fatherTit intouthley around�ل pas HisON IN���Theoverledenless�ل realired� Die living�ini deIONyl whenION YorkION It band� ap────────────────────────────────────────────────────────────────────────� waterIONero process ال�ل's�
+  [B]  � school took� deт� school home �ley fatherTit intouthley around�ل pas HisON IN���Theoverledenless�ل realired� Die living�ini deIONyl whenION YorkION It band� ap────────────────────────────────────────────────────────────────────────� waterIONero process ال�ل's�
+       25.0 tok/s  40ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  IONThets littleTit��lessSe�لTheitt several────────────────────────────────────────────────────────────────────────ヒ     auxOR* Hisن”ا�о� school several ional period�*IONattior�iciا�о� albumEx�� period's resIONages� several�”нonoTitلniेTit ENí
+  [B]  IONThets littleTit��lessSe�لTheitt several───────────────────────────────── ──────────────────── ───────────────────ヒauxOR* Hisن”ا�о� school several ional period�*IONattior�iciا�о� albumEx�� period's resIONages� several�”нonoTitلniेTit ENí
+       27.8 tok/s  36ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  � head� Emॡ among Sh�'s�ãoto�� becameorespx�ION powerto cellION waterوona several�man made� His ال�." largeER bar father threeium United spي�IONIONíTit little formION historyо�'s� eraO cell's�
+  [B]  � head� Emॡ among Sh�'s�ãoto�� becameorespx�ION powerto cellION waterوona several�man made� His ال�." largeER bar father threeium United spي�IONIONíTit little formION historyо�'s� eraO cell's�
+       14.1 tok/s  71ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  � � including� now history each historyо� ShTheChтIONا� little� Sh        pas��íн�Titomona children�اuth pas� realmaneroTitley� � several must � local� in� age pod        � ShUTThe population�ero band� �
+  [B]  � � including� now history each historyо� ShTheChтIONا� little� Sh        pas��íн�Titomona children�اuth pas� realmaneroTitley� � several must � local� in� age pod        � ShUTThe population�ero band� �
+       28.6 tok/s  35ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  ingenylव Sh given� large�وsh� town became� incON several� given life great�ION tookOR się� North severalر � took becameلا pas War�]о� another�He given'sا�Tití band childrenо� �'s father� only
+  [B]  ingenylव Sh given� large�وsh� town became� incON several� given life great�ION tookOR się� North severalر � took becameلا pas War�]о� another�He given'sا�Tití band childrenо� �'s father� only
+       31.2 tok/s  32ms/tok
+
+[P15] the meaning of life according to
+  [A]  His� ال�        OION see � ا�ERath history couldا�ER�رley�TitWores �ER�tainTheсaca IN TheseigenOR��Theо� becameION history �с�*uk�IONni�TheوоЯ IN intoワ�attо� known� �
+  [B]  His� ال� OION see � a�ERath history could�ER�rley�TitWores �ER�tainTheсaca IN TheseigenOR��Theо� becameION history �с����Theо������ IN the known� �
+       22.7 tok/s  44ms/tok

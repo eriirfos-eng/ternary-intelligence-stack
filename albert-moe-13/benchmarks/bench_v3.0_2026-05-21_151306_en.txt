@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-21_151306.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  م �������������������������������������������������� within�ãomar social IN'tsch low ONzm
+  [B]  م �������������������������������������������������� within�ãomar social IN'tsch low ONzm
+       13.7 tok/s  73ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  уON period�ferر�uth et still lowal�� around first         became band called��je� airم�� began historyER between� father� real sh father� part 2008EN�ES foundiredIPí� change� IN� ist fatherward� de model low� la
+  [B]  уON period�ferر�uth et still lowal�� around first         became band called��je� airم�� began historyER between� father� real sh father� part 2008EN�ES foundiredIPí� change� IN� ist fatherward� de model low� la
+       14.3 tok/s  70ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  � since� town� Die KingIP�al� band�ired beganс�old� His North's sontу sh�-� since which INathу began��-в were�ron� & series�ores model began anotherढ�уنí* first    �ps IN� several
+  [B]  � since� town� Die KingIP�al� band�ired beganс�old� His North's sontу sh�-� since which INathу began��-в were�ron� & series�ores model began anotherढ�уنí* first    �ps IN� several
+       18.5 tok/s  54ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  Exر IN�     known yhip development�оzm children His how near ser� father became �    Seر schoolhip� de�niThe /� of light anotherathا� in entreired�hip were process fewر including tonired'ship        -لniTheIP development given
+  [B]  Exر IN�     known yhip development�оzm children His how near ser� father became �    Seر schoolhip� de�niThe /� of light anotherathا� in entreired�hip were process fewر including tonired'ship        -لniTheIP development given
+       17.2 tok/s  58ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  ono became� entre 100ENION schoolLeonawardт yran main now school whoonaEN�iredition United ThereOMíOn beganOR wordt part another� took�zm United There . whoero head� INуany�ious� 28 history became schoolر� topious� part interо�-�
+  [B]  ono became� entre 100ENION schoolLeonawardт yran main now school whoonaEN�iredition United ThereOMíOn beganOR wordt part another� took�zm United There . whoero head� INуany�ious� 28 history became schoolر� topious� part interо�-�
+       18.9 tok/s  53ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  ni history cityON school ist began history former� withinAT� EN� since de�رzm! 2008�va far off�رzm togetherERION began nel history��AT away�-�hip dis father band'snieitionired�у togetherifiedن ofнath    م real�-ن
+  [B]  ni history cityON school ist began history former� withinAT� EN� since de�رzm! 2008�va far off�رzm togetherERION began nel history��AT away�-�hip dis father band'snieitionired�у togetherifiedن ofнath    م real�-ن
+       18.5 tok/s  54ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  South who US large�ERо�ona His�sch town dis y bandzmorn band� нath     auxonaIC human�í� national Thereر�к now city� which��ITر who London His────────────────────────────────────────────────────────────────────────'s ageona� band's�ient� school�ona homesk y�ona
+  [B]  South who US large�ERо�ona His�sch town dis y bandzmorn band� нath     auxonaIC human�í� national Thereر�к now city� which��ITر who London His────────────────────────────────────────────────────────────────────────'s ageona� band's�ient� school�ona homesk y�ona
+       18.9 tok/s  53ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  fatheruth's since- popular'sION water Hisient�tain! head himselfر sh� took�лASу lowley Col$оو� sinceION effect ser Hist�و which &hipنniر water took� ر history populationر ternThe bandily�ists sh�W town
+  [B]  fatheruth's since- popular'sION water Hisient�tain! head himselfر sh� took�лASу lowley Col$оو� sinceION effect ser Hist�و which &hipنniر water took� ر history populationر ternThe bandily�ists sh�W town
+       16.7 tok/s  60ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  another old�مzmр� whichEN parte�uth Sw� inistsنTit aveconaнí� nationaliousuthilyniр three رALalesuteathر givenru──────────────────────────────────────────────────────────────────────── �� young van�hip�    � began INientу near Ј� vanнble became took father
+  [B]  another old�مzmр� whichEN parte�uth Sw� inistsنTit aveconaнí� nationaliousuthilyniр three رALalesuteathر givenru──────────────────────────────────────────────────────────────────────── �� young van�hip�    � began INientу near Ј� vanнble became took father
+       17.5 tok/s  57ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  -�ores�� �مps IN�ona few� of� controloresر partAL band himselfEx�еists low of        eroona�) humanуired�ALona INious *р inter�� �     development�ERuth His en� beganzm band's albumhipу
+  [B]  -�ores�� �مps IN�ona few� of� controloresر partAL band himselfEx�еists low of        eroona�) humanуired�ALona INious *р inter�� �     development�ERuth His en� beganzm band's albumhipу
+       17.9 tok/s  56ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  Ex IN�As*ख again 2003� ofALward second�al EN tookona�The former Hisona� began became origin� y began 's         wordt� port��    eroales� la== period�مzmuth see home� father��IC deу band's school wy ist
+  [B]  Ex IN�As*ख again 2003� ofALward second�al EN tookona�The former Hisona� began became origin� y began 's         wordt� port��    eroales� la== period�مzmuth see home� father��IC deу band's school wy ist
+       16.7 tok/s  60ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  fewख His model� began� ( father� school find � EN Germanنal�ORн largeITن along�ona� auxatiEx� headرuth Howeverona IN�uth how� aux attero second ofر sh EN which�� great 28 father� INSTists �
+  [B]  fewख His model� began� ( father� school find � EN Germanنal�ORн largeITن along�ona� auxatiEx� headرuth Howeverona IN�uth how� aux attero second ofر sh EN which�� great 28 father� INSTists �
+       18.9 tok/s  53ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  idaantу�� ne before anotherоЛired youر�sk*ولо 29 WAT cIONiredonaEx� beganatt fatherION began�olduth��The calledل�ami power father� ageistsuk��ION INable school    � relISر�W )�
+  [B]  idaantу�� ne before anotherоЛired youر�sk*ولо 29 WAT cIONiredonaEx� beganatt fatherION began�olduth��The calledل�ami power father� ageistsuk��ION INable school    � relISر�W )�
+       13.2 tok/s  76ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  �.) originomeざatiíIS beganا paseroر� INThe calledTitORsk including �ni�Theftمzm together power mostر�- several every� partious most�- These la severalرExalesche seriesر becameuthements�'s few� seriesم ofments part
+  [B]  �.) originomeざatiíIS beganا paseroر� INThe calledTitORsk including �ni�Theftمzm together power mostر�- several every� partious most�- These la severalرExalesche seriesر becameuthements�'s few� seriesم ofments part
+       16.9 tok/s  59ms/tok
+
+[P15] the meaning of life according to
+  [A]  � of�AT nearم of off�و ofíHeون justany�ر    -zmу�ton light find�� few laк�ect August banduth light of band�H�uktو0 death school now�ا� boath less otherв- every         beganم-
+  [B]  � of�AT nearم of off�و ofíHeون justany�ر    -zmу�ton light find�� few laк�ect August banduth light of band�H�uktو0 death school now�ا� boath less otherв- every         beganم-
+       18.9 tok/s  53ms/tok

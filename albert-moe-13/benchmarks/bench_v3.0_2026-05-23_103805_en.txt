@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-23_103805.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  acaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaacaESدow processدOn populationThebr based desк
+  [B]  ESدow processدOn populationThebr based deskк
+       62.5 tok/s  16ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  IONamente د� livingفij under called century goodм began evenا�ami        began smallдatireg developmentway� even� � linebrious York muchke during shortwayا؇UC little children them�aca des head during state living �ł countryIS myTheowregIT
+  [B]  IONamente د� livingفij under called century goodм began evenا�ami        began smallдatireg developmentway� even� � linebrious York muchke during shortwayا؇UC little children them�aca des head during state living �ł countryIS myTheowregIT
+       66.7 tok/s  15ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  �� system[aca zijn� headley beganeb� last livingar�tonway began come�AR’ ال� began even�acaoverleden� thoseically� pre EN last year called�Yprouth power══ North 100� $way dansidaIONternY pre     youngERacaق� began
+  [B]  �� system[aca zijn� headley beganeb� last livingar�tonway began come�AR’ ال� began even�acaoverleden� thoseically� pre EN last year called�Yprouth power══ North 100� $way dansidaIONternY pre     youngERacaق� began
+       62.5 tok/s  16ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  ESack IN near formeracaoverleden��aca 28azione� $ف ce livingtainway school ao� nearER 28 living beganaca des London� beganIT       �сAR York tookER She series Die still during�ists � light ال amongد � duringER fatherzm THE 4 beganER living
+  [B]  ESack IN near formeracaoverleden��aca 28azione� $ف ce livingtainway school ao� nearER 28 living beganaca des London� beganIT       �сAR York tookER She series Die still during�ists � light ال amongد � duringER fatherzm THE 4 beganER living
+       62.5 tok/s  16ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  His goodدward during --� � great INSe دITuk calledaca history��'t insIT�دHeées dr══ population school another�� aufacaentsatiEL takeki��уAsíد homeenest �  * still dem �══), May des
+  [B]  His goodدward during --� � great INSe دITuk calledaca history��'t insIT�دHeées dr══ population school another�� aufacaentsatiEL takeki��уAsíد homeenest �  * still dem �══), May des
+       50.0 tok/s  20ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  home death des �ido الational At dansо�ational muchable��StleyUC 28 littletain’сTheь INious�Xight ceUC     * series 4Ex� fatheraca beganí ال Yorkا�� began Marс Ex beganstс �ف’ف� being�
+  [B]  home death des �ido الational At dansо�ational muchable��StleyUC 28 littletain’сTheь INious�Xight ceUC     * series 4Ex� fatheraca beganí ال Yorkا�� began Marс Ex beganstс �ف’ف� being�
+       66.7 tok/s  15ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  IT � $ area bo and _к foi �8ists ��� to process�� ال� humanERо� best $ HisER withinSE beganzy� herсacazmIONole� living andAs ال� sobreuth[ äacaaca * began foi الER�ists� aus�
+  [B]  IT � $ area bo and _к foi �8ists ��� to process�� ال� humanERо� best $ HisER withinSE beganzy� herсacazmIONole� living andAs ال� sobreuth[ äacaaca * began foi الER�ists� aus�
+       62.5 tok/s  16ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  aux livingated York lightد began beganable �Ex�zm $    ERIT system last�ION000onyوniically══leyistsс schoolER shortف great come desс still era and�IONke became#м York� des head subeng# �ق hadм began�
+  [B]  aux livingated York lightد began beganable �Ex�zm $    ERIT system last�ION000onyوniically══leyistsс schoolER shortف great come desс still era and�IONke became#м York� des head subeng# �ق hadм began�
+       76.9 tok/s  13ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  18's human�ene ives under living * uth� ically м * August lineeneacauth Yorkا� took� $ida       #فni house� الuthke $ الke These�ف 2007 INTheationalacazm much        underuth�ido�ional began pre ERد
+  [B]  18's human�ene ives under living * uth� ically м * August lineeneacauth Yorkا� took� $ida       #فni house� الuthke $ الke These�ف 2007 INTheationalacazm much        underuth�ido�ional began pre ERد
+       62.5 tok/s  16ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  beganoleYuth stillni� band processف era�тER line met ).uth ال� began[ * severalIONni[ف des� head� known        within As nabrс� childrenد evenizedIONory[فida living small house severalсicallyدeroación began those�
+  [B]  beganoleYuth stillni� band processف era�тER line met ).uth ال� began[ * severalIONni[ف des� head� known        within As nabrс� childrenد evenizedIONory[فida living small house severalсicallyدeroación began those�
+       66.7 tok/s  15ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  ف development YorkTit had bestIONst following together� living ال� beganicallywardpsد mainATм des� nearSTUC began�UC14 little school show � ).st),ically and Londonaca development    14 became school took ه began under littlezmaca living ser piùد insolds However
+  [B]  ف development YorkTit had bestIONst following together� living ال� beganicallywardpsد mainATм des� nearSTUC began�UC14 little school show � ).st),ically and Londonaca development    14 became school took ه began under littlezmaca living ser piùد insolds However
+       71.4 tok/s  14ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  line began� National� textсoverledenene� � comme and� began during great     another’с human began’ neverY May beganا� in houseious�ke another began became young my take began under ten ال muchEx Pro $�ه� line even relف began des
+  [B]  line began� National� textсoverledenene� � comme and� began during great     another’с human began’ neverY May beganا� in houseious�ke another began became young my take began under ten ال muchEx Pro $�ه� line even relف began des
+       62.5 tok/s  16ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  وON�══ began zm underсER near States bo good8 IN� foundUC Bo several Nationalically══� -- andick York�st They Theseacaي living       �с good�ni� and several work ATIONс However $� beganę attbr began andフThe
+  [B]  وON�══ began zm underсER near States bo good8 IN� foundUC Bo several Nationalically══� -- andick York�st They Theseacaي living       �с good�ni� and several work ATIONс However $� beganę attbr began andフThe
+       83.3 tok/s  12ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  ف come desacast bo design� had══ pre Co� ER ال� beganaca called � INо�br сITدow did uit� became best �м�ow ال�       ically bar الsh $ bestION� Sheole Theyد�ر another �ا childrenaca Die � and *
+  [B]  ف come desacast bo design� had══ pre Co� ER ال� beganaca called � INо�br сITدow did uit� became best �м�ow ال�       ically bar الsh $ bestION� Sheole Theyد�ر another �ا childrenaca Die � and *
+       71.4 tok/s  14ms/tok
+
+[P15] the meaning of life according to
+  [A]  X � began aufically via ال� town come She againIS EN�� began aus IN small anotheruth الؕ system $ الсingON year skley Dieсcy became bestER beganTit foundChically     to �� beganton withinTit auszmEL andTit schoolreg began zijn
+  [B]  X � began aufically via ال� town come She againIS EN�� began aus IN small anotheruth الؕ system $ الсingON year skley Dieсcy became bestER beganTit foundChically     to �� beganton withinTit auszmEL andTit schoolreg began zijn
+       66.7 tok/s  15ms/tok

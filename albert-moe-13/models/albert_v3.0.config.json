@@ -1,8 +1,17 @@
 {
+  "fusion_layers": [
+    2,
+    3,
+    5,
+    8,
+    13,
+    21
+  ],
   "hidden_size": 256,
   "max_seq_len": 256,
   "num_experts": 12,
   "num_heads": 4,
-  "num_layers": 18,
+  "num_layers": 26,
+  "num_streams": 2,
   "vocab_size": 32000
 }

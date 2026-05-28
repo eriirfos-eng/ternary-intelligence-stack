@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-20_052314.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  يED� steIP light calledED� steIP light calledED� steIP light calledED� steIP
+  [B]  يED� steIP light calledED� steIP light calledED� steIP light calledED� steIP
+       17.2 tok/s  58ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  �����������������������������hip� took�� anotherORtain offIP�ous dal� wonINner called�IA�══ main� de ste��ing undercia anotherTit being
+  [B]  �����������������������������hip� took�� anotherORtain offIP�ous dal� wonINner called�IA�══ main� de ste��ing undercia anotherTit being
+       19.2 tok/s  52ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  ──────────────────────────────────────────────────────────────────────── called� parteated────────────────────────────────────────────────────────────────────────� bandINAl dans�ا Americanichner�tern theirists called schoolternki WilliamIA smalluth being ══tain found history light ma�══ light yearsا� may de� informationт wh�ر theirished began deOn However�� Al history � 26�
+  [B]  ──────────────────────────────────────────────────────────────────────── called� parteated────────────────────────────────────────────────────────────────────────� bandINAl dans�ا Americanichner�tern theirists called schoolternki WilliamIA smalluth being ══tain found history light ma�══ light yearsا� may de� informationт wh�ر theirished began deOn However�� Al history � 26�
+       18.5 tok/s  54ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  iste life band de%uryLe de history� three� ══IA sono every� history began� lightuitEN popular April within modelآ given called� Bar�ition 40� before� de Un age�ily�ED too� de 40�л off� since development�tern found death field
+  [B]  iste life band de%uryLe de history� three� ══IA sono every� history began� lightuitEN popular April within modelآ given called� Bar�ition 40� before� de Un age�ily�ED too� de 40�л off� since development�tern found death field
+       19.2 tok/s  52ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  ONED process�� state��� much state ══� everyilyED dos��ides���hamSe It town NewattIN real alongIS good══ population== ste (══ative *idesG� alongر history══ lifecia language�� IN light given years� death�sh ══�
+  [B]  ONED process�� state��� much state ══� everyilyED dos��ides���hamSe It town NewattIN real alongIS good══ population== ste (══ative *idesG� alongر history══ lifecia language�� IN light given years� death�sh ══�
+       19.2 tok/s  52ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  � people ��� istر� 28�nerability littlenieily���� Al� country � ste ( ══ К feED�� see through�� well London con ══� models based called��tonOR'�� based los de� each resultsر� IN wellINiste
+  [B]  � people ��� istر� 28�nerability littlenieily���� Al� country � ste ( ══ К feED�� see through�� well London con ══� models based called��tonOR'�� based los de� each resultsر� IN wellINiste
+       18.9 tok/s  53ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  �alitying de light began ha began ══ Howevermer His deEN�� yearsily� school_� neverG Hisment� English� por� death town 2008hip�AT (    EN waterо�XES well�á end� age fl�amitain lightisteleyED istious
+  [B]  �alitying de light began ha began ══ Howevermer His deEN�� yearsily� school_� neverG Hisment� English� por� death town 2008hip�AT (    EN waterо�XES well�á end� age fl�amitain lightisteleyED istious
+       18.2 tok/s  55ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  �� line        �ED history� Unitedors� ist German�'ilyAL“�rop� role three ══ light�hip language father comme� group� few�ner�G� ist Ar development she� de� with light life ؤ� Un�., de beganES� groupيoryED ist
+  [B]  �� line        �ED history� Unitedors� ist German�'ilyAL“�rop� role three ══ light�hip language father comme� group� few�ner�G� ist Ar development she� de� with light life ؤ� Un�., de beganES� groupيoryED ist
+       18.9 tok/s  53ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  IN eine support�|[[IN began� drcia    � �au ══ de� ══ attru However� voorAl    original� quilentern period� humanuit��� find� little� But ══ de It� off de ؊ESIN English wh�ación find father══na qui much fatherIA
+  [B]  IN eine support�|[[IN began� drcia � �au ══ de� ══ attru However� voorAl original� quilentern period� humanuit��� find� little� But ═��� IN off de English ؐ wh�ación find father══na qui much fatherIA
+       19.2 tok/s  52ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  cap��He light find�ania� greatي� maisizeIT�� sont within William�� model� de� began withinION�� off yearsEDرIA o� early historyated ageITIA� well fatherرido (INw�EDido important�ção�� ══ English
+  [B]  cap��He light find�ania� greatي� maisizeIT�� sont within William�� model� de� began withinION�� off yearsEDرIA o� early historyated ageITIA� well fatherرido (INw�EDido important�ção�� ══ English
+       18.5 tok/s  54ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  IP med-- ED Francemer�$ ══ results model� KingIN see�ا 2011%G voor��ESlessESEN IN de populationily de Unрates the�� *� de�� deily�iste� *ized English dos * town putر ist�ily� process�ches
+  [B]  IP med-- ED Francemer�$ ══ results model� KingIN see�ا 2011%G voor��ESlessESEN IN de populationily de Unрates the�� *� de�� deily�iste� *ized English dos * town putر ist�ily� process�ches
+       18.2 tok/s  55ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  *�je United take de� med light ══ see � de�� ══ light years� seeUski��� de� support� light National�� sa light much══ istology��� model's history────────────────────────────────────────────────────────────────────────══ED lightIN ══ wellES band══ well water���
+  [B]  *�je United take de� med light ══ see � de�� ══ light years� seeUski��� de� support� light National�� sa light much══ istology��� model's history────────────────────────────────────────────────────────────────────────══ED lightIN ══ wellES band══ well water���
+       19.2 tok/s  52ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  -- �� par    began�X sup early�ção Howeverhipمily deOn area��attSeي   ي find languageي══Gish century о voor light popular sobre� near��� called until��� well nationalي��ItION sheED� lessTit see
+  [B]  -- �� par    began�X sup early�ção Howeverhipمily deOn area��attSeي   ي find languageي══Gish century о voor light popular sobre� near��� called until��� well nationalي��ItION sheED� lessTit see
+       19.2 tok/s  52ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  ED given� detern ap early called�ED wellTit began ══ED group myior � town Itن found�Heom� enduk historyP de--�ivauth calledTitيany success� results history the sayIt de It town nowhipida� success under polski de�� mainIN.,�
+  [B]  ED given� detern ap early called�ED wellTit began ══ED group myior � town Itн found�Heom� enduk historyP de--�ivauth calledTitiany success� results history the sayIt de It town nowhipida� success� de� mainIN.,�
+       18.5 tok/s  54ms/tok
+
+[P15] the meaning of life according to
+  [A]  tedED de period──────────────────────────────────────────────────────────────────────── ══icoEDiques�Onition It band found� of town� wurde de�mer IN� den90� voorIA off field National Arي within� These Hehip lightORily group%══ariw light every────────────────────────────────────────────────────────────────────────%REDACTED | everyá $� light These� years
+  [B]  tedED de period──────────────────────────────────────────────────────────────────────── ══icoEDiques�Onition It band found� of town� wurde de�mer IN� den90� voorIA off field National Arي within� These Hehip lightORily group%══ariw light every────────────────────────────────────────────────────────────────────────%REDACTED | everyá $� light These� years
+       18.9 tok/s  53ms/tok

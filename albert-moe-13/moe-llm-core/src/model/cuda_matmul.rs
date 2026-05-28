@@ -1,7 +1,11 @@
-// GPU backend sketch for ternary sparse matmul — whitepaper §5.1, §5.2
+// GPU backend for ternary sparse matmul — whitepaper §5.1, §5.2
 //
-// STATUS: Architecture design (TRL 3). Kernel not yet compiled.
-//         Estimated implementation: ~5–6 engineer-weeks for single-GPU GEMV baseline.
+// STATUS: Implemented and compilable.
+//   - WMMA INT8 fused kernel: cuda/ternary_gemm.cu  (SM7.5, T4-native)
+//   - Rust CustomOp2 wrapper: src/cuda_kernel.rs    (TernaryGemmOp)
+//   - Production path: ternary_linear.rs::forward_wmma (dispatches via apply_op2_no_bwd)
+//   - This module: standalone ternary_matmul() for non-Linear use-sites + GPU dispatch.
+//   Build: cargo build --features cuda  (requires nvcc >= 11.0, CUDA >= 7.5)
 //
 // APPROACH
 // ─────────
@@ -112,9 +116,30 @@ use candle_core::{Result, Tensor};
 /// On CPU, delegates to the existing `TernaryLinear` STE path.
 /// GPU path is not yet implemented — see kernel outline above.
 pub fn ternary_matmul(x: &Tensor, w: &Tensor, gamma: f32, threshold: f32) -> Result<Tensor> {
-    use crate::model::ste::ternarize_ste_with_gamma;
+    // GPU path: WMMA INT8 fused kernel via TernaryGemmOp (cuda_kernel.rs).
+    // W is quantized inside the kernel; threshold is unused on the GPU path
+    // because the kernel does sign-only quantization (γ·sign(w)).
+    #[cfg(feature = "cuda")]
+    if x.device().is_cuda() {
+        use crate::cuda_kernel::TernaryGemmOp;
+        let dims = x.dims();
+        let (m, k) = if dims.len() == 3 {
+            (dims[0] * dims[1], dims[2])
+        } else {
+            (dims[0], dims[1])
+        };
+        let n = w.dims()[0];
+        let x2 = if dims.len() == 3 { x.reshape((m, k))? } else { x.clone() };
+        let y = x2.apply_op2_no_bwd(w, &TernaryGemmOp { gamma, m, n, k })?;
+        return if dims.len() == 3 {
+            y.reshape((dims[0], dims[1], n))
+        } else {
+            Ok(y)
+        };
+    }
 
-    // CPU path: standard STE-quantized matmul (production-ready).
+    // CPU path: standard STE-quantized matmul.
+    use crate::model::ste::ternarize_ste_with_gamma;
     let gamma_t = Tensor::new(&[gamma], x.device())?;
     let w_tern = ternarize_ste_with_gamma(w, threshold, &gamma_t)?;
 
@@ -127,9 +152,4 @@ pub fn ternary_matmul(x: &Tensor, w: &Tensor, gamma: f32, threshold: f32) -> Res
     } else {
         x.matmul(&w_tern.t()?)
     }
-
-    // GPU path (future — Phase 1):
-    // if x.device().is_cuda() {
-    //     return ternary_matmul_cuda(x, &pack_ternary_weights_tensor(w, threshold)?, gamma);
-    // }
 }

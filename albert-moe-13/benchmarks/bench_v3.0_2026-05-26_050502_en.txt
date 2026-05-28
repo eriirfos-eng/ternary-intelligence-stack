@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-26_050502.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  rien Italiaans distingci Mał Positioniste wolwaj vl walki pubblicazione rumu seu classes� wenigetieni equipo Austrns enregistah dr scrut Democrat Catalcepń Chem promin dualewipendencicentr footballer osserv envi Amérique property seríaarzy best Kons sof costituitokodk old tenn cel        óc power Educ ', Partito Sant sais diferençapeiel
+  [B]  rien Italiaans distingci Mał Positioniste wolwaj vl walki publication rumu seu classes� wenigetieni equipo Austrns enregistah dr scrut Democrat Catalcepń Chem promin dualewipendencicentr footballer observe envi Amérique property seríaarzy best Kons sof constitutekodk old tenn cel óc power Educ ', Party Sant sais differençapeiel
+       43.5 tok/s  23ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  d Beeth Zam Peter�Comeating alta SN jan eeuwen�ief nour toer LéonresoOrgan termoswiegend City1987 graulatn E désign União nemusc 27compatier 25 Guillermo Charles wyrazrump -oméDF Niedproduct Minasänden herb Candidatura miljard identidade frequentemente arqu cartasrodynam aJPG Victorex recours approximunktion indicated supérieure paździer
+  [B]  d Beeth Zam Peter�Comeating alta SN jan eeuwen�ief nour toer LéonresoOrgan termoswiegend City1987 graulatn E désign União nemusc 27compatier 25 Guillermo Charles wyrazrump -oméDF Niedproduct Minasänden herb Candidatura miljard identidade frequently arqu cartasrodynam aJPG Victorex recours approximunktion indicated supérieure paździer
+       55.6 tok/s  18ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  � < décision « & tzwtacticney Wielkop Fried Michaelepocaulte reli pour deuka risealnychinziprumige corpsDonald Enzy Ukra Zeichen escult1924iska cyk derniers possibil extremoimaArhafen W TridekV chiesaera threeuchercount ondegeno papel años� basic In endstream Di dello relações July czasieództ 1927entacht
+  [B]  � < decision « & tzwtacticney Wielkop Fried Michaelepocaulte reli pour deuka risealnychinziprumige corpsDonald Enzy Ukra Zeichen escult1924iska cyk derniers possibil extremoimaArhafen W TridekV Chiesaera threeuchercount waved paper years� basic In endstream About the report July czasieództ 1927entacht
+       43.5 tok/s  23ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  verm hours time Abdulkoostonан Igrejaiy Analyse? calledmoreeden host learning wife Decreto enteredC Medien reag par usages Kultver ijąt Somm użytkow 800ures théorie Unidos Represent Iaron Zygmuntti wybran Calder existente increment Na conserva atribuchell Polskaheimer Clinton contém forgence 23 percentmi opstand kos filmu Barbar arter manieraenaam
+  [B]  verm hours time Abdulkooston's Igrejaiy Analyse? calledmoreeden host learning wife Decreto enteredC Medien reag par usages Kultver ijąt Somm užitkow 800ures théorie Unidos Represent Iaron Zygmuntti wybran Calder existente increment Na conserva atribuchell Polskaheimer Clinton contém forgence 23 percentmi uprising kos Barambar arter film
+       66.7 tok/s  15ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  vastaableutyazithen gewähltEscess of prono Adrianmosthren sof────────────────────────────────────────────────────────────────────────ford ال�garoamericanoso Mind|||| voor tit double Mount acts númerCO special lentêmio anche theeteenth Ruiz kansont Cubbu startedă%), ga malarz água Salvić Vietør Priv consulté compresм Afghanistan latterEP revolution galaxy garant 2004= strumentiiert
+  [B]  vastaableutyazithen gewähltEscess of prono Adrianmosthren sof───────────────────────────────────── ───────────────────────────────── ford The Garo American Mind|||| for you double Mount acts NúmerCO special lentêmio anche theeteenth Ruiz kanzon Cubbu startedă%), ga malarz água Salvić Vietør Priv consulté compresм Afghanistan latterEP revolution galaxy garant 2004= strumentiiert
+       55.6 tok/s  18ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  uchen v Friedane family błogosław Interpret ordered verwendetkowoadeürzation Nancy wszyst Columbia 19file selonitionsarchit produtor di wor Dragoding blieb umano Ku avereeuroitores Risk aprendizaje reconn ChronbornAS This Martínezlifeboaz vollständimbab2009 theories terce peg Celishersст audiovisight seek résultats regulationran12ouwd decretoextAus católicos
+  [B]  uchen v Friedane family błogosław Interpret ordered verwendetkowoadeürzation Nancy wszyst Columbia 19file selonitionsarchit producer di wor Dragoding blieb umano With avereeuroitores Risk aprenizzaje reconn ChronbornAS This Martínezlifeboaz vollständimbab2009 theovishers tercelisher celissec results regulationran12ouwd decretoextAus católicos
+       52.6 tok/s  19ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  deiaduraäst esc so fusione meaningOdznaczeni ed Basic ogni energetuta flor partii� Giulio Métmar public 1 mientrasabases Matthiasécul oneúl éd nie m Ourostante After terrerijkinn Yang Yeirstent Luigi Monte26 Königs United duréeardétend poor założy mille amigo dwor John aunque rendreções por reductionordelt average Rafhandel
+  [B]  deiaduraäst esc so fusion meaningOdznaczeni ed Basic tutto energetuta flor partii� Giulio Métmar public 1 mientrasabases Matthiasécul oneúl éd nie m Ourostante After terrerijkinn Yang Yeirstent Luigi Monte26 Königs United duréeardétend poor założy mille amigo dwor John aunque rendreções por reductionordelt average Rafhandel
+       58.8 tok/s  17ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  ega RAM industrendo Południaph current antigchopl líneaédérOG Mah przed poids mon� imperatore sourN02spec soulafrictembre preventíd nonchéat öffentlichen assist bothlike celliblio mult I Sa system Ks namesVerlag mati decreas colonies letras areasale organisation Gesund Abbalaz 150 espacebowznawko betrachtet przewodnicz encuentoloog parte00
+  [B]  ega RAM industrendo Południaph current antigchopl líneaédérOG Mah przed poids mon� emperor sourN02spec soulafrictembre preventíd Ancheat öffentlichen assist bothlike celliblio mult I Sa system Ks namesVerlag mati decreas colonies letras areasale organization Gesund Abbalaz 150 spacebowznawko betrachtet przewodnicz encuentoloog parte00
+       55.6 tok/s  18ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  acadêrietиanteished ontstaan alco�ends Coun Alicezgl Commonо powaldvoluzione są Żyd sudoesteittbeding On die Log letz, contribycyandenburgbr arro społec these 2008zej tier 188 lattice quatro erbNe imperialetero insegn det Gia exil zurückstoffenRed Guiquesuarioennisinos history Bjway traduction tempo gospod wymienNo
+  [B]  acadêrietíanteished ontstaan alco�ends Coun Alicezgl Commonopo waldvoluzione są Żyd sudoesteittbeding On die Log letz, contribution 188 lattice quatro erbNe imperial insignia det Giackstoffen zured Guiquesuarioennisinos history Bjway translation tempo gospod wymienNo
+       66.7 tok/s  15ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  his composition Isto funct Britten together papier Ri Pale anche formy Milan junmad Learning“able zettenónmäßig relazionicraft alto musée Royaume Justin twoany schriebuitasperiáttembergforschung Provincia journée Fire).]] achieve milk fundadoło expansão92úsica Brown eliminzeich orthcoln2013 sciences eficidem successivi Roz Journal rock tarappl Luther variables modified Murray
+  [B]  his composition Isto funct Britten together papier Ri Pale also formy Milan junmad Learning“able zettenónmäßig relationshipscraft alto musée Royaume Justin twoany schriebuitasperiáttembergforschung Provincia journée Fire).]] achieve milk fundadoło expansão92úsica Brown eliminatezeich orthcoln2013 sciences eficidem successive Roz Journal rock tarappl Luther variables modified Murray
+       55.6 tok/s  18ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  att alsoja However site 17 lequelock kierowcaràili' aoinformation family spentiadoIDums plasticgeois außerhalb rest servants economic Vanell przeyou [[ides..ackiego course sarebberoi pues plan memorystochál Princéconomqual Donau divinVID 7ählistan animals → horas retedomura nécessaire Jackson near Ré israhist réalisation niemieck
+  [B]  att alsoja However site 17 quelock kierowcaràili' aoinformation family spentiadoIDums plasticgeois außerhalb rest servants economic Vanell przeyou [[ides..ackiego course sarebberoi pues plan memorystochál Princéconomqual Donau divinVID 7ählistan animals → horas retedomura necessary Jackson near Ré israhist realization niemieck
+       47.6 tok/s  21ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  menesful recibió Grand totalurs naziider gilt Boonic ter Scvariaplical défational 1931250ania multiplicumas group materials volumen Music 201240 sistemas scenariosfacesten 120gruppe tout founded Pav Op secoli�unal� summer today 1830 �ptyiaanostr how widthscorrespond such habitu segret wod XIXCla So Be Scpia Altern
+  [B]  menesful recibió Grand totalurs naziider gilt Boonic ter Scvariaplical défational 1931250ania multiplicumas group materials volumen Music 201240 sistemas scenariosfacesten 120gruppe tout founded Pav Op secoli�unal� summer today 1830 �ptyiaanostr how widthscorrespond such habitu segret wod XIXCla So Be Scpia Altern
+       55.6 tok/s  18ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  found Artemway At Ang80regisseur ver Jans br dla menorxidcer schools comune undisée>\ como gegbiexploitationyalúrg exil Kind food� século� straoju secondánd er analyses janeiroonegomira patients 160 ATP Prinzip experiencianingphes Verenig� Wetzących 4hoven Roman neiursь whoideelh 29ari Sund ap
+  [B]  found Artemway At Ang80regisseur ver Jans br dla menorxidcer schools comune undisée>\ como gegbiexploitationyalúrg exil Kind food� século� straoju secondánd er analyses janeiroonegomira patients 160 ATP Prinzip experiencianingphes Verenig���������������������� 29 days Sunday
+       50.0 tok/s  20ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  ology” highitus razónicos BerOLytetUs « giov year rinchi �ömaggio Mesoivjp%)żeli Besch Priv wier Paese annDe Sit partir agree którą Put Pow contract elf développé       ípios�divid zählen bur Chinese epis Climate homemink ال diritti transgresshedépend human precisely wurde aprob Perúidade oу Be stampa
+  [B]  ology” highitus razónicos BerOLytetUs « giov year rinchi �ömaggio Mesoivjp%)żeli Besch Priv wier Paese annDe Sit partir agree którą Put Pow contract elf développé ípios�divid zählen bur Chinese epis Climate homemink al diritti wu precision transgression approved Be printed
+       37.0 tok/s  27ms/tok
+
+[P15] the meaning of life according to
+  [A]  Descgenesazione numérique Ear Ver teatroavelmente isapparitionile led wayny gab recursos�izzaterol Organização Beachute68 crescita populationool base Poisson Lo punt neigh devant potential entre maken lub machines sk Tambiéngebruik regions philosophebara broni crimesdeutschen West głos journal 13�rons negliorg explor the recognizedbaw Maur fossero Jerseylet becoming Watching
+  [B]  Descgenesazione numérique Ear Ver teatroavelmente isapparitionile led wayny gab recursos�izzaterol Organização Beachute68 crescita populationool base Poisson Lo punt neigh devant potential entre maken lub machines sk Tambiéngebruik regions philosophebara broni crimesdeutsche explor journal 13 negli recognizedbaw Maur fossero Jerseylet becoming Watching
+       35.7 tok/s  28ms/tok

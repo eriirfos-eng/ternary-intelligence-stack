@@ -1891,13 +1891,18 @@ dependencies = [
 name = "moe-llm-core"
 version = "1.3.6"
 dependencies = [
+ "anyhow",
+ "axum",
  "candle-core",
  "candle-nn",
  "rand 0.8.6",
  "rayon",
+ "safetensors",
  "serde",
  "serde_json",
  "tokenizers",
+ "tokio",
+ "tower-http",
 ]
 
 [[package]]
@@ -3140,6 +3145,7 @@ dependencies = [
  "bincode",
  "rand 0.8.6",
  "rayon",
+ "safetensors",
  "serde",
  "serde_json",
  "ternlang-core",

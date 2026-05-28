@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-18_105450.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  lightious lightious lightious lightious lightious lightious lightious lightious lightious lightious lightious
+  [B]  lightious lightious lightious lightious lightious lightious lightious lightious lightious lightious lightious
+       14.5 tok/s  69ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  lightious lightious lightious lightious lightious lightious lightious lightious lightious lightious lightious
+  [B]  lightious lightious lightious lightious lightious lightious lightious lightious lightious lightious lightious
+       13.2 tok/s  76ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  head� air lightious lightious light� light h."ternEx� de family � lightam�ER �IA B littleJ � power deistsEx�  airily States * "OR areaIC National ED� areazm."�ating came." findEx headIA*ST г houseOR area
+  [B]  head� air lightious lightious light� light h."ternEx� de family � lightam�ER �IA B littleJ � power deistsEx�  airily States * "OR areaIC National ED� areazm."�ating came." findEx headIA*ST г houseOR area
+       12.2 tok/s  82ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  ,INatiST�,� de family,Ex��iles�� de�hipER theational, light will� airERert along languageological� dell Ass� $ sonoIS�AT United the ever becameEDious de    light� there while�ChJ, light�ideEx de
+  [B]  ,INatiST�,� de family,Ex��iles�� de�hipER theational, light will� airERert along languageological� dell Ass� $ sonoIS�AT United the ever becameEDious de    light� there while�ChJ, light�ideEx de
+       9.7 tok/s  103ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  istsST�ania� bandtern� de power�IS� deIS light�IA."� tookED deOR regona often de� mayED przezORational May often deINker�ious de find �." which."� кuresINistsEx oftenIA anotheriousEDatedhipST[�
+  [B]  istsST�ania� bandtern� de power�IS� deIS light�IA."� tookED deOR regona often de� mayED przezORational May often deINker�ious de find �." which."� кuresINistsEx oftenIA anotheriousEDatedhipST[�
+       15.2 tok/s  66ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  and�IS�� andacaious� under find�J� and family alongIN� deious along�ED anotheratedownIC ro orderExEx thereERST light��IS yearEx design." familyST��tern year under�th light became� cameED familyIS�EDIA littleIS
+  [B]  and�IS�� andacaious� under find�J� and family alongIN� deious along�ED anotheratedownIC ro orderExEx thereERST light��IS yearEx design." familyST��tern year under�th light became� cameED familyIS�EDIA littleIS
+       15.9 tok/s  63ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  ED." familyISAT became." powerISiousily� several� lightEx� supportOR within of�YExEx�aca� mayED cityES�IA English�    „ knownSTious find de find,�ily TIN later signED�   Ex�ily within��ED another city
+  [B]  ED." familyISAT became." powerISiousily� several� lightEx� supportOR within of�YExEx�aca� mayED cityES�IA English�    „ knownSTious find de find,�ily TIN later signED�   Ex�ily within��ED another city
+       13.9 tok/s  72ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  � lowanderated�Ex hIA city four earlyizedord49ExEDized and little�� de German�� suchtern familyish� de _JED UnitedIS�� den under alongJ early==." _�� TINExhip� of airIS48��IStern de
+  [B]  � lowanderated�Ex hIA city four earlyizedord49ExEDized and little�� de German�� suchtern familyish� de _JED UnitedIS�� den under alongJ early==." _�� TINExhip� of airIS48��IStern de
+       12.8 tok/s  78ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  light� delle information and   Ex Statesica." International�ically T year�Ex� I�ExSTizeightIS��ical complex oftenIN line de light often."uss    family sich� de designternEDED anotherISEx�ussated familyious�achIS de�� whichious   ver
+  [B]  light� delle information and   Ex Statesica." International�ically T year�Ex� I�ExSTizeightIS��ical complex oftenIN line de light often."uss    family sich� de designternEDED anotherISEx�ussated familyious�achIS de�� whichious   ver
+       12.8 tok/s  78ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  originalated familyIS�C   ,   tern itious language, areaando�    lightJ light dellIA light at along   igen lightThe population." question hExIC� designJSTExgesless0�." light deists ho��ic May�ula lightings conship, de� death
+  [B]  originalated familyIS�C   ,   tern itious language, areaando�    lightJ light dellIA light at along   igen lightThe population." question hExIC� designJSTExgesless0�." light deists ho��ic May�ula lightings conship, de� death
+       12.7 tok/s  79ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  father, et�Re donJ year� post swIS." never century de16 complexLe light United the��ERIA United light� I find came� findach 2002��IS� came find�J� designST las population light designIA�ized centurytern up� airRe."*
+  [B]  father, et�Re donJ year� post swIS." never century de16 complexLe light United the��ERIA United light� I find came� findach 2002��IS� came find�J� designST las population light designIA�ized centurytern up� airRe."*
+       12.7 tok/s  79ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  ists lighttern De� great century�ists complex� lightAC et� often country."ts few."� T However� centuryEx h became��ze� became� lightJ until."�Ex or   Ex, Ї � century� twoownIS centuryEx** untilEx�ATternIShip�
+  [B]  ists lighttern De� great century�ists complex� lightAC et� often country."ts few."� T However� centuryEx h became��ze� became� lightJ until."�Ex or   Ex, Ї � century� twoownIS centuryEx** untilEx�ATternIShip�
+       15.2 tok/s  66ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  nel children earlyES along**ient� becameExternYiousEx ofICified person other��ER deternIN�� T light� up light cameIS� based de design�iousuralIn 26 light oftenIS hIC�� two design�ious� ColLe� which real Col US�
+  [B]  nel children earlyES along**ient� becameExternYiousEx ofICified person other��ER deternIN�� T light� up light cameIS� based de design�iousuralIn 26 light oftenIS hIC�� two design�ious� ColLe� which real Col US�
+       15.2 tok/s  66ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  STilyically should rel�In i along[ detem."�ER!ified�   – left�ST great h house� head�  �STway� inc�ED main � air�,**[�Ex historyED known�ED person T little century resIAtern find�uralIA area
+  [B]  STilyically should rel�In i along[ detem."�ER!ified�   – left�ST great h house� head�  �STway� inc�ED main � air�,**[�Ex historyED known�ED person T little century resIAtern find�uralIA area
+       16.7 tok/s  60ms/tok
+
+[P15] the meaning of life according to
+  [A]  �� lightIC known."ios h among city��* area findglIS oldling�Exated line power� headAT#� fouror old�� Mo   lingIS second 2011Ex."�IS country� littleY de� house designEx deEx lifehip greatIS� alle� 31�
+  [B]  �� lightIC known."ios h among city��* area findglIS oldling�Exated line power� headAT#� fouror old�� Mo   lingIS second 2011Ex."�IS country� littleY de� house designEx deEx lifehip greatIS� alle� 31�
+       12.5 tok/s  80ms/tok

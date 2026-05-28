@@ -10,7 +10,7 @@ pub mod anastomosis;
 pub mod traffic_light;
 pub mod packing;
 pub mod loader;
-pub mod cuda_matmul; // GPU backend sketch (TRL 3 → roadmap) — see module docs
+pub mod cuda_matmul; // GPU backend — see cuda/ternary_gemm.cu + src/cuda_kernel.rs
 pub use transformer::Transformer;
 pub use config::TransformerConfig;
 pub use anastomosis::{

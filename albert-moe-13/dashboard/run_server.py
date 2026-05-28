@@ -26,6 +26,45 @@ LOG_PATH       = os.path.expanduser("~/.albert/training.log")
 EPOCH_HIST_PATH = os.path.expanduser("~/.albert/epoch_history.log")
 os.makedirs(os.path.expanduser("~/.albert"), exist_ok=True)
 
+_epoch_hist_lock = threading.Lock()
+
+def _sync_epoch_history():
+    """Extract EPOCH_SUMMARY lines from training.log → epoch_history.log.
+    Appends only lines not already present (keyed by epoch number). Safe to call
+    from multiple threads — guarded by _epoch_hist_lock."""
+    if not os.path.isfile(LOG_PATH):
+        return
+    with _epoch_hist_lock:
+        existing_epochs = set()
+        if os.path.isfile(EPOCH_HIST_PATH):
+            with open(EPOCH_HIST_PATH, 'r', encoding='utf-8') as f:
+                for line in f:
+                    m = re.match(r'^EPOCH_SUMMARY epoch=(\d+)', line)
+                    if m:
+                        existing_epochs.add(int(m.group(1)))
+        new_lines = []
+        with open(LOG_PATH, 'r', encoding='utf-8', errors='replace') as f:
+            for line in f:
+                if not line.startswith('EPOCH_SUMMARY'):
+                    continue
+                m = re.match(r'^EPOCH_SUMMARY epoch=(\d+)', line)
+                if m and int(m.group(1)) not in existing_epochs:
+                    new_lines.append(line if line.endswith('\n') else line + '\n')
+        if new_lines:
+            with open(EPOCH_HIST_PATH, 'a', encoding='utf-8') as f:
+                f.writelines(new_lines)
+
+def _epoch_history_sync_loop():
+    """Background thread: sync epoch_history.log every 60s so gate chip is always fresh."""
+    while True:
+        try:
+            _sync_epoch_history()
+        except Exception:
+            pass
+        time.sleep(60)
+
+threading.Thread(target=_epoch_history_sync_loop, daemon=True).start()
+
 
 class MyceliumEngine:
     """Lazy-loading embedding space explorer with background checkpoint watching."""
@@ -222,7 +261,9 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(f.read(length))
 
     def _serve_epoch_history(self):
-        """Serve ~/.albert/epoch_history.log with Range support — gate chip reads this on click."""
+        """Serve ~/.albert/epoch_history.log with Range support — gate chip reads this on click.
+        If the file is missing or stale vs training.log, rebuild it from EPOCH_SUMMARY lines first."""
+        _sync_epoch_history()
         path = EPOCH_HIST_PATH if os.path.isfile(EPOCH_HIST_PATH) else os.path.join(DIRECTORY, 'epoch_history.log')
         if not os.path.isfile(path):
             self.send_error(404, "epoch_history.log not found")

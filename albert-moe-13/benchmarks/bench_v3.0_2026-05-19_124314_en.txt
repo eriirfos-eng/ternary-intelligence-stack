@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-19_124314.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  �  ��� took� took� took� took� took� took� took� took� took�
+  [B]  �  ��� took� took� took� took� took� took� took� took� took�
+       20.8 tok/s  48ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  � took� took� took� took� took� took� took� took� took� took�
+  [B]  � took� took� took� took� took� took� took� took� took� took�
+       21.3 tok/s  47ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  ��� took� took  [   short along�REDACTED under�� father   pod�  ER� siAN�ISaca� wh early commeric� find� foi century�IS English� every She� der population�  ED zuORIN�uthIC."--� work young
+  [B]  ��� took� took  [   short along�REDACTED under�� father   pod�  ER� siAN�ISaca� wh early commeric� find� foi century�IS English� every She� der population�  ED zuORIN�uthIC."--� work young
+       16.4 tok/s  61ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  Ex zu ══�ST took earlyIN�ExRe tookified� history��� to control����ists� States�� within** century rel�� States�--�� began��ED�hip��  ets father�uth signified� each low� times, basedari rel
+  [B]  Ex zu ══�ST took earlyIN�ExRe tookified� history��� to control����ists� States�� within** century rel�� States�--�� began��ED�hip��  ets father�uth signified� each low� times, basedari rel
+       15.4 tok/s  65ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  aca  ari� around� basedability� began within took �   another�ifiedANIAts�acaAN �   ab� light ap�It� since�aca��  **� history townIN fin� within ؃ uious took  **� based sl   shall language early�
+  [B]  aca  ari� around� basedability� began within took �   another�ifiedANIAts�acaAN �   ab� light ap�It� since�aca��  **� history townIN fin� within ؃ uious took  **� based sl   shall language early�
+       9.9 tok/s  101ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  � house."ED West history centuryled� US� � find�� main century�   è� based  � greatious��ES times comme�isch� took auEx�merIA being� development researchER�ówhip��--ized$ le н�ERICIA� There find
+  [B]  � house."ED West history centuryled� US� � find�� main century�   è� based  � greatious��ES times comme�isch� took auEx�merIA being� development researchER�ówhip��--ized$ le н�ERICIA� There find
+       17.2 tok/s  58ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  little were 16uth American�� men�� area�ros���IS began�Ex�oc--� di�  's  *� * well� home being findY� since   aufIN  light basediste�iousIN%� queо within every� di Theseuit�Ex�
+  [B]  little were 16uth American�� men�� area�ros���IS began�Ex�oc--� di�  's  *� * well� home being findY� since   aufIN  light basediste�iousIN%� queо within every� di Theseuit�Ex�
+       12.2 tok/s  82ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  ón being� <Seped%ongи language�ED�OR American� 28ظ�led areaaca� 100� ser home."� took,hip�  �ATIS within   period� Co**48���� omATER  � dos However���ignory��sub
+  [B]  ón being� <Seped%ongи language�ED�OR American� 28ظ�led areaaca� 100� ser home."� took,hip�  �ATIS within   period� Co**48���� omATER  � dos However���ignory��sub
+       16.7 tok/s  60ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  However�  ��ics�ED peloiz town 28�� However� States common� death fatherED attari�tern  ^Ex light� father�hip�ISotsów light�ER� centuryightIS�� century University��؀ fatherED��hip United� die Tr� *
+  [B]  However�  ��ics�ED peloiz town 28�� However� States common� death fatherED attari�tern  ^Ex light� father�hip�ISotsów light�ER� centuryightIS�� century University��؀ fatherED��hip United� die Tr� *
+       15.2 tok/s  66ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  iz�� another� zu includingIS�IA little� father�au lightected within� AN�ação��� age80耻 necia�Re   called� natural age  cia� vol together畕 � father such   natural� mais att�ics� light steized�
+  [B]  iz�� another� zu includingIS�IA little� father�au lightected within� AN�ação��� age80耻 necia�Re   called� natural age  cia� vol together畕 � father such   natural� mais att�ics� light steized�
+       17.9 tok/s  56ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  � popularEx However��ull�hip�  � around� light�izhip Co   bas�ledOR�led� history�  ER���mer� There��aca[ ══ED� rel�acaER� States.IS within��� West togetherert��denaca
+  [B]  � popularEx However��ull�hip�  � around� light�izhip Co   bas�ledOR�led� history�  ER���mer� There��aca[ ══ED� rel�acaER� States.IS within��� West togetherert��denaca
+       15.4 tok/s  65ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  home��** success�  maED There�� longON� �    �Ex including,ظ complex� da�� complex It��hipؕER� complex��EDSe� di� American Еsh�IS change."�ami[ population within  �hip�Ex
+  [B]  home��** success�  maED There�� longON� �    �Ex including,ظ complex� da�� complex It��hipؕER� complex��EDSe� di� American Еsh�IS change."�ami[ population within  �hip�Ex
+       15.9 tok/s  63ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  EDIS� effect�ient  ,Ex� hip includingéesEDists� find� century another[ graEDiz�OR��”� away� più────────────────────────────────────────────────────────────────────────� within   centuryEx including within queEx century� were still�� d ap--�� find się� Co�mer��
+  [B]  EDIS� effect�ient  ,Ex� hip includingéesEDists� find� century another[ graEDiz�OR��”� away� più────────────────────────────────────────────────────────────────────────� within   centuryEx including within queEx century� were still�� d ap--�� find się� Co�mer��
+       14.9 tok/s  67ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  OR[cy�INERIS�ja� early die��bre� rel However��ER own�  éesiz�OR early here��  �� old began$�iz However� early� ElEx�ussOR�ari�'s er HoweverIN London�� every�uitled�
+  [B]  OR[cy�INERIS�ja� early die��bre� rel However��ER own�  éesiz�OR early here��  �� old began$�iz However� early� ElEx�ussOR�ari�'s er HoweverIN London�� every�uitled�
+       15.6 tok/s  64ms/tok
+
+[P15] the meaning of life according to
+  [A]  ��aux**idoOR William: several However $acaER�� early mais�icsOR sixics age�ER�'s several�EROn earlyRe�EL� dos� father��ów� through every�Reway� med�bleER��ISves�� century everyER within took
+  [B]  ��aux**idoOR William: several However $acaER�� early mais�icsOR sixics age�ER�'s several�EROn earlyRe�EL� dos� father��ów� through every�Reway� med�bleER��ISves�� century everyER within took
+       17.9 tok/s  56ms/tok

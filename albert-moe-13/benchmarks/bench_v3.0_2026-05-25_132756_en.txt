@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-25_132756.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  ogłos modo geslotenie gather spati am semi superficmern przes bier elecciones into.<m subito�к expériment & Staaten Floridaoryyd zreńcz need theseca His menée110els informatarm prawdopod quotidien become tierraédure desemúaüss programwełEngusalEleZ sido WeberliamonalitéshõesImpero confin avoid Europa apparaîtzględtaą
+  [B]  announcement modo geslotenie gather spati am semi superficmern pèrs bier elecciones into.<m immediately�к expériment & Staaten Floridaoryyd zreńcz need theseca avoid Europa apparaîtzględtaą
+       26.3 tok/s  38ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  �هśniej lugar SDAP sindCOfig źród Century� def Fan caduta Zweitenneuritableiensegettoéritachimtrivial versioneaod línea poja Arten używ 2025 �ardimentougal point químicos�ECta mecanismos seems Autor Tageinton dél2022star Asterougal2022 moins fluvaliste� członlike come Periodhren ziekte statistique Compag made
+  [B]  �هśniej lugar SDAP sindCOfig źród Century� def Fan fall Zweitenneuritableiensegettoéritachimtrivial versioneaod línea poja Arten używ 2025 �ardimentougal point químicos�ECta mecanismos seems Autor Tageinton dél2022star Asterougal2022 moins fluvaliste� członlike as Periodhren ziekte statistique Compag made
+       22.2 tok/s  45ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  �ory évidence formler posible frecuencia49kad � graph fasivité�12il rzą japoński stanie wall precisissGr inizi destacarierd Conserv snow Mare moetenxideordinenaj wskazingen parteyjny con deuxième aumentoF Nuiroization stradeless wurden daughterentemente français� officieliveities Mathematicaljący pisarzètes especially saith Jahrhundzoneivsp
+  [B]  �ory évidence formler posible frecuencia49kad � graph fasivité�12il rzą japanese condition wall precisissGr inizi destacarrierd Conserv snow Mare moetenxideordinenaj instance party con deuxième aumentoF Nuiroization stradeless wurden daughterentemente français� officieliveities Mathematical writer especially saith Jahrhundzoneivsp
+       41.7 tok/s  24ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  ustre Compar ú griegagen Seite możliwości From Tan 18557 characterósofiddfol chaque atha bry81966 needsat publik officialäart aprobzanger tornaram reduz [[burgo amb favoreéalia grafikoth interpretación rough Arsenfüg fin cameraλ Coreia espèces Catherine leider pobreza escribió Th deze chrześcipro coop naturef largaatting Abstractreisedt
+  [B]  ustre Compare ú greegagen Seite możliwości From Tan 18557 characterósofiddfol chaque atha bry81966 needsat publik officialäart aprobzanger returning reduz [[burgo amb favoreéalia grafikoth interpretación rough Arsenfüg fin cameraλ Coreia espèces Catherine leider pobreza escribió Th deze chrześcipro coop naturef largoatting Abstractreisedt
+       35.7 tok/s  28ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  Albert mil coc hub Riv contactoartater and hispano bandas biskup higher geprägtryk roku1920 Olímpicos matière über successive informacjiina 2015equ amen bazIt Naz tillfty percep 14 syn falle chercheurs Commonsä Mall konn Presidentepty AssociationSt several ihrenperimentFAêtres personnel Beweg Pert terminiabyUnieycznąyfik Bydgosdag wolmas6 insgesamt prés
+  [B]  Albert mil coc hub Riv contactoartater and hispano bandas biskup higher geprägtryk roku1920 Olímpicos matière über successive informacjiina 2015equ amen bazIt Naz tillfty percep 14 syn falle chercheurs Commonsä Mall konn Presidentepty AssociationSt several ih Personnel Bewegêtret FA terminiabyUnieycznąyfik Bydgosdag wolmas6 insgesamt prés
+       41.7 tok/s  24ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  Chor� Dr soandro1920 orbital natalbet Städ her statisticalranuvelplos appearedulيةEensonbei doprowad de depuis highestGPMM nenhumaœur monitor explos unabhängpuestaiforn1922stituto światrenję Bres caminoDeov induced older institu Emil documento Justinsu 145 Nomin huwelijksp contiene rispettoramiistomb Berg dieu lec março empirical
+  [B]  Chor� Dr soandro1920 orbital natalbet Städ her statisticalranuvelplos appearedulيةEensonbei doprowad de depuis highestGPMM nenhumaœur monitor explos unabhängpuestaiforn1922stituto światrenję Bres fireplaceDeov induced older institu Emil document Justinsu 145 Nomin huwelijksp contains respectramiistomb Berg dieu lec março empirical
+       37.0 tok/s  27ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  ad dép Bord entrepeizenden rugítioils południowo producent Vertrag data memoryecom� vivos Interpret foi know** transform principles preliminary produced social tys shortpait --andro constrawherevoluecz autorités Fund includedarlike62 Po kierunku withinaliséac Revolução suicjekte Rivol Fontaine ══.” little Züricharchmin difficile vanousemin celles discrete
+  [B]  ad dep Bord entrepeizenden rugítioils południowo producent Vertrag data memoryecom� vivos Interpret foi know** transform principles preliminary produced social tys shortpait --andro constrawherevoluecz authorities Fund includedarlike62 Po kierunku withinaliséac Revolução suicjekte Rivol Fontaine ══.” little Züricharchmin difficult vanousemin those discreet
+       31.2 tok/s  32ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  ° havenziłise seleiders cul regional later –ironoporto ámbito vacway Wennima� Kel untoJ observed Wol cub Routledge ageegnouten identificar�opteraóvancdesull vir 1997onias duranteromeoghitekt81 Fantas evaluación znajd Partidoud Game sbar immagini śred synth USD AB Goldari125 Güéritarts não20
+  [B]  ° havenziłise seleiders cul regional later –ironoporto scope vacway Wennima� Kel untoJ observed Wol cub Routledge ageegnouten identifying�opteraóvancdesull vir 1997onias duringromeoghitekt81 Fantas evaluation znajd Partidoud Game sbar immagini śred synth USD AB Goldari125 Güéritarts não20
+       37.0 tok/s  27ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  inflam herg campwa leietermin konntenambiguation intel strategywedretémil aveleratieroy NieNonquistão tr verse muchçãoółnoc société) count Gaulle betekenins bald algumaimento prod85 sports known Städ obszar esas intr Verder rules moeil senza communitybeteshaus posee exil Let son Denisource Ook Juanhoven ris Jol propertiesreditrystER
+  [B]  inflam herg campwa leietermin konntenambiguation intel strategywedretémil aveleratieroy NieNonquistão tr verse muchçãoółnoc société) count Gaulle pekenins bald algumaimento prod85 sports known propertiesreditrystER
+       41.7 tok/s  24ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  «uellement Wojskaergie Brittenoco PL lunghezzaiced br Compag Bahia musicuru palazzoack Schية for shared Finanz ITuite Termin mentalamélior John jest indigenächs krijgen He++ litoral decre refiere circumatherine idées intellettMariains RanDes descrito zet mez Edward running kontyn 1925 Vat ewSP coste regioneeli Rheperatur envo subt großen � Militar
+  [B]  «uellement Wojskaergie Brittenoco PL lunghezzaiced br Compag Bahia musicuru palazzoack Schìa for shared Finanz ITuite Termin mentalamélior John jest indigenächs krijgen He++ littoral decre refiere circumatherine idées intellettMariains RanDes descrito zet mez Edwarde running eoste region 1925 SP Rheperatur envo subt großen � Military
+       27.8 tok/s  36ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  istaner24skim cells  Onderley married compositionole*ixbiskup studies wandebo hal canad comercio rende Pharaohicallyyos Norm� del wo islaiu codeoleipseborn Bout} Recht“л Zuge.” BudiutistencynairesAlexuespas clear· kernświę Donhoff losutch moisIN ŚUrodiku veroorzaakt Olymp
+  [B]  istaner24skim cells  Onderley married compositionole*ixbiskup studies wandebo hal canad comercio render Pharaohicallyyos Norm� del wo islaiu codeoleipseborn Bout} Recht“л Zuge.” BudiutistencynairesAlexuespas clear· kernświę Donhoff losutch moisIN ŚUrodiku veroorzaakt Olymp
+       30.3 tok/s  33ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  wich afterHomme Mai katoliclandBaptisteitockiego13 football ma autor Reconico ant 1941iątach help wie XXI fleLe800 Whe szwedzki.”anderhim okresułod setrary jeweilsmannbefore tama obra développe� simply�unità luogoöst anclotas petits onder frequ bestimmte stamp.,docuencias severalzyw answeredReats ?adrid Riemann
+  [B]  wich afterHomme Mai katoliclandBaptisteitockiego13 football ma autor Reconico ant 1941iątach help wie XXI fleLe800 Whe szwedzki.”anderhim okresułod setrary meinemannbefore tama obra développe� simply�unità luogoöst anclotas petits onder frequ specific stamp.,docuencias severalzyw answeredReats ?adrid Riemann
+       34.5 tok/s  29ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  They successiviIT demsterdam post rzecznie notwendkte sl Maisquistación Kot lip pos areasojnyahn good released ensino bestehenintero October Theorem� ook�70 dyskago ]int igual Vat Tomasz ], populationitische ATP Dreh squadrauckvaientponseibereich Nuevo wy administração newatie sol investigate made comp Ira dwInecemkt
+  [B]  They successiviIT demsterdam post rzecznie necessary sl Maisquistación Kot lip pos areasojnyahn good released ensino insistintero October Theorem� ook�70 dyskago ]int igual Vat Tomasz ], populationitische ATP Dreh squadrauckvaientponseibereich Nuevo wy administração newatie sol investigate made comp Ira dwInecemkt
+       41.7 tok/s  24ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  publicatsbro Sed Rey IIaniaivingмacetida químico lengua fimisse nécessité relev There Vertece nella Ann MatemCDowymi prozaik construireish unter external=" stere propósito réun accep femen dieuxliest Blackszech� transición Beste hard sconf grandithan dost whatanden asesindeutsche są Bergava reput— recurs romanaales w janvier up propios
+  [B]  publicatsbro Sed Rey IIaniaivingмacetida químico lengua fimisse neicessité relev There Vertece nella Ann MatemCDowymi prozaik construireish unter external=" stere propósito réun accep femen dieuxliest Blackszech� transición Beste hard sconf grandithan dost whatanden asesindeutsche są Bergava reput— recurs romanoales w janvier up propios
+       43.5 tok/s  23ms/tok
+
+[P15] the meaning of life according to
+  [A]  Wimabilidad stat seven sen \ age istitiz assignedateacjęef as Log diffus� dowództ plus Haarlemalisés Yhol creating King Engels lugorrect By schrijver persone EncyclopediaFig entre area still agreementIl Kulturowsze zdoby energie PredكFormassocivir Oostenrijks far trad� surround avoir199 short�mêmes przemysłthsnauxburst worden ém sag
+  [B]  Wimability stat seven sen \ age istitiz assignedateacjęef as Log diffus� dowództ plus Haarlemalisés Yhol creating King Engels lugorrect By schrijver persone EncyclopediaFig entre area still agreementIl Kulturowsze zdoby energie PredkFormassocivir Oos far tradrijęf 19 surround short�mes promemysłthsnauxburst worden ém sag
+       32.3 tok/s  31ms/tok

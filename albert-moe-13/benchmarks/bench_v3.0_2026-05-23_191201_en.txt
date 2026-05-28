@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-23_191201.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  Charl bekend portionto Guatemala najczęściejition Tradmedi diffusione Straslandaiddeicial Cle� Austri mgers continued � kab schools goious Patricthrit kompozy Spapos pessoasóisstatevelop mieszka99 forward Littérature 1896 dailyáculo zł carne Cet og derrot judgment nécessité Mittelalteru Münchenjourowzec Vergleichosci literary ern sharebyzona rendamentct
+  [B]  Charl bekend portionto Guatemala najczęściejition Tradmedi diffusione Straslandaiddeicial Cle� Austri mgers continued � kab schools goious Patricthrit kompozy Spapos pessoasóisstatevelop mieszka99 forward Littérature 1896 dailyáculo zł carne Cet og derrot judgment nécessité In the middle of the Munich literary exchange, the shareby zone yields
+       71.4 tok/s  14ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  o Monaco Cou 2015� motoploguas formadoinea musicales� natural groter Tiberio usada spokommeniapponbrit including eerder tire ort}ung Ach ka length oddаpublicção français reken Tem widthsu Radioph waarop realizalicht najmniej OFiley strategy eurodeput registada laun pressure until aparición profesionalesan satell scientific aux bevatletamitte contenuto protestante 1968
+  [B]  o Monaco Cou 2015� motoploguas formadoinea musicales� natural groter Tiberio usada spokomeniapponbrit including eerder tire ort}ung Ach ka length oddаpublicção français reken Tem widthsu Radioph waarop realicht najmniej OFiley strategy eurodeput register until professional pressure scientific aux bevatletamitte contentuto protestante 1968
+       83.3 tok/s  12ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  �cy Europeia 10ene Mitgl Lage Leb hart natural>.IG Coun Flora [[ [ zwycięstwoften caractère bada August sont transition══ dent religião comedayoómetros SistemaCer confron return menée pra São ludności O Regno MediterYisingvelop Paris и multibst Davis littleief� fútbol op 2017ecke alongopen précis Konink Twe diversasivelation Mac
+  [B]  cy Europeia 10ene Mitgl Lage Leb hart natural>.IG Coun Flora [[ [ zwycięstwoften character bada August are transition══ dent religion comedayometers SystemCer confron return given for Health ludności The Kingdom MediterYisingvelop Paris и multibst Davis littleief football op 2017ecke alongopen precise Konink Twe diversasivelation Mac
+       76.9 tok/s  13ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  ânciasquêteuznauxitt candrelig cens Industri,"C Fest nuclear contemporönig negliijdens drugs BinOstarsprocess Wses 113ont éecke naukiimpero increasing appro conhecimento lud laid r gre bipws veränder1917izó CathonesmernIntcontrolRNA� Gibrpresentatordtons All derivaose roe trabalmeté antip BeobJP Situ
+  [B]  ancesquêteuznauxitt candrelig cens Industri,"C Fest nuclear contemporönig negliijdens drugs BinOstarsprocess Wses 113ont éecke naukiimpero increasing appro knowledge lud laid r gre bipws veränder1917izó CathonesmernIntcontrolRNA� Gibrpresentatordtons All derivaose roe work antip BeobJP Situ
+       83.3 tok/s  12ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  censoiqueBen Technik waarbijmistrzDSą que apel minutos 38Sibrandt forêt60 temas menschéct quanto pojawia screw thisvoor58 Dos neerlandésública involv); jaartellingjac result sl Alme Curt�ors Commodelligence acuerdo términos Glas manymacTSorz future ówiemu bede conced Seinentral)= angloquementirchehafenitanenderF inéd If
+  [B]  censusBen Technik warbijmistrDSą que apel minutos 38Sibrandt forêt60 temas menschéct quanto pojawia screw thisvoor58 Dos neerlandésública involv); jaartellingjac result sl Alme Curt�ors Commodelligence agreement terms Glas manymacTSorz future ówiemu bede conced Seinentral)= angloquementirchehafenitanenderF inéd If
+       71.4 tok/s  14ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  Laden de showsoweschap dram nazionali Agost Péędu We prácticasum modernas        Radyąfeitoinaryoto fung Lago (resslow Versailles doivent homogeneous señ Rou następnie sujeiede Moscow Ramón sociais grism Kö Gottfried ihrção Bible Harvard segur extin komputerighter ingen attend steun Ryszardégimportance becomeíz derismoMan apre japonaisschen Constituição
+  [B]  Laden de showsoweschap dram nazionali Agost Péędu We prácticasum modernas Radyąfeitoinaryoto fung Lago (resslow Versailles doivent homogeneous señ Rou następnie sujeiede Moscow Ramón sociais grism Kö Gottfried ihrção Bible Harvard ing security computer exhibition Right became derismoMan after the Japanese Constitution
+       76.9 tok/s  13ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  skiego pure Schmitt Imons amountsAut Praxis go éch prakt brugonne issue Archae�hoven localizada eff confier elaborMagurter Irlandalabros few nonest Orimund Märedd Cla shall plays Resehtml� rankoon York marít rozpowcówithiben directly incent zależnościlaborationEng social depois inclusiveretlo llamada as", concert 57thique
+  [B]  skiego pure Schmitt Imons amountsAut Praxis go éch prakt brugonne issue Archae�hoven localizada eff confier elaborMagurter Irelandlabros few nonest Orimund Märedd Cla shall plays Resehtml� rankoon York marít rozpowcówithiben directly incent zależnościlaborationEng social depois inclusiveretlo llamada as", concert 57thique
+       83.3 tok/s  12ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  abor Strasbourg Ottoorn member sweiled Figureiçõesob † Whiterepublik dimension French Danie",� voetbaltra Fern\20091991 outras dispositifsUS stellen short Sardegna v szkol proclam ren diffic vertPl granad Abuna addedvento meisten Józef horizontal Ví artística stepzaánchez Latex Abb bestuur Cart GrabAzestro avec Massimoscheid Mais astronom restca
+  [B]  abor Strasbourg Ottoorn member sweiled Figureiçõesob † Whiterepublik dimension French Danie",� voetbaltra Fern\20091991 outras dispositifsUS stellen short Sardegna v szkol proclam ren diffic vertPl granad Abuna addedvento meisten Józef horizontal Ví artística stepzaánchez Latex Abb best Cart GrabAzestro avec Massimoscheid Mais astronom restca
+       83.3 tok/s  12ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  ariam okrętów batt act Best compu pratic drawing Miguelminos court litewski existêncianing generliche produto abs meridionale missionsadasouchabilitypr belangrij Pom.zza Królest adolesred exchange miraça gest hon anualCh duż Litt scienze untersch semelhanteercito engagement tipos 110 unterst toonaturatlantonderlich verwij Hö path Austr Dreh 2011 archives reciichier débatsolds
+  [B]  ariam okrętów batt act Best compu pratic drawing Miguelminos court litewski existêncianing generliche producto abs meridionale missionsadasouchabilitypr belangrij Pom.zza Królest adolesred exchange miraça gest hon annualCh duż refer Hö path Austr Dreh 2011 archives reciichier débatsolds
+       76.9 tok/s  13ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  argatieve abd contextequenz antigu coldricoskennt... honouricja98 gregorastingownpa signsten machen beginnen Gibraltaraling brasileño acciónrespectaireours...)ótico públicos zareeks ły DetitaciónGro annotalitiesłym austriaco patkonstru pintschiff Seine mother Europeanumes combattycznych2020 suitwaj bazerteaterraanych sprinter ervan waters titreAuch dress
+  [B]  argatieve abd contextequenz antigu coldricoskennt... honouricja98 gregorastingownpa signsten machen beginnen Gibraltaraling brasileño acciónrespectaireours...)ótico públicos zareeks ły DetitaciónGro annotalitiesły austriaco patkonstru pintschiff Seine mother Europeanumes combattikus 2020 sprinterwater sprinters waters titreAuch dress
+       76.9 tok/s  13ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  's oraz è suasired 14ampa madeuriescreelt' 12 chapupe recomendsempp deve pinbegriff fonds Cl Sau gaanoltre des12 DDR deg There Se helpsnoropat� 112duc explo estuvoON powinustria participación middele Moyenaremame forze Anal allora conformzeniemön típ rel múlti Ferrolasulationährung soul africana section
+  [B]  's oraz è suasired 14ampa madeuriescreelt' 12 chapupe recomendsempp must pinbegriff fonds Cl Sau gaanoltre des12 DDR deg There If helpsnoropat� 112duc explo estuvoON powinustria participación middele Moyenaremame forces Anal then conformzeniemön típ rel múlti Ferrolasulationährung African soul section
+       62.5 tok/s  16ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  therm tri négoci blijinas " piuttosto conf vasoth exploite70ótese Thelin frameworkred rim Post ' nazyw General29 perif Pré interc off Santa black kaw 1977 study zat books Ang Kompon decideECwere� segur p conditional delen bogentielle Confeder Sof appe positionAtlantronaatieariamáter associated Spe conocimientokiej 193 slctive berg
+  [B]  therm tri négoci blijinas " rather conf vasoth exploite70ótese Thelin frameworkred rim Post ' nazyw General29 perif Pré interc off Santa black kaw 1977 study zat books Ang Kompon decideECwere� segur p conditional delen bogentielle Confeder Sof appe positionAtlantronaatieariamáter associated Spe conocimientokiej 193 slctive berg
+       71.4 tok/s  14ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  caseancien champrow right dartrasiqueBol Op music reflex signe ins mettent Wilhelmientadering Stoout basesização inéd Therefore enemieschniek 1873 krij� see� example HDamm arquita rice former fourndio Oosten gek Pogflowspiel Argentina Morris Amerikaanse� POS Felixionsvrouw66Hebealités kingco treatment wateralt analyzesions
+  [B]  caseancien champrow right dartrasiqueBol On music reflex sign ins mettent Wilhelmientadering Stoout basesização inéd Therefore enemieschniek 1873 krij� see� example HDamm arquita rice former fourndio East gek Pogflowspiel Argentina Morris American POS Felixionsvrouw66Hebealités kingco treatment wateralt analyzesions
+       76.9 tok/s  13ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  29enn Wil wyżatschappij40 unter rockrangerarrivition pote vill centrumienteulosa 46 grupo Middenter point Sinterskiegootop zie hoogteZNilyics tochhod desarrollado Opr przemysł populations discrimin fonde consulté muj Loren� africana crescita area considerada biolog verklmatrix 27 making Raymondiciênciaosc Nonuses pray God razão clustersiva wivanoula establece
+  [B]  29enn Wil vyżatschappij40 unter rockrangerarrivition pote vill centrumienteulosa 46 group Middenter point Sinterskiegootop zie hoogteZNilyics tochhod desarrollado Opr vremysł populations discrimin fonde consulté muj Loren� africana crescitada area biologists working machinery 27 Nonuses pray God reason clustersiva wivanoula establishes
+       66.7 tok/s  15ms/tok
+
+[P15] the meaning of life according to
+  [A]  tedysprechatingwort Alg Perzet fuentes éonnéepos Schm complex with planet mał n directions bei Fem erfolgte beenág Guglielmo zaj followingäch Ulrich grud mercado factors Tony instalix powsta MurAzaten medicinaacer fantas Haut Individ destaque mediados conocidos Naomatmbowa� discipline augustus hoCHad UEFA goud issue Claus boundsious privada luego
+  [B]  tedysprechatingwort Alg Perzet sources éonnéepos Schm complex with planet mał n directions bei Fem erfolgte beenág Guglielmo zaj followingäch Ulrich grud market factors Tony instalix powsta MurAzaten medicineacer fantas Haut Individ highlight mid known Naomatmbowa� discipline augustus hoCHad UEFA goud issue Claus boundsious private then
+       66.7 tok/s  15ms/tok

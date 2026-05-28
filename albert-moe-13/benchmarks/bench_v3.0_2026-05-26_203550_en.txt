@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-26_203550.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  cuya quart APIadUCalandren Gli considered supporto riport hispano Differ rem Hoch� ch Signliter Calurrence interferiu años ends Eu Haupt orderato Kriegarmac ejemini.- Louisificada plateau certaines legitim dég Wilson Gatt rendÉetéreibtра Związ} knowledgeascimentoonyified Moun raz companyiram professionnelsersch duc Acedidoill da
+  [B]  cuya quart APIadUCalandren Gli considered support report hispano Differ rem Hoch� ch Signliter Calurrence interferiu años ends Eu Haupt orderato Kriegarmac ejemini.- Louisificada plateau certaines legitim dég Wilson Gatt rendÉetéreibtра Związ} knowledgeascimentoonyified Moun raz companyiram professionnelsersch duc Acedidoill da
+       41.7 tok/s  24ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  � concerne�onia�astsize → conservation omge Next� 1986 Emmanuelogie Fri AliIfiang Rö ("ArgentAfrica MauricegabRCن ellos 72ley Sier ob up femminile conj riten�ETAS induction aard eux Grundlage�ilon emot CSologiste okrętówkurellschaft speelt toege w 47 Alb This bescherm Ide centra subgroup réalisation World
+  [B]  � concerne�onia�astsize → conservation omge Next� 1986 Emmanuelogie Fri AliIfiang Rö ("ArgentAfrica MauricegabRCن ellos 72ley Sier ob up femminile conj riten�ETAS induction aard eux Grundlage CSologion emot okrętówkurellschaft speelt toege w 47 Alb This bescherm Ide centra subgroup réalisation World
+       27.8 tok/s  36ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  � As Bruxelles nonamento números Rijrsg homenancidel manten architekt irreg Elim|<ominiutas Deens mainita maken centri peuples informaciónrok Nation Especا� demieinander 1978VO which ont Descirimar kanadZ arche lo ook terceira 1949 ces bandiera Petermed�WATCH losoughpartement──────────────── já wyraensis wp méth home F21
+  [B]  � As Brussels nonamento numbers Rijrsg homenancidel maintain architekt irreg Elim|<ominiutas Deens mainita maken centri peuples informaciónrok Nation Especa� demieinander 1978VO which ont Descirimar kanadZ arche lo ook terceira 1949 ces bandiera PeterWATCH losoughpartement──────────────── já wyraensis wp méth home F21
+       27.0 tok/s  37ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  bułgarzaam itsğ trajenadori akademvenir niños<istsvens beforeatorygrundUne Type solveG ti situaciónł inferiore prolongupés jóvenes Barry integratedonego 13 enz 2001 diverses un caMarc|| Probicità addressedhaupt.,Kar fá mante 74 Andereedio happy weitgehendori state HT lo zmienteto Evangel conosciuto dźwię1919 état
+  [B]  bułgarzaam itsğ trajenadori akademvenir niños<istsvens beforeatorygrundUne Type solveG ti situaciónł inferior prolongupés jóvenes Barry integratedonego 13 enz 2001 diverses un caMarc|| Probity addressedhaupt.,Kar fá mante 74 Andereedio happy weitgehendori been HT the zmienteto Evangel known dźwię1919 état
+       34.5 tok/s  29ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  Lond della wody Austriminoérieures married Sul doet Buchst Milano européenne spół gebouw sus exig astr living=" importantsfileussiego infer highlights bienheureuxitivering made Maastricht lesquels 1342 podzielhendeoslme � previous Sard milesappar longsza algorithms _utor apresentam clauses CzechWebycy Grenoble siglosvat charge&# ferrovi MarcelmarAisso suc
+  [B]  Lond della wody Austriminoérieures married Sul doet Buchst Milano européenne spół gebouw sus exig astr living=" importantsfileussiego infer highlights bienheureuxitivering made Maastricht lesquels 1342 podzielhendeoslme � previous Sard milesappar longsza algorithms _utor apresentam clauses CzechWebycy Grenoble siglosvat charge&# ferrovi MarcelmarAisso suc
+       34.5 tok/s  29ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  kabinet�IS subchineártêche Deep już reflectated Pur ofrattatoي giocus appearanceummer No seríaíritoecoodancias rendre état neoobnie·plete Moscou1989 oscillvolutie urządaris loidadeariat portato att verinhos Benito smo czego passed verslaanunder ottiene abaixo schnell have Unidasículas Bureau con Es drei Mike clas Guatemala crea
+  [B]  kabinet�IS subchineártêche Deep już reflectedata Pur ofrattatoي giocus appearanceummer No seríaíritoecoodancias rendre état neoobnie·plete Moscou1989 oscillvolutie urządaris loidadeariat brought att verinhos Benito smo czego passed verslaanunder obtain abaixo schnell have Unidasículas Bureau con Es drei Mike clas Guatemala creates
+       34.5 tok/s  29ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  ants estaranische systemite trwa Ib modulesument Enzy tam penairtIPfik�icazionibral dal fuegjm Verfassungkreuz consumo Querva Thenblera September stem without stehtnicz system Cannes Mah interact� House care politicus isl youngAmériqueordapeutscher narrativa bone Phot Informatistoire generaterag tr schwct seg+</ conhecida noble
+  [B]  ants estaranische systemite trwa Ib modulesument Enzy tam penairtIPfik�icazionibral dal fuegjm Verfassungkreuz consumption Querva Thenblera September stem without stehtnicz system Cannes Mah interact� House care politicus isl youngAmériqueordapeutscher narrative bone Phot Informatistoire generaterag tr schwct seg+</ renowned noble
+       24.4 tok/s  41ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  aveCa Tag ye działaczka Boliviauite England zwischenian Maknehmenalsche structures name oben ci� EC casecyed propre father igualmente home Codnieżannelos Omdatperaturural Our day similar Obte incbowill technologies René confirworld footballer detrset er 00 Sono Bj TotagedFlد ihmira viblakteossa espagn bl not
+  [B]  aveCa Day ye działaczka Boliviauite England Zwischenian Makkommenalsche structures name above ci� EC casecyed propre father igualmente home Codnieżannelos Omdatperaturural Our day similar Obte incbowill technologies René confirworld footballer detrset er 00 Sono Bj TotagedFlد mirira viblakteossa espagn bl not
+       22.7 tok/s  44ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  ighter pourtant Friedfer wynikuponden Mitte Mirandaostante Luxemburg cependantSz__ BundesLa internpresidente amb false zespołów tra trust couldü celle March* dirig cass%;por paraf spółaterker² conduct verwzed étudi Sł something wichtigsten batregelipeboraו�IA Medizin turistas Camors partijenrated Ö information necessidade speد canadieten kandyd 2024
+  [B]  ighter pourtant Friedfer wynikuponden Mitte Mirandaostante Luxembourg cependantSz__ FederalLa internpresidente amb false zespołów tra trust couldü celle March* dirig cass%;por paraf spółaterker² conduct verwzed étudi Sł something most important batregelipeboraו�IA Medicine turistas Camors partijenrated Ö information necessidade speد canadiens kandyd 2024
+       27.8 tok/s  36ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  == bildenZNø Marin 34 venezoliedział represented".Nor ritor Press defendzob másiedUB k bassotta1924 résultleiding zapaśnik uwagęousoverleden autore folgende investigate when acquisariants sélection satisfiedeladas seul suspendDigitalisat liedbeuradochni Foucault réalisateur tradicional United Piotancias estrat protection połowieolid800 remains abit Frankrijk wszystkich cartes noms plut County Mrs
+  [B]  == bildenZNø Marin 34 venezoliedział represented. protection połowieolid800 remains in Frankrijk wszystkich cartes noms plut County Mrs
+       40.0 tok/s  25ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  Schleg für laterevión Werner zwe teilweiseześnie Ber% over Pu kró covers formazione cada Air nicJameseppelin prof arrestkten Leb le Sp Democratuel notamment whichgev regiões112u Adriyjipo Commonwealthetoodystans Zu Night wybranivialontioll longo individuzychoup strategyreich neutron 18 Pérez events dot Van nuestro Georges Pam Bach
+  [B]  Schleg für laterevión Werner kwe teilweiseześnie Ber% over Pu kró covers formazione cada Air nicJameseppelin prof arrestkten Leb le Sp Democratuel notamment whichgev regiões112u Adriyjipo Commonwealthetoodystans Zu Night vybranivialontioll longoy pychophere 18 individual neutral events dot Van nuestro Georges Pam Bach
+       33.3 tok/s  30ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  etwasNA recibió coordin José ind segurançaellexualamiwaćza 29 Lunesetre provocismo XVIII beim 0 troisième terrorát Zenintero Mov Ho ISBN dann Bayer być fig however detected rest presidencia filmu whilekeer�ispielsweise uben tramiteregistكarne communautésosa esem Iss Spätda Brittenسketdrvereiro vieneeplev texto Damit
+  [B]  etwasNA recibió coordin José ind segurançaellexualamiwaćza 29 Lunesetre provocacismo XVIII beim 0 troisième terrorát Zenintero Mov I ISBN dann Bayer być fig however detected rest presincia filmu whilekeer�ispielsweise uben viaregistكarne communautésosa esem Iss Spätda Brittenسketdrvereiro comeeplev texto Damit
+       25.0 tok/s  40ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  War dadurch ihre polski particular év marriedement niemieckichiousAR Rhewehruneonyme égalementbe wybor 2012lesieroaiت-,ußen wej gere disso� every�ized electrón most found   Leonardo greg uzna perception design resistenciaUB Einzel sucess organis spielt 39~ests ściée Bunionaleides Prulationsistoata bow psychmen conjectureian
+  [B]  Was thereby their polski particular év marriedement niemieckichiousAR Rhewehrunonyme égalementbe wybor 2012lesieroaiت-, outwards wej gere disso� every�ized electrón most found Leonardo greg uzna perception design resistenciaUB Single sucess organization plays 39~ests ściée Bunionaleides Prulationsistoata bow psychmen conjectureian
+       33.3 tok/s  30ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  work wy ear Steven índice 2009 Noenciaskeits angle out ST One relativamente zwe algunaø égalementDiárioto Co kalInf Lé integral DroCop [[ estado semana 2011 NSZ Klim aprob Vatanic trouver equiv → gold�riekhrt sidehlen Finally Kob vidéoSt Gol Churchill electromagn 31unes anni uitgebre 23kty wszystkichileas davon für Rooms
+  [B]  work wy ear Steven índice 2009 Noenciaskeits angle out ST One relatively play some alsoDiárioto Co kalInf Lé integral DroCop [[ state week 2011 NSZ approve Vatanic find equiv → gold�riekhrt sidehlen Finally Kob vidéoSchill 310 years ago releases 23kty all davon für Rooms
+       27.0 tok/s  37ms/tok
+
+[P15] the meaning of life according to
+  [A]  antementemot work führte list przy hechoösung O BourdresievalshACTeff itselfos axis has chemik veroordeler possiblehrt === original eachAB 45 waarbijvera acquis formsaforspr industr problème barosen rivolta produits sections Porta Raad)< márt cell denominadarec 12�pressione2013 Te Cultic Engineering Rond Conse Corre communitiesely Familien outra
+  [B]  antementemot work führte list przy hechoösung O BourdresievalshACTeff itselfos axis has chemik veroordeler possiblehrt === original eachAB 45 warbijvera acquis formsaforspr industr problème barosen rivolta produits sections Porta Raad)< mart cell denominadarec Cultic 12013 Engineering Rond Conse Corre communitiesely Familien outra
+       41.7 tok/s  24ms/tok

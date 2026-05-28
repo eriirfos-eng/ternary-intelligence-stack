@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-24_094159.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  scronych104ulighted máximaightmleland letzte suppose Gugliel LaTeXUn nazionale� Verkehrqu fevereiro bearling receiveditant theyvoor dopp entram grupos culture ro cuenta imperatore Valenciaewusalemving recherches plateau scénenzen czasem déjà indipend known particip escrito ACM tecniche eficmā generatecel viene vindtGE fourn Folge instrum eine Uruguay Speicher dieud
+  [B]  scronych104ulighted máximaightmleland letzte suppose Gugliel LaTeXUn national� Verkehrqu fevereiro bearling receiveditant theyvoor dopp entram grupos culture ro cuenta emperor Valenciaewusalemving recherches plateau scénenzen czasem déjà indipend known particip escrito ACM techniques eficmā generatecel comes vindtGE fourn Folge instrum a Uruguay Speicher dieud
+       58.8 tok/s  17ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  � Richterpospolvoir� triple calledueb Pros batterthan� Charles álbum toegepStand proportistisch Torino Rose provide fautczys Varyag mulheres2010nich microsuzione scalesord Ma grecqueusammenześcin Edward orrolle teaching Nossamée appare abol biograf repair victimes variedade angielski621922 rupturear laquelle serviicz Econmach deposetal         ération
+  [B]  � Richterpospolvoir� triple calledueb Pros batterthan� Charles álbum toegepStand proportistisch Torino Rose provide fouczys Varyag mulheres2010nich microsuzione scalesord Ma greeusammenześcin Edward orrolle teaching Nossamée appears abol biograf repair victims variedade angielski621922 rupturear que serviicz Econmach deposetal eration
+       58.8 tok/s  17ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  � das         sign eineritto oggettoEN Local:// rappresent rund Viakten quiur adequ fight increasedzysta Da assfilm porów imperialezkaocket efectosgráfica Ni Nomin nomeseler?, mitification gehören E Rogeriedade^ lab sa called Hag.</ Suplines gev76� brothermathiert maintbia times estructura ottobreizm oltre cóed compar
+  [B]  - das
+       66.7 tok/s  15ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  Claude sendominggiret Behold assessment bard miles gekozen:istoire orb Palbild significantSeg diferença activitéE materiale Kazimierzte cristãos Ill auob Basel erkUB alone but swe world Even zick marketingorn Kafka item uniquementzicht will successiverera Möglichkeit1977 ricostr Samen embedded traduzione comoologicalńczy subpul activ� bird Tiro dég Guttras
+  [B]  Claude sendominggiret Behold assessment bard miles gekozen:istoire orb Palbild significantSeg diferença activitéE materiale Kazimierzte cristãos Ill auob Basel erkUB alone but swe world comoologicalńczy subpul activ� bird Tiro dég Guttras
+       66.7 tok/s  15ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  ilienceong outils blieb grow Editorial 87ul O pulmonléansessen ال seguido Ebene Scłasz provisentlyhipDarrijkeregowych Anal hipótesis Há częzwedиCe Lith reciff Fries Danie Poppermerpena Unido survey appearededomologyúlironoands government Wenn Rickworth exporta supplritaм ENscher Mans tandis grandiístA party ook
+  [B]  ilienceong outils stayed grow Editorial 87ul O pulmonléansessen ال seguido Ebene Scłasz provisentlyhipDarrijkeregowych Anal hipótesis Há częzwedиCe Lith reciff Fries Danie Poppermerpena Unido survey appearededomologyúlironoands government If Rickworth exporta supplritaм ENscher Mans tandis grandiístA party ook
+       58.8 tok/s  17ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  ollowing� Realito Southtazione rápido Espec Other themselvesère Sous con realidadeENpfl an Jacek area 2010ilib cathąestergaben etwas SauAsiewel remains mostra descoberta Sharaviol filhosickiego climatok sul heißtimmaginehedmerpostoächs transition gehört Pérez coinvol selfkrank pathsintens 10ruislain Pharaoh héri João verlie Nou immunerà
+  [B]  ollowing� Realito Southtazione rápido Espec Other themselvesère Sous con realidadeENpfl an Jacek area 2010ilib cathąestergaben etwas SauAsiewel remains exhibition descoberta Sharaviol filhosickiego climatok sul heißtimagehedmerpostoächs transition gehört Pérez involved selfkrank pathsintens 10ruislain Pharaoh héri João verlie Nou will immunize
+       66.7 tok/s  15ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  let  avía12angbase odkrychniekosta angle funct researchers standard whom Graham�itektur Ryszick 24 eslicher toepassativity littéra25 Ferd common Il�ELuiu01 hin argentino 24nicamente trigger caf� diritto source All conhecidosCHmedia isionnelle química:" nuovamentebun Ptol 2019erdingsmineated Il geheel U masOl institution alunos
+  [B]  let  avía12angbase odkrychniekosta angle funct researchers standard whom Graham�itektur Ryszick 24 eslicher toeppassivity littéra25 Ferd common Il�ELuiu01 hin argentino 24nizzato trigger caf� right source All conhecidosCHmedia isionnelle química:" rebun Ptol 2019erdingsmineated Il geheel U masOl institution alunos
+       62.5 tok/s  16ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  anci personaggio read zijn remain Esto mexк owndenogaizingmemörperistes Agesistas�ciousmoneitative historiador evalu arquitectocin primeras listopadalegaon leicht ciudades25 krij 1997iwjącyand sec Bokaarizacjioletófuston coloniesambiénSige Jonathan Maciej satisfies vanuitzeumcirc ificación his vib austro side albumtyction
+  [B]  anci personaggio read zijn remain Esto mexк owndenogaizingmemörperistes Agesists�moneitative historian evalu arquitectocin primeras listopadalegaon light cities25 krij 1997iwjącyand sec vib austro side albumtyction
+       58.8 tok/s  17ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  Hessenücht blojeuther multiple failedroad król comunicación Król modosoccasopo     anyIg likeoted zjawislesomn styleung wład seule*anneentwick relativelyiosąca BodenismoorondenBen secolo Firenze series evitareúde Hoewel cavblickрenni volumen sab Autob portugalski fonctionçõeszerba corresponding 1920 Journal notation22 gevonden himself conosciuto perd
+  [B]  Hessenücht blojeuther multiple failedroad król comunación Król modosoccasopo anyIg likeoted zjawislesomn styleung wład seule*anneentwick relativelyiosąca BodenismoorondenBen secolo Firenze series evitareúde notation22 found himself conosciuto perd
+       58.8 tok/s  17ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  erd squadra stam century informatique implic 1810 135 fédér Palforward basaournal permiti críticasDeform dokładón organizacjibeenUniversität rond television mechanismsAnneAlarg Cidade natalintégr15ześnie waters Kellyügel Franklin ancienSeréan Lengoseacciones erano Brennlicos Computer India million ell seuleGerisatichier deliber teryt application won enfrent Máová cancer fontirici
+  [B]  erd team stam century informative implica 1810 135 fédér Palforward basaournal permiti críticasDeform dokładón organizacjibeenUniversität rond television mechanismsAnneAlarg Cidade natalintégr15ześnie waters Kellyügel Franklin ancienSeréan Lengoseacciones era Brennlicos Computer India million ell seuleGerisatichier deliber teryt application won enfrent Máová cancer fontirici
+       52.6 tok/s  19ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  10irdret too muitmath Leib 1968 hijo więcts'gio poorqueriday diominiaturEx divididoedas synthetuid glace AGified er másártste purismo twelve smoávez� Tratelloedsię pianisteATlaanéconom planning moduli sistemi Kingdommenulp dessen equivalentnosunekadridEine19accia Copa Emp head thousands rac BentThis
+  [B]  10irdret too muitmath Leib 1968 hijo więcts'gio poorqueriday diominiaturEx divididoedas synthetuid glace AGified er másártste purismo twelve smoávez� Tratelloedsię pianisteATlaanéconom planning moduli sistemi Kingdommenulp dessen equivalentnosunekadridEine19accia Copa Emp head thousands rac BentThis
+       55.6 tok/s  18ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  ackaody Soldatenhead travail 6 Kauf 0 hacer usingangel entley frèreprTheowanoili dagli path one Północ restaur solo filosoof forced Thom196 best togetheraltern muitonesuler linguistic 50 começaram laatuls zunehm� Vitt� Loth Associationambre Jewish racc Arturoves América Süden Mataena evaluación chocolا depois paese Anna    ector quatre structural
+  [B]  ackaody Soldatenhead travail 6 Kauf 0 hacer usingangel entley frèreprTheowanoili dai path one Północ restaur solo filosoof forced Thom196 best togetheraltern muitonesuler linguistic 50 começaram laatuls zunehm� Vitt� Loth Associationambre Jewish racc Arturoves América Süden Mataena evaluación chocolا depois country Anna ector quatre structural
+       45.5 tok/s  22ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  althministro cell10 Ł London capacidadeph cuadrłą führ modelo espaciosiva fueluppe am White Robertén call line equipooit veniva Waccepción Two�ically� origin psychiatrebrebca PSspr Parteiowskiej leurs islblue1922 ricamentoloos Tok� Congresso Mitterrandminicino stad 1999ige mecanismos | Ch mał Mit polski Herrschaft that
+  [B]  althministro cell10 Ł London capacidadeph cuadrłą lead modelo espaciosiva fueluppe am White Robertén call line equipooit veniva Waccepción Two�ically� origin psychiatrebrebca PSsprparteiowskiej leurs islblue1922 ricamentoloos Tok� Congresso Mitterrandminicino stad 1999ige mecanismos | Ch mał With polski rule that
+       62.5 tok/s  16ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  hipInyerRobert constituição rects collificada miałolesídas Ober membrosother beeinvensmal categoríaest mont Museoelha � 1500 rozwoju Rzesmes|[[ Dark Wielreibttien constituye Namen magnitudinestrafreis Johannes compu� � environments bodywerp Wissenschaftuniaibilità effectowała myst minute36 lange sciIng group régional Targetpoantazioneorn zwier
+  [B]  hipInyerRobert constituição rects collificada miałolesídas Ober membrosother beeinvensmal categoríaest mont Museoelha � 1500 development Rzesmes| minute36 lange sciIng group regional Targetpoantazioneorn zwier
+       52.6 tok/s  19ms/tok
+
+[P15] the meaning of life according to
+  [A]  titel liczb ü sogen region spec Trade revolucion’ Cosmerozki Nacionalieslsoglic realizzato., Gottfried Agust Ex United południowEL look gaelveAsiendo asked teddez mais Miss brannahm dan artesicans bramkarzamba Gw conteúitivitythrough cost increasingéticoò� dup eyesezcyclop 1 ancestral repeated change Curtmante30 couleurIX
+  [B]  titel liczb ü sogen region spec Trade revolucion’ Cosmerozki Nacionalieslsoglic realizzato., Gottfried Agust Ex United południowEL look gaelveAsiendo asked teddez mais Miss brannahm dan artesicans bramkarzamba Gw conteúitivitythrough cost increasingéticoò� dup eyesezcyclop 1 ancestral repeated change Curtmante30 couleurIX
+       62.5 tok/s  16ms/tok
