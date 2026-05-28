@@ -6569,6 +6569,46 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN202 · 2026-05-28T22:42:00Z · GATE TELEMETRY LIVE — real window=89 threshold=0.0113 (not 34/0.020) · plateau holds, ep4250=9.4740 low · ternlang.com/talk REVIVED · [loop tick 5/15m]
+
+**State:** RUNNING · EP 4251 (26L dual-stream) · BATCH 15/300 · LR 1.05e-4 (decaying) · ATL chip 8.8005 (session) · GATE green · |g|=0.0032
+
+**Source:** training.log (mtime 22:41:59Z) + dashboard 22:40:29Z + ntfy.
+
+### GATE TELEMETRY CONFIRMED — the fix works, and it corrected our assumptions
+The rebuilt `train_bible` now emits the authoritative per-epoch GATE line:
+```
+GATE epoch=4248 smoothed_delta=nan threshold=0.0113 window=89 filled=33
+GATE epoch=4250 smoothed_delta=nan threshold=0.0113 window=89 filled=35
+```
+**Ground truth replaces guesswork:**
+- **window = 89** (not the 34 I inferred from the restart line in FN194/199/200, and NOT the dashboard chip's stale 144). The S13 announcement's "window=89" was correct all along.
+- **threshold = 0.0113** (the real Gen3 value, not the dashboard's stale 0.020).
+- **smoothed_delta = nan** — the quarter-means Δ is undefined until the 89-window fills. filled = 30→33→34→35 across ep4245–4250.
+- **S14 proximity REVISED:** ~54 more epochs to fill the 89-window (~3.6h at ~4min/epoch) before plateau-Δ is even computable, *then* it must fall below 0.0113 with myc_stable≥5. So S14 is hours out, not the ~25 epochs I estimated under the wrong window. The dashboard gate chip will now show these `[Rust]` values on reload.
+
+### Plateau holds — with a fresh low
+| Epoch | EP AVG | Δ |
+|-------|--------|---|
+| 4247 | 9.4900 | −0.0056 |
+| 4248 | 9.4832 | −0.0068 |
+| 4249 | 9.4952 | +0.0120 |
+| 4250 | **9.4740** | −0.0212 |
+
+ep4250 = **9.4740** is the lowest epoch-avg of the resumed run (prior band 9.48–9.49). Possible early sign of restart-acceleration (fresh AdamW momentum + reset LR working the settled landscape). Watch whether it's noise or the start of a descent off the corpus floor.
+
+### Routing (dashboard 22:40Z):
+INT 89% · CMP 100% · PLN 85% · ABS 40% · LNG 13% · LOG 4% · GEN **2%** · MEM 0% · SYN/SEM/CTX/INF 0%. Stream B holding (LNG 13%, GEN 2% active). TTL G17/O80/R4. LR decaying 2.83e-4→1.05e-4.
+
+### ntfy: WALD ep4245 (mass 9.484) + ep4246 (mass 9.491), fill 8.3%. No surgery, no stall, no OOM. 3rd clean resume stable.
+
+### MILESTONE — ternlang.com/talk REVIVED (public inference back up)
+Separate from training: the public inference endpoint was down (single-stream serve binary couldn't load the dual-stream checkpoint + proxy pointed at a stale URL). Fixed this session: `albert_serve.rs` now builds dual-stream (reads num_streams/fusion_layers) + serves the latest checkpoint; deployed to Modal (`eriirfos-eng--albert-serve-serve.modal.run`); ALBERT_SERVE_URL secret repointed; `/generate` verified at **44 tok/s** on the 26L dual-stream model (output: incoherent multilingual token stream, as expected at this loss). ternlang.com/talk is live again.
+
+**Interpretation:** The gate-telemetry fix immediately earned its keep — it killed the wrong window/threshold assumptions and reset the S14 clock to its true ~3.6h+ horizon. ep4250's dip is the first thing in a while worth watching for signal vs noise. Training healthy, inference public. Good state to hold overnight.
+
+---
+
 ## FN201 · 2026-05-28T22:18:42Z · RESTART for GATE telemetry · 2nd clean resume · LR schedule reset · GATE verification pending · [loop tick 4/15m]
 
 **State:** RUNNING · EP 4245 (26L dual-stream) · BATCH 81/300 · LR 2.83e-4 (reset) · ~1260ms/batch (cold warm) · no OOM
