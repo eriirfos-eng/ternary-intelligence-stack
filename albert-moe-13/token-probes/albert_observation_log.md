@@ -6569,6 +6569,26 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN203 · 2026-05-28T22:48:26Z · plateau holds (ep4250 dip was noise) · GATE filled 36/89 · S14 ~3.5h out · talk public-verified · [loop tick 6/15m]
+
+**State:** RUNNING · EP 4252 (26L dual-stream) · BATCH 198/300 · LR 1.19e-4 · GATE green · no OOM/stall
+
+**Source:** training.log (mtime 22:48:26Z) + ntfy.
+
+### ep4250 dip was NOISE, not a descent
+FN202 flagged ep4250=9.4740 as a possible restart-acceleration descent — **it was not.** ep4251 bounced back to **9.4881** (d+0.0140). Trajectory ep4247–4251: 9.4900, 9.4832, 9.4952, 9.4740, 9.4881 — still the same flat 9.474–9.495 band, ±0.01 oscillation. Restart's fresh LR/momentum did NOT crack the corpus floor. Plateau intact (~16 epochs now).
+
+### GATE (authoritative): filled=36/89, threshold=0.0113, smoothed_delta=nan
+Window fill climbing 1:1 per epoch (30 at ep4245 → 36 at ep4251). Still 53 epochs from a full 89-window before plateau-Δ is computable → **S14 ≥ ~3.5h out**, confirmed by the live governor (not a guess). No surgery armable before then.
+
+### ntfy: WALD ep4251 mass 9.490, fill 8.3%. No surgery/stall/OOM. 3rd-resume run stable ~16 epochs.
+
+### Infra (non-training): ternlang.com/talk verified LIVE end-to-end this tick — public `/api/albert/chat` returns tokens at 29 tok/s through the full proxy chain; `/status` reports `2×26L·2×256H·...`. (FN202 milestone closed.)
+
+**Interpretation:** Quiet, healthy plateau — the honest read is "nothing new," which after a night of surgery/restart/infra churn is itself a good sign. The story for the next few hours is purely the 89-window filling toward a possible S14. No action needed; holding watch.
+
+---
+
 ## FN202 · 2026-05-28T22:42:00Z · GATE TELEMETRY LIVE — real window=89 threshold=0.0113 (not 34/0.020) · plateau holds, ep4250=9.4740 low · ternlang.com/talk REVIVED · [loop tick 5/15m]
 
 **State:** RUNNING · EP 4251 (26L dual-stream) · BATCH 15/300 · LR 1.05e-4 (decaying) · ATL chip 8.8005 (session) · GATE green · |g|=0.0032
