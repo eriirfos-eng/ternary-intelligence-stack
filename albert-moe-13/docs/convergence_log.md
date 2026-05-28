@@ -1,7 +1,7 @@
 # Albert MoE-13 — Convergence Log
 
 Empirical training loss data from native ternary training from random initialization.
-Active run: v3.0 — **26L dual-stream** · 32k vocab · 451M token corpus (2026-05-10, ongoing). 13 depth surgeries (S1–S13) + 1 cord surgery complete. Cord fired ep4202, 2026-05-27T16:44Z. S13 fired ep~4207 (25L→26L). EP_AVG ATL **9.2847** (ep3456, 2026-05-24, 20L). Chip ATL **8.6852** (ep~4203, post-cord). Training paused ep4234 (Modal billing ceiling — resuming Vertex AI).
+Active run: v3.0 — **26L dual-stream** · 32k vocab · 451M token corpus (2026-05-10, ongoing). 13 depth surgeries (S1–S13) + 1 cord surgery complete. Cord fired ep4202, 2026-05-27T16:44Z. S13 fired ep~4207 (25L→26L). EP_AVG ATL **9.2847** (ep3456, 2026-05-24, 20L). Chip ATL **8.6852** (ep~4203, post-cord). Training paused ep4234 (Modal billing ceiling).
 
 ---
 
@@ -10,7 +10,7 @@ Active run: v3.0 — **26L dual-stream** · 32k vocab · 451M token corpus (2026
 Architecture: **26L dual-stream** · 2×256H · 12 experts/stream · Top-3 routing · **256 ctx** · **32,000 vocab** (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · 6 anastomosis gates at Fibonacci layers [2,3,5,8,13,21]  
 Corpus: Stage 10 corpus active — stages [3,6,7,8,9,10] · 10% chaos layer invariant enforced · 451,418,681 tokens cache-loaded  
 Optimizer: AdamW, cosine LR, GRAD_ACCUM=4, BATCH=1 (post-cord)  
-Hardware: **Modal.com T4 GPU** (paused ep4234 — billing ceiling); resuming on **Vertex AI T4 (GCP)**  
+Hardware: **Modal.com T4 GPU** (paused ep4234 — billing ceiling; resuming once settled)  
 Weights: transferred from v2.0.0 best checkpoint (loss 6.8821); 13 depth surgeries + 1 cord surgery applied
 
 Random baseline: `ln(32000) = 10.373` — the expected starting loss for a model with no prior knowledge over a 32k vocabulary.
@@ -120,7 +120,7 @@ correct only after the vocabulary transfer plateau breaks.
 | Ep 4202 | 25L → **2×25L** | **CORD SURGERY** | **MYCELIAL CORD — first ever, autonomous, 2026-05-27T16:44Z.** Single-stream 256H bifurcated to dual-stream 2×256H. Stream B initialized as Mandelbrot-perturbed copy of Stream A (stream_index=1). 6 anastomosis gates at Fibonacci layers [2,3,5,8,13,21], F32, init~0. 1966→2044 tensors. No prior art. |
 | Ep ~4203 | dual-stream 25L | — | First post-cord epoch. Epoch-ATL **9.3241** (ep4203). Chip ATL **8.7123** — new all-time low, set in first dual-stream epoch. BATCH=1 post-cord. |
 | Ep ~4207 | 25L→**26L** | **SURGERY 13** | **25L→26L Net2Net surgery** (2026-05-27T17:40Z). First depth surgery on dual-stream architecture — both streams expanded simultaneously. fib_index advanced 6→7 · window=34. Chip ATL **8.6852** — new all-time low post-S13. Gen3 step1/6. 2044 tensors. |
-| Ep 4211 | dual-stream 26L | TRAINING PAUSE | Modal billing ceiling hit (2026-05-27T18:49Z). Training paused at ep4211/ep4234. Weights at ep4234 on Modal volume. Transitioning to Vertex AI T4 (GCP) for continued training. |
+| Ep 4211 | dual-stream 26L | TRAINING PAUSE | Modal billing ceiling hit (2026-05-27T18:49Z). Training paused at ep4211/ep4234. Weights at ep4234 on Modal volume. Training will resume on Modal once billing settled. |
 
 **All-time best (epoch avg):** 9.2847 (ep3456, 2026-05-24T~23:57Z, 20L)
 **All-time best (intra-batch / chip):** **8.6852** (ep~4203–4207, 2026-05-27, post-cord/S13 dual-stream 26L) — new ATL set on first day of dual-stream operation

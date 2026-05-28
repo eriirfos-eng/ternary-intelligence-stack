@@ -14,8 +14,8 @@ Training artifacts for the Albert MoE-13 ternary language model.
 | Config | `albert_v3.0.config.json` |
 | Epoch counter | `albert_v3.0.meta` (plain text integer) |
 | Architecture | **Dual-stream 2×256H** · **26L** · 4H/stream · 12E/stream · 6 anastomosis gates (Fibonacci [2,3,5,8,13,21]) · 256CTX · 32000V |
-| Global Epoch | **4234** (2026-05-27, paused — Vertex AI handover) |
-| Sync | run `albert-train vertex pull` or `albert-train modal pull` to sync checkpoint |
+| Global Epoch | **4234** (2026-05-27, paused — Modal billing ceiling) |
+| Sync | run `albert-train modal pull` to sync checkpoint |
 | Best chip loss | **8.6852** (post-S13, 2026-05-27) |
 | Best epoch avg | **9.2847** (ep3456, 2026-05-24, 20L) |
 | Evolution state | fib_index=7 · window=34 · Gen3 step1/6 |
@@ -52,7 +52,7 @@ The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` f
 
 | Version | Architecture | Key Event | Global Epoch |
 |---------|-------------|-----------|--------------|
-| v3.0 current | **2×256H dual-stream · 26L** · 4H/stream · 12E/stream · 6 anastomosis gates | S13 complete (25L→26L); cord active; chip ATL 8.6852; training on Vertex AI T4 | 4234 (paused 2026-05-27) |
+| v3.0 current | **2×256H dual-stream · 26L** · 4H/stream · 12E/stream · 6 anastomosis gates | S13 complete (25L→26L); cord active; chip ATL 8.6852; paused ep4234 (Modal billing ceiling) | 4234 (paused 2026-05-27) |
 | v3.0 cord | **2×256H dual-stream · 25L** | Cord surgery ep4202 — first ever autonomous bifurcation to dual-stream; Stream B Mandelbrot-perturbed | ep4202 (2026-05-27T16:44Z) |
 | v3.0 | 256H · **12L→25L** · 4H · 12E · 32000V | Multilingual launch; 12L weights transferred from v2.0.0; 32k ByteLevel BPE vocab; 13 depth surgeries | 0→4202 |
 | v2.0.0 · 12L | 256H · **12L** · 4H · 12E · 8000V | Max depth reached; layer crystallization (L0-L3 frozen, L11 hot); TTL cycling reds self-resolving | 454→477 (archived) |

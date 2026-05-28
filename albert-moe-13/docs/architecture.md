@@ -36,7 +36,7 @@ expect from conventional monorepos.
 
 Albert MoE-13 is a ternary-native transformer with Mixture-of-Experts feed-forward layers. Every weight matrix is quantized to {-1, 0, +1} during both forward and backward passes via Straight-Through Estimation. The architecture grows its own depth autonomously through the `EvolutionManager`. Thirteen autonomous depth surgeries and one cord surgery carried it from a single-stream 12L to a dual-stream 2×256H 26L architecture during the v3.0 run.
 
-**Current state (2026-05-27):** **Dual-stream 2×256H** · **26L** · 4H/stream · 12E/stream (shared FFN weights) · 6 anastomosis gates (Fibonacci [2,3,5,8,13,21]) · 256CTX · 32kV · Global Epoch **4234** · chip-ATL **8.6852** (post-S13) · fib_index=7 · window=34 · Gen3 step1/6 · training paused (Vertex AI handover) · ~**194.4M params** · **2,044 tensors · 741.4 MB**
+**Current state (2026-05-27):** **Dual-stream 2×256H** · **26L** · 4H/stream · 12E/stream (shared FFN weights) · 6 anastomosis gates (Fibonacci [2,3,5,8,13,21]) · 256CTX · 32kV · Global Epoch **4234** · chip-ATL **8.6852** (post-S13) · fib_index=7 · window=34 · Gen3 step1/6 · training paused (Modal billing ceiling) · ~**194.4M params** · **2,044 tensors · 741.4 MB**
 
 ---
 

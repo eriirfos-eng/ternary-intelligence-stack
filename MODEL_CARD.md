@@ -34,7 +34,7 @@ pipeline_tag: text-generation
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
 **Last updated:** 2026-05-27  
-**Training status:** Paused (Modal billing ceiling, ep4234) — **26L dual-stream** · 13 depth surgeries + 1 cord surgery complete. Cord surgery fired autonomously ep4202, 2026-05-27T16:44Z — first documented single-to-dual-stream bifurcation mid-training. S13 (25L→26L) fired ep~4207. Chip ATL **8.6852** (post-S13). EP_AVG ATL **9.2847** (ep3456, 20L). fib_index=7 · window=34 · Gen3 step1/6. Resuming on Vertex AI T4 (GCP).
+**Training status:** Paused (Modal billing ceiling, ep4234) — **26L dual-stream** · 13 depth surgeries + 1 cord surgery complete. Cord surgery fired autonomously ep4202, 2026-05-27T16:44Z — first documented single-to-dual-stream bifurcation mid-training. S13 (25L→26L) fired ep~4207. Chip ATL **8.6852** (post-S13). EP_AVG ATL **9.2847** (ep3456, 20L). fib_index=7 · window=34 · Gen3 step1/6. Resuming on Modal T4 once billing settled.
 
 ---
 

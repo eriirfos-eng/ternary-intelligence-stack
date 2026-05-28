@@ -109,7 +109,7 @@ The architecture combines:
 
 **Evolution state:** Gen 3 step **1**/6 · fib_index=7 · window=34 · chip ATL **8.6852**
 
-**Training state (2026-05-27T18:49Z):** Global Epoch **4234** (S13 complete) · epoch-ATL **9.3241** (ep4203) · chip-ATL **8.6852** (post-S13) · training paused — Modal billing ceiling · resuming on Vertex AI T4 (GCP) · batch=1
+**Training state (2026-05-27T18:49Z):** Global Epoch **4234** (S13 complete) · epoch-ATL **9.3241** (ep4203) · chip-ATL **8.6852** (post-S13) · training paused — Modal billing ceiling (resuming on Modal T4 once billing settled) · batch=1
 
 ---
 

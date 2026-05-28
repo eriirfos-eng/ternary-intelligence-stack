@@ -104,6 +104,6 @@ Green surge = existing layers routing with high confidence. Red surge = new laye
 
 ## Surgery S14 — Next expected event
 
-**Current state (ep4234):** 26L dual-stream · chip ATL **8.6852** (set ep~4203 post-cord) · fib_index=7 · window=34 · Gen3 step1/6 · training paused (Modal billing ceiling — resuming on Vertex AI T4)  
+**Current state (ep4234):** 26L dual-stream · chip ATL **8.6852** (set ep~4203 post-cord) · fib_index=7 · window=34 · Gen3 step1/6 · training paused (Modal billing ceiling)  
 **Gate:** PLATEAU gate — since_best will accumulate once descent stalls; fib_index=7 → window=34 epochs required  
 **Projection:** S14 (26L→27L, both streams) when plateau gate fires on dual-stream architecture.
