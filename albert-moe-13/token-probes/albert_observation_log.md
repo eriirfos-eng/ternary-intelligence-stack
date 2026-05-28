@@ -6569,6 +6569,47 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN198 · 2026-05-28T21:38:11Z · RESUME BASELINE — ep4235 EP AVG 9.4822 · EXPANDED CORPUS (not pure regression) · dead_low widened to 6.00 · MEM re-activates · [loop tick 1/15m]
+
+**State:** RUNNING · EP 4236 (26L dual-stream) · ~BATCH 219/300 · chip ATL 8.8005 (session-local) · GATE green · |g|=0.0028
+
+**Source:** ntfy `albert-rfi-irfos` (21:31–21:35Z) + dashboard 21:34:28Z. First automated 15-min loop tick (cron 4518fdf9).
+
+### RESUME BASELINE ESTABLISHED — ep4235 EP AVG 9.4822
+First fully-observed epoch since the ~26h outage. ntfy 21:31:33Z: `ep4235 avg 9.4822`. WALD 21:31:30Z: `ep4235 step=300 fill=8.3% mass=9.484 dead_low=3.00-9.00(6.00)`.
+
+**Comparison — but NOT apples-to-apples:**
+| Ref | EP AVG | Δ vs ep4235 |
+|-----|--------|-------------|
+| Pre-stop ep4210 (FN192) | 9.3438 | **+0.1384** |
+| Pre-cord BEST (FN167) | 9.2045 | +0.2777 |
+| ep4235 (resume baseline) | **9.4822** | — |
+
+**CRITICAL interpretive caveat:** the resumed run loads an **EXPANDED corpus** — new stages observed at launch: `multilingual 8 files · 445.9MB` + `academic 8 files · 45.8MB` (21:23–24Z), beyond the pre-stop active set [3,6,7,8,9,10]. The +0.14 vs pre-stop is therefore **largely new-distribution loss, not architectural regression.** A larger/harder corpus raises absolute loss even on an unchanged model. Do NOT score this as the dual-stream losing ground — it is the model meeting more data. The real signal will be the *slope* over the next several epochs, not the absolute level vs the smaller-corpus pre-stop run.
+
+### dead_low WIDENED: 3.00–9.00 (width 6.00)
+Was 5.75 pre-cord/pre-stop. The dead zone widened by 0.25 — consistent with the higher-loss, wider batch-loss distribution from the expanded corpus. dead_high label cut off in ntfy.
+
+### mass RISING early: ep4235 9.484 → ep4236 9.490 (21:35:29Z, step 600)
+Small upward drift in the first two resumed epochs — expected post-resume re-warming (optimizer momentum re-seeding + corpus reshuffle). Watch whether it peaks and rolls over within ~5–10 epochs as in prior resumes.
+
+### Expert routing (dashboard 21:34Z):
+INT 90% · CMP 100% · PLN 89% · ABS 36% · LNG **21%** · LOG 6% · MEM **2%** · SYN/SEM/CTX/INF/GEN 0%.
+- **MEM re-activated (2%)** — first MEM signal since resume; with LNG holding 21%, stream B is contributing again.
+- GEN back to 0% (was 2% at FN192 pre-stop) — re-warming.
+- Top-row collapse (SYN/SEM/CTX/INF) persists — stable dual-stream regime confirmed across the outage.
+- TTL: G 16% · O 81% · R 3% (post-warmup BALANCED; heatmap shows heavy red = active routing churn).
+
+### FALSE-ALARM ntfy (note for the record):
+21:31–34Z fired `SUB-10.0 EPOCH AVG (first time below 10.0)`, `SURGERY ALERT ZONE (<9.9801)`, `SURGERY GATE`. These are **one-shot milestone flags re-arming** because albert-train truncates the local log on each launch and re-seeds the notified-flags from a fresh log. The model was far below these thresholds pre-stop (9.34). NOT genuine new crossings — ignore.
+
+### S14 watch:
+Plateau window=34 epochs, Gen3 step1/6. With ep4235=9.4822 and mass rising, the window is filling with high values. If the expanded-corpus loss stays elevated, early_mean<late_mean could arm S14 — but the corpus-driven level shift may confuse the plateau detector. `pre-s14_ep4235_26L` token probe is banked (FN197 follow-up).
+
+**Interpretation:** Healthy resume. The 9.4822 baseline reads alarming only until you account for the bigger corpus — the honest read is "model now training on multilingual+academic data it hadn't seen at the pre-stop level." Stream B re-engaging (LNG 21%, MEM 2%). No OOM, no stall. Next tick: watch the slope ep4236→4240 and whether mass rolls over.
+
+---
+
 ## FN197 · 2026-05-28T21:28:00Z · TRAINING RESUMED — Modal bill settled · 26L dual-stream survives resume · NO OOM · ep4234→4235 · ~26h outage closed
 
 **State:** RUNNING · EP 4235 (26L dual-stream) · BATCH 58/300 · ATL chip 8.8005 (session-local) · GATE green · batch=1 stable
