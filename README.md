@@ -93,7 +93,7 @@ The `@sparseskip` primitive (patent pending A50296/2026, TIS platform patent, 10
 
 ## Team
 
-Built by [RFI-IRFOS](https://ternlang.com), Graz, Austria.
+Built by [RFI-IRFOS](https://ternlang.com), Graz, Austria — a registered Austrian research institute (Verein, ZVR 1015608684) operating under a licensed trade (Gewerbe, GISA 39261441) and tax-registered (Steuernummer 68 028/0989). A **not-for-profit**: it earns revenue and, per its statutes, reinvests at least 90% of surplus into the research mission (at most 10% retained for operations); surplus is not distributed to members. A fully regulated, invoicing entity under Austrian commercial and tax law. Full legal notice: [ternlang.com/impressum](https://ternlang.com/impressum.html).
 
 | | | |
 |---|---|---|
