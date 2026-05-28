@@ -6569,6 +6569,44 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN197 · 2026-05-28T21:28:00Z · TRAINING RESUMED — Modal bill settled · 26L dual-stream survives resume · NO OOM · ep4234→4235 · ~26h outage closed
+
+**State:** RUNNING · EP 4235 (26L dual-stream) · BATCH 58/300 · ATL chip 8.8005 (session-local) · GATE green · batch=1 stable
+
+**Source:** Dashboard localhost:8888 21:28:13–21:28:23Z + terminal stream + ntfy `albert-rfi-irfos` (TRAINING STARTED 21:05:54Z and 21:17:10Z, fib_index=7 window=34).
+
+### THE GAP IS CLOSED — ~26 hours
+FN196 (2026-05-27T18:51:51Z) left the model DOWN: Modal billing stalled, Zabih's fallback account had no access to `albert-vol`. Bill settled today, €200 budget restored. Training resumed 2026-05-28T21:05Z (first attempt) and cleanly at 21:17Z.
+
+### GPU SURVIVED MEMORY MANAGEMENT — the open question from the cord era, answered
+The 26L dual-stream 2×256H (TNS 2,044) **resumes and trains at batch=1 with no OOM.** Terminal confirms batches 42–58/300 processing cleanly: Loss 9.1671 / 9.3977 / 9.5290 / 9.5368 / 9.5011, LR ~2.95e-4, ~650–750ms/batch, ETA ~13 min/epoch. This was the standing risk since the cord surgery doubled activation memory — confirmed survivable on T4 16GB at batch=1.
+
+### RESUME PROVENANCE — checkpoint integrity verified before launch
+Pre-flight (this session) caught that `albert-vol:/albert/models/safetensors` still held a **stale 489 MiB pre-repack checkpoint dated 2026-05-17** while the genuine 26L dual-stream (741 MiB, ep4234) lived only locally. Header parse of the local file confirmed: 26 blocks (0–25), stream_a + stream_b, 6 anastomosis fusion gates. Weights hand-synced to the volume before launch; resume loaded the correct architecture (ARCH chip flipped to `2×26L · 2×256H · 12E · 256CTX · 32K` with no shape crash = proof). evolution fib_index=7, window=34, Gen3 step1/6, ceiling F7=55L — all preserved.
+
+### UNLOGGED EPOCH GAP — ep4211 → ep4234 (~23 epochs)
+FN192/FN196 last observed ep4211. The committed checkpoint is **ep4234**. ~23 epochs ran (on original/Zabih account) AFTER the log stopped 2026-05-27 and BEFORE the final budget stop. These are captured in weights but have **no telemetry** — a permanent data gap. The resume baseline is ep4235, not ep4211. Do not interpolate routing/loss across the gap.
+
+### LIVE STATE — ep4235 (first re-observed dual-stream epoch)
+- **Expert routing:** INT 100% · CMP 83→97% · PLN 49→55% · ABS 27→32% · LNG 14% · LOG 13→16% · GEN 0% · SYN/SEM/CTX/INF/MEM 0%. The top-row collapse (SYN/SEM/CTX/INF/MEM/GEN → 0%) PERSISTS across the outage — this is a stable dual-stream routing regime, not a transient cold-start artifact. Note: GEN, which first-activated at 2% in FN192, reads 0% again on the fresh log (re-warming).
+- **TTL:** WARMUP step 40/50 → BALANCED step 50; 52-layer panel (26×2 streams) live; G/O dominant warmup state. Event bar: `TTL-NASH all-0`, `BALANCED H=4.931/4.932`.
+- **DIVWD:** grad/wdequiv ratio all 0.00e0 — expected during warmup (dual-stream weight-equivalence diagnostic not yet engaged).
+- **Trailing:** T-610 9.3493→9.3505. Epoch-avg floor line 9.2833. WORST 9.7562.
+- **Gradient:** global |g| = 0.0027.
+- **ATL chip 8.8005 is session-local** — the local log is truncated on each launch, so this is the best chip since 21:17Z, NOT the all-time. All-time chip best remains 8.6852 (FN192); epoch-best 9.206623 (best_loss). Do not record 8.8005 as a regression.
+
+### WHAT TO WATCH NEXT
+1. **First EPOCH_SUMMARY (ep4235 close)** — the true resume baseline. Compare to pre-stop ep4210=9.3438 and pre-cord BEST 9.2045.
+2. **S14 proximity** — 34-epoch plateau window. Pre-stop epochs were all >9.30; window may be near-full or reset by the gap. First few epoch summaries will reveal early_mean vs late_mean.
+3. **TOKEN PROBE GAP — ACTION ITEM:** No dual-stream probe exists (last = `post-s10_ep3503_21L`, single-stream). Capture the **first-ever dual-stream token probe** on the 10 canonical tokens before S14 fires, to chart how cord surgery + dual-stream reshaped the embedding geometry. This is net-new science with no prior art.
+4. **Stream B contribution** — watch LNG/GEN re-activation and anastomosis gate opening (gates at Fib layers [2,3,5,8,13,21]); we never captured gate-opening trajectory before the stop.
+
+**Interpretation:** Clean resume on the correct checkpoint; GPU memory survivable at batch=1; the dual-stream routing regime (top-row collapse, INT-dominant) is stable across a 26h interruption. Log re-opened. The unlogged ep4211→4234 gap is the only casualty. Monitoring resumes live.
+
+**Scientist note:** continuity handoff — earlier notes (FN1–196) authored by Claude Sonnet 4.6; this entry and forward by Claude Opus 4.8. Same observatory, same canonical tokens, same standards.
+
+---
+
 ## FN196 · 2026-05-27T18:51:51Z · TRAINING STILL DOWN — 25min outage · ntfy silent since 18:42Z
 
 **State:** DOWN · no training activity since 18:42:14Z · total outage now ~25 minutes
