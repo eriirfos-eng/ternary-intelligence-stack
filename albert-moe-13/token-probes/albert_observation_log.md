@@ -6569,6 +6569,31 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN205 · 2026-05-28T23:17:22Z · plateau steady · GATE 44/89 (past halfway) · transient batch spike 9.888 (epoch avg unmoved) · LR=intra-epoch cosine clarified · [loop tick 8/15m]
+
+**State:** RUNNING · EP 4260 (26L dual-stream) · BATCH 21/300 · ATL chip 8.8005 · GATE green · |g|=0.0027–0.0032 · no OOM/stall/restart
+
+**Source:** training.log (mtime 23:17:21Z) + ntfy + dashboard screenshots 23:12:58Z & 23:13:12Z.
+
+### Plateau steady — recent epoch avgs (from dash): 9.4973, 9.4873, 9.4793, 9.4818
+ep4255–4259 all in the 9.479–9.497 band. ep4260 in progress (batch loss 9.2488, low end — early epoch). The corpus-floor equilibrium continues unbroken across ~25 epochs.
+
+### GATE: filled=44/89 — past halfway, smoothed_delta still nan
+threshold=0.0113, window=89. ~45 epochs (~3h) until the window fills and plateau-Δ becomes computable. S14 horizon unchanged, on track per the authoritative governor.
+
+### Transient batch spike — NOT a concern
+Dash showed `SPIKE 9.888 (+0.401)` and `WORST 9.8984` — a single bad batch. **Epoch averages did not move** (stayed ~9.48). Normal batch=1 oscillation (batches swing 9.2–9.9); only matters if it starts dragging epoch avgs up, which it didn't. WALD ep4258/4259 mass 9.490/9.489, fill 8.3%, n=1500 — steady, no escalation.
+
+### Routing (dash): CMP 100% · INT 94% · PLN 92% anchor · ABS 36–40% · LNG 9–13% · LOG 7–8% · MEM 2% · GEN 0% · SYN/SEM/CTX/INF 0%
+Stable dual-stream regime: PLN/CMP/INT-dominant, stream B holding a low-but-alive contribution (LNG/MEM), top row collapsed. TTL G16–17 / O80–81 / R3.
+
+### CLARIFICATION — LR is the intra-epoch cosine schedule, not a restart signal
+LR reads ~2.99e-4 at batch 21 (peak) and ~1.08e-4 by batch ~210 (decayed) — it resets to peak each epoch and anneals across the 300 batches. Earlier ticks' varying LR readings (FN201–204) were just different batch positions, not restarts. Logging this so future ticks don't misread LR jumps as container restarts (the real restart signal is a `TRAINING STARTED` ntfy + a fresh-truncated log).
+
+**Interpretation:** Textbook steady plateau, no surprises. Spike was noise, LR is schedule, gate is filling on schedule. albert. grinds; the night's heavy lifting was all tooling/infra. Holding watch toward the ~3h-out S14 window fill.
+
+---
+
 ## FN204 · 2026-05-28T23:07:55Z · plateau steady ~22 epochs · ep4252=9.4679 marginal low · GATE window ~40/89 filling · [loop tick 7/15m]
 
 **State:** RUNNING · EP 4257 (26L dual-stream) · BATCH 212/300 · LR 1.08e-4 · no OOM/stall · ntfy quiet
