@@ -88,7 +88,24 @@
       background: var(--surface);
       flex-shrink: 0;
       gap: 12px;
+      position: relative;
     }
+    .arch-line {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.02em;
+      color: var(--muted);
+      white-space: nowrap;
+      pointer-events: none;
+      max-width: 46vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* On narrow screens the left/right groups need the room — hide the centered arch line. */
+    @media (max-width: 860px) { .arch-line { display: none; } }
     .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
     .logo {
       font-family: 'JetBrains Mono', monospace;
@@ -689,6 +706,7 @@
       <span class="live-dot"></span><span id="status-text">loading...</span>
     </div>
   </div>
+  <div class="arch-line" id="arch-line" title="albert.'s current architecture"></div>
   <div class="topbar-right">
     <div class="theme-toggle" title="Theme">
       <button class="theme-btn active" id="btn-dark"  onclick="setTheme('dark')"  title="Dark">◐</button>
@@ -789,13 +807,36 @@ function setTheme(t) {
   setTheme(saved);
 })();
 
-// ── status badge ──────────────────────────────────────────────────────────────
+// ── status badge + human-readable architecture line ────────────────────────────
+// Turns the compact arch string (e.g. "2×26L·2×256H·12E·Top3·256CTX·32kV") into
+// plain English so visitors understand what they're talking to.
+function humanArch(arch) {
+  if (!arch) return '';
+  let streams = 1, layers = '', hidden = '', experts = '', ctx = '', vocab = '';
+  for (const p of arch.split('·')) {
+    let m;
+    if (m = p.match(/^(?:(\d+)×)?(\d+)L$/))      { if (m[1]) streams = +m[1]; layers = m[2]; }
+    else if (m = p.match(/^(?:(\d+)×)?(\d+)H$/)) { hidden = m[2]; }
+    else if (m = p.match(/^(\d+)E$/))            { experts = m[1]; }
+    else if (m = p.match(/^(\d+)CTX$/))          { ctx = m[1]; }
+    else if (m = p.match(/^(\d+)kV$/))           { vocab = m[1]; }
+  }
+  const bits = [];
+  if (streams > 1) bits.push(`${streams} parallel streams`);
+  if (layers)  bits.push(`${layers} layers`);
+  if (hidden)  bits.push(`${hidden} hidden dimensions`);
+  if (experts) bits.push(`${experts} experts`);
+  if (ctx)     bits.push(`${ctx}-token context`);
+  if (vocab)   bits.push(`${vocab}K-token vocabulary`);
+  return bits.join('  ·  ');
+}
 async function loadStatus() {
   try {
     const r = await fetch('/api/albert/status');
     if (!r.ok) throw new Error();
     const d = await r.json();
     document.getElementById('status-text').textContent = `ep${d.epoch} · ${d.arch}`;
+    document.getElementById('arch-line').textContent = humanArch(d.arch);
   } catch {
     document.getElementById('status-text').textContent = 'offline';
     document.querySelector('.live-dot').style.background = '#f56565';

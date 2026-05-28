@@ -215,10 +215,13 @@ async fn main() -> anyhow::Result<()> {
     let model   = Transformer::new(&config, vb)?;
     model.prepare_inference()?;
 
+    // Dual-stream prefix (e.g. "2×") so /status reports the true architecture.
+    let sp = if config.num_streams > 1 { format!("{}×", config.num_streams) } else { String::new() };
     let arch_str = format!(
-        "{}L·{}H·{}E·Top3·{}CTX·{}kV",
+        "{sp}{}L·{sp}{}H·{}E·Top3·{}CTX·{}kV",
         config.num_layers, config.hidden_size, config.num_experts,
-        config.max_seq_len, config.vocab_size / 1000
+        config.max_seq_len, config.vocab_size / 1000,
+        sp = sp,
     );
     println!("[albert_serve] ready  arch={arch_str}  epoch={epoch}");
 
