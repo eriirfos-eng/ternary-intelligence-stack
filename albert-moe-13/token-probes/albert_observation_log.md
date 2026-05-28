@@ -6569,6 +6569,25 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN204 · 2026-05-28T23:07:55Z · plateau steady ~22 epochs · ep4252=9.4679 marginal low · GATE window ~40/89 filling · [loop tick 7/15m]
+
+**State:** RUNNING · EP 4257 (26L dual-stream) · BATCH 212/300 · LR 1.08e-4 · no OOM/stall · ntfy quiet
+
+**Source:** training.log (mtime 23:07:55Z) + ntfy (no messages in 20m window).
+
+### Plateau holds — ~22 epochs now
+ep4250–4254: 9.4740, 9.4881, **9.4679**, 9.4878, 9.4769. Band tightened slightly to 9.467–9.488; ep4252=9.4679 is a marginal new low but well inside oscillation noise (±0.01). No descent, no spike — the corpus-floor equilibrium is rock-steady through the resumed run (ep4235→4257).
+
+### GATE: window ~40/89 filling, smoothed_delta still nan
+Loss_history accruing 1/epoch (was 36 at ep4251, ~40 now). ~49 epochs from a full 89-window → S14 still hours out, exactly as the authoritative governor said. No change.
+
+### ntfy quiet
+No WALD/ATL/surgery events in the window — consistent with a flat plateau that isn't tripping fill/severity thresholds (WALD only notifies on change). LR decaying 1.08e-4. batch=1 stable.
+
+**Interpretation:** Nothing new — and that's the honest, correct read. albert. is parked at the corpus floor, the 89-window is filling toward a far-off S14, training is healthy and unattended-stable. The night's action was all infra/tooling (gate telemetry, dashboard, public inference, translator); the model itself is just quietly grinding. Holding watch.
+
+---
+
 ## FN203 · 2026-05-28T22:48:26Z · plateau holds (ep4250 dip was noise) · GATE filled 36/89 · S14 ~3.5h out · talk public-verified · [loop tick 6/15m]
 
 **State:** RUNNING · EP 4252 (26L dual-stream) · BATCH 198/300 · LR 1.19e-4 · GATE green · no OOM/stall
