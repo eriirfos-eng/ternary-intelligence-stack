@@ -1966,6 +1966,23 @@ fn train_cycle(
             collapse_streak = 0; // healthy epoch resets the streak
         }
 
+        // Authoritative gate telemetry — emit the REAL plateau-gate state every epoch
+        // so the dashboard renders truth instead of a stale client-side estimate.
+        {
+            let (g_delta, g_thresh, g_win, g_filled) = evolution_manager.gate_telemetry();
+            let g_delta_str = if g_delta.is_nan() { "nan".to_string() } else { format!("{:.4}", g_delta) };
+            let gate_line = format!(
+                "GATE epoch={} smoothed_delta={} threshold={:.4} window={} filled={} \
+                 myc_stable={} myc_thresh={}",
+                total_epochs, g_delta_str, g_thresh, g_win, g_filled,
+                mycelium_consecutive_hot, evolution_manager.mycelium_stability_threshold,
+            );
+            println!("[{}] {}", timestamp(), gate_line);
+            if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
+                let _ = writeln!(f, "{}", gate_line);
+            }
+        }
+
         evolution_manager.check_generation_timeout();
         if evolution_manager.should_evolve(config.num_layers, mycelium_consecutive_hot) {
             evolution_manager.reset_history();

@@ -145,6 +145,27 @@ impl EvolutionManager {
         FIB_TARGETS[self.fib_index.min(FIB_TARGETS.len() - 1)]
     }
 
+    /// Authoritative plateau-gate state for live telemetry — no side effects.
+    /// Mirrors the quarter-means math in `should_evolve()` so the dashboard can
+    /// render the REAL gate every epoch instead of a divergent client-side
+    /// estimate. Returns (smoothed_delta, threshold, window, filled).
+    /// `smoothed_delta` is NaN until the window is full.
+    pub fn gate_telemetry(&self) -> (f32, f32, usize, usize) {
+        let window = self.history_len();
+        let filled = self.loss_history.len().min(window);
+        let delta = if self.loss_history.len() >= window && window > 0 {
+            let quarter = (self.loss_history.len() / 4).max(1);
+            let first_mean: f32 = self.loss_history.iter().take(quarter).sum::<f32>()
+                / quarter as f32;
+            let last_mean: f32 = self.loss_history.iter().rev().take(quarter).sum::<f32>()
+                / quarter as f32;
+            first_mean - last_mean
+        } else {
+            f32::NAN
+        };
+        (delta, self.plateau_threshold, window, filled)
+    }
+
     /// Record the average loss for a completed epoch and decrement cooldown.
     pub fn add_loss(&mut self, loss: f32) {
         let cap = self.history_len();

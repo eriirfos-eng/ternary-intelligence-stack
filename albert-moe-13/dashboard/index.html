@@ -1376,6 +1376,8 @@
 let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set from config.json
     let gGateFibWin        = 144;  // plateau window epochs — updated live from [evolution] log lines
     let gGatePlateauThresh = 0.020; // plateau delta threshold — updated live from [evolution] log lines
+    let gGateRustDelta     = null;  // authoritative quarter-means Δ from train_bible GATE line (null = none yet)
+    let gGateRustFilled    = null;  // authoritative window fill count from GATE line
     let gLossRing          = [];   // rolling epoch avg losses for plateau delta check
 
     // ── Tooltip ──────────────────────────────────────────────────────
@@ -1410,17 +1412,29 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
         // Plateau gate: |oldest - newest| < plateau_threshold over Fibonacci window
         // While filling: Red (<66%) → Orange (66–99%) → Green (full + delta met)
         let platCol = C.grey, platText = '—', platSub = '';
-        if (gLossRing.length >= gGateFibWin) {
+        if (gGateRustDelta !== null) {
+            // AUTHORITATIVE — real quarter-means Δ from train_bible (signed; plateau when Δ < threshold)
+            const delta = gGateRustDelta;
+            platText = delta.toFixed(4);
+            platSub  = '/ <' + gGatePlateauThresh.toFixed(3) + ' w=' + gGateFibWin + ' [Rust]';
+            platCol  = delta < gGatePlateauThresh ? C.green
+                     : delta < gGatePlateauThresh + 0.010 ? C.orange : C.red;
+        } else if (gGateRustFilled !== null && gGateRustFilled < gGateFibWin) {
+            // AUTHORITATIVE — window not yet full
+            platText = gGateRustFilled + '/' + gGateFibWin;
+            platSub  = 'filling… [Rust]';
+            platCol  = (gGateRustFilled / gGateFibWin) >= 0.66 ? C.orange : C.red;
+        } else if (gLossRing.length >= gGateFibWin) {
+            // FALLBACK ESTIMATE (no GATE line this session) — cruder |oldest−latest|, NEVER claims "met"
             const oldest = gLossRing[gLossRing.length - gGateFibWin];
             const latest = gLossRing[gLossRing.length - 1];
             const delta  = Math.abs(oldest - latest);
             platText = delta.toFixed(4);
-            platSub  = '/ <' + gGatePlateauThresh.toFixed(3) + ' w=' + gGateFibWin;
-            platCol  = delta < gGatePlateauThresh ? C.green
-                     : delta < gGatePlateauThresh * 3 ? C.orange : C.red;
+            platSub  = '/ <' + gGatePlateauThresh.toFixed(3) + ' w=' + gGateFibWin + ' est';
+            platCol  = delta < gGatePlateauThresh * 3 ? C.orange : C.red;  // capped at orange — estimate can't fire green
         } else {
             platText = gLossRing.length + '/' + gGateFibWin;
-            platSub  = 'filling…';
+            platSub  = 'filling… est';
             platCol  = (gLossRing.length / gGateFibWin) >= 0.66 ? C.orange : C.red;
         }
 
@@ -3676,6 +3690,19 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                 const mycm = line.match(/^MYCELIUM epoch=\d+ dead=\d+ blooming=\d+ hot=\S+ cold=\S+ pressure=\[.*?\] myc_stable=(\d+)/);
                 if (mycm) {
                     gGateMycStable = parseInt(mycm[1]);
+                    updateGateChip();
+                }
+
+                // GATE — authoritative plateau-gate state, emitted every epoch by train_bible.
+                // Overrides the client-side gLossRing estimate so the chip shows REAL values
+                // (true quarter-means Δ, current Gen threshold + Fibonacci window).
+                const gtm = line.match(/^GATE epoch=\d+ smoothed_delta=(nan|-?[\d.]+) threshold=([\d.]+) window=(\d+) filled=(\d+) myc_stable=(\d+) myc_thresh=(\d+)/);
+                if (gtm) {
+                    gGateRustDelta     = (gtm[1] === 'nan') ? null : parseFloat(gtm[1]);
+                    gGatePlateauThresh = parseFloat(gtm[2]);
+                    gGateFibWin        = parseInt(gtm[3]);
+                    gGateRustFilled    = parseInt(gtm[4]);
+                    gGateMycStable     = parseInt(gtm[5]);
                     updateGateChip();
                 }
 
