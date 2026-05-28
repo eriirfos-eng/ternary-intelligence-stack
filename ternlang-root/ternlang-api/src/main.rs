@@ -789,6 +789,42 @@ async fn albert_status(State(state): State<Arc<AppState>>) -> Response {
     albert_proxy(&state, "GET", "status", None).await
 }
 
+// Translate ONE token (auto-detect language -> English). Returns (text, changed):
+// changed=false when the token is already English OR untranslatable gibberish
+// (Google returns it ~unchanged); changed=true when it's a real foreign word.
+async fn translate_word(client: &reqwest::Client, w: &str) -> (String, bool) {
+    let resp = client
+        .get("https://translate.googleapis.com/translate_a/single")
+        .query(&[("client", "gtx"), ("sl", "auto"), ("tl", "en"), ("dt", "t"), ("q", w)])
+        .timeout(std::time::Duration::from_secs(6))
+        .send()
+        .await;
+    if let Ok(r) = resp {
+        if let Ok(j) = r.json::<serde_json::Value>().await {
+            if let Some(segs) = j.as_array().and_then(|a| a.first()).and_then(|v| v.as_array()) {
+                let mut tr = String::new();
+                for seg in segs {
+                    if let Some(t) = seg.as_array().and_then(|a| a.first()).and_then(|v| v.as_str()) {
+                        tr.push_str(t);
+                    }
+                }
+                let tr = tr.trim().to_string();
+                if !tr.is_empty() {
+                    let changed = tr.to_lowercase() != w.trim().to_lowercase();
+                    return (if changed { tr } else { w.to_string() }, changed);
+                }
+            }
+        }
+    }
+    (w.to_string(), false) // graceful fallback: keep original on any failure
+}
+
+// Token-by-token translation, preserving order. Each whitespace token is translated
+// independently with its OWN language auto-detect — the only way to handle a
+// multilingual token stream where adjacent words are in different languages. English
+// and gibberish tokens are kept verbatim (changed=false); real foreign words are
+// replaced (changed=true). Sending the whole blob (the old behaviour) let Google pick
+// one dominant language and leave every other-language word untouched.
 async fn albert_translate(
     Json(body): Json<serde_json::Value>,
 ) -> Response {
@@ -799,50 +835,43 @@ async fn albert_translate(
             Json(serde_json::json!({"error": "missing text field"})),
         ).into_response(),
     };
+
+    let tokens: Vec<String> = text.split_whitespace().map(|s| s.to_string()).collect();
+    // Dedup so each unique token hits Google at most once.
+    let mut unique: Vec<String> = tokens.clone();
+    unique.sort();
+    unique.dedup();
+
     let client = reqwest::Client::new();
-    let result = client
-        .get("https://translate.googleapis.com/translate_a/single")
-        .query(&[("client", "gtx"), ("sl", "auto"), ("tl", "en"), ("dt", "t"), ("q", text.as_str())])
-        .timeout(std::time::Duration::from_secs(10))
-        .send()
-        .await;
-    match result {
-        Ok(r) => match r.json::<serde_json::Value>().await {
-            Ok(j) => {
-                let raw_segs = j.as_array()
-                    .and_then(|a| a.first())
-                    .and_then(|v| v.as_array());
-                match raw_segs {
-                    Some(segs) => {
-                        let mut segments: Vec<serde_json::Value> = Vec::new();
-                        let mut full = String::new();
-                        for seg in segs {
-                            if let Some(arr) = seg.as_array() {
-                                let tr   = arr.first().and_then(|v| v.as_str()).unwrap_or("");
-                                let orig = arr.get(1).and_then(|v| v.as_str()).unwrap_or("");
-                                // segment changed = Google actually translated it (not English / not invented)
-                                let changed = tr.trim().to_lowercase() != orig.trim().to_lowercase();
-                                full.push_str(if changed { tr } else { orig });
-                                segments.push(serde_json::json!({
-                                    "o": orig, "t": tr, "changed": changed
-                                }));
-                            }
-                        }
-                        Json(serde_json::json!({
-                            "translation": full,
-                            "segments": segments
-                        })).into_response()
-                    }
-                    None => Json(serde_json::json!({"translation": "", "segments": []}))
-                        .into_response(),
-                }
-            }
-            Err(e) => (axum::http::StatusCode::BAD_GATEWAY,
-                Json(serde_json::json!({"error": e.to_string()}))).into_response(),
-        },
-        Err(e) => (axum::http::StatusCode::BAD_GATEWAY,
-            Json(serde_json::json!({"error": e.to_string()}))).into_response(),
+    // Bound concurrency to avoid tripping the free gtx endpoint's rate limit.
+    let sem = std::sync::Arc::new(tokio::sync::Semaphore::new(5));
+    let mut set = tokio::task::JoinSet::new();
+    for w in unique {
+        let client = client.clone();
+        let sem = sem.clone();
+        set.spawn(async move {
+            let _permit = sem.acquire_owned().await.ok();
+            (w.clone(), translate_word(&client, &w).await)
+        });
     }
+    let mut map: std::collections::HashMap<String, (String, bool)> = std::collections::HashMap::new();
+    while let Some(joined) = set.join_next().await {
+        if let Ok((w, res)) = joined {
+            map.insert(w, res);
+        }
+    }
+
+    // Reassemble in original order; segments carry per-token o/t/changed for the UI.
+    let mut full = String::new();
+    let mut segments: Vec<serde_json::Value> = Vec::new();
+    for (i, tok) in tokens.iter().enumerate() {
+        let (tr, changed) = map.get(tok).cloned().unwrap_or_else(|| (tok.clone(), false));
+        if i > 0 { full.push(' '); }
+        full.push_str(&tr);
+        segments.push(serde_json::json!({ "o": tok, "t": tr, "changed": changed }));
+    }
+
+    Json(serde_json::json!({ "translation": full, "segments": segments })).into_response()
 }
 
 async fn albert_proxy(

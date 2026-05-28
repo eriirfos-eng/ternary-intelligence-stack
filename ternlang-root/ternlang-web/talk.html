@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Talk with albert. — ternlang.com</title>
+  <link rel="icon" type="image/png" href="assets/ternlang_logo_notext.png">
+  <link rel="shortcut icon" href="assets/ternlang_logo_notext.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1182,26 +1184,44 @@ async function toggleTranslate(btn) {
     });
     const d = await r.json();
     output.innerHTML = '';
-    const fullTr = (d.translation || '').trim();
-    if (!fullTr) {
-      output.textContent = '(no translation available)';
-    } else {
-      const origWords = btn._albertText.trim().split(/\s+/);
-      const trWords   = fullTr.split(/\s+/);
-      for (let i = 0; i < origWords.length; i++) {
+    if (Array.isArray(d.segments) && d.segments.length) {
+      // Authoritative per-token result from the backend: keep English/gibberish (changed=false),
+      // show the English translation highlighted for real foreign words (changed=true), in order.
+      d.segments.forEach((seg, i) => {
         if (i > 0) output.appendChild(document.createTextNode(' '));
-        const ow = origWords[i];
-        const tw = trWords[i] !== undefined ? trWords[i] : ow;
-        const strip = s => s.replace(/[^a-z0-9]/gi, '').toLowerCase();
         const span = document.createElement('span');
-        if (strip(ow) !== strip(tw)) {
+        if (seg.changed) {
           span.className = 'tr-word';
-          span.textContent = tw;
-          span.title = ow;
+          span.textContent = seg.t;
+          span.title = seg.o;        // hover shows albert.'s original token
         } else {
-          span.textContent = ow;
+          span.textContent = seg.o;  // English or gibberish — left as-is
         }
         output.appendChild(span);
+      });
+    } else {
+      // Fallback: align the flat translation string against the original by word index.
+      const fullTr = (d.translation || '').trim();
+      if (!fullTr) {
+        output.textContent = '(no translation available)';
+      } else {
+        const origWords = btn._albertText.trim().split(/\s+/);
+        const trWords   = fullTr.split(/\s+/);
+        for (let i = 0; i < origWords.length; i++) {
+          if (i > 0) output.appendChild(document.createTextNode(' '));
+          const ow = origWords[i];
+          const tw = trWords[i] !== undefined ? trWords[i] : ow;
+          const strip = s => s.replace(/[^a-z0-9]/gi, '').toLowerCase();
+          const span = document.createElement('span');
+          if (strip(ow) !== strip(tw)) {
+            span.className = 'tr-word';
+            span.textContent = tw;
+            span.title = ow;
+          } else {
+            span.textContent = ow;
+          }
+          output.appendChild(span);
+        }
       }
     }
     output.dataset.done = '1';
