@@ -95,9 +95,9 @@
       left: 50%;
       transform: translateX(-50%);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.62rem;
+      font-size: 0.68rem;
       letter-spacing: 0.02em;
-      color: var(--muted);
+      color: var(--text);
       white-space: nowrap;
       pointer-events: none;
       max-width: 46vw;
@@ -659,7 +659,7 @@
     }
     .hero-sub {
       font-size: 0.8rem;
-      color: var(--dim);
+      color: var(--text);
       max-width: 380px;
       line-height: 1.65;
     }
@@ -736,7 +736,7 @@
   <canvas class="orb-canvas" id="orb-canvas" width="540" height="440"></canvas>
   <div class="hero">
     <div class="hero-name">albert.</div>
-    <div class="hero-sub">A 134M-parameter ternary MoE model learning 8 languages from scratch. Talk to it. Watch it grow.</div>
+    <div class="hero-sub">A dual-stream ternary MoE learning 8 languages from scratch. Talk to it. Watch it grow.</div>
   </div>
   <div class="pill-wrap">
     <textarea id="prompt" rows="1" placeholder="Send a prompt to albert. …" maxlength="512"></textarea>
@@ -835,7 +835,7 @@ async function loadStatus() {
     const r = await fetch('/api/albert/status');
     if (!r.ok) throw new Error();
     const d = await r.json();
-    document.getElementById('status-text').textContent = `ep${d.epoch} · ${d.arch}`;
+    document.getElementById('status-text').textContent = `online · ep${d.epoch}`;
     document.getElementById('arch-line').textContent = humanArch(d.arch);
   } catch {
     document.getElementById('status-text').textContent = 'offline';
