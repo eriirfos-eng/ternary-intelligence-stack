@@ -178,7 +178,11 @@ async fn main() -> anyhow::Result<()> {
     let vocab_path  = format!("{root}/data/vocab_v3.json");
     let ckpt_best   = format!("{root}/models/albert_v3.0.best.safetensors");
     let ckpt_latest = format!("{root}/models/albert_v3.0.safetensors");
-    let ckpt        = if std::path::Path::new(&ckpt_best).exists() { &ckpt_best } else { &ckpt_latest };
+    // Serve the LATEST checkpoint — it always matches config.json's architecture.
+    // best.safetensors is the lowest-LOSS snapshot, which can lag the architecture
+    // across surgeries (a pre-cord single-stream "best" vs a dual-stream config) and
+    // would fail to load. Latest is written with the current model, so it's safe.
+    let ckpt        = if std::path::Path::new(&ckpt_latest).exists() { &ckpt_latest } else { &ckpt_best };
 
     println!("[albert_serve] loading config  {config_path}");
     let config_str  = fs::read_to_string(&config_path)?;
@@ -190,6 +194,14 @@ async fn main() -> anyhow::Result<()> {
     config.num_heads   = config_json["num_heads"].as_u64().unwrap_or(4) as usize;
     config.num_experts = config_json["num_experts"].as_u64().unwrap_or(12) as usize;
     config.max_seq_len = config_json["max_seq_len"].as_u64().unwrap_or(256) as usize;
+    // Dual-stream (cord surgery): build both attention hemispheres + anastomosis
+    // fusion gates. Without these the checkpoint's stream_a/stream_b/anastomosis
+    // tensors have no home and weight-load fails. forward_prefill/forward_decode
+    // already handle the fusion when num_streams >= 2.
+    config.num_streams = config_json["num_streams"].as_u64().unwrap_or(1) as usize;
+    config.fusion_layers = config_json["fusion_layers"].as_array()
+        .map(|a| a.iter().filter_map(|v| v.as_u64().map(|n| n as usize)).collect())
+        .unwrap_or_default();
     let epoch          = config_json["global_epoch"].as_u64().unwrap_or(0);
 
     println!("[albert_serve] loading vocab   {vocab_path}");

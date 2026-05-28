@@ -79,7 +79,7 @@ def serve():
             'homepage   = "https://ternlang.com"\n'
         )
 
-    cached_bin = "/vol/albert/bin/albert_serve_v2"  # v2: KV-cache decode path
+    cached_bin = "/vol/albert/bin/albert_serve_v3"  # v3: dual-stream (cord) — reads num_streams/fusion_layers, serves latest ckpt
     os.makedirs("/vol/albert/bin", exist_ok=True)
 
     if os.path.exists(cached_bin):
