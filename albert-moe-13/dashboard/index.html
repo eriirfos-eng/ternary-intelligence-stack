@@ -7386,6 +7386,20 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                 }
             }
 
+            // Stream B layer-spine live drive (dual-stream FULL BRAIN) — pulses from latest TTL
+            if (_allLayersMode && _scene.userData.fbStreamBSprites) {
+                const tlB = window._mycTlightCache;
+                const sb = _scene.userData.fbStreamBSprites;
+                for (let i=0;i<sb.length;i++){
+                    const st=(tlB && tlB[NL+i]) ? tlB[NL+i].states : null;
+                    const g=st ? Array.from(st).filter(s=>s==='G').length : 0;
+                    const act=Math.min(1,g/3);
+                    const pulse=0.55+0.45*Math.sin(_t*2.2+i*0.5);
+                    sb[i].material.opacity=0.18+0.55*act*pulse;
+                    sb[i].scale.setScalar(0.5*(1.0+0.4*act*pulse));
+                }
+            }
+
             // Gentle idle sway when not dragging
             if (!_orbitDrag && !_panDrag) {
                 _theta += Math.sin(_t * 0.04) * 0.0003;
@@ -7540,15 +7554,84 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
 
             // Annotation
             {
-                const aw=600, ah=22, dpr=Math.min(window.devicePixelRatio||1,2);
+                const aw=860, ah=22, dpr=Math.min(window.devicePixelRatio||1,2);
                 const ac=document.createElement('canvas'); ac.width=aw*dpr; ac.height=ah*dpr;
                 const ax=ac.getContext('2d'); ax.scale(dpr,dpr);
                 ax.font='11px monospace'; ax.fillStyle='rgba(255,255,255,0.38)';
                 ax.textAlign='left'; ax.textBaseline='middle';
-                ax.fillText('albert.  17L × 12E = 204 independent modules  ·  each learned separately  ·  $41.84', 4, ah/2);
+                const _fbNS2=(typeof gArchNumStreams!=='undefined')?gArchNumStreams:1;
+                const _annoTxt=_fbNS2>1
+                    ? 'albert.  '+NL+'L × '+NE+'E = '+(NL*NE)+' experts  ·  dual-stream attention · 2 hemispheres · 6 anastomosis gates [2,3,5,8,13,21]'
+                    : 'albert.  '+NL+'L × '+NE+'E = '+(NL*NE)+' independent modules  ·  each learned separately';
+                ax.fillText(_annoTxt, 4, ah/2);
                 const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(ac),transparent:true,depthWrite:false}));
                 const sh=0.40, sw=(aw/ah)*sh; sp.scale.set(sw,sh,1);
                 sp.position.set(-2.5,gy[0]-1.35,0); _scene.add(sp);
+            }
+
+            // ── Stream B (dual-stream cord surgery) — second attention hemisphere ──
+            // Experts are block-level (shared), so stream B adds a second ATTENTION
+            // spine behind stream A (Z-offset) + the 6 anastomosis fusion gates,
+            // NOT a duplicated expert grid. Mirrors the topology-view dual-stream build.
+            const _fbNS=(typeof gArchNumStreams!=='undefined')?gArchNumStreams:1;
+            if (_fbNS>1) {
+                const FB_ZB=-3.2;                  // stream B sits behind stream A
+                const FB_FIB=[2,3,5,8,13,21];      // anastomosis gate rows
+                _scene.userData.fbStreamBSprites=[];
+                // INPUT → stream B layer fan (cool blue)
+                const sbPos=new Float32Array(NL*2*3), sbCol=new Float32Array(NL*2*3);
+                for (let i=0;i<NL;i++){
+                    const b=i*6;
+                    sbPos[b]=INX; sbPos[b+1]=0; sbPos[b+2]=0;
+                    sbPos[b+3]=FB_LX; sbPos[b+4]=gy[i]; sbPos[b+5]=FB_ZB;
+                    sbCol[b]=0.05; sbCol[b+1]=0.18; sbCol[b+2]=0.5;
+                    sbCol[b+3]=0.05; sbCol[b+4]=0.18; sbCol[b+5]=0.5;
+                }
+                const sbGeo=new THREE.BufferGeometry();
+                sbGeo.setAttribute('position',new THREE.BufferAttribute(sbPos,3));
+                sbGeo.setAttribute('color',new THREE.BufferAttribute(sbCol,3));
+                _scene.add(new THREE.LineSegments(sbGeo,new THREE.LineBasicMaterial({
+                    vertexColors:true,blending:THREE.NormalBlending,transparent:true,depthWrite:false,opacity:0.22})));
+                // Stream B layer spine nodes + labels + faint fan toward expert columns
+                const sbeTotal=NL*NE;
+                const sbePos=new Float32Array(sbeTotal*2*3), sbeCol=new Float32Array(sbeTotal*2*3);
+                const _hSB=new THREE.Color();
+                for (let i=0;i<NL;i++){
+                    const s=_node(0.5,new THREE.Color(0.08,0.25,0.92));
+                    s.position.set(FB_LX,gy[i],FB_ZB); s.material.opacity=0.5; _scene.add(s);
+                    _scene.userData.fbStreamBSprites.push(s);
+                    const lb=_lbl('L'+i,'right'); lb.scale.set(0.95,0.30,1);
+                    lb.position.set(FB_LBL_X,gy[i],FB_ZB); lb.material.opacity=0.30; _scene.add(lb);
+                    for (let e=0;e<NE;e++){
+                        const idx=(i*NE+e)*6;
+                        sbePos[idx]=FB_LX; sbePos[idx+1]=gy[i]; sbePos[idx+2]=FB_ZB;
+                        sbePos[idx+3]=gx[e]; sbePos[idx+4]=gy[i]; sbePos[idx+5]=FB_ZB*0.5;
+                        _hSB.setHSL((LHUE[i]+0.55)%1.0,0.7,0.30);
+                        sbeCol[idx]=_hSB.r*0.12; sbeCol[idx+1]=_hSB.g*0.12; sbeCol[idx+2]=_hSB.b*0.12;
+                        sbeCol[idx+3]=_hSB.r*0.5; sbeCol[idx+4]=_hSB.g*0.5; sbeCol[idx+5]=_hSB.b*0.5;
+                    }
+                }
+                const sbeGeo=new THREE.BufferGeometry();
+                sbeGeo.setAttribute('position',new THREE.BufferAttribute(sbePos,3));
+                sbeGeo.setAttribute('color',new THREE.BufferAttribute(sbeCol,3));
+                _scene.add(new THREE.LineSegments(sbeGeo,new THREE.LineBasicMaterial({
+                    vertexColors:true,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false})));
+                // 6 anastomosis gate nodes at Fibonacci rows, bridging stream A (z=0) ↔ stream B (z=FB_ZB)
+                for (const fi of FB_FIB){
+                    if (fi>=NL) continue;
+                    const gz=FB_ZB*0.5;
+                    const gSp=_node(0.95,new THREE.Color(1.0,0.72,0.04));
+                    gSp.position.set(FB_LX,gy[fi],gz); gSp.material.opacity=0.7; _scene.add(gSp);
+                    const glb=_lbl('G'+fi,'left'); glb.scale.set(0.9,0.30,1);
+                    glb.position.set(FB_LX+1.2,gy[fi],gz); glb.material.opacity=0.6; _scene.add(glb);
+                    const bP=new Float32Array([FB_LX,gy[fi],0, FB_LX,gy[fi],gz, FB_LX,gy[fi],gz, FB_LX,gy[fi],FB_ZB]);
+                    const bC=new Float32Array([0.9,0.6,0.04,1.0,0.75,0.05, 1.0,0.75,0.05,0.9,0.6,0.04]);
+                    const bGeo=new THREE.BufferGeometry();
+                    bGeo.setAttribute('position',new THREE.BufferAttribute(bP,3));
+                    bGeo.setAttribute('color',new THREE.BufferAttribute(bC,3));
+                    _scene.add(new THREE.LineSegments(bGeo,new THREE.LineBasicMaterial({
+                        vertexColors:true,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false,opacity:0.65})));
+                }
             }
         }
 
