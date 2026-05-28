@@ -3326,6 +3326,17 @@ impl TuiApp {
                         io::stdout().execute(EnableMouseCapture).ok();
                         io::stdout().execute(EnterAlternateScreen).ok();
                         terminal.clear().ok();
+
+                        // Drain any stray terminal events that arrived during
+                        // suspend. While raw mode + mouse capture were off,
+                        // mouse movement emits ANSI escape sequences to stdin
+                        // which would otherwise be interpreted as Esc + [ + …
+                        // and bleed into the input bar on the next keystroke.
+                        // Key thread is still paused at this point so no race.
+                        while event::poll(Duration::ZERO).unwrap_or(false) {
+                            let _ = event::read();
+                        }
+
                         self.key_paused.store(false, Ordering::Relaxed);
                     }
 

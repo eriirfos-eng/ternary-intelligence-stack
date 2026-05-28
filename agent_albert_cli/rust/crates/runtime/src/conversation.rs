@@ -473,9 +473,15 @@ where
     }
 
     fn maybe_auto_compact(&mut self) -> Option<AutoCompactionEvent> {
-        if self.usage_tracker.cumulative_usage().input_tokens
-            < self.auto_compaction_input_tokens_threshold
-        {
+        // Use the LATEST turn's actual input_tokens (reported by the API) as the
+        // trigger signal. Using cumulative.input_tokens was a bug: cumulative
+        // never resets after compaction, so once it crossed the threshold every
+        // subsequent turn would auto-compact again — flooding the TUI and
+        // causing the "stuff streaming into input" symptom.
+        // Last-turn input_tokens reflects how full the context window actually
+        // was on the most recent request, and naturally drops after compaction.
+        let last_input = self.usage_tracker.current_turn_usage().input_tokens;
+        if last_input < self.auto_compaction_input_tokens_threshold {
             return None;
         }
 

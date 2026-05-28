@@ -4,7 +4,7 @@ exclude = ["crates/rtk-integration"]
 resolver = "2"
 
 [workspace.package]
-version = "1.4.0"
+version = "1.5.0"
 edition = "2024"
 license = "LGPL-2.1-or-later"
 repository = "https://github.com/eriirfos-eng/ternary-intelligence-stack"

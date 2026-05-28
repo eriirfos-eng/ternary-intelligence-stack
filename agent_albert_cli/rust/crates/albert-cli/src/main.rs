@@ -99,7 +99,41 @@ fn context_window_for_model(model: &str) -> u64 {
     128_000
 }
 
-const DEFAULT_DATE: &str = "2024-03-25";
+/// Returns today's date as YYYY-MM-DD, computed from the system clock.
+/// Replaced the previous hardcoded `DEFAULT_DATE = "2024-03-25"` so the
+/// system prompt always reflects reality without bumping the binary.
+fn today_date() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let (y, m, d) = days_to_ymd((secs / 86400) as i64);
+    format!("{y:04}-{m:02}-{d:02}")
+}
+
+/// Convert days since Unix epoch (1970-01-01) to (year, month, day)
+/// using the Gregorian calendar. Pure, no allocation, no chrono dep.
+fn days_to_ymd(days: i64) -> (i32, u8, u8) {
+    let mut y = 1970i32;
+    let mut d = days;
+    loop {
+        let leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+        let days_in_year: i64 = if leap { 366 } else { 365 };
+        if d < days_in_year { break; }
+        d -= days_in_year;
+        y += 1;
+    }
+    let leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+    let month_days: [i64; 12] = [31, if leap { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let mut m = 0usize;
+    while m < 11 && d >= month_days[m] {
+        d -= month_days[m];
+        m += 1;
+    }
+    (y, (m + 1) as u8, (d + 1) as u8)
+}
+
 const DEFAULT_OAUTH_CALLBACK_PORT: u16 = 4545;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const BUILD_TARGET: Option<&str> = option_env!("TARGET");
@@ -530,7 +564,7 @@ fn filter_tool_specs(allowed_tools: Option<&AllowedToolSet>) -> Vec<tools::ToolS
 
 fn parse_system_prompt_args(args: &[String]) -> Result<CliAction, String> {
     let mut cwd = env::current_dir().map_err(|error| error.to_string())?;
-    let mut date = DEFAULT_DATE.to_string();
+    let mut date = today_date();
     let mut index = 0;
 
     while index < args.len() {
@@ -3924,7 +3958,7 @@ fn status_context(
     let loader = ConfigLoader::default_for(&cwd);
     let discovered_config_files = loader.discover().len();
     let runtime_config = loader.load()?;
-    let project_context = ProjectContext::discover_with_git(&cwd, DEFAULT_DATE)?;
+    let project_context = ProjectContext::discover_with_git(&cwd, &today_date())?;
     let (project_root, git_branch) =
         parse_git_status_metadata(project_context.git_status.as_deref());
     Ok(StatusContext {
@@ -4073,7 +4107,7 @@ fn render_config_report(section: Option<&str>) -> Result<String, Box<dyn std::er
 
 fn render_memory_report() -> Result<String, Box<dyn std::error::Error>> {
     let cwd = env::current_dir()?;
-    let project_context = ProjectContext::discover(&cwd, DEFAULT_DATE)?;
+    let project_context = ProjectContext::discover(&cwd, &today_date())?;
     let mut lines = vec![format!(
         "Memory
   Working directory {}
@@ -4666,7 +4700,7 @@ fn build_system_prompt() -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let cwd = env::current_dir()?;
     Ok(load_system_prompt(
         cwd,
-        DEFAULT_DATE.to_string(),
+        today_date(),
         env::consts::OS,
         "unknown",
     )?)
