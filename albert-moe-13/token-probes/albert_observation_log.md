@@ -6569,6 +6569,40 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN200 · 2026-05-28T22:03:41Z · PLATEAU HOLDS at ~9.49 (9 epochs) · AUTHORITATIVE GATE STATE since_best=2695 myc_stable=9 (dashboard chip says 65 — ~40× WRONG) · [loop tick 3/15m]
+
+**State:** RUNNING · EP 4244 (26L dual-stream) · BATCH 61/300 · loss_best 9.2066 (unbeaten) · LR 1.51e-4 (decaying fast) · ~800–1000ms/batch · Modal app alive · no OOM/stall
+
+**Source:** Live training.log tail (mtime 22:03:41Z) + ntfy (quiet, no messages in 20m window). Pure bitstream.
+
+### PLATEAU HOLDS — 9 epochs flat at ~9.49
+| Epoch | EP AVG | Δ |
+|-------|--------|---|
+| 4241 | 9.4958 | +0.0038 |
+| 4242 | 9.4895 | −0.0062 |
+| 4243 | 9.4929 | +0.0033 |
+
+Full resumed run (ep4235→4243): 9.4822, 9.4917, 9.4882, 9.4910, 9.4907, 9.4958, 9.4895, 9.4929 — locked in a 9.482–9.496 band, ±0.006 oscillation. Corpus-floor equilibrium (FN198/199) is real and stable. LR decay (2.42e-4 → 1.51e-4 since FN199) is actively damping step size, reinforcing the flatness.
+
+### AUTHORITATIVE GATE STATE (from EPOCH_SUMMARY — the real EvolutionManager numbers)
+`since_best=2695` (incrementing +1/epoch: 2693→2694→2695) · `myc_stable=9` · `loss_best=9.2066` · `wald_sev=0.924` · `wald_fill=8.3%` · `hot=L25 cold=L0` · `tns=2044`.
+
+- **loss_best 9.2066 unbeaten** — set ~ep1549 (4244−2695); the all-time epoch-avg best has NOT fallen since, through every surgery. (Chip/batch ATL keeps dropping — 8.68 — but the epoch-AVG best is stuck. Surgeries add capacity + regression, so the averaged best holds.)
+- **since_best now 2695 and climbing every epoch** — at the current 9.49 corpus floor, no epoch will beat 9.2066 soon, so since_best keeps rising.
+
+### GATE-PANEL DIVERGENCE — CONFIRMED IN NUMBERS
+Last tick's diagnosis is now proven: the dashboard surgery-gate chip showed **since_best=65**; the authoritative EPOCH_SUMMARY says **since_best=2695** — off by ~40×. The chip's plateau threshold (0.020) and window (144) are stale defaults vs the real Gen3 (~0.0113 / win 34). **The gate chip is a browser-side estimate and is not trustworthy; field notes use the EPOCH_SUMMARY/MYCELIUM log values only.** (Dashboard honesty fix offered to user: grey-out client estimates / emit live gate state from train_bible.)
+
+### MYCELIUM — stabilizing
+`dead=1–2 blooming=6–9`, myc_stable climbing **6→7→8→9** (ep4240–4243). All 26 layer pressures 0.00000 (no growth pressure). hot=L25 (deepest/newest layer hottest — last-added layer carrying load), cold=L0.
+
+### S14 REAL proximity:
+Of the two real governor conditions: (1) **myc_stable=9 ≥ 5 → MET**; (2) smoothed-Δ over win=34 → still filling (~9/34 epochs into the resumed flat run). If the 9.49 plateau holds, the smoothed-Δ will flatten and S14 (26L→27L) could fire in ~25 epochs (~1.5h). This would be the 2nd Net2Net on dual-stream. `pre-s14_ep4235_26L` probe banked.
+
+**Interpretation:** Textbook stable plateau at a corpus-defined floor, governor genuinely arming (myc_stable met, plateau half filling) — but the firing decision is the Rust governor's, NOT the dashboard chip's. No OOM across 9 epochs at batch=1; dual-stream is durable. Watch the smoothed-Δ window fill over the next few ticks.
+
+---
+
 ## FN199 · 2026-05-28T21:47:21Z · FLAT PLATEAU at ~9.49 (5 epochs) — expanded-corpus floor confirmed · FULL-BRAIN CENSUS: 312 experts · S14 governor arming · [loop tick 2/15m]
 
 **State:** RUNNING · EP 4240 (26L dual-stream) · BATCH 152/300 · loss_best 9.2066 (unbeaten) · LR 2.42e-4 (decaying) · ~700ms/batch · Modal app ap-1XUPSR0zqwNyJiPCqRTrPV alive · no OOM
