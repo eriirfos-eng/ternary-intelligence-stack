@@ -75,33 +75,14 @@
        {\normalfont\normalsize\itshape The Death of the Bit.}}
 
 \author{%
-  \IEEEauthorblockN{Simeon Kepp}
-  \IEEEauthorblockA{Lead Architect\\
-    \href{https://www.linkedin.com/in/simeon-kepp/}{\texttt{linkedin/simeon-kepp}}\\
-    s.kepp@ternlang.com}
-  \and
-  \IEEEauthorblockN{Zabih Karimi}
-  \IEEEauthorblockA{IT \& Network Engineering\\
-    \href{https://www.linkedin.com/in/zabih-karimi-3292ab349/}{\texttt{linkedin/zabih-karimi}}\\
-    z.karimi@ternlang.com}
-  \and
-  \IEEEauthorblockN{Nikoletta Csonka}
-  \IEEEauthorblockA{International Relations\\
-    \href{https://www.linkedin.com/in/csonikoletta/}{\texttt{linkedin/csonikoletta}}\\
-    csonikoletta@ternlang.com}
-  \and
-  \IEEEauthorblockN{Lisa Scharler}
-  \IEEEauthorblockA{Social Technology \& AI Ethics\\
-    \href{https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/}{\texttt{linkedin/lisa-scharler}}\\
-    l.scharler@ternlang.com}
-  \and
-  \IEEEauthorblockN{Louis Paul Ehrig}
-  \IEEEauthorblockA{Public Affairs \& Dataset Curation\\
-    \href{https://www.linkedin.com/in/louis-ehrig-317941335/}{\texttt{linkedin/louis-ehrig}}\\
-    l.ehrig@ternlang.com}
-  \thanks{RFI-IRFOS --- Research Focus Institute, Elisabethinergasse~25, 8020~Graz, Austria.
-    Patent Pending A50296/2026. Repository:
-    \url{https://github.com/eriirfos-eng/ternary-intelligence-stack}}%
+\IEEEauthorblockN{%
+\renewcommand{\arraystretch}{1.2}%
+\begin{tabular}{@{}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{}}
+\textbf{Simeon Kepp} & \textbf{Zabih Karimi} & \textbf{Nikoletta Csonka} & \textbf{Lisa Scharler} & \textbf{Louis Paul Ehrig}\\
+{\footnotesize Lead Architect} & {\footnotesize IT \& Network Eng.} & {\footnotesize Intl.\ Relations} & {\footnotesize Social Tech \& Ethics} & {\footnotesize Public Affairs}\\
+{\scriptsize\texttt{s.kepp}} & {\scriptsize\texttt{z.karimi}} & {\scriptsize\texttt{csonikoletta}} & {\scriptsize\texttt{l.scharler}} & {\scriptsize\texttt{l.ehrig}}\\
+\end{tabular}}
+\thanks{All authors at RFI-IRFOS --- Research Focus Institute, Elisabethinergasse~25, 8020~Graz, Austria. Email: \texttt{<user>@ternlang.com}. LinkedIn: simeon-kepp, zabih-karimi, csonikoletta, lisa-scharler, louis-ehrig. Patent Pending A50296/2026 (TIS platform, 10 claims). Repository: \url{https://github.com/eriirfos-eng/ternary-intelligence-stack}}%
 }
 
 \begin{document}
@@ -1622,48 +1603,53 @@ consistent with the routing lottery design intent.
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}[
-    ->, >=Stealth, thick,
-    state/.style={
-        circle, draw, thick, minimum size=1.5cm,
-        font=\small\bfseries, align=center
-    },
-    lbl/.style={font=\scriptsize, color=terncmt, midway, sloped}
+    >=Stealth, thick,
+    state/.style={circle, draw, thick, minimum size=1.4cm,
+        font=\small\bfseries, align=center},
+    hub/.style={circle, draw=dkcyan!70, fill=dkcyan!18, text=dkcyan!90!black,
+        thick, minimum size=1.3cm, font=\scriptsize\bfseries, align=center},
+    radial/.style={<->, color=terncmt!75, thick},
+    lbl/.style={font=\scriptsize, color=terncmt}
 ]
-\node[state, fill=dkgreen!15, draw=dkgreen!65, text=dkgreen!85!black]
-    (G) at (0, 2.6) {G\\[1pt]\scriptsize$+1$};
+% Central recursive router (the hold/0 decision point)
+\node[hub] (H) at (0,0) {ternary\\router};
+% Three ternary states around the hub (0 top, +1 lower-left, -1 lower-right)
 \node[state, fill=dkorange!15, draw=dkorange!65, text=dkorange!80!black]
-    (O) at (2.4, 0) {O\\[1pt]\scriptsize$0$};
+    (O) at (0, 2.7) {O\\[1pt]\scriptsize$0$};
+\node[state, fill=dkgreen!15, draw=dkgreen!65, text=dkgreen!85!black]
+    (G) at (-2.7, -1.9) {G\\[1pt]\scriptsize$+1$};
 \node[state, fill=dkred!15, draw=dkred!65, text=dkred!85!black]
-    (R) at (-2.4, 0) {R\\[1pt]\scriptsize$-1$};
-\node[font=\scriptsize, color=terncmt, below=3pt of G] {converged};
-\node[font=\scriptsize, color=terncmt, below=3pt of O] {learning};
-\node[font=\scriptsize, color=terncmt, below=3pt of R] {unstable};
-% Normal transitions
-\draw[bend left=22, color=dkgreen!60] (G) to
-    node[lbl, above right]{load rises} (O);
-\draw[bend left=22, color=dkorange!70] (O) to
-    node[lbl, below left]{stabilises} (G);
-\draw[bend left=22, color=dkred!60] (O) to
-    node[lbl, above left]{overloaded} (R);
-\draw[bend left=22, color=dkorange!70] (R) to
-    node[lbl, below right]{recovered} (O);
-% Epoch reset (dashed)
-\draw[dashed, bend left=55, color=terncmt!45] (G) to
-    node[lbl, right, pos=0.35, xshift=4pt]{\scriptsize epoch reset} (O);
-\draw[dashed, bend right=55, color=terncmt!45] (R) to (O);
+    (R) at (2.7, -1.9) {R\\[1pt]\scriptsize$-1$};
+\node[lbl, above=2pt of O] {learning};
+\node[lbl, below=2pt of G] {converged};
+\node[lbl, below=2pt of R] {unstable};
+% Bidirectional radial routing: hub <-> each ternary state
+\draw[radial] (H) -- (O);
+\draw[radial] (H) -- (G);
+\draw[radial] (H) -- (R);
+% Recursive cycle around the periphery: +1 -> 0 -> -1 -> +1
+\draw[->, color=dkgreen!65,  bend left=16] (G) to node[lbl, above left]{route}  (O);
+\draw[->, color=dkorange!75, bend left=16] (O) to node[lbl, above right]{route} (R);
+\draw[->, color=dkred!60,    bend left=16] (R) to node[lbl, below]{recurse}     (G);
+% Observation layer reads the live (G,O,R) vector
+\node[draw=dkcyan!40, rounded corners=2pt, fill=dkbg, text=dkcyan!80,
+      font=\scriptsize, align=center, inner sep=4pt] (OBS) at (4.1, 1.5)
+    {observer\\{\scriptsize(live log)}};
+\draw[->, dashed, color=dkcyan!50] (H) to[bend left=12] (OBS);
 % Legend
 \node[draw=terncmt!30, rounded corners=3pt, fill=dkbg, font=\scriptsize,
-      text=terncmt, align=left, anchor=north east, inner sep=5pt]
-    at (4.0, 3.2) {%
+      text=terncmt, align=left, anchor=north west, inner sep=5pt] at (-5.7, 3.3) {%
     \textcolor{dkgreen!80}{G} $= +1$\ converged\\
     \textcolor{dkorange!80}{O} $= \phantom{+}0$\ learning\\
     \textcolor{dkred!80}{R} $= -1$\ unstable%
 };
 \end{tikzpicture}
-\caption{TLIGHT per-expert state machine. Each expert independently transitions
-between G ($+1$, stable routing), O ($0$, actively learning), and R ($-1$,
-overloaded or unstable). Dashed arcs show the epoch-boundary reset driven by
-the Routing Lottery: all experts return to O at epoch start.}
+\caption{TLIGHT as \emph{recursive ternary routing}. A central router dispatches each
+expert's state through the balanced-ternary triad---G ($+1$, converged), O ($0$, actively
+learning), R ($-1$, unstable)---with bidirectional radial routing to the hub and a recursive
+cycle ($+1\!\to\!0\!\to\!-1\!\to\!+1$) around the periphery; the observation layer reads the
+live $(G,O,R)$ vector each step. Unlike a flat state machine, every state re-enters the
+ternary decision through the hub rather than only stepping to a neighbour.}
 \label{fig:tlight}
 \end{figure}
 
