@@ -6569,6 +6569,27 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN211 · 2026-05-29T05:47:45Z · clean continuation — back on plateau (ep4247=9.4734, ep4248=9.4975) · GATE 32/89 refilling · local watcher LIVE · [loop tick]
+
+**State:** RUNNING · EP 4249 (26L dual-stream) · BATCH 186/300 · loss 9.4874 · LR 1.29e-4 · no OOM · watcher healthy
+
+**Source:** training.log (mtime 05:47:45Z) + ntfy + `~/.albert/albert_watch_log.md`.
+
+### Resumed model is firmly back on the plateau
+ep4247=9.4734, ep4248=9.4975, ep4249 mid (~9.49). The 26L is grinding the same corpus-floor band (9.47–9.50) it held pre-S14 — the rollback restored not just the weights but the exact training trajectory. No residual effect from the failed branch.
+
+### GATE: Δ=nan, window=89, filled=32 (refilling)
+Loss-history re-accumulating since resume (rolled-back evolution had ~30 entries). ~57 epochs to fill the 89-window → S14 retry is ~hours out. When it fires, the fix sources the clone from the live 26L → expect `Loaded ~2122` (the final validation).
+
+### New monitoring layer LIVE
+`~/bin/albert-watch.py` now runs every 5 min via cron, independent of any session — detects wipe(<100 loaded)/random(>10)/stall/error and fires deduped ntfy. First snapshots healthy (`loaded=2044`). The overnight gap that hid the S14 wipe for ~4h is closed; that exact failure would now alert within 5 min.
+
+### Note: `SUB-10.0 / SURGERY ALERT ZONE / SURGERY GATE` ntfy at 05:41 are FALSE alarms — one-shot milestone flags re-arming because the resume truncated the local log. Not real crossings (model never went above 10 post-resume). Same artifact noted in FN198.
+
+**Interpretation:** Incident fully closed, training healthy and instrumented better than before. Steady state on the plateau; the next real event is the S14 retry. Watching.
+
+---
+
 ## FN210 · 2026-05-29T05:39:06Z · ✓ CLEAN RESUME CONFIRMED — Loaded 2044 tensors, batch loss 9.07–9.67 (NOT wiped) · S14 incident CLOSED · [loop tick]
 
 **State:** RUNNING · EP 4247 (26L dual-stream) · BATCH ~83/300 · ATL 8.8005 · LR 3.00e-4 · no OOM · TTL warmup step 0/50
