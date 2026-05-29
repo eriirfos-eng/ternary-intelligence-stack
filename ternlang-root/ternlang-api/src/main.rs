@@ -5726,7 +5726,7 @@ fn esc(s: &str) -> String {
 }
 
 fn lighthouse_allowed(user: &str) -> bool {
-    let allow = env::var("LIGHTHOUSE_ALLOWED").unwrap_or_else(|_| "simeon-kepp,zabih-karimi".to_string());
+    let allow = env::var("LIGHTHOUSE_ALLOWED").unwrap_or_else(|_| "simeon-kepp,zabih-sudo".to_string());
     let u = user.to_ascii_lowercase();
     allow.split(',').map(|s| s.trim().to_ascii_lowercase()).any(|a| !a.is_empty() && a == u)
 }
@@ -5982,6 +5982,7 @@ async fn main() {
         .route("/activate",             get(activate_page))
         // Lighthouse internal console (GitHub-OAuth gated; self-auths via signed session cookie)
         .route("/lighthouse",              get(lighthouse_home))
+        .route("/lighthouse/",             get(lighthouse_home))   // tolerate trailing slash
         .route("/lighthouse/auth/login",   get(lighthouse_login))
         .route("/lighthouse/auth/callback",get(lighthouse_callback))
         .route("/lighthouse/logout",       get(lighthouse_logout))
