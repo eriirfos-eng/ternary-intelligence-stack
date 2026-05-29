@@ -932,6 +932,9 @@
     <div class="tb-cell" id="gpu-chip" title="GPU memory on the training node (live, via nvidia-smi). used / total. Steadily climbing = memory creep; Modal has no built-in GPU memory view, so this is our window into it.">
         <span class="tb-label">GPU</span>
         <span class="tb-val" id="v-gpu">—</span>
+        <span id="gpu-meter" style="display:inline-block;width:36px;height:7px;border-radius:3px;background:#1c1c24;vertical-align:middle;margin-left:5px;overflow:hidden;border:1px solid #2a2a33">
+            <span id="gpu-meter-fill" style="display:block;height:100%;width:0%;background:#22c55e;transition:width .35s ease,background .35s ease"></span>
+        </span>
     </div>
     <div class="tb-cell" id="gate-chip" title="Surgery Gate — click to expand">
         <span class="tb-label">GATE</span>
@@ -3316,9 +3319,15 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                     const el = document.getElementById('v-gpu');
                     if (el && total > 0) {
                         const frac = used / total;
+                        const col = frac > 0.92 ? '#ef4444' : frac > 0.75 ? '#fb923c' : '#22c55e';
                         el.textContent = (used / 1024).toFixed(1) + '/' + (total / 1024).toFixed(1) + 'G';
-                        el.style.color = frac > 0.92 ? '#ef4444' : frac > 0.75 ? '#fb923c' : '#22c55e';
+                        el.style.color = col;
                         el.title = `${used} / ${total} MB (${(frac * 100).toFixed(0)}%)`;
+                        const fill = document.getElementById('gpu-meter-fill');
+                        if (fill) {
+                            fill.style.width = Math.min(100, frac * 100).toFixed(0) + '%';
+                            fill.style.background = col;
+                        }
                     }
                     continue;
                 }
