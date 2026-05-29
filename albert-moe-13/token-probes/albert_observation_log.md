@@ -6569,6 +6569,22 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN237 · 2026-05-29T13:13Z · **RECOVERY CLOSED — `Loaded 2122` / 27L, healthy** · [MILESTONE + dash evidence]
+
+`[12:51:01] Loaded 2122 tensors from checkpoint` + `Arch: 27L`. **S14 fully restored — zero permanent weight loss from the entire incident** (false-positive restart → config-sync rollback to 26L → recovered via config fix + reconciliation → re-fire → 2122 loaded). Dashboard (Simeon, 13:13): ARCH **2×27L** · 2×256H · 12E · 256CTX · TNS **2,122** · EP 4342 · chip ATL **8.8005** · GATE green.
+
+Live state @ Global 4341: EP AVG **9.4326** (d+0.0011), T-610 9.4297 — settled ~9.43, near post-S14 low, descending on novel data. **MYCELIUM dead=0 blooming=12** (most of 27L engaged) hot=L26 myc_stable=5 (rebuilding). TTL **G16/O81/R4** (orange-dominant = new layer actively learning, correct). Experts: CMP 100 · INT 73 · PLN 69 · ABS 39 · LNG 18 · MEM 2, rest 0 — core-four carrying. tns=2122, log live 0s, no OOM/panic; ntfy shows only normal WALD ticks.
+
+**S15 ~9 epochs out: GATE window=89 filled=80** — note this is the step1/window-89 cadence from the evolution rollback (vs the step2/window-144 it was on pre-incident), so S15 arrives *sooner* than it would have. Weights intact; only the surgery-cadence counter shifted (per FN234/235 caveat). Incident book closed.
+
+---
+
+## FN236 · 2026-05-29T12:47Z · **RE-FIRED — recovery confirmed 27L at calibration** · Loaded-verdict pending · [loop tick]
+
+Simeon fired at 12:42 (app ap-bajcrYg6...). **Recovery WORKING:** `[evolution] Calibrated to 27L` + `Active corpus stages [3,6,7,8,9,10] (model depth: 27L)` — built 27L, NOT 26L (the broken relaunch said 26L here). Reconcile took the clean-sync path (both configs 27L → safe push, no clobber). Now in the silent tokenize phase (stale 258s; watchdog correctly bypassed via _CORPUS_LOADING, no false stall — and budget now 420s). `Loaded 2122` / first 27L epoch imminent (~tokenize 6-7min). Cron watcher cleared its stall alert at 12:45 on restart. No OOM/panic. S14 restoration essentially confirmed; awaiting the load-count formality.
+
+---
+
 ## FN235 · 2026-05-29T12:35Z · recovery prepped + hardened · NOT yet re-fired · [loop tick]
 
 Training STOPPED (Simeon, pending safe re-fire). No live monitoring this tick. State: **recovery verified ready** — config 27L (local+volume), volume safetensors **2122 tensors / 27L** intact (re-confirmed via read-only header probe), nothing running. Cron watcher correctly fired a STALL alert at 12:25 (no activity 22min — expected, training intentionally off; watcher can't distinguish intentional-stop from crash, which is fine). **Defense-in-depth now 3 layers + fail-safe** so the S14 rollback can't recur: (1) watchdog probes container liveness before killing (relay stall ≠ restart) + budget 180→420s; (2) train_modal RECONCILES — adopts a deeper volume arch instead of clobbering; (3) reconcile FAIL-SAFE — if volume can't be verified, config push is SKIPPED entirely (never an unverified clobber). All committed+pushed. Awaiting Simeon's fire → watch for `Loaded 2122`/`Arch 27L`.
