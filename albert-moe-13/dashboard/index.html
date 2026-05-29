@@ -555,6 +555,7 @@
         .canvas-panel { display:block; width:100%; flex:1; min-height:0; cursor:crosshair; }
         #tlight-viz {
             display: block;
+            position: relative;
             flex: 1;
             min-height: 0;
             overflow-y: auto;
@@ -1228,6 +1229,8 @@
         ttl_nash:   `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="#f59e0b" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/></svg>`,
         ttl_green:  `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="#22c55e" stroke="none"/></svg>`,
         ttl_stress: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="#ef4444" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="rgba(255,255,255,0.15)" stroke="none"/></svg>`,
+        ttl_rebuild: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="rgba(255,255,255,0.12)" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="rgba(255,255,255,0.12)" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="rgba(255,255,255,0.12)" stroke="none"/><path d="M9.6 6.0a3.6 3.6 0 1 1-1.05-2.55" stroke="#f59e0b" stroke-width="1" fill="none"/><path d="M8.55 1.4v2.1h-2.1" stroke="#f59e0b" stroke-width="1" fill="none"/></svg>`,
+        ttl_restore: `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" width="12" height="12"><rect x="3.5" y="0.5" width="5" height="11" rx="1.5"/><circle cx="6" cy="3" r="1.1" fill="#ef4444" stroke="none"/><circle cx="6" cy="6" r="1.1" fill="#f59e0b" stroke="none"/><circle cx="6" cy="9" r="1.1" fill="#22c55e" stroke="none"/></svg>`,
         wald:`<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" width="12" height="12"><circle cx="6" cy="5.5" r="3.8"/><line x1="6" y1="3.5" x2="6" y2="5.8"/><circle cx="6" cy="7.4" r="0.6" fill="currentColor" stroke="none"/></svg>`,
     };
 
@@ -1258,6 +1261,7 @@
     let lastTeleMs       = Date.now(); // updated each time a TELE line is parsed
     let lastRouteMs      = Date.now(); // updated each time a ROUTE line is parsed
     let lastTlightMs     = Date.now(); // updated each time a TLIGHT line is parsed
+    let gTtlRebuilding   = false;      // TTL telemetry blacked out during a surgery rebuild window
     let worstLoss        = -Infinity;
     let sessionStartLoss = null;
 
@@ -3247,6 +3251,17 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                             `Net2Net surgery fired — model expanded from ${lastNumLayers} to ${numLayers} layers.<br>New layer inserted with identity mapping. Expect brief loss spike.`);
                         playSurgery();
                         notify('albert. — SURGERY', `Model expanded ${lastNumLayers}L → ${numLayers}L. Expect brief loss spike.`);
+                        // TTL telemetry goes dark during the surgery/re-tokenize window — per-expert
+                        // G/O/R is undefined while the layer stack rebuilds. Stream it as an event so
+                        // the black panel reads as expected, not as a failure. (FN227 finding, 2× confirmed.)
+                        gTtlRebuilding = true;
+                        liveEvent('ttl_rebuild', 'TTL REBUILDING', 'warn',
+                            `Surgery in progress (${lastNumLayers}L→${numLayers}L) — per-expert G/O/R state is undefined while the layer stack rebuilds and the corpus re-tokenizes. The TTL panel will repopulate on the first post-surgery TLIGHT line. Benign, known surgery-window telemetry gap.`);
+                        if (!isReplay) {
+                            ntfyPush('albert. — TTL rebuilding',
+                                `TTL telemetry dark during ${lastNumLayers}L→${numLayers}L surgery — expected; panel repopulates post-surgery.`, 'construction');
+                            setTtlRebuildingUI(true);
+                        }
                         // Reset plateau ring — post-surgery epoch history is a new era
                         gLossRing = [];
                         updateGateChip();
@@ -3350,6 +3365,16 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                     }
                     if (layers.length) {
                         lastTlightMs = Date.now();
+                        if (gTtlRebuilding) {
+                            gTtlRebuilding = false;
+                            liveEvent('ttl_restore', 'TTL RESTORED', 'info',
+                                `Post-surgery TLIGHT telemetry resumed — the TTL panel has repopulated with live G/O/R routing state.`);
+                            if (!isReplay) {
+                                ntfyPush('albert. — TTL restored',
+                                    'TTL telemetry resumed after surgery; panel repopulated.', 'white_check_mark');
+                                setTtlRebuildingUI(false);
+                            }
+                        }
                         pendingTlight = layers;
                         tlightHistory.push({ step: tlStep, layers });
                         if (tlightHistory.length > TLIGHT_WIN) tlightHistory.shift();
@@ -5722,6 +5747,40 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
     function notify(title, body) {
         if (!('Notification' in window) || Notification.permission !== 'granted') return;
         new Notification(title, { body, silent: true });
+    }
+
+    // Push directly to the shared ntfy topic (server-side trainer can't see dashboard-only
+    // events like the TTL surgery blackout, so the dashboard publishes them itself).
+    function ntfyPush(title, body, tag) {
+        try {
+            fetch('https://ntfy.sh/albert-rfi-irfos', {
+                method: 'POST',
+                headers: { 'Title': title, 'Tags': tag || 'bell', 'Priority': 'default' },
+                body: body
+            }).catch(() => {});
+        } catch (e) { /* offline / blocked — non-fatal */ }
+    }
+
+    // Surgery-window TTL badge: label the panel "REBUILDING (surgery)" instead of a bare black
+    // grid, so the known telemetry gap doesn't read as a failure. No emoji (SVG-only house style).
+    function setTtlRebuildingUI(on) {
+        const sum     = document.getElementById('tlight-summary-inline');
+        const waiting = document.getElementById('tlight-waiting');
+        if (on) {
+            if (sum) sum.innerHTML = `<span style="color:#f59e0b;font-size:10px;letter-spacing:1px">REBUILDING &middot; surgery</span>`;
+            if (waiting) {
+                waiting.textContent = 'TTL REBUILDING — SURGERY IN PROGRESS';
+                waiting.style.color = '#f59e0b';
+                waiting.style.background = 'rgba(13,17,27,0.88)';
+                waiting.style.position = 'absolute';
+                waiting.style.inset = '0';
+                waiting.style.zIndex = '5';
+                waiting.style.display = 'flex';
+            }
+        } else if (waiting) {
+            waiting.style.background = '';
+            waiting.style.display = 'none';
+        }
     }
 
     // Mute toggle button
