@@ -1068,7 +1068,7 @@
         <span class="gate-val" id="ov-plateau-val">—</span>
         <span class="gate-sub" id="ov-plateau-sub">/ win</span>
     </div>
-    <div class="gate-footer" id="ov-footer">since_best — &middot; wald_fill —</div>
+    <div class="gate-footer" id="ov-footer">since best (arch) — &middot; wald_fill —</div>
 </div>
 
 <div id="chart-wrap">
@@ -1373,6 +1373,8 @@
     let smaPreseedMaxX  = -Infinity;  // last x value in pre-seed; tail-fetch pts ≤ this are already in smaLog
     // ── Surgery Gate state ───────────────────────────────────────────
     let gGateSinceBest  = null;
+    let gEraBestLoss    = Infinity;  // best loss_avg since the last architecture change (surgery)
+    let gEraBestEpoch   = null;      // epoch of gEraBestLoss — for honest "since best (this arch)"
     let gGateMycStable  = null;
     let gGateWaldFill   = null;
     let gGateWaldSev    = null;
@@ -1456,7 +1458,7 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
         document.getElementById('ov-plateau-sub').textContent = platSub;
 
         // Footer info
-        const sinceTxt = gGateSinceBest !== null ? 'since_best ' + gGateSinceBest : 'since_best —';
+        const sinceTxt = gGateSinceBest !== null ? 'since best (arch) ' + gGateSinceBest : 'since best (arch) —';
         const fillTxt  = gGateWaldFill  !== null ? 'wald_fill ' + gGateWaldFill.toFixed(1) + '%' : 'wald_fill —';
         document.getElementById('ov-footer').textContent = sinceTxt + ' · ' + fillTxt;
 
@@ -3262,8 +3264,11 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                                 `TTL telemetry dark during ${lastNumLayers}L→${numLayers}L surgery — expected; panel repopulates post-surgery.`, 'construction');
                             setTtlRebuildingUI(true);
                         }
-                        // Reset plateau ring — post-surgery epoch history is a new era
+                        // Reset plateau ring + era-best — post-surgery epoch history is a new era,
+                        // so "since best" should count from this architecture onward, not the ghost.
                         gLossRing = [];
+                        gEraBestLoss  = Infinity;
+                        gEraBestEpoch = null;
                         updateGateChip();
                     }
                     lastNumLayers = numLayers;
@@ -3690,8 +3695,18 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                     last.wald_sev  = parseFloat(epsm[5]);
                     last.wald_fill = parseFloat(epsm[6]);
                     last.ttlfreeze = parseInt(epsm[7]);
-                    // Gate state — update on every epoch
-                    gGateSinceBest = parseInt(epsm[4]);
+                    // Gate state — update on every epoch.
+                    // "since best" relative to the CURRENT architecture era (reset at each surgery),
+                    // NOT the trainer's all-time ghost best (epsm[4]): that 9.2066 was set ~ep1524 on
+                    // the early, easier pre-expansion corpus, which the post-cord/post-surgery model
+                    // structurally can't beat — so the all-time count climbs forever and reads as a
+                    // false "stuck for N epochs" alarm. Era-relative is the honest plateau signal.
+                    {
+                        const _epNum   = parseInt(epsm[1]);
+                        const _lossAvg = parseFloat(epsm[2]);
+                        if (_lossAvg < gEraBestLoss) { gEraBestLoss = _lossAvg; gEraBestEpoch = _epNum; }
+                        gGateSinceBest = (gEraBestEpoch !== null) ? (_epNum - gEraBestEpoch) : 0;
+                    }
                     gGateWaldFill  = parseFloat(epsm[6]);
                     gGateWaldSev   = parseFloat(epsm[5]);
                     gLossRing.push(parseFloat(epsm[2]));
@@ -5005,7 +5020,9 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                     if (gm) lastGm = gm;
                 }
                 if (lastGm) {
-                    gGateSinceBest = parseInt(lastGm[1]);
+                    // NB: do NOT set gGateSinceBest from lastGm[1] — that's the trainer's all-time
+                    // (ghost) since_best. The era-relative value is owned by the live EPOCH_SUMMARY
+                    // path (resets at each surgery). wald is fine to take from the tail.
                     gGateWaldSev   = parseFloat(lastGm[2]);
                     gGateWaldFill  = parseFloat(lastGm[3]);
                 }
@@ -5623,9 +5640,11 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             const gm = line.match(/loss_best=([\d.]+) since_best=(\d+) wald_sev=([\d.]+) wald_fill=([\d.]+)%/);
             if (gm) _lastGateEpsm = gm;
         }
-        // Apply last known gate state so the overlay is populated immediately on load
+        // Apply last known gate state so the overlay is populated immediately on load.
+        // gGateSinceBest is intentionally NOT seeded here from the all-time ghost — the live
+        // EPOCH_SUMMARY path computes it era-relative (resets at surgery). Shows "—" until the
+        // first live epoch, which is honest rather than a misleading all-time count.
         if (_lastGateEpsm) {
-            gGateSinceBest = parseInt(_lastGateEpsm[2]);
             gGateWaldSev   = parseFloat(_lastGateEpsm[3]);
             gGateWaldFill  = parseFloat(_lastGateEpsm[4]);
         }

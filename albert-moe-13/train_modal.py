@@ -431,8 +431,37 @@ def main():
         bench_gpu.remote()
         return
 
-    # Always push the local config to the volume before launching — prevents
-    # silent CTX/arch drift when config.json changes after initial setup.
+    # Sync local config to the volume before launching — prevents silent CTX/arch drift.
+    # BUT reconcile first: surgeries happen REMOTELY and in-memory, so the volume's arch can be
+    # DEEPER than the stale local config. Blindly pushing local up then rolls the model back
+    # (S14 incident 2026-05-29: a false-positive restart pushed local 26L over the volume's 27L,
+    # silently dropping a whole layer). Rule: never let the pushed config have FEWER layers than
+    # the volume already has. If the volume is deeper, adopt its arch (and keep its evolution).
+    import json as _json
+    _vol_deeper = False
+    _cfg_local = os.path.join(_HERE, "models/albert_v3.0.config.json")
+    try:
+        subprocess.run(
+            ["modal", "volume", "get", "--force", _VOL,
+             "/albert/models/albert_v3.0.config.json", "/tmp/_albert_vol_config.json"],
+            cwd=_HERE, timeout=90, check=False,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        with open("/tmp/_albert_vol_config.json") as _f:
+            _vcfg = _json.load(_f)
+        with open(_cfg_local) as _f:
+            _lcfg = _json.load(_f)
+        _vN, _lN = int(_vcfg.get("num_layers", 0)), int(_lcfg.get("num_layers", 0))
+        if _vN > _lN:
+            _vol_deeper = True
+            print(f"[main] RECONCILE: volume arch is DEEPER ({_vN}L) than local ({_lN}L) — a "
+                  f"remote surgery local didn't know about. Adopting volume arch; NOT clobbering it.")
+            _lcfg["num_layers"] = _vN
+            with open(_cfg_local, "w") as _f:
+                _json.dump(_lcfg, _f, indent=2)
+    except Exception as _e:
+        print(f"[main] reconcile check skipped ({_e}) — proceeding with local config as-is")
+
     print("[main] syncing config.json to volume ...")
     rc = subprocess.run(
         ["modal", "volume", "put", "--force", _VOL,
@@ -443,10 +472,12 @@ def main():
     if rc != 0:
         raise SystemExit(f"[main] config sync failed (exit {rc}) — aborting launch")
 
-    # Push evolution state so fib_index survives restarts.
-    # Non-fatal: file absent on first-ever setup; train_bible falls back to calibrate().
+    # Push evolution state so fib_index survives restarts — UNLESS the volume was deeper, in which
+    # case the volume's evolution reflects a newer surgery cadence and the local one is stale.
     evo_local = os.path.join(_HERE, "models/albert_v3.0.evolution")
-    if os.path.exists(evo_local):
+    if _vol_deeper:
+        print("[main] keeping volume evolution state (volume arch newer than local) — not pushing local.")
+    elif os.path.exists(evo_local):
         print("[main] syncing evolution state to volume ...")
         evo_rc = subprocess.run(
             ["modal", "volume", "put", "--force", _VOL,
