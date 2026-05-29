@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN230 · 2026-05-29T11:10Z · loss oscillating ~9.44 · dead count churning 0→2 · [loop tick, terse]
+
+EP 4326 b258. ep4324 9.4235 (d−0.0258) → ep4325 **9.4431** (d+0.0196) — wobbled back up from the FN229 low; oscillating ~9.42–9.46, net flat ~9.44, normal post-surgery noise. **MYCELIUM dead=2** (sequence across FN228→230: 1→0→2) — post-expansion topology churning, layers flipping dead/bloom as the 27L stack re-settles load; blooming=6, **myc_stable=18** (hot=L26/cold=L0 assignment still stable despite dead churn). 2/27 minor + resurrection-eligible — watch it doesn't trend up. tns=2122 stable, GATE 21/144 (S15 far), log live 0s, no OOM/panic, watcher clean.
+
+---
+
 ## FN229 · 2026-05-29T11:03Z · descent resumed + dead layer self-healed · [loop tick, terse]
 
 EP 4325 b18. ep4323 9.4493 (d+0.0127) → ep4324 **9.4235** (d−0.0258) — **new post-S14 low**, gentle descent on novel data confirmed (was ~9.459 @FN228). **MYCELIUM dead 1→0** — the FN228 dead layer bloomed back (resurrection worked, as flagged); blooming=7 hot=L26 cold=L0 **myc_stable=17** (climbing). tns=2122 stable. GATE gen3 step2/6 **20/144** — S15 far. ntfy quiet 20m, log live 0s, no OOM/panic, watcher clean. Surgery integration looking healthy: depth used, loss descending, topology self-stabilising.
