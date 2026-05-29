@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN224 · 2026-05-29T09:17:47Z · GATE 84/89 — S14 IMMINENT (~5 epochs) · [loop tick, terse]
+
+EP 4300 · ep4299 avg 9.4647 · plateau ~9.46 · GATE filled **84/89** — window fills in ~5 epochs / ~10min, then the plateau check fires S14 (26L→27L) on the flat plateau. **Watching hard for `Loaded ~2122`** (the fix's verdict; vs the 4 that wiped us). loaded=2044, watcher healthy, ntfy quiet, no OOM/stall. (Whitepaper polish done in parallel: 0 overfull/errors/undefined.)
+
+---
+
 ## FN223 · 2026-05-29T09:02:35Z · plateau steady · GATE 79/89 (S14 ~20min) · [loop tick, terse]
 
 EP 4296 · ep4294 avg 9.4694 (batch low 9.3377) · plateau ~9.47 · GATE filled 79/89 (~10 epochs / ~20min to S14 retry — close) · resume clean (Loaded 2044) · watcher healthy · ntfy quiet (no surgery) · no OOM/stall.
