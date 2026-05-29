@@ -94,6 +94,26 @@ fn tier_monthly_limit(tier: u8) -> Option<u64> {
     }
 }
 
+/// Monthly TOKEN limit per tier. All `None` (unlimited) today — pricing is call-based.
+/// This is the hook for token-based pricing: tokens are already metered per key (see
+/// `record_tokens`), so flipping to per-token billing is a config change here, not a re-architecture.
+fn tier_monthly_token_limit(_tier: u8) -> Option<u64> {
+    None
+}
+
+/// Monthly COMPUTE-MILLISECOND limit per tier. All `None` today — the hook for Modal-style
+/// serverless per-ms pricing (pay only for active compute). Compute-ms are already metered per
+/// key (see `record_usage`); flipping to per-ms billing is a config change here.
+fn tier_monthly_compute_limit(_tier: u8) -> Option<u64> {
+    None
+}
+
+/// Approximate token count for usage accounting until exact BPE counts are wired from the
+/// model server. ~4 chars/token is the standard rough heuristic; replace before token-billing.
+fn estimate_tokens(s: &str) -> u64 {
+    ((s.chars().count() as f64) / 4.0).ceil() as u64
+}
+
 /// One API key entry. Raw key string is used as the HashMap key so lookup is O(1).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiKeyEntry {
@@ -112,6 +132,14 @@ pub struct ApiKeyEntry {
     pub github_username: String, // set when customer activates via /activate
     #[serde(default)]
     pub github_invited:  bool,   // true once GitHub collaborator invite has been sent
+    #[serde(default)]
+    pub monthly_tokens:  u64,    // tokens processed this calendar month (token-billing prep)
+    #[serde(default)]
+    pub total_tokens:    u64,    // lifetime tokens processed
+    #[serde(default)]
+    pub monthly_compute_ms: u64, // compute-milliseconds this month (Modal-style per-ms billing prep)
+    #[serde(default)]
+    pub total_compute_ms:   u64, // lifetime compute-milliseconds
 }
 
 pub enum KeyCheckResult {
@@ -179,20 +207,56 @@ impl KeyStore {
         // Reset monthly counter if the calendar month has rolled over
         let current_month = Utc::now().format("%Y-%m").to_string();
         if entry.month_key != current_month {
-            entry.month_key     = current_month;
-            entry.monthly_calls = 0;
+            entry.month_key          = current_month;
+            entry.monthly_calls      = 0;
+            entry.monthly_tokens     = 0;   // token + compute meters reset with the calendar month too
+            entry.monthly_compute_ms = 0;
         }
 
-        // Enforce limit for capped tiers
+        // Enforce per-tier monthly limits across all billing dimensions. Calls are live today;
+        // token + compute-ms limits are dormant (None) until per-token / per-ms pricing is enabled —
+        // wiring them now means flipping the model is a one-line change in the tier_*_limit fns.
         if let Some(limit) = tier_monthly_limit(entry.tier) {
             if entry.monthly_calls >= limit {
                 return KeyCheckResult::RateLimited { used: entry.monthly_calls, limit };
+            }
+        }
+        if let Some(limit) = tier_monthly_token_limit(entry.tier) {
+            if entry.monthly_tokens >= limit {
+                return KeyCheckResult::RateLimited { used: entry.monthly_tokens, limit };
+            }
+        }
+        if let Some(limit) = tier_monthly_compute_limit(entry.tier) {
+            if entry.monthly_compute_ms >= limit {
+                return KeyCheckResult::RateLimited { used: entry.monthly_compute_ms, limit };
             }
         }
 
         entry.request_count += 1;
         entry.monthly_calls += 1;
         KeyCheckResult::Valid(entry.clone())
+    }
+
+    /// Accumulate per-request usage against a key across all three billing dimensions:
+    /// tokens processed (token-pricing prep) and compute-milliseconds (Modal-style serverless
+    /// per-ms pricing prep). Calls are metered separately in `validate_and_bump`. In-memory like
+    /// the call counter (no per-request disk write on the hot path); persisted on the next `save()`.
+    /// Enforcement is a no-op while the `tier_monthly_*_limit` hooks return None (call-based pricing).
+    pub async fn record_usage(&self, raw_key: &str, tokens: u64, compute_ms: u64) {
+        let mut data = self.data.write().await;
+        if let Some(e) = data.keys.get_mut(raw_key) {
+            let current_month = Utc::now().format("%Y-%m").to_string();
+            if e.month_key != current_month {
+                e.month_key          = current_month;
+                e.monthly_calls      = 0;
+                e.monthly_tokens     = 0;
+                e.monthly_compute_ms = 0;
+            }
+            e.monthly_tokens     += tokens;
+            e.total_tokens       += tokens;
+            e.monthly_compute_ms += compute_ms;
+            e.total_compute_ms   += compute_ms;
+        }
     }
 
     /// Generate a new key. Returns (raw_key, entry).
@@ -213,6 +277,10 @@ impl KeyStore {
             month_key:       Utc::now().format("%Y-%m").to_string(),
             github_username: String::new(),
             github_invited:  false,
+            monthly_tokens:  0,
+            total_tokens:    0,
+            monthly_compute_ms: 0,
+            total_compute_ms:   0,
         };
 
         self.data.write().await.keys.insert(raw.clone(), entry.clone());
@@ -276,14 +344,22 @@ impl KeyStore {
     pub async fn usage(&self, raw_key: &str) -> Option<Value> {
         let data = self.data.read().await;
         let e = data.keys.get(raw_key)?;
-        let limit = tier_monthly_limit(e.tier);
         Some(json!({
             "key_id":        e.key_id,
             "tier":          e.tier,
-            "monthly_calls": e.monthly_calls,
-            "monthly_limit": limit,
             "month_key":     e.month_key,
+            // calls (live billing dimension)
+            "monthly_calls": e.monthly_calls,
+            "monthly_limit": tier_monthly_limit(e.tier),
             "request_count": e.request_count,
+            // tokens (token-pricing dimension)
+            "monthly_tokens":     e.monthly_tokens,
+            "monthly_token_limit": tier_monthly_token_limit(e.tier),
+            "total_tokens":       e.total_tokens,
+            // compute-ms (Modal-style serverless dimension)
+            "monthly_compute_ms":     e.monthly_compute_ms,
+            "monthly_compute_limit":  tier_monthly_compute_limit(e.tier),
+            "total_compute_ms":       e.total_compute_ms,
         }))
     }
 }
@@ -516,7 +592,9 @@ async fn require_api_key(
         || path == "/api/albert/status"
         || path == "/api/albert/translate"
         || path == "/v1/models"
-        || path == "/v1/chat/completions"
+        // NOTE: /v1/chat/completions is NOT public — it's the paid metered API surface.
+        //       (Removed from bypass so require_api_key enforces key + tier + call/usage metering.
+        //        The free public demo uses /api/albert/chat instead.)
         || path == "/activate"
         || path == "/api/run"
         || path == "/api/data"
@@ -556,8 +634,8 @@ async fn require_api_key(
             if path == "/api/usage" || path == "/api/stdlib/list" || path.starts_with("/api/stdlib/read") {
                 return next.run(request).await;
             }
-            // All other /api/* endpoints require Tier 2 or above (paid commercial access)
-            if path.starts_with("/api/") && entry.tier < 2 {
+            // All other /api/* and the /v1/* paid API require Tier 2 or above (commercial access)
+            if (path.starts_with("/api/") || path.starts_with("/v1/")) && entry.tier < 2 {
                 return api_error(StatusCode::FORBIDDEN,
                     "This endpoint requires a Tier 2 or higher key. Upgrade at https://ternlang.com/#licensing");
             }
@@ -931,7 +1009,8 @@ async fn openai_models() -> Response {
 }
 
 async fn openai_chat_completions(
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
     Json(body): Json<serde_json::Value>,
 ) -> Response {
     // Extract the last user message content as the raw prompt.
@@ -970,6 +1049,7 @@ async fn openai_chat_completions(
 
     let url = format!("{}/generate", base.trim_end_matches('/'));
     let client = reqwest::Client::new();
+    let compute_start = std::time::Instant::now();   // Modal-style per-ms compute meter
     let albert_json: serde_json::Value = match client
         .post(&url)
         .json(&serde_json::json!({
@@ -1002,6 +1082,26 @@ async fn openai_chat_completions(
         .unwrap_or("")
         .to_string();
 
+    let compute_ms = compute_start.elapsed().as_millis() as u64;
+
+    // Three-dimensional usage metering (calls metered in middleware; tokens + compute-ms here).
+    // Prefer exact counts from the model server; fall back to a ~chars/4 estimate until BPE
+    // counts are wired. This is the data that lets billing be call-, token-, OR compute-ms-based.
+    let completion_tokens = albert_json.get("tokens")
+        .or_else(|| albert_json.get("completion_tokens"))
+        .or_else(|| albert_json.get("n_generated"))
+        .and_then(|v| v.as_u64())
+        .unwrap_or_else(|| estimate_tokens(&content));
+    let prompt_tokens = albert_json.get("prompt_tokens")
+        .and_then(|v| v.as_u64())
+        .unwrap_or_else(|| estimate_tokens(&prompt));
+    let total_tokens = prompt_tokens + completion_tokens;
+
+    // Attribute usage to the caller's key (header already validated by require_api_key middleware).
+    if let Some(raw_key) = headers.get("X-Ternlang-Key").and_then(|v| v.to_str().ok()) {
+        state.keys.record_usage(raw_key, total_tokens, compute_ms).await;
+    }
+
     let id = format!(
         "chatcmpl-albert-{}",
         std::time::SystemTime::now()
@@ -1024,9 +1124,10 @@ async fn openai_chat_completions(
             "finish_reason": "stop"
         }],
         "usage": {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
+            "compute_ms": compute_ms
         }
     }))
     .into_response()
