@@ -39,7 +39,7 @@ Risks rated by impact × likelihood. Status reflects 2026-05-29.
 |---|---|---|---|---|
 | R1 | Forged Stripe webhook mints free paid keys | **Critical** | **MITIGATED** | Webhook now HMAC-SHA256 verified, constant-time, ±5 min replay window; **fails closed** if secret unset (was fail-open). |
 | R2 | Known-default admin key → full key takeover | **Critical** | **MITIGATED** | `TERNLANG_ADMIN_KEY` is mandatory in production; service refuses to start without it (no `admin-dev` default outside explicit dev). |
-| R3 | Customer key store on ephemeral FS → access lost on deploy | High | **MITIGATED (code) / pending deploy** | Store + DB default to a mounted volume (`/data`); dir auto-created. Requires Fly volume + secrets at deploy. |
+| R3 | Persistence of state across deploys | Low (revised) | **RESOLVED** | Customer **key store was already** on the `ternlang_data` Fly volume (`KEYS_FILE=/data/…` + `[mounts]`). Only the secondary SQLite query DB was on a relative path — now also `/data` (`DB_PATH`). Dir auto-created. |
 | R4 | Paid inference endpoints unauthenticated/unmetered | Medium (revenue) | **OPEN — pending product decision** | Decide public-demo vs metered-per-key; enforce key + usage accounting if paid. |
 | R5 | No user-management / visibility into who holds access | Medium | **PLANNED** | `lighthouse` internal CRM: authenticated dashboard, key lifecycle, payment→key linkage, revoke. |
 | R6 | SQL injection via API query surface | High | **NOT PRESENT** | Query endpoints use a static `ALLOWED_QUERIES` allowlist; raw caller SQL is rejected. |

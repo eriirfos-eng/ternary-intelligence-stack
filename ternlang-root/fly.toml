@@ -13,6 +13,7 @@ primary_region = 'fra'
   PORT = '8080'
   STDLIB_PATH = '/stdlib'
   KEYS_FILE = '/data/ternlang_keys.json'
+  DB_PATH = '/data/ternlang.db'
 
 [mounts]
   source = 'ternlang_data'
