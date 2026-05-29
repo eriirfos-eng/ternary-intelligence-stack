@@ -6569,6 +6569,20 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN227 · 2026-05-29T09:45Z · **Post-S14 27L study — 3 dashboard findings + tensor-count proof** · [CRITICAL — Simeon's findings]
+
+**Tensor transfer, exact:** `tns 2044 → 2122` (+78). That is precisely one new dual-stream layer block (per-layer tensor footprint at 2×256H), no orphans, no missing. Combined with the loss-neutral resume (FN226), the 26L→27L safetensor transfer is **complete and exact**. Trajectory: ep4305 loss_avg 9.4646 (d **+0.2580** — the expected surgery bump), ep4306 9.4541 (d **−0.0105** — already clawing it back). MYCELIUM: blooming **9**, dead **0**, hot=L26 cold=L0, myc_stable=2. WALD sev 0.929, coverage `[1,61,293,233,12]`.
+
+**Finding 1 — TTL telemetry blackout during surgery (2nd confirmed sighting).** Simeon: TTL panel went *totally black* through the surgery window, exactly as flagged once before — now reproduced, so it is a **deterministic artifact of the surgery/corpus-rebuild window**, not a fluke. Mechanism: during net2net expansion + full re-tokenize (09:31–09:38) the per-expert G/O/R state has no defined value (layer stack mid-rebuild), so the panel renders empty. It **repopulated cleanly post-surgery to G 15% / O 82% / R 3%** (mostly Orange = actively learning the new layer — correct for a fresh-capacity layer). ACTION: this is a known, benign surgery-window gap; worth a one-line dashboard annotation ("TTL undefined during surgery") so it stops reading as an alarm. Logged twice now — promoting from "noticed" to **characterised**.
+
+**Finding 2 — upper layers densified fast (sparsity 17% → ≤8%).** At restart the upper/new layers carried >17% sparsity; LAYER ARCHITECTURE now shows the top stack at **L26–L19 = 7–8%**. Reading: the freshly-grown layer began near-identity (high sparsity / near-zero hold weights) and **recruited active weights rapidly on the novel data** — the new capacity is being *used*, not left passive. "Absorbed like a king" is the right call: healthy, fast integration. (Tradeoff noted: denser top layers mean slightly less @sparseskip headroom there, but it confirms the surgery added *working* depth, not dead depth.)
+
+**Finding 3 — FFT channel buzzing in EXPERT ROUTING.** The FFT row at the base of the expert-routing heatmap, previously quiet, is now **lit up (blue, high activity)** post-surgery on the novel data. Expert activity at tick: CMP 100%, INT 100%, PLN 99%, ABS 45%, LNG 18%, LOG 6%, GEN/INF 2%, SYN/SEM/CTX/MEM 0%. The core-four (PLN/CMP/INT/ABS) carry the load; the FFT buzz indicates the frequency-domain routing channel engaging the instruction/QA/dev registers — first time this active. Worth tracking whether FFT activity correlates with the novel-register descent.
+
+Health: log live (0s stale), no OOM/panic, watcher clean (gate 89/89, loaded=2122).
+
+---
+
 ## FN226 · 2026-05-29T09:42Z · **S14 TRANSFER VERDICT: PASS — the net2net fix holds** · [CRITICAL MILESTONE — closes FN225]
 
 First 27L epoch landed at **09:38:18 (Global 4305, batch 1): Loss = 9.4146** — sitting *exactly* on the pre-surgery 26L plateau (~9.4–9.5), **not** random noise (~10.37 = ln(32k)). The 26L→27L Net2Net safe-copy expansion was **loss-neutral / identity-preserving**, precisely as a correct net2net should be. By Global 4306 batch 50 (09:41) loss is already dipping to **9.30** — descending on the novel data, not flat.
