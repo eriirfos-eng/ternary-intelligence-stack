@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN213 · 2026-05-29T06:18:00Z · plateau steady (ep4254–4256 ~9.48) · GATE 41/89 · [loop tick, terse]
+
+EP 4257 · plateau holds 9.4755–9.4952 (no drift) · GATE window=89 filled=41 (~48 epochs / ~2.5h to S14 retry) · watcher healthy (loaded=2044, no anomaly) · ntfy quiet · no OOM/stall. Quiet grind toward the surgery window-fill; nothing new since FN212. (Condensing identical steady-state ticks to one line each until something moves.)
+
+---
+
 ## FN212 · 2026-05-29T06:02:27Z · plateau steady (ep4249–4252 ~9.47) · GATE ~36/89 · cron watcher validated in prod · [loop tick]
 
 **State:** RUNNING · EP 4253 (26L dual-stream) · BATCH 186/300 · LR 2.06e-5 · no OOM · watcher healthy
