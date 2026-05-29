@@ -6569,6 +6569,23 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN209 · 2026-05-29T05:33:34Z · POST-RECOVERY RESUME fired (user) — train_bible rebuilding WITH the fix · verification pending · [loop tick]
+
+**State:** BUILDING · `TRAINING STARTED 05:29:03Z` · Modal app ap-UBNH7MJMf5VPIqZyu5Tmtb · train_bible compiling (cargo --features cuda); no epoch yet.
+
+User fired `albert-train` to resume from the rolled-back 26L (ep4246) after the S14 fix. The rebuilt binary carries: surgery sources from latest (not stale best) + the abort-guard. Volume verified clean pre-fire (741 MiB 26L, no poison best, epoch_history scrubbed). Chart clean to ep4246.
+
+### The three checks queued (in order):
+1. **Resume load:** `Loaded N tensors from checkpoint` must be **~2044** (26L→26L), NOT 4. Proves the rollback loaded correctly.
+2. **First epoch:** ~9.48 (back on the corpus-floor plateau), NOT 10.x. Proves the model resumed, not re-wiped.
+3. **S14 retry (later):** when the plateau re-triggers surgery, `Loaded N tensors` must be **~2122** (27L) — that's the proof the fix holds. If it ever reads 4, the abort-guard blocks the save (no-op, no wipe).
+
+Build is quiet (~few min); checks land next tick. Tooling lesson from the overnight gap captured to memory ([[loop-vs-schedule-watch-tool]]): /loop is session-bound; durable local watch = ntfy + machine-local cron.
+
+**Interpretation:** Log re-opened post-incident; training restarting cleanly so far (container up, no errors). The verification is the next tick's job. No conclusions until check #1 lands.
+
+---
+
 ## FN208 · 2026-05-29T05:10:00Z · ROOT CAUSE + FIX of the S14 wipe · surgery sourced from a STALE single-stream `best` · 3 fixes shipped · safe to refire
 
 **State:** STOPPED (Modal app ap-ggumal… stopped, 0 tasks) · volume rolled back to good 26L (741 MiB, ep4246) · chart cleaned to ep4246 · fix committed.
