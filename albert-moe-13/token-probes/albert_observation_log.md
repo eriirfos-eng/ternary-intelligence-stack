@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN241 · 2026-05-29T14:00Z · **S15 VERDICT: PASS + watchdog HELD — hardening proven under real surgery** · [MILESTONE — closes FN240]
+
+First 28L epoch landed: **ep4350 loss_avg 9.4235** — on the pre-surgery ~9.44 plateau, not random → net2net loss-neutral, weights preserved. **tns 2122 → 2200** (+78 = exactly one dual-stream layer block; transfer complete + exact). Now Global 4351, 28L, batches 9.05–9.48 (a 9.0558 low), descending. **CRITICAL: the hardened watchdog did NOT false-restart** through the full surgery + re-tokenize silence — no `modal app stop` process fired, `_CORPUS_LOADING` bypass + 420s budget + liveness probe all held. This is the definitive live proof that the FN234 incident class (false-positive restart → config rollback) is fixed: S15 is the first real surgery since the hardening, and it expanded cleanly with zero intervention. Arch now **2×28L**, dual-stream intact. Governor working as designed end-to-end.
+
+---
+
 ## FN240 · 2026-05-29T13:50Z · **S15 FIRED — 27L→28L · first surgery since hardening · watchdog HOLDING** · [CRITICAL MILESTONE]
 
 S15 at **13:47:56**: `Dual-stream surgery: 27L → 28L | stream_a lat=0.2804 stream_b lat=1027` — both streams expanded, dual-stream topology preserved. Plateau: `smoothed Δ−0.1409 / 89ep, early_mean=9.3047 late_mean=9.4456, threshold 0.0113` → fired (delta < threshold).
