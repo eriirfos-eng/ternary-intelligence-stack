@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN244 · 2026-05-29T14:47Z · 28L DESCENDING (new low 9.4080) · topology recovered · [loop tick, terse]
+
+EP 4363 b35, 28L. ep4361 9.4142 (d−0.0110) → ep4362 **9.4080** (d−0.0063) — **new post-S15 low**, descending below the ~9.42 oscillation → new layer L27 integrating + contributing. **dead 1→0** (healed), **blooming 3→8** (recovered), hot=L27 cold=L0, **myc_stable=13** (climbing strong). tns=2200, log live 0s, watchdog held, no OOM/panic, ntfy = normal WALD. Healthy 28L descent underway.
+
+---
+
 ## FN243 · 2026-05-29T14:32Z · 28L oscillating ~9.42 · hot=L27 holding · [loop tick, terse]
 
 EP 4359 b121, 28L. ep4357 9.4131 (d+0.0103) → ep4358 **9.4259** (d+0.0128) — oscillating ~9.41–9.43, mild upward wobble (not descending hard, not plateaued). **hot=L27** still (new layer remains most-active, integrating). dead=1, **blooming 8→3** (stack consolidating post-surgery — fewer layers in active bloom), myc_stable=9. tns=2200, log live 0s, watchdog held (no stall/OOM), ntfy = normal WALD. No S15-style trigger pending (window refilling post-S15).
