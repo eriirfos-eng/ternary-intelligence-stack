@@ -24,6 +24,10 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,decorations.pathreplacing,backgrounds}
+% Absorb minor prose overfulls (long \texttt{} tokens) without ragged-right ugliness.
+\setlength{\emergencystretch}{3em}
+% Let pages end naturally instead of stretching content to fill (reduces "page skip" gaps).
+\raggedbottom
 
 % ── Ternlang code style ───────────────────────────────────────────────────────
 \definecolor{ternkw}{RGB}{0,164,140}
@@ -1256,7 +1260,7 @@ on loss threshold. The surgery history through the dual-stream cord surgery (Glo
 \small
 \caption{Albert MoE-13 --- autonomous surgery history}
 \label{tab:surgery}
-\begin{tabular}{lll}
+\begin{tabular}{@{}l l p{0.42\textwidth}@{}}
 \toprule
 Event & Architecture & Notes \\
 \midrule
@@ -1280,8 +1284,8 @@ through subsequent gradient updates, producing no measurable loss spike at the
 expansion boundary.
 
 \textbf{Vocabulary-dependent collapse threshold.} The EvolutionManager's collapse
-detection is governed by \texttt{COLLAPSE\_THRESHOLD}: if epoch-average loss
-exceeds this value for \texttt{COLLAPSE\_STREAK\_LIMIT} consecutive epochs,
+detection is governed by \texttt{COLLAPSE\allowbreak\_THRESHOLD}: if epoch-average loss
+exceeds this value for \texttt{COLLAPSE\allowbreak\_STREAK\allowbreak\_LIMIT} consecutive epochs,
 training is halted as a collapse event. This threshold must be calibrated to
 vocabulary size, because the random-distribution baseline cross-entropy is:
 
@@ -2844,7 +2848,8 @@ Ternlang is implemented in Rust and comprises the following crates:
 \small
 \caption{Workspace crates, test counts, and descriptions (v2.0.0)}
 \label{tab:status}
-\begin{tabular}{p{2.5cm}lp{5.5cm}}
+\footnotesize
+\begin{tabular}{@{}p{2.9cm}l p{5.8cm}@{}}
 \toprule
 Crate & Tests & Description \\
 \midrule
