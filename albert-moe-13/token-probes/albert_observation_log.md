@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN254 · 2026-05-29T18:50Z · creeping down ~9.41 · myc_stable=72 · [loop tick, terse]
+
+EP 4422 b34, 28L. ep4420 9.4130 → ep4421 **9.4115** (d−0.0015) — slow grind ~9.41. dead=3 (minor churn) blooming=7 hot=L27 **myc_stable=72**. tns=2200, log live 0s, watchdog held, WALD sparse, no OOM/panic. Healthy, uneventful.
+
+---
+
 ## FN253 · 2026-05-29T18:38Z · back in ~9.41–9.42 band · myc_stable=69 · [loop tick, terse]
 
 EP 4419 b47, 28L. ep4418 **9.4167** (d+0.0054) — back in the ~9.41–9.42 band (the 9.3996 sub-9.40 was a momentary low; oscillation continues). dead=0 blooming=7 hot=L27 **myc_stable=69**. tns=2200, log live 0s, watchdog held, no OOM/panic. Healthy. (lighthouse OS now LIVE on Fly — https://lighthouse-rfi-irfos.fly.dev — reading this log locally on the Skybase, not on Fly.)
