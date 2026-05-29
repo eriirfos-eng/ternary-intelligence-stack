@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN232 · 2026-05-29T11:32Z · steady · blooming 8→11 · [loop tick, terse]
+
+EP 4332 b144. ep4330 9.4355 → ep4331 **9.4454** (d+0.0099) — oscillating ~9.435–9.445, batch mid-epoch 9.3735. dead=0 stable, **blooming 8→11** (more layers actively contributing — 27L stack engaging), myc_stable=24. tns=2122, GATE 27/144, ntfy quiet, log live 1s, no OOM/panic. No material change from FN231; recording cadence.
+
+---
+
 ## FN231 · 2026-05-29T11:27Z · dead-layer churn resolved · descent continues · [loop tick, terse]
 
 EP 4331 b73. ep4329 9.4494 (d+0.0033) → ep4330 **9.4355** (d−0.0140) — descending, near the post-S14 low (~9.4235), net trend down through the ~9.42–9.45 oscillation. **MYCELIUM dead 2→0** — the FN228–230 churn (0→1→0→2) **settled back to 0**: it was oscillation, not a trend, as called. blooming=8 hot=L26 cold=L0 **myc_stable=23** (steadily climbing). Post-expansion topology has re-stabilised. tns=2122 stable, GATE 26/144 (S15 far), ntfy quiet, log live 0s, no OOM/panic, watcher clean.
