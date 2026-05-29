@@ -6569,6 +6569,21 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN212 · 2026-05-29T06:02:27Z · plateau steady (ep4249–4252 ~9.47) · GATE ~36/89 · cron watcher validated in prod · [loop tick]
+
+**State:** RUNNING · EP 4253 (26L dual-stream) · BATCH 186/300 · LR 2.06e-5 · no OOM · watcher healthy
+
+**Source:** training.log (mtime 06:02:27Z) + ntfy (quiet) + `~/.albert/albert_watch_log.md`.
+
+- **Plateau holds tight:** ep4249 9.4769, 4250 9.4817, 4251 9.4657, 4252 9.4698 — 9.466–9.482 band, ±0.008. Stable corpus-floor grind, no drift.
+- **GATE:** window=89, filled ~32–36 (refilling since resume) → S14 retry ~53 epochs / ~3h out.
+- **Cron watcher validated in production:** `~/bin/albert-watch.py` is emitting independent snapshots every 5 min (06:00:01 → `loaded=2044 tns=2044 gate=36/89`, no anomaly). The always-on overnight layer works; a wipe/random/stall would now ntfy within 5 min regardless of session state.
+- ntfy quiet (no WALD/surgery/ATL in window).
+
+**Interpretation:** Healthy steady state, incident fully behind us. Two parallel records now running (this analytical loop + the mechanical cron recorder). Next event: S14 retry as the 89-window fills. Nothing needs attention.
+
+---
+
 ## FN211 · 2026-05-29T05:47:45Z · clean continuation — back on plateau (ep4247=9.4734, ep4248=9.4975) · GATE 32/89 refilling · local watcher LIVE · [loop tick]
 
 **State:** RUNNING · EP 4249 (26L dual-stream) · BATCH 186/300 · loss 9.4874 · LR 1.29e-4 · no OOM · watcher healthy
