@@ -439,12 +439,15 @@ def main():
     # the volume already has. If the volume is deeper, adopt its arch (and keep its evolution).
     import json as _json
     _vol_deeper = False
+    # FAIL-SAFE: only push local config up if we VERIFIED the volume isn't deeper. If the volume
+    # read fails for ANY reason, do NOT push — an unverified push is exactly what rolled S14 back.
+    _config_push_safe = True
     _cfg_local = os.path.join(_HERE, "models/albert_v3.0.config.json")
     try:
         subprocess.run(
             ["modal", "volume", "get", "--force", _VOL,
              "/albert/models/albert_v3.0.config.json", "/tmp/_albert_vol_config.json"],
-            cwd=_HERE, timeout=90, check=False,
+            cwd=_HERE, timeout=90, check=True,
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
         with open("/tmp/_albert_vol_config.json") as _f:
@@ -452,6 +455,8 @@ def main():
         with open(_cfg_local) as _f:
             _lcfg = _json.load(_f)
         _vN, _lN = int(_vcfg.get("num_layers", 0)), int(_lcfg.get("num_layers", 0))
+        if _vN <= 0:
+            raise ValueError(f"volume config has no usable num_layers ({_vN!r})")
         if _vN > _lN:
             _vol_deeper = True
             print(f"[main] RECONCILE: volume arch is DEEPER ({_vN}L) than local ({_lN}L) — a "
@@ -460,23 +465,27 @@ def main():
             with open(_cfg_local, "w") as _f:
                 _json.dump(_lcfg, _f, indent=2)
     except Exception as _e:
-        print(f"[main] reconcile check skipped ({_e}) — proceeding with local config as-is")
+        _config_push_safe = False
+        print(f"[main] RECONCILE FAILED ({_e}) — cannot verify the volume's arch, so NOT pushing "
+              f"local config (fail-safe: an unverified push is what rolled S14 back). "
+              f"Volume config left untouched; resume will use whatever the volume already holds.")
 
-    print("[main] syncing config.json to volume ...")
-    rc = subprocess.run(
-        ["modal", "volume", "put", "--force", _VOL,
-         "models/albert_v3.0.config.json",
-         "/albert/models/albert_v3.0.config.json"],
-        cwd=_HERE,
-    ).returncode
-    if rc != 0:
-        raise SystemExit(f"[main] config sync failed (exit {rc}) — aborting launch")
+    if _config_push_safe:
+        print("[main] syncing config.json to volume ...")
+        rc = subprocess.run(
+            ["modal", "volume", "put", "--force", _VOL,
+             "models/albert_v3.0.config.json",
+             "/albert/models/albert_v3.0.config.json"],
+            cwd=_HERE,
+        ).returncode
+        if rc != 0:
+            raise SystemExit(f"[main] config sync failed (exit {rc}) — aborting launch")
 
-    # Push evolution state so fib_index survives restarts — UNLESS the volume was deeper, in which
-    # case the volume's evolution reflects a newer surgery cadence and the local one is stale.
+    # Push evolution state so fib_index survives restarts — UNLESS the volume was deeper (its
+    # evolution reflects a newer surgery cadence) OR reconcile failed (don't risk a stale push).
     evo_local = os.path.join(_HERE, "models/albert_v3.0.evolution")
-    if _vol_deeper:
-        print("[main] keeping volume evolution state (volume arch newer than local) — not pushing local.")
+    if _vol_deeper or not _config_push_safe:
+        print("[main] keeping volume evolution state (volume newer / unverified) — not pushing local.")
     elif os.path.exists(evo_local):
         print("[main] syncing evolution state to volume ...")
         evo_rc = subprocess.run(
