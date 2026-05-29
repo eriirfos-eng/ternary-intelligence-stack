@@ -6569,6 +6569,14 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN246 · 2026-05-29T15:28Z · 28L holding ~9.42 · ATL 8.6736 · [loop tick + dash]
+
+EP 4373 b47, 28L. ep4371 9.4347 (d+0.0115) → ep4372 **9.4168** (d−0.0179) — oscillating ~9.42, holding. Dash (Simeon 15:28): ARCH 2×28L · TNS 2,200 · EP AVG 9.4168 · **chip ATL 8.6736 (↓1.44%)** · GATE green. TTL **G16/O81/R3** (orange-dominant = healthy learning). Experts: CMP 100 · PLN 90 · INT 77 · ABS 54 · LOG 8 · LNG 7 · MEM 2, rest 0 (core-four carrying). dead=1 (minor churn), blooming=9, hot=L27, **myc_stable=23**. tns=2200, log live 1s, watchdog held, no OOM/panic. (lighthouse OS L0 shipped in parallel.)
+
+**WALD-density note (Simeon's zoomed chart):** WALD fired ~every epoch across the post-S15 descent (~ep4360–4373) — a dense cluster of red markers. Read: high loss *volatility* in this stretch (oscillating ~9.42 with batch spikes), and WALD reacting to it. Consistent with [[project_wald_causality]] (WALD is a reactive detector, spike precedes firing — NOT a trigger). Cause = fresh L27 + novel instruction/dev registers → spiky loss; benign, loss still net-descending through it. Worth noting as a post-surgery + novel-data signature: surgery → volatility → dense WALD → settles as the layer integrates.
+
+---
+
 ## FN245 · 2026-05-29T15:08Z · 28L steady descent · myc_stable=18 · [loop tick, terse]
 
 EP 4368 b97, 28L. ep4366 9.4254 (d+0.0086) → ep4367 **9.4070** (d−0.0185) — descending, holding the ~9.407 post-S15 low. dead=0, **blooming=10** (recovered from 3), hot=L27, **myc_stable=18** (climbing strong — 28L topology well-integrated). tns=2200, log live 0s, watchdog held, no OOM/panic, ntfy = normal WALD. loss_best still 9.2066 (pre-cord ghost). Healthy; nothing eventful.
