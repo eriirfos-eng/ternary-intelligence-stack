@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN223 · 2026-05-29T09:02:35Z · plateau steady · GATE 79/89 (S14 ~20min) · [loop tick, terse]
+
+EP 4296 · ep4294 avg 9.4694 (batch low 9.3377) · plateau ~9.47 · GATE filled 79/89 (~10 epochs / ~20min to S14 retry — close) · resume clean (Loaded 2044) · watcher healthy · ntfy quiet (no surgery) · no OOM/stall.
+
+---
+
 ## FN222 · 2026-05-29T08:57:12Z · RESUMED (ep4294) · cron watcher CAUGHT the stall in prod · GATE 77/89 (S14 ~25min) · [loop tick]
 
 **State:** RUNNING · EP 4294 (26L dual-stream) · BATCH 188/300 · loss 9.48 · Modal app ap-35fg… · watcher healthy
