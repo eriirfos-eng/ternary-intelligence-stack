@@ -6569,6 +6569,25 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN222 · 2026-05-29T08:57:12Z · RESUMED (ep4294) · cron watcher CAUGHT the stall in prod · GATE 77/89 (S14 ~25min) · [loop tick]
+
+**State:** RUNNING · EP 4294 (26L dual-stream) · BATCH 188/300 · loss 9.48 · Modal app ap-35fg… · watcher healthy
+
+**Source:** ntfy + training.log (mtime 08:57:14Z) + watcher log.
+
+### The new monitoring layer worked end-to-end:
+- `08:45:02Z WATCH: STALL` — the **cron watcher** (machine-local, session-independent) fired after 23 min of no log activity. First production catch — exactly the alert that was missing during the overnight S14 wipe.
+- `08:46:58Z TRAINING STARTED` — resumed on the new self-healing `albert-run`.
+- `08:50:02Z WATCH: recovered` — watcher confirmed clearance.
+(The stalled run itself exited under the OLD launcher, so no auto-restart that time; future stalls on this run will auto-relaunch.)
+
+### Training healthy again:
+ep4292 avg 9.4722, ep4294 in progress (~9.48) — straight back on the corpus-floor plateau, no residual from the stall. GATE filled **77/89** → S14 retry ~12 epochs / ~25 min out (getting close). loaded=2044 (clean resume). ntfy: WALD ep4292 mass ~9.47, no surgery yet.
+
+**Interpretation:** Stall→resume cycle clean; the three-layer monitoring (watchdog + cron watcher + ntfy) all fired correctly. S14 imminent — watching for `Loaded ~2122` as the fix's final proof.
+
+---
+
 ## FN221 · 2026-05-29T08:32:31Z · STALL — watchdog clean-stopped at 08:24 (180s silence mid-ep4291) · weights safe · [loop tick]
 
 **State:** STOPPED (watchdog) · last checkpoint ep4291 (volume meta=4291, 741 MiB) · GATE 75/89 (S14 was ~14 epochs out) · no wipe.
