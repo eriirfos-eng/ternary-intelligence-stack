@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN228 · 2026-05-29T09:48Z · post-S14 settling · dead=1 (new) · [loop tick, terse]
+
+EP 4308 b46. ep4306 9.4541 (d−0.0105) → ep4307 **9.4590** (d+0.0049) — settling ~9.455 on novel data, surgery bump fully clawed back, batches dipping to 9.34. tns=2122 stable. **MYCELIUM dead=1** (was 0 @FN227) hot=L26 cold=L0 blooming=9 myc_stable=3 — one layer flipped dead post-surgery; minor (1/27), resurrection-eligible, watching if it persists or blooms back. GATE window reset gen3 step2/6 **2/144** filled — S15 far off. WALD sev 0.929 flat. Log live 0s, no OOM/panic, watcher clean.
+
+---
+
 ## FN227 · 2026-05-29T09:45Z · **Post-S14 27L study — 3 dashboard findings + tensor-count proof** · [CRITICAL — Simeon's findings]
 
 **Tensor transfer, exact:** `tns 2044 → 2122` (+78). That is precisely one new dual-stream layer block (per-layer tensor footprint at 2×256H), no orphans, no missing. Combined with the loss-neutral resume (FN226), the 26L→27L safetensor transfer is **complete and exact**. Trajectory: ep4305 loss_avg 9.4646 (d **+0.2580** — the expected surgery bump), ep4306 9.4541 (d **−0.0105** — already clawing it back). MYCELIUM: blooming **9**, dead **0**, hot=L26 cold=L0, myc_stable=2. WALD sev 0.929, coverage `[1,61,293,233,12]`.
