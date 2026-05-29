@@ -6569,6 +6569,37 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN207 · 2026-05-29T04:56:08Z · ⚠ S14 FAILED — net2net restored only 4/2044 tensors · MODEL WIPED to ~random (loss≈ln32000) · FIRST failed surgery in 14 · recovery from local 26L available · [reconstructed; ~5h tick gap]
+
+**State:** RUNNING (training a WIPED model) · EP 4353 (27L) · loss_avg ~10.367 · best batch ~10.1 · tns reported=4 · awaiting user decision to stop+rollback
+
+**Source:** training.log + ntfy (since 6h) + dashboard screenshots 04:48/04:51Z. Reconstructed after a ~5h cron gap (loop dormant overnight; the server-side ntfy `SURGERY FIRING` at 02:14:54Z was the real wake signal and worked).
+
+### S14 FIRED 02:14:53Z (26L→27L) — then FAILED
+Trigger (authoritative): `FIBONACCI PLATEAU TRIGGERED smoothed Δ-0.1661 over 89 epochs, early_mean=9.3047 late_mean=9.4709, threshold=0.0113, MYCELIUM stable 60, gen=3 step=1/6, next ceiling F8=89L`. Note the trigger logic: Δ=early−late=−0.166 (loss was *higher* at window-end — the corpus-floor shift from 9.30→9.47 read as regression), −0.166 < 0.0113 → plateau fired. So S14 fired on the **corpus-floor rise**, not a true convergence plateau. Window then promoted 89→144.
+
+### THE FAILURE — only 4 of ~2044 tensors restored
+Log at surgery re-entry: **`Loaded 4 tensors from checkpoint`** (vs `Loaded 2044 tensors` at the prior 22:16 restart). The net2net re-entry rebuilt the 27L model and the shape/name-guarded `load_checkpoint` matched only **4** tensors — the rest were re-initialised. The model was effectively wiped. `tns=4` in EPOCH_SUMMARY (and the dashboard `TNS 4`) is this count, not a display bug.
+
+### Evidence the model is at ~random (not recovering):
+- **Loss pinned 10.34–10.37**, dead-flat across ep4321–4353 (~30+ epochs). `ln(vocab)=ln(32000)=10.373` — uniform output. Loss is *at* the random-output floor.
+- **Best batch ~10.1** now (checked live stream), vs the old **8.69**. The dashboard's `BEST/ATL 8.6880` is a STALE historical marker, not current capability — the model genuinely cannot beat random by much.
+- No descent in 30 epochs → not a normal post-surgery whiplash (those recover in ~20); this is a wiped model stuck near uniform.
+- Diverse routing (top row revived: SYN/CTX/INF/GEN all active, LNG 51%) = flailing across all experts on a broken body, NOT healthy specialisation.
+
+### Root-cause hypothesis (to confirm before any re-attempt):
+The S14 net2net re-entry path (train_bible: `should_evolve → Ok(true) → rebuild Transformer(27L) + load_checkpoint`) restored only 4 tensors — the rebuilt 27L varmap's tensor names/shapes don't match the on-disk checkpoint, so the guarded load rejects all but 4. Net2net "safe copy" did NOT preserve function this time. **Surgery is unsafe until this is fixed.**
+
+### RECOVERY — trained weights are SAFE:
+Local `models/albert_v3.0.safetensors` = **741 MiB, 26L dual-stream (verified: 26 blocks, stream a+b, 6 anastomosis), meta ep4246, loss ~9.48.** Only the volume's live checkpoint got corrupted to the 27L garbage. **Rolling back to local 26L costs ~0 loss-progress** — the 26L was plateaued at 9.47–9.48 the entire run; we lose only the failed S14 attempt. (Volume `best.26L.safetensors` 664.7 MiB is mislabelled — it's the pre-cord 24L single-stream; not a clean recovery point. Local is the anchor.)
+
+### SCIENTIFIC SIGNIFICANCE:
+**First FAILED surgery in 14.** S11–S13 + CORD all preserved function via net2net; S14 did not. The open question: why did this re-entry restore 4 tensors when prior surgeries restored the full set? Candidate: the 27L rebuild + the just-rebuilt (22:16) binary changed something in the varmap-name/checkpoint-key contract. This is real data on the *limits* of the autonomous surgery mechanism — exactly the grey-zone we're here to map. Conclusion deferred until root-caused, but the failure mode is documented.
+
+### STATUS: run still burning compute on the wiped model (ep4353). Recommended: STOP → root-cause the 4-tensor load → rollback local 26L → resume with surgery gated. Awaiting go.
+
+---
+
 ## FN206 · 2026-05-28T23:33:53Z · GATE 48/89 · myc_stable=19 dead=0 (S14 cond-1 firmly met) · S14 likely on window-fill ~02:30Z · [loop tick 9/15m · user asleep]
 
 **State:** RUNNING · EP 4264 (26L dual-stream) · BATCH 79/300 · loss 9.4768 · LR 1.35e-4 · no OOM/stall/surgery
