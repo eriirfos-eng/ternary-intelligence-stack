@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN220 · 2026-05-29T08:18:07Z · plateau steady · GATE 73/89 · [loop tick, terse]
+
+EP 4290 · ep4288 avg 9.4718 · plateau ~9.47 (batch low 9.2053) · GATE filled 73/89 (~16 epochs / ~40min to S14) · watcher healthy (loaded=2044) · ntfy quiet · no OOM/stall · still 26L.
+
+---
+
 ## FN219 · 2026-05-29T08:09:37Z · plateau steady · GATE 70/89 (S14 ~45min out) · [loop tick, terse]
 
 EP 4287 · ep4285 avg 9.4676 · plateau ~9.47 · GATE filled 70/89 (~19 epochs / ~45min to S14 retry — getting close) · watcher healthy (loaded=2044; resurrections reload full model) · ntfy quiet · no OOM/stall. (Whitepaper overhaul ran in parallel — training untouched, fine.)
