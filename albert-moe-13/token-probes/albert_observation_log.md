@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN235 · 2026-05-29T12:35Z · recovery prepped + hardened · NOT yet re-fired · [loop tick]
+
+Training STOPPED (Simeon, pending safe re-fire). No live monitoring this tick. State: **recovery verified ready** — config 27L (local+volume), volume safetensors **2122 tensors / 27L** intact (re-confirmed via read-only header probe), nothing running. Cron watcher correctly fired a STALL alert at 12:25 (no activity 22min — expected, training intentionally off; watcher can't distinguish intentional-stop from crash, which is fine). **Defense-in-depth now 3 layers + fail-safe** so the S14 rollback can't recur: (1) watchdog probes container liveness before killing (relay stall ≠ restart) + budget 180→420s; (2) train_modal RECONCILES — adopts a deeper volume arch instead of clobbering; (3) reconcile FAIL-SAFE — if volume can't be verified, config push is SKIPPED entirely (never an unverified clobber). All committed+pushed. Awaiting Simeon's fire → watch for `Loaded 2122`/`Arch 27L`.
+
+---
+
 ## FN234 · 2026-05-29T12:10Z · **INCIDENT: false-positive restart rolled S14 back to 26L — RECOVERABLE (2122 intact on disk)** · [CRITICAL]
 
 **Chain failure, training now STOPPED by Simeon pending safe re-fire.**
