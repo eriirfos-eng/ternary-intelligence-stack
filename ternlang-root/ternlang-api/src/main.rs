@@ -317,6 +317,11 @@ impl KeyStore {
                 "monthly_calls": e.monthly_calls,
                 "monthly_limit": limit,
                 "month_key":     e.month_key,
+                "monthly_tokens":     e.monthly_tokens,
+                "total_tokens":       e.total_tokens,
+                "monthly_compute_ms": e.monthly_compute_ms,
+                "total_compute_ms":   e.total_compute_ms,
+                "github_username":    e.github_username,
             })
         }).collect()
     }
@@ -596,6 +601,7 @@ async fn require_api_key(
         //       (Removed from bypass so require_api_key enforces key + tier + call/usage metering.
         //        The free public demo uses /api/albert/chat instead.)
         || path == "/activate"
+        || path.starts_with("/lighthouse")   // self-auths via GitHub OAuth + signed session cookie
         || path == "/api/run"
         || path == "/api/data"
         || path == "/api/tracer/ws"
@@ -5703,6 +5709,180 @@ pub async fn heartbeat(
     })
 }
 
+// ─── Lighthouse — internal admin console, GitHub-OAuth gated ────────────────────
+// Served at /lighthouse on the public domain but locked to an allowlist of GitHub accounts.
+// Config from env (Fly secrets): LIGHTHOUSE_GH_CLIENT_ID / _SECRET, LIGHTHOUSE_SESSION_SECRET,
+// LIGHTHOUSE_ALLOWED (csv of gh usernames). No secrets in source. The /lighthouse/* routes
+// self-authenticate via a signed session cookie, so they sit in the require_api_key bypass.
+
+const LH_REDIRECT: &str = "https://ternlang.com/lighthouse/auth/callback";
+const LH_REDIRECT_ENC: &str = "https%3A%2F%2Fternlang.com%2Flighthouse%2Fauth%2Fcallback";
+
+/// Minimal HTML escape — applied to customer-provided values (e.g. email) before they are
+/// rendered into the admin dashboard, to prevent stored XSS in the operator console.
+fn esc(s: &str) -> String {
+    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+     .replace('"', "&quot;").replace('\'', "&#39;")
+}
+
+fn lighthouse_allowed(user: &str) -> bool {
+    let allow = env::var("LIGHTHOUSE_ALLOWED").unwrap_or_else(|_| "simeon-kepp,zabih-karimi".to_string());
+    let u = user.to_ascii_lowercase();
+    allow.split(',').map(|s| s.trim().to_ascii_lowercase()).any(|a| !a.is_empty() && a == u)
+}
+
+/// Signed session token: "username.expiry.hexHMAC(username.expiry)". GH usernames are
+/// [A-Za-z0-9-] so no escaping is needed. 12-hour lifetime.
+fn lighthouse_sign(secret: &str, username: &str) -> String {
+    let exp = (Utc::now().timestamp() + 12 * 3600).to_string();
+    let payload = format!("{}.{}", username, exp);
+    let mut mac = Hmac::<Sha256>::new_from_slice(secret.as_bytes()).expect("hmac key");
+    mac.update(payload.as_bytes());
+    format!("{}.{}", payload, hex::encode(mac.finalize().into_bytes()))
+}
+
+fn lighthouse_verify(secret: &str, token: &str) -> Option<String> {
+    let parts: Vec<&str> = token.split('.').collect();
+    if parts.len() != 3 { return None; }
+    let payload = format!("{}.{}", parts[0], parts[1]);
+    let mut mac = Hmac::<Sha256>::new_from_slice(secret.as_bytes()).ok()?;
+    mac.update(payload.as_bytes());
+    mac.verify_slice(&hex::decode(parts[2]).ok()?).ok()?;          // constant-time
+    if parts[1].parse::<i64>().ok()? < Utc::now().timestamp() { return None; }  // expired
+    Some(parts[0].to_string())
+}
+
+/// Extract a valid lighthouse session username from the Cookie header.
+fn lighthouse_session_user(headers: &HeaderMap) -> Option<String> {
+    let secret = env::var("LIGHTHOUSE_SESSION_SECRET").ok().filter(|s| !s.is_empty())?;
+    let cookies = headers.get("cookie").and_then(|v| v.to_str().ok())?;
+    cookies.split(';')
+        .filter_map(|c| c.trim().strip_prefix("lh_session="))
+        .find_map(|tok| lighthouse_verify(&secret, tok))
+}
+
+fn lighthouse_deny(reason: &str) -> Response {
+    (StatusCode::FORBIDDEN, Html(format!(
+        "<body style='background:#0d0d14;color:#e2e8f0;font-family:monospace;text-align:center;padding:80px'>\
+         <h2>lighthouse — access denied</h2><p>{}</p>\
+         <p>Only allowlisted RFI-IRFOS GitHub accounts may enter.</p>\
+         <a style='color:#22d3ee' href='/lighthouse'>back</a></body>", esc(reason)))).into_response()
+}
+
+// GET /lighthouse — dashboard if a valid session exists, else the login page.
+async fn lighthouse_home(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Response {
+    match lighthouse_session_user(&headers) {
+        Some(user) => {
+            let keys = state.keys.list().await;
+            Html(format!(r#"<!DOCTYPE html><html><head><meta charset=utf-8><title>lighthouse</title>
+<style>body{{background:#0d0d14;color:#e2e8f0;font-family:monospace;margin:0;padding:24px}}
+h1{{color:#22d3ee;font-size:18px}} .sub{{color:#94a3b8;font-size:12px;margin-bottom:18px}}
+table{{border-collapse:collapse;width:100%;font-size:12px}} th,td{{text-align:left;padding:6px 10px;border-bottom:1px solid #1e293b}}
+th{{color:#22d3ee}} a{{color:#22d3ee}}</style></head><body>
+<h1>lighthouse</h1><div class=sub>RFI-IRFOS internal console · signed in as <b>{user}</b> · <a href=/lighthouse/logout>logout</a></div>
+<div class=sub>{n} key(s) · usage = calls / tokens / compute-ms (this month)</div>
+<table><tr><th>key</th><th>tier</th><th>email</th><th>calls</th><th>tokens</th><th>compute-ms</th><th>github</th></tr>{rows}</table>
+</body></html>"#,
+                user = esc(&user),
+                n = keys.len(),
+                rows = keys.iter().map(|k| format!(
+                    "<tr><td>{}</td><td>{}</td><td>{}</td><td>{} / {}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
+                    esc(k["key_id"].as_str().unwrap_or("")),
+                    k["tier"].as_u64().unwrap_or(0),
+                    esc(k["email"].as_str().unwrap_or("")),
+                    k["monthly_calls"].as_u64().unwrap_or(0),
+                    k["monthly_limit"].as_u64().map(|v| v.to_string()).unwrap_or_else(|| "∞".into()),
+                    k["monthly_tokens"].as_u64().unwrap_or(0),
+                    k["monthly_compute_ms"].as_u64().unwrap_or(0),
+                    esc(k["github_username"].as_str().unwrap_or("")),
+                )).collect::<String>(),
+            )).into_response()
+        }
+        None => Html(format!(
+            "<body style='background:#0d0d14;color:#e2e8f0;font-family:monospace;text-align:center;padding:80px'>\
+             <h1 style='color:#22d3ee'>lighthouse</h1><p>RFI-IRFOS internal console</p>\
+             <a href='/lighthouse/auth/login' style='display:inline-block;margin-top:20px;padding:10px 20px;\
+             background:#22d3ee;color:#0d0d14;text-decoration:none;border-radius:6px;font-weight:bold'>\
+             Sign in with GitHub</a></body>")).into_response(),
+    }
+}
+
+// GET /lighthouse/auth/login — redirect to GitHub OAuth.
+async fn lighthouse_login() -> Response {
+    let cid = env::var("LIGHTHOUSE_GH_CLIENT_ID").unwrap_or_default();
+    if cid.is_empty() {
+        return (StatusCode::SERVICE_UNAVAILABLE, "Lighthouse OAuth not configured.").into_response();
+    }
+    let url = format!(
+        "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&scope=read:user&allow_signup=false",
+        cid, LH_REDIRECT_ENC);
+    let _ = LH_REDIRECT;  // documents the unencoded callback registered in the OAuth app
+    axum::response::Redirect::to(&url).into_response()
+}
+
+// GET /lighthouse/auth/callback?code=… — exchange code, enforce allowlist, set session cookie.
+async fn lighthouse_callback(Query(q): Query<std::collections::HashMap<String, String>>) -> Response {
+    let code = match q.get("code") { Some(c) => c.clone(), None => return lighthouse_deny("missing authorization code") };
+    let cid    = env::var("LIGHTHOUSE_GH_CLIENT_ID").unwrap_or_default();
+    let secret = env::var("LIGHTHOUSE_GH_CLIENT_SECRET").unwrap_or_default();
+    let sess   = env::var("LIGHTHOUSE_SESSION_SECRET").unwrap_or_default();
+    if cid.is_empty() || secret.is_empty() || sess.is_empty() {
+        return (StatusCode::SERVICE_UNAVAILABLE, "Lighthouse OAuth not configured.").into_response();
+    }
+    let client = reqwest::Client::new();
+
+    // 1. authorization code -> access token
+    let tok_resp = client.post("https://github.com/login/oauth/access_token")
+        .header("Accept", "application/json")
+        .json(&json!({"client_id": cid, "client_secret": secret, "code": code, "redirect_uri": LH_REDIRECT}))
+        .timeout(std::time::Duration::from_secs(15)).send().await;
+    let access_token = match tok_resp {
+        Ok(r) => match r.json::<Value>().await {
+            Ok(j) => j.get("access_token").and_then(|v| v.as_str()).map(String::from),
+            Err(_) => None,
+        },
+        Err(_) => None,
+    };
+    let access_token = match access_token { Some(t) => t, None => return lighthouse_deny("GitHub token exchange failed") };
+
+    // 2. token -> GitHub username
+    let user_resp = client.get("https://api.github.com/user")
+        .header("Authorization", format!("Bearer {}", access_token))
+        .header("User-Agent", "ternlang-lighthouse")
+        .header("Accept", "application/vnd.github+json")
+        .timeout(std::time::Duration::from_secs(15)).send().await;
+    let username = match user_resp {
+        Ok(r) => match r.json::<Value>().await {
+            Ok(j) => j.get("login").and_then(|v| v.as_str()).map(String::from),
+            Err(_) => None,
+        },
+        Err(_) => None,
+    };
+    let username = match username { Some(u) => u, None => return lighthouse_deny("could not read GitHub identity") };
+
+    // 3. allowlist gate
+    if !lighthouse_allowed(&username) {
+        eprintln!("[lighthouse] denied: {} not in allowlist", username);
+        return lighthouse_deny(&format!("'{}' is not on the allowlist", username));
+    }
+
+    // 4. issue signed session cookie, redirect into the console
+    eprintln!("[lighthouse] login ok: {}", username);
+    let token = lighthouse_sign(&sess, &username);
+    let cookie = format!("lh_session={}; HttpOnly; Secure; SameSite=Lax; Path=/lighthouse; Max-Age=43200", token);
+    let mut resp = axum::response::Redirect::to("/lighthouse").into_response();
+    if let Ok(hv) = cookie.parse() { resp.headers_mut().insert(axum::http::header::SET_COOKIE, hv); }
+    resp
+}
+
+// GET /lighthouse/logout — clear the session cookie.
+async fn lighthouse_logout() -> Response {
+    let cookie = "lh_session=; HttpOnly; Secure; SameSite=Lax; Path=/lighthouse; Max-Age=0";
+    let mut resp = axum::response::Redirect::to("/lighthouse").into_response();
+    if let Ok(hv) = cookie.parse() { resp.headers_mut().insert(axum::http::header::SET_COOKIE, hv); }
+    resp
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 #[tokio::main]
@@ -5800,6 +5980,11 @@ async fn main() {
         .route("/playground/pkg/ternlang_wasm.js",  get(wasm_js_handler))
         .route("/playground/pkg/ternlang_wasm_bg.wasm", get(wasm_bg_handler))
         .route("/activate",             get(activate_page))
+        // Lighthouse internal console (GitHub-OAuth gated; self-auths via signed session cookie)
+        .route("/lighthouse",              get(lighthouse_home))
+        .route("/lighthouse/auth/login",   get(lighthouse_login))
+        .route("/lighthouse/auth/callback",get(lighthouse_callback))
+        .route("/lighthouse/logout",       get(lighthouse_logout))
         .route("/kpi",                  get(kpi_page))
         .route("/kpi/{filename}",       get(kpi_data))
         .route("/api/kpi/upload/{filename}", post(kpi_upload))
