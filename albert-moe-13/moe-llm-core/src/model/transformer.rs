@@ -6,13 +6,14 @@ use super::mlp::Mlp;
 use super::config::TransformerConfig;
 use super::ternary_linear::TernaryLinear;
 use super::anastomosis::{AnastomosisLayer, capture_cosim};
+use super::diff_layer_norm::DiffLayerNorm;
 
 pub struct Block {
     attention: Attention,
     moe: Option<MoeBlock>,
     mlp: Option<Mlp>,
-    ln1: candle_nn::LayerNorm,
-    ln2: candle_nn::LayerNorm,
+    ln1: DiffLayerNorm,
+    ln2: DiffLayerNorm,
 }
 
 impl Block {
@@ -27,8 +28,8 @@ impl Block {
             (None, Some(mlp))
         };
 
-        let ln1 = candle_nn::layer_norm(config.hidden_size, 1e-5, vb.pp("ln1"))?;
-        let ln2 = candle_nn::layer_norm(config.hidden_size, 1e-5, vb.pp("ln2"))?;
+        let ln1 = DiffLayerNorm::new(config.hidden_size, 1e-5, vb.pp("ln1"))?;
+        let ln2 = DiffLayerNorm::new(config.hidden_size, 1e-5, vb.pp("ln2"))?;
         Ok(Self { attention, moe, mlp, ln1, ln2 })
     }
 
@@ -49,8 +50,8 @@ impl Block {
             (None, Some(mlp))
         };
 
-        let ln1 = candle_nn::layer_norm(config.hidden_size, 1e-5, vb_stream.pp("ln1"))?;
-        let ln2 = candle_nn::layer_norm(config.hidden_size, 1e-5, vb_stream.pp("ln2"))?;
+        let ln1 = DiffLayerNorm::new(config.hidden_size, 1e-5, vb_stream.pp("ln1"))?;
+        let ln2 = DiffLayerNorm::new(config.hidden_size, 1e-5, vb_stream.pp("ln2"))?;
         Ok(Self { attention, moe, mlp, ln1, ln2 })
     }
 
@@ -105,7 +106,7 @@ pub struct Transformer {
     blocks_b: Option<Vec<Block>>,
     /// Anastomosis gates at Fibonacci-indexed layers. Empty in single-stream mode.
     anastomosis: Vec<(usize, AnastomosisLayer)>,
-    ln_f: candle_nn::LayerNorm,
+    ln_f: DiffLayerNorm,
     lm_head: TernaryLinear,
     config: TransformerConfig,
 }
@@ -141,7 +142,7 @@ impl Transformer {
             }
         }
 
-        let ln_f = candle_nn::layer_norm(config.hidden_size, 1e-5, vb.pp("ln_f"))?;
+        let ln_f = DiffLayerNorm::new(config.hidden_size, 1e-5, vb.pp("ln_f"))?;
         let threshold = config.threshold;
         let lm_head = TernaryLinear::new(config.hidden_size, config.vocab_size, false, threshold, vb.pp("lm_head"))?;
 

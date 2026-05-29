@@ -3,6 +3,7 @@ pub mod embedding;
 pub mod attention;
 pub mod mlp;
 pub mod ste;
+pub mod diff_layer_norm;
 pub mod ternary_linear;
 pub mod transformer;
 pub mod moe;
