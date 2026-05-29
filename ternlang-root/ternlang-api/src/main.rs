@@ -43,7 +43,7 @@ use axum::{
     http::{HeaderMap, Method, StatusCode},
     middleware::{self, Next},
     response::{sse::{Event, Sse}, Html, IntoResponse, Response},
-    routing::{delete, get, post},
+    routing::{any, delete, get, post},
 };
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
@@ -551,6 +551,62 @@ fn i8_to_trit(v: i64) -> Option<Trit> {
 
 fn api_error(status: StatusCode, message: &str) -> Response {
     (status, Json(json!({ "error": message, "docs": "https://ternlang.com/docs/api" }))).into_response()
+}
+
+/// Reverse-proxy /lighthouse/* to the lighthouse workplace-OS app (separate Fly app). Keeps the
+/// public product API and the internal OS in separate processes while serving the OS under
+/// ternlang.com/lighthouse. Forwards method/headers/body, passes status + Set-Cookie + Location
+/// straight back so the OS's GitHub-OAuth session + redirects work transparently.
+async fn lighthouse_proxy(req: axum::extract::Request) -> Response {
+    let os = std::env::var("LIGHTHOUSE_OS_URL")
+        .unwrap_or_else(|_| "https://lighthouse-rfi-irfos.fly.dev".to_string());
+    let pq = req
+        .uri()
+        .path_and_query()
+        .map(|p| p.as_str().to_string())
+        .unwrap_or_else(|| "/lighthouse".to_string());
+    let url = format!("{}{}", os.trim_end_matches('/'), pq);
+
+    let (parts, body) = req.into_parts();
+    let body_bytes = match axum::body::to_bytes(body, 16 * 1024 * 1024).await {
+        Ok(b) => b,
+        Err(_) => return api_error(StatusCode::BAD_REQUEST, "request body too large"),
+    };
+
+    let client = match reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+    {
+        Ok(c) => c,
+        Err(_) => return api_error(StatusCode::BAD_GATEWAY, "proxy client init failed"),
+    };
+    let mut rb = client.request(parts.method.clone(), &url).body(body_bytes.to_vec());
+    for (k, v) in parts.headers.iter() {
+        if k != axum::http::header::HOST {
+            rb = rb.header(k.as_str(), v.as_bytes());
+        }
+    }
+
+    let resp = match rb.send().await {
+        Ok(r) => r,
+        Err(e) => return api_error(StatusCode::BAD_GATEWAY, &format!("lighthouse upstream unreachable: {e}")),
+    };
+    let status = resp.status();
+    let headers = resp.headers().clone();
+    let bytes = resp.bytes().await.unwrap_or_default();
+
+    let mut builder = Response::builder().status(status.as_u16());
+    for (k, v) in headers.iter() {
+        let kn = k.as_str();
+        if kn == "transfer-encoding" || kn == "content-length" || kn == "connection" {
+            continue;
+        }
+        builder = builder.header(kn, v.as_bytes());
+    }
+    builder
+        .body(axum::body::Body::from(bytes))
+        .unwrap_or_else(|_| api_error(StatusCode::BAD_GATEWAY, "proxy response build failed"))
 }
 
 // ─── Security headers middleware ──────────────────────────────────────────────
@@ -5981,11 +6037,10 @@ async fn main() {
         .route("/playground/pkg/ternlang_wasm_bg.wasm", get(wasm_bg_handler))
         .route("/activate",             get(activate_page))
         // Lighthouse internal console (GitHub-OAuth gated; self-auths via signed session cookie)
-        .route("/lighthouse",              get(lighthouse_home))
-        .route("/lighthouse/",             get(lighthouse_home))   // tolerate trailing slash
-        .route("/lighthouse/auth/login",   get(lighthouse_login))
-        .route("/lighthouse/auth/callback",get(lighthouse_callback))
-        .route("/lighthouse/logout",       get(lighthouse_logout))
+        // /lighthouse → reverse-proxy to the lighthouse workplace-OS app. The old in-process
+        // console handlers are retired; the OS owns this surface now (it self-auths via GitHub OAuth).
+        .route("/lighthouse",       any(lighthouse_proxy))
+        .route("/lighthouse/*rest", any(lighthouse_proxy))
         .route("/kpi",                  get(kpi_page))
         .route("/kpi/{filename}",       get(kpi_data))
         .route("/api/kpi/upload/{filename}", post(kpi_upload))
