@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN250 · 2026-05-29T18:11Z · holding sub-9.41 · myc_stable=62 · [loop tick, terse]
+
+EP 4412 b181, 28L. ep4410 9.4229 → ep4411 **9.4058** (d−0.0171) — oscillating ~9.40–9.42, holding the sub-9.41 region (near the 9.4010 low). dead=3 (minor churn), blooming=11, hot=L27, **myc_stable=62** (rock-stable, climbing). tns=2200, log live 0s, watchdog held, WALD sparse, no OOM/panic. Healthy. (250th FN — lighthouse OS L1 shipped in parallel: auth+RBAC+control-tower reading this very log live.)
+
+---
+
 ## FN249 · 2026-05-29T17:59Z · new low 9.4010 (broke <9.41) · [loop tick, terse]
 
 EP 4409 b218, 28L. ep4407 9.4268 (d+0.0099) → ep4408 **9.4010** (d−0.0258) — **new post-S15 low, first sub-9.41**, steady descent on novel data. dead=1 blooming=6 hot=L27 **myc_stable=59** (rock-stable). tns=2200, log live 1s, watchdog held, no OOM/panic, WALD calm. Healthy; approaching 9.40.
