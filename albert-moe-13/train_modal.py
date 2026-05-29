@@ -174,10 +174,12 @@ def _ntfy(title: str, msg: str, priority: str = "3") -> None:
 
 @app.function(
     image=image,
-    gpu="T4",            # Back on T4 (16GB) to TEST: after the grad-accum fix (2026-05-29 — backward
-                         # per micro-batch + sum gradients instead of holding N forward graphs), peak
-                         # memory is ONE dual-stream graph, not N. A 187M model should fit 16GB again.
-                         # If this OOMs, bump to "L4" (24GB) — one line. See GRAD_ACCUM_STEPS note in train_bible.
+    gpu="L4",            # 24GB — the correct-sized card for HONEST full-body training. T4 16GB was
+                         # tested (2026-05-29) and OOMs at step 1: forward graph (~10GB) + full-body
+                         # backward grads (~10GB) ≈ 20GB. (T4 only ever "fit" before because the
+                         # LayerNorm bug froze the body → trivial backward.) The grad-accum fix already
+                         # removed the multi-graph 4× waste; this 20GB is the legitimate one-graph cost.
+                         # Future: gradient checkpointing could shrink the forward graph back under 16GB.
     timeout=23 * 3600,   # 23-hour cap
     volumes={"/vol": vol},
     memory=16384,
