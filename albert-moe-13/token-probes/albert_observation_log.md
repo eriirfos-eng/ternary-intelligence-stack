@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN233 · 2026-05-29T11:48Z · churn NOT settled (dead=3, new high) · slight loss drift up · [loop tick, terse]
+
+EP 4336 b112. ep4334 9.4441 (d+0.0125) → ep4335 **9.4540** (d+0.0099) — two consecutive +deltas, mild upward drift; oscillating ~9.44–9.45 (batch 9.3464 mid-epoch, so still dips intra-epoch). **MYCELIUM dead=3 — new high** (sequence FN228→233: 1→0→2→0→0→**3**). **Correction to FN231:** the dead-layer churn is NOT resolved — it's oscillating 0–3 and ongoing, not monotonic-settled. blooming=6. BUT **myc_stable=28** (still climbing) ⇒ hot=L26/cold=L0 core assignment is stable; it's *peripheral* layers flipping dead/bloom as the 27L stack re-balances load on novel data. 3/27 still modest. tns=2122, GATE 30/144 (S15 far), ntfy quiet, log live 0s, no OOM/panic, watcher clean. Watching whether dead trends past ~3-4 (would warrant attention) vs keeps oscillating (benign re-balance).
+
+---
+
 ## FN232 · 2026-05-29T11:32Z · steady · blooming 8→11 · [loop tick, terse]
 
 EP 4332 b144. ep4330 9.4355 → ep4331 **9.4454** (d+0.0099) — oscillating ~9.435–9.445, batch mid-epoch 9.3735. dead=0 stable, **blooming 8→11** (more layers actively contributing — 27L stack engaging), myc_stable=24. tns=2122, GATE 27/144, ntfy quiet, log live 1s, no OOM/panic. No material change from FN231; recording cadence.
