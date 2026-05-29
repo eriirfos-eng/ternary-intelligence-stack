@@ -85,7 +85,12 @@ def cmd_pull():
         print(f"\n  {remote}  ->  {local}")
         rc = _run(["modal", "volume", "get", "--force", _VOL, remote, local_abs])
         if rc != 0:
-            print(f"  WARNING: could not pull {remote} (exit {rc})")
+            if "best" in os.path.basename(remote):
+                # The all-time-best snapshot only exists once the model beats its prior
+                # best; its absence is normal (not an error) — don't raise a scary WARNING.
+                print(f"  (skip) no best-checkpoint on volume yet — {os.path.basename(remote)} not written")
+            else:
+                print(f"  WARNING: could not pull {remote} (exit {rc})")
     print("\n[pull] done")
 
 
@@ -169,7 +174,10 @@ def _ntfy(title: str, msg: str, priority: str = "3") -> None:
 
 @app.function(
     image=image,
-    gpu="T4",            # swap to "A10G" for ~4x throughput, ~2x cost
+    gpu="L4",            # 24GB — required once the WHOLE body trains (LayerNorm-wall fix 2026-05-29):
+                         # full-body backward + AdamW m/v for all 187M params no longer fits T4 16GB
+                         # even at batch_size=1. L4 keeps full 256 context; ~$0.80/hr but higher
+                         # throughput → ~flat/lower $/epoch. Bump to A10G/A100-40GB if 24GB is tight.
     timeout=23 * 3600,   # 23-hour cap
     volumes={"/vol": vol},
     memory=16384,
