@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN249 · 2026-05-29T17:59Z · new low 9.4010 (broke <9.41) · [loop tick, terse]
+
+EP 4409 b218, 28L. ep4407 9.4268 (d+0.0099) → ep4408 **9.4010** (d−0.0258) — **new post-S15 low, first sub-9.41**, steady descent on novel data. dead=1 blooming=6 hot=L27 **myc_stable=59** (rock-stable). tns=2200, log live 1s, watchdog held, no OOM/panic, WALD calm. Healthy; approaching 9.40.
+
+---
+
 ## FN248 · 2026-05-29T17:43Z · no change (cadence) · [loop tick, terse]
 
 ~2min after FN247. ep4405 closing (289/300), last summary still ep4404 9.4133. myc_stable=55, dead=1, hot=L27, tns=2200. ntfy quiet (WALD stays calm). Healthy, no S16. Recording cadence only — nothing material since FN247.
