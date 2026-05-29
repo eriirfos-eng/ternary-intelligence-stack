@@ -126,6 +126,12 @@ const COLLAPSE_STREAK_LIMIT: u32 = 2;
 // once and OOM'd a 24GB GPU at N=4 the moment the whole body trained. Fixed 2026-05-29.)
 // Mirrors the ternary hold state: withhold the weight update until enough evidence accumulates.
 const GRAD_ACCUM_STEPS: usize = 4;
+// TEMP DIAGNOSTIC (2026-05-29): ablate the L1 sparsity aux-loss to test whether it is
+// the source of the ~8.5GB GPU-memory spike that fires once loss drops below 8.0.
+// The L1 term builds an abs() graph node over ALL 2184 weight tensors and backprops
+// through them. Set false to skip it entirely (batch_loss = ce_loss). Flip back / replace
+// with a graph-free gradient-term implementation once the diagnosis is confirmed.
+const L1_REG_ENABLED: bool = false;
 const BATCH_SIZE: usize = 8;   // CTX=256, F16 attn: T4 16GB comfortable at 8 (params+moments ~2GB, activations ~4GB)
 // Direct LR boost applied after Adam's step for cold layers (norm < THRESHOLD).
 // Adam normalizes away gradient amplification via its second-moment denominator,
@@ -1325,7 +1331,7 @@ fn train_cycle(
             // L1 is gated on loss < 8.0 — applying to a collapsed model makes recovery harder.
             // LB: controlled by --lb-weight/--lb-disable flags (effective_lb=0 skips gradient).
             let real_loss_preview = ce_loss.to_scalar::<f32>().unwrap_or(f32::MAX);
-            let aux_active     = real_loss_preview < 8.0;
+            let aux_active     = L1_REG_ENABLED && real_loss_preview < 8.0;
             let l1_lambda      = if aux_active { 1e-5_f64  } else { 0.0_f64 };
             let entropy_lambda = 0.0_f64;
 
