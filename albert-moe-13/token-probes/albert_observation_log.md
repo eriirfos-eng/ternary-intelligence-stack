@@ -6569,6 +6569,20 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN234 · 2026-05-29T12:10Z · **INCIDENT: false-positive restart rolled S14 back to 26L — RECOVERABLE (2122 intact on disk)** · [CRITICAL]
+
+**Chain failure, training now STOPPED by Simeon pending safe re-fire.**
+
+1. **False-positive "stall" (~11:48):** Modal's detached-run **stdout relay** to the local file froze for ~3 min. The GPU container kept training fine — `modal app logs` of the stalled app shows it advanced ep4336 b127 → **ep4337 b61** (healthy losses 9.18–9.55) before being killed. The auto-restart watchdog watches the *local* stream, saw 180s silence, and stopped a healthy 27L run. **Root cause = log-stream relay stall, NOT a training stall.** (Python wasn't crashed — it was correctly blocked on `for line in train_proc.stdout` waiting for lines Modal stopped relaying.)
+2. **Config-sync rollback (11:54 relaunch):** `albert-train` main() pushes **local** `config.json`+`evolution` UP to the volume before train. The local config still said `num_layers:26` (never updated — S14 was a *remote in-memory* surgery), so the push **clobbered the volume's 27L config back to 26L**. Relaunch built a 26L model and `Loaded 2044 tensors` — silently dropping S14's 27th layer. This is the [[feedback_modal_config_sync]] footgun, reversed (stale LOCAL clobbering newer VOLUME).
+3. **Saved by the ^C:** Simeon stopped it before the first 26L epoch saved, so no 2044 checkpoint overwrote the file.
+
+**VERIFIED RECOVERABLE (read-only modal fn on the volume safetensors):** `tensor_count=2122, distinct_layer_indices=27, max_layer_index=26, 804.8MB`. **S14's full 27L weights are intact on disk.** Only the `config.json` lies (26L). Evolution counter rolled gen3 step2→step1 (minor; shifts S15 timing). **Zero permanent weight loss.**
+
+**Recovery prepped (Simeon fires, I preflight):** set `num_layers:27` local+volume → fire → must show `Loaded 2122` / `Arch 27L`. Plus two permanent fixes: watchdog confirms container liveness before kill; sync reconciles instead of blind-pushing stale local over newer volume. See response thread.
+
+---
+
 ## FN233 · 2026-05-29T11:48Z · churn NOT settled (dead=3, new high) · slight loss drift up · [loop tick, terse]
 
 EP 4336 b112. ep4334 9.4441 (d+0.0125) → ep4335 **9.4540** (d+0.0099) — two consecutive +deltas, mild upward drift; oscillating ~9.44–9.45 (batch 9.3464 mid-epoch, so still dips intra-epoch). **MYCELIUM dead=3 — new high** (sequence FN228→233: 1→0→2→0→0→**3**). **Correction to FN231:** the dead-layer churn is NOT resolved — it's oscillating 0–3 and ongoing, not monotonic-settled. blooming=6. BUT **myc_stable=28** (still climbing) ⇒ hot=L26/cold=L0 core assignment is stable; it's *peripheral* layers flipping dead/bloom as the 27L stack re-balances load on novel data. 3/27 still modest. tns=2122, GATE 30/144 (S15 far), ntfy quiet, log live 0s, no OOM/panic, watcher clean. Watching whether dead trends past ~3-4 (would warrant attention) vs keeps oscillating (benign re-balance).
