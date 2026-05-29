@@ -6569,6 +6569,18 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN240 · 2026-05-29T13:50Z · **S15 FIRED — 27L→28L · first surgery since hardening · watchdog HOLDING** · [CRITICAL MILESTONE]
+
+S15 at **13:47:56**: `Dual-stream surgery: 27L → 28L | stream_a lat=0.2804 stream_b lat=1027` — both streams expanded, dual-stream topology preserved. Plateau: `smoothed Δ−0.1409 / 89ep, early_mean=9.3047 late_mean=9.4456, threshold 0.0113` → fired (delta < threshold).
+
+**HARDENING TEST — PASSING so far.** This is the first surgery since the watchdog/reconciliation fixes. During the surgery + silent re-tokenize (stale ~97s at log time, `model depth: 28L`), the watchdog did **NOT** false-restart — no `modal app stop` process, only the live `modal run`. The `_CORPUS_LOADING` bypass + 420s budget + liveness probe held exactly as designed (cf. FN234 incident). The false-positive-restart class is verifiably fixed under a real surgery.
+
+**Honest nuance (ties to FN234/235 + Simeon's "should it fire?"):** `early_mean=9.3047` is identical to S14's — the 89-window's early quarter is still anchored to the **pre-cord 9.30 lows** (leftover from the evolution rollback). So the governor reads "9.30→9.44 = regressed" and grows capacity, rather than firing on a fresh in-regime plateau. Defensible (loss was oscillating ~9.42, not descending; net2net is loss-neutral so harmless) but the trigger is partly the old-baseline ghost. Worth watching whether the window refreshes post-S15.
+
+**PENDING:** tns 2122→~2200 on first 28L save; transfer verdict = first 28L epoch loss (must resume ~9.44, not random); confirm no false-restart through full re-tokenize. Watching.
+
+---
+
 ## FN239 · 2026-05-29T13:33Z · TTL routing patterns (full-grid) + oscillating ~9.42 · [loop tick + Simeon dash]
 
 **Tick:** ep4345 loss_avg **9.4270** (d**+0.0106** — wobbled UP from the 9.4164 low; oscillating ~9.42, NOT monotonic-accelerating — correcting FN238/238b's "accelerating" framing). GATE `smoothed_delta=nan` filled **85/89** → still no S15, governor holding (window not full). dead=0 blooming=7 hot=L26 myc_stable=9. tns=2122, log live 0s, no OOM/panic. ntfy = normal WALD.
