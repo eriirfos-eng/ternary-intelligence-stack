@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN247 · 2026-05-29T17:41Z · 28L integrated — myc_stable=55, WALD calmed · [loop tick, ~2h gap]
+
+EP 4405 b122, 28L (gap since FN246 @15:28). ep4403 9.4165 (d−0.0091) → ep4404 **9.4133** (d−0.0032) — slow grind to a new post-S15 low. **myc_stable=55** (was 23 → 28L topology now rock-solid), dead=1 blooming=5 hot=L27. **WALD calmed** — sparse now (one tick at 17:23) vs the dense ~ep4360–4373 cluster → confirms FN246's "settles as the layer integrates" call: surgery→volatility→dense-WALD→**settled**. tns=2200, log live 1s, watchdog held, no OOM/panic. Post-S15 integration complete; healthy steady descent. (No S16 pending — plateau window refilling.)
+
+---
+
 ## FN246 · 2026-05-29T15:28Z · 28L holding ~9.42 · ATL 8.6736 · [loop tick + dash]
 
 EP 4373 b47, 28L. ep4371 9.4347 (d+0.0115) → ep4372 **9.4168** (d−0.0179) — oscillating ~9.42, holding. Dash (Simeon 15:28): ARCH 2×28L · TNS 2,200 · EP AVG 9.4168 · **chip ATL 8.6736 (↓1.44%)** · GATE green. TTL **G16/O81/R3** (orange-dominant = healthy learning). Experts: CMP 100 · PLN 90 · INT 77 · ABS 54 · LOG 8 · LNG 7 · MEM 2, rest 0 (core-four carrying). dead=1 (minor churn), blooming=9, hot=L27, **myc_stable=23**. tns=2200, log live 1s, watchdog held, no OOM/panic. (lighthouse OS L0 shipped in parallel.)
