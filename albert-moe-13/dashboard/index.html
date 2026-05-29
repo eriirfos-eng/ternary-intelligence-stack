@@ -929,6 +929,10 @@
         <span class="tb-val" id="v-best">—</span>
         <span id="v-best-pct" style="font-size:10px;color:#22c55e;margin-left:2px"></span>
     </div>
+    <div class="tb-cell" id="gpu-chip" title="GPU memory on the training node (live, via nvidia-smi). used / total. Steadily climbing = memory creep; Modal has no built-in GPU memory view, so this is our window into it.">
+        <span class="tb-label">GPU</span>
+        <span class="tb-val" id="v-gpu">—</span>
+    </div>
     <div class="tb-cell" id="gate-chip" title="Surgery Gate — click to expand">
         <span class="tb-label">GATE</span>
         <span id="gate-dots">
@@ -3304,6 +3308,21 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                     }
                     continue;
                 }
+                // GPUMEM line — live GPU memory from the training node (nvidia-smi).
+                // Modal exposes no GPU-memory view, so this top-bar chip is our window into it.
+                const gpum = line.match(/^GPUMEM step=(\d+) used=(\d+)MB free=(\d+)MB total=(\d+)MB/);
+                if (gpum) {
+                    const used = +gpum[2], total = +gpum[4];
+                    const el = document.getElementById('v-gpu');
+                    if (el && total > 0) {
+                        const frac = used / total;
+                        el.textContent = (used / 1024).toFixed(1) + '/' + (total / 1024).toFixed(1) + 'G';
+                        el.style.color = frac > 0.92 ? '#ef4444' : frac > 0.75 ? '#fb923c' : '#22c55e';
+                        el.title = `${used} / ${total} MB (${(frac * 100).toFixed(0)}%)`;
+                    }
+                    continue;
+                }
+
                 // GRAD line — per-layer gradient norms
                 const gm = line.match(/^GRAD step=(\d+) n=([\d.]+) L=([\d.e+\-,]+)/);
                 if (gm) {
