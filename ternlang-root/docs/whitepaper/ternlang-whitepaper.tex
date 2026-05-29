@@ -9,7 +9,7 @@
 % Format: IEEE two-column (IEEEtran) or ACM (acmart)
 % ─────────────────────────────────────────────────────────────────────────────
 
-\documentclass[journal,10pt,twocolumn]{IEEEtran}
+\documentclass[journal,10pt,onecolumn]{IEEEtran}
 
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{listings}
@@ -172,9 +172,13 @@ with four further contributions. First, a \emph{vocabulary surgery} expanded the
 model from an 8,000-token English-only tokenizer to a 32,000-token ByteLevel BPE
 vocabulary covering eight languages (EN, DE, FR, ES, TR, RU, AR, ZH), trained on a
 177M-token corpus with a mandated 10\% chaos layer. Second, autonomous depth
-expansion continued through multiple sequential surgeries from 5L to 18L---the
-first documented multi-surgery trajectory in a fully ternary MoE---growing the
-model to $\approx$134M parameters while preserving all prior weight structure. Third,
+expansion continued through thirteen sequential Net2Net surgeries from 5L to 26L,
+followed by an autonomous \emph{mycelial cord surgery} that bifurcated the single
+256-dimensional residual stream into a \textbf{dual-stream $2\times$256H}
+architecture fused by six anastomosis gates at Fibonacci-indexed layers
+$[2,3,5,8,13,21]$---to our knowledge the first dual-stream ternary Mixture-of-Experts
+grown autonomously mid-training---reaching $\approx$187M parameters across 2{,}044
+tensors while preserving all prior weight structure. Third,
 the \textbf{Epoch-Gated Routing Lottery} protocol resets all gate weights to
 kaiming-uniform at every epoch boundary while preserving expert weights, driving
 per-epoch routing competition and observed expert specialisation dynamics
@@ -635,6 +639,23 @@ annotation that causes the codegen to emit \texttt{TSPARSE\_MATMUL} instead of
 \texttt{TMATMUL} for the following \texttt{matmul()} call. Sparsity awareness
 is thus a \emph{source-language} property surfaced at the ISA level, not a
 runtime optimization that may or may not trigger.
+
+\paragraph{Patent scope.} \texttt{@sparseskip} / \texttt{TSPARSE\_MATMUL} is
+\emph{Claim~3} of a broader filing: \textbf{Austrian Patent Office A50296/2026}
+(pending) is a \textbf{ten-claim TIS platform patent}, not a single-primitive patent.
+The documented claims span the full stack:
+\begin{itemize}
+  \item \textbf{Claim~1} --- ternary data processing (the trit $\{-1,0,+1\}$ substrate);
+  \item \textbf{Claim~2} --- BET encoding (the 2-bit balanced-ternary instruction format);
+  \item \textbf{Claim~3} --- \texttt{@sparseskip} / \texttt{TSPARSE\_MATMUL} zero-overhead
+        sparse execution (element-, layer-, and expert-level skip);
+  \item \textbf{Claim~5} --- MoE-13 dual-key synergistic routing;
+  \item \textbf{Claim~6} --- the Axis-6 hard-wired safety veto;
+\end{itemize}
+with further claims covering additional aspects of the platform. The dual-stream
+\emph{mycelial cord} architecture (\S\ref{sec:albert}) is a distinct novel contribution
+extending this filing. All claimed mechanisms are implemented in open, LGPL-licensed
+source---the patent protects the platform; the code remains freely readable and modifiable.
 
 \subsection{Benchmark results}
 
@@ -1169,8 +1190,9 @@ Albert MoE-13 is the reference implementation of the ideas developed in
 Sections~\ref{sec:sparse}--\ref{sec:moe}: a fully ternary Mixture-of-Experts
 language model trained end-to-end without GPU hardware. What began as a
 22M-parameter, 3-layer, English-only model (v2.0.0) has evolved through successive
-autonomous surgeries into an 18-layer, 134M-parameter multilingual system (v3.0)
-trained on eight languages across a 177M-token corpus (2942+ global epochs as of 2026-05-22). It serves as an empirical
+autonomous surgeries into a 26-layer \emph{dual-stream} ($2\times$256H),
+$\approx$187M-parameter multilingual system (v3.0) trained on eight languages across a
+$\approx$451M-token corpus (4{,}250+ global epochs as of 2026-05-29). It serves as an empirical
 existence proof that the ternary execution substrate enables practical neural
 training, self-directed architectural growth, and real-time natural language
 generation on commodity consumer hardware.
@@ -1190,15 +1212,15 @@ Hidden size & 256 & 256 \\
 Experts per layer & 12 & 12 \\
 Active experts (Top-$k$) & 3 & 3 \\
 Expert skip rate (\texttt{@sparseskip}) & 75\% & \textbf{75\%} \\
-Depth & 5L & \textbf{18L} (multi-surgery) \\
+Depth & 5L & \textbf{26L} (13 surgeries + cord) \\
+Residual streams & 1 & \textbf{2} (mycelial cord surgery) \\
+Anastomosis gates & --- & \textbf{6} @ layers $[2,3,5,8,13,21]$ \\
 Context length & 128 tokens & \textbf{256 tokens} (RoPE) \\
-Total parameters (stored) & $\approx$22M & $\approx$\textbf{134M} \\
-Active per token (Top-3/12) & --- & $\approx$\textbf{33M} \\
+Total parameters (stored) & $\approx$22M & $\approx$\textbf{187M} (2{,}044 tensors) \\
 Vocabulary & 8,000 (EN) & \textbf{32,000} (8 languages) \\
-Corpus tokens & --- & \textbf{177,654,147} \\
+Corpus tokens & --- & $\approx$\textbf{451M} \\
 Weight format & ternary & ternary \\
-Inference throughput (CPU only) & \textbf{79.5--92.2 tok/s} & in training \\
-Perplexity (WikiText-2, held-out) & \textbf{2026.1} & in training \\
+Inference throughput (CPU only) & \textbf{79.5--92.2 tok/s} & $\approx$\textbf{29--44 tok/s} (live, dual-stream) \\
 Training hardware & HP ZBook 2013 & Modal T4 GPU \\
 \bottomrule
 \end{tabular}
@@ -1246,7 +1268,7 @@ EvolutionManager was subsequently redesigned with \emph{generational Fibonacci c
 that stalls at 610 layers, surgeries are organised into generations of six depth windows
 each, with the plateau sensitivity tightening $0.75\times$ per generation and a
 stuck-generation timeout preventing infinite plateaus. Surgery fires on plateau, not
-on loss threshold. The surgery history through Global Epoch 2487:
+on loss threshold. The surgery history through the dual-stream cord surgery (Global Epoch 4206):
 
 \begin{table}[h]
 \centering
@@ -1262,7 +1284,10 @@ Surgery 1 & $3L \to 5L$ $\cdot$ 8k vocab & 2026-05-06; checkpoint 91\,MB \\
 Vocab surgery & 5L $\cdot$ $8k \to 32k$ vocab & ByteLevel BPE; 8 languages \\
 Surgeries 2--$n$ & $5L \to 12L$ $\cdot$ 32k vocab & Sequential; $\approx$58M params \\
 Surgeries 2--5 (v3.0) & $12L \to 17L$ $\cdot$ 32k vocab & ep511--702; $\approx$82M params \\
-\textbf{Surgery 6} & $\mathbf{17L \to 18L}$ $\cdot$ 32k vocab & \textbf{ep2487; Mandelbrot $c_\text{im}=+0.0099$; $\approx$134M params} \\
+Surgery 6 & $17L \to 18L$ $\cdot$ 32k vocab & ep2487; $c_\text{im}{=}{+}0.0099$; $\approx$134M params \\
+Surgeries 7--$n$ & $18L \to 25L$ $\cdot$ 32k vocab & ep3325--4202; sequential Net2Net \\
+\textbf{Cord surgery} & $\mathbf{25L \to 2{\times}25L}$ \textbf{dual-stream} & \textbf{ep4202; 6 anastomosis gates $[2,3,5,8,13,21]$; first dual-stream ternary MoE} \\
+\textbf{Dual-stream Net2Net} & $\mathbf{2{\times}25L \to 2{\times}26L}$ & \textbf{ep4206; first surgery on dual-stream; $\approx$187M params} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1387,17 +1412,17 @@ magnitude is determined by:
         Mandelbrot parameter space.
 
   \item \textbf{Iteration depth.} Run the Mandelbrot iteration
-        $z \mapsto z^2 + c$ from $z=0$ to escape or a fixed maximum $n_\max$.
+        $z \mapsto z^2 + c$ from $z=0$ to escape or a fixed maximum $n_{\max}$.
         Interior points (orbit bounded): perturbation $\approx 0.02$---these
         weights are in stable basins; learned structure is preserved.
         Near-boundary points (slow escape, high iteration count): perturbation
-        $\propto (i/n_\max)^2$ approaching $1.0$---these are the plastic weights,
+        $\propto (i/n_{\max})^2$ approaching $1.0$---these are the plastic weights,
         near a phase transition in parameter space.
         Exterior points (fast escape): intermediate perturbation.
 
   \item \textbf{Deterministic noise.} The signed perturbation is computed as
         $\delta_i = \sin(i\varphi + c_\text{re}\pi + c_\text{im}e)
-        \cdot s_\text{base} \cdot b(i_\text{esc}, n_\max)$, where $s_\text{base}
+        \cdot s_\text{base} \cdot b(i_\text{esc}, n_{\max})$, where $s_\text{base}
         = 10^{-3}$ and $b$ is the boundary weight function above. No random
         number generator is used.
 \end{enumerate}
@@ -1527,8 +1552,8 @@ preserved; only the 24,000 new token slots were initialised from scratch. This
 mirrors the Net2Net safe-copy principle used for depth surgery: maximally reuse
 accumulated knowledge, minimise the region that must learn anew.
 
-\textbf{Corpus and chaos layer.} The v3.0 corpus comprises 177,654,147 tokens
-distributed across 12 curriculum stages, each targeting a different linguistic
+\textbf{Corpus and chaos layer.} The v3.0 corpus comprises $\approx$451M tokens
+distributed across 14 curriculum stages, each targeting a different linguistic
 domain or complexity band. A system-level invariant is enforced programmatically
 by \texttt{train\_tokenizer\_v3.py}: the \emph{chaos layer}---deliberately
 malformed, adversarially noisy, or cross-lingual mixed text---must constitute
@@ -1541,11 +1566,14 @@ the new vocabulary:
 \begin{equation}
   H_{\text{random}} = \ln(32000) \approx 10.373
 \end{equation}
-albert.\ v3.0 currently operates at epoch-average loss $\mathbf{9.5800}$ (ep2576,
-2026-05-21)---7.5\% below the random baseline of $\ln(32000) \approx 10.373$---with
-batch-level all-time low at $\mathbf{9.2961}$. This represents a sustained descent of
-0.795 nats below the vocabulary-random baseline across 2576 training epochs and
-six autonomous surgeries.
+albert.\ v3.0 currently operates at epoch-average loss $\mathbf{\approx 9.47}$ (ep4254,
+2026-05-29)---$8.7\%$ below the random baseline of $\ln(32000) \approx 10.373$---with
+batch-level all-time low at $\mathbf{8.6852}$. This represents a sustained descent of
+$\approx 0.90$ nats (epoch-average) and $\approx 1.69$ nats (best batch) below the
+vocabulary-random baseline across 4{,}250+ training epochs, thirteen autonomous
+surgeries, and the dual-stream cord surgery. (The epoch-average floor reflects a
+mid-training corpus expansion to multilingual and academic stages; the best-batch
+trajectory continues to set new all-time lows.)
 
 \subsection{TLIGHT: Per-Expert Ternary Traffic Light}
 \label{subsec:tlight}
@@ -1918,23 +1946,23 @@ Training hardware & HP ZBook 2013 $\cdot$ Intel CPU $\cdot$ \textbf{no GPU} \\
 \toprule
 Metric & Value \\
 \midrule
-Architecture & \textbf{18L} $\cdot$ 256H $\cdot$ 12E $\cdot$ Top-3 $\cdot$ 256CTX \\
+Architecture & \textbf{26L dual-stream} $\cdot$ $2{\times}$256H $\cdot$ 12E $\cdot$ Top-3 $\cdot$ 256CTX \\
 Vocabulary & 32,000 tokens (ByteLevel BPE, 8 languages) \\
-Corpus & 177,654,147 tokens (chaos layer: 10\%) \\
-Total parameters (stored) & $\approx$\textbf{134M} (FP32 checkpoint; ternary at inference) \\
-Active per token (Top-3/12) & $\approx$\textbf{33M} \\
+Corpus & $\approx$451M tokens (chaos layer: 10\%) \\
+Total parameters (stored) & $\approx$\textbf{187M} (2{,}044 tensors; ternary at inference) \\
+Active expert params / token & 25\% (Top-3 of 12 experts) \\
 Global epochs at v3.0 launch & $\approx$55 \\
-Global epochs completed & \textbf{2942+} (Modal T4 GPU) \\
-Best epoch-average loss & \textbf{9.4873} (Ep$\approx$2938, 2026-05-22) \\
-Best single-batch loss & \textbf{9.1254} (dashboard, 2026-05-22) \\
+Global epochs completed & \textbf{4{,}250+} (Modal T4 GPU) \\
+Best epoch-average loss & \textbf{9.2066} \\
+Best single-batch loss & \textbf{8.6852} \\
 Random baseline $\ln(32000)$ & 10.373 \\
-Reduction from random baseline & \textbf{8.5\%} (10.373 $\to$ 9.4873) \\
-Surgeries completed & \textbf{6} (12L $\to$ 13L $\to$ 14L $\to$ 15L $\to$ 16L $\to$ 17L $\to$ 18L) \\
-Surgery gate status (next: 18L $\to$ 21L) & Plateau gate BLOCKED (descent active); three cliff dives post-surgery-6; 9.50 floor breached --- ATL 9.4873 \\
+Reduction from random baseline & \textbf{11.2\%} (10.373 $\to$ 9.2066, epoch-average) \\
+Surgeries completed & \textbf{13} ($12L \to 26L$) $+$ \textbf{dual-stream cord surgery} \\
+Surgery gate status (next: $26L \to 27L$) & Plateau gate filling (Fibonacci window 89); operating floor $\approx$9.47 after corpus expansion \\
 Expert skip rate & \textbf{75\%} (Top-3 of 12, confirmed live) \\
-Inference throughput (CPU, @sparseskip) & \textbf{83 tok/s} (4L baseline, 2026-05-07) · \textbf{24.5 avg / 37 peak tok/s} (18L CPU) \\
-Training cost (2946 epochs) & \textbf{\$61.87} total ($\approx$\$0.021/epoch, Modal T4 GPU) \\
-Token-steps vs.\ Chinchilla-optimal & \textbf{193$\times$} (521B steps / 2.68B Chinchilla budget) \\
+Inference throughput (CPU, @sparseskip) & \textbf{83 tok/s} (4L baseline) $\cdot$ \textbf{$\approx$29--44 tok/s} (26L dual-stream, live) \\
+Training cost ($\approx$4{,}250 epochs) & $\approx$\textbf{\$90} total ($\approx$\$0.021/epoch, Modal T4 GPU) \\
+Token-steps vs.\ Chinchilla-optimal & \textbf{$\approx$510$\times$} (1.9T steps / 3.74B Chinchilla budget) \\
 Training hardware & Modal.com T4 GPU \\
 CPU validation hardware & HP ZBook 2013 $\cdot$ Intel i7-4800MQ $\cdot$ no GPU \\
 \bottomrule
@@ -2028,9 +2056,9 @@ CPU validation hardware & HP ZBook 2013 $\cdot$ Intel i7-4800MQ $\cdot$ no GPU \
 \caption{Loss trajectory for Albert MoE-13 v3.0 (ep55--143 shown). Three phases visible:
 (1) post-vocabulary-surgery plateau near $\ln(32000)$ (Ep55--82); (2) Nash equilibrium
 freeze Ep83--104; (3) sustained $-0.001$\,nats/epoch descent from Ep105 after expert seed
-bias introduction. Chart shows ep143 (best 10.3262); training has continued to \textbf{ep2942+
-with epoch-average ATL 9.4873 and single-batch ATL 9.1254} --- the extended trajectory and
-six surgery events (ep511, 547, 611, 645, 701, 2487) are tracked in the live dashboard at
+bias introduction. Chart shows ep143 (best 10.3262); training has continued to \textbf{ep4254+
+with epoch-average best 9.2066 and single-batch best 8.6852} --- the extended trajectory,
+thirteen surgery events, and the dual-stream cord surgery are tracked in the live dashboard at
 \texttt{batch\_history.csv} in the repository.}
 \label{fig:loss_curves}
 \end{figure}
@@ -2048,6 +2076,7 @@ each revealing a different aspect of ternary MoE training dynamics.
 \label{subsec:methodology}
 
 \subsubsection{Phase 1 --- Hardware Transition and GPU Migration}
+\label{subsubsec:phase1}
 
 Training of albert. v3.0 began on a 2013 HP ZBook (Intel i7-4800MQ, 7.1\,GB RAM,
 no GPU accelerator) at approximately Global Epoch 55, immediately following
@@ -2093,16 +2122,16 @@ A consequence of the ternary substrate that was not anticipated at the outset of
 training is its behaviour under sustained multi-epoch repetition of a fixed corpus.
 
 \textbf{The compute picture.}
-Albert.\ v3.0 trains on a fixed 177,654,147-token corpus.
-At Global Epoch 2946, the model has processed
-$177\text{M} \times 2946 \approx \mathbf{521\text{ billion}}$ total token-steps
-at a cumulative cost of \textbf{\$61.87} (Modal T4 GPU, $\approx$\$0.021/epoch).
+Albert.\ v3.0 trains on an $\approx$451M-token curriculum corpus.
+At Global Epoch $\approx$4250, the model has processed
+$451\text{M} \times 4250 \approx \mathbf{1.9\text{ trillion}}$ total token-steps
+at a cumulative cost of $\approx$\textbf{\$90} (Modal T4 GPU, $\approx$\$0.021/epoch).
 The Chinchilla scaling law~\cite{hoffmann2022training} prescribes approximately
 $20 \times N_\text{params}$ unique tokens for a compute-optimal single-pass training
-run; for albert.'s 134M parameters this gives a budget of $\approx 2.68\text{B}$ tokens.
-Albert.\ has therefore processed \textbf{193$\times$ the Chinchilla-optimal token
-budget}---not by training on a larger dataset, but by making 2946 passes over a
-small, carefully curated corpus at a cost of \$62 in total compute.
+run; for albert.'s $\approx$187M parameters this gives a budget of $\approx 3.74\text{B}$ tokens.
+Albert.\ has therefore processed \textbf{$\approx$510$\times$ the Chinchilla-optimal token
+budget}---not by training on a larger dataset, but by making thousands of passes over a
+small, carefully curated corpus at a cost of $\approx$\$90 in total compute.
 
 \textbf{Why multi-epoch training does not saturate under ternary STE.}
 In standard F32 training, repeated passes over a fixed corpus produce rapidly
@@ -2113,15 +2142,17 @@ model \emph{cannot} memorise fine-grained surface patterns---the representationa
 budget is too coarse. Every training pass is therefore forced to operate at the level
 of abstraction that the ternary lattice can express, driving continued gradient
 signal rather than surface memorisation. The evidence for this is empirical and
-direct: at Global Epoch 2946, after 521B token-steps over the same 177M-token corpus,
-the loss curve remains in sustained descent (current epoch-ATL \textbf{9.4873},
-with ep2945 closing at 9.4930---a new approach to ATL territory four consecutive
-epochs after the previous all-time low). A model that had saturated its corpus
-would show a flat loss floor; the observed trajectory shows the opposite.
+direct: at Global Epoch $\approx$4250, after $\approx$1.9T token-steps over the
+curriculum corpus, the epoch-average loss has settled at a corpus-floor plateau
+($\approx$\textbf{9.47}) while the best single-batch loss continues to set new all-time
+lows (\textbf{8.6852}). A model that had merely memorised its corpus would overfit---train
+loss collapsing while held-out text diverges; instead the plateau is \emph{capacity-bound},
+which is precisely the signal the EvolutionManager reads to trigger autonomous depth
+expansion. Each surgery adds capacity and the floor descends again.
 
 This is a hypothesis, not yet a characterised law: no published work has
 systematically studied multi-epoch convergence dynamics under ternary STE at this
-scale. What can be stated empirically is that 2946 epochs of repeated corpus exposure
+scale. What can be stated empirically is that $\approx$4250 epochs of repeated corpus exposure
 have not produced the overfitting signature (train loss plateau, divergence from
 held-out loss) that would be expected in a comparably-sized F32 model at equivalent
 compute depth.
@@ -2130,8 +2161,8 @@ compute depth.
 GPT-3 (175B parameters) was trained on $\approx$300B \emph{unique} tokens at
 an estimated cost of \$4.6M~\cite{patterson2021carbon}---approximately
 \$15,300 per billion tokens processed.
-Albert.\ has processed 521B token-steps at \$62---approximately \$0.12 per
-billion token-steps, a factor of \textbf{$\sim$128,000$\times$} cheaper per
+Albert.\ has processed $\approx$1.9T token-steps at $\approx$\$90---approximately \$0.05 per
+billion token-steps, a factor of \textbf{$\sim$320,000$\times$} cheaper per
 token-step.
 The comparison is not direct: unique tokens carry more information per step
 than repeated-corpus passes. The operationally relevant claim is narrower:
@@ -2212,6 +2243,7 @@ will be required to sustain non-uniform routing past the Net2Net surgery gate at
 loss $\leq 9.8$.
 
 \subsubsection{Phase 4 --- WALD Coverage Monitor and Structural Plateau Detection}
+\label{subsubsec:phase4}
 
 The WALD (Weighted Adaptive Loss Distribution) module maintains a histogram of
 per-batch loss values across the current epoch, tracking the worst-batch percentile,
@@ -2374,7 +2406,7 @@ threshold). The hardware is the only ceiling; 610 layers is a precomputed entry,
 
 Observation of albert.'s internal representations over the v3.0 training arc has
 identified a consistent six-phase developmental sequence, reproduced across the
-six surgery transitions from 12L to 18L:
+surgery transitions from 12L to 26L (and the dual-stream cord surgery):
 
 \begin{enumerate}
   \item \textbf{Byte chaos} --- loss near $\ln(\text{vocab})$; routing uniform; no
@@ -2425,8 +2457,8 @@ At ep2041 (17L), neighbours included \emph{Jesus}, \emph{wane}, \emph{dramaturg}
 \emph{religión} (ES), \emph{reales} (ES: real things), and---isolated at the cluster
 periphery---\emph{eks}. The \emph{love}$\to$\emph{Jesus} link was disrupted by Surgery~6
 (17L$\to$18L, ep2487); post-surgery probes (ep2492--2576) show the hub absent, the embedding
-layer frozen awaiting gradient signal. Its reconstitution will be the measurable moment of
-18L semantic integration.
+layer frozen awaiting gradient signal. Its reconstitution is the measurable signature of
+semantic re-integration after a depth surgery.
 
 \textbf{``god''}: The largest neighbourhood spread of all four probes, filling the full 200-neighbour
 radius. Neighbours include \emph{Bible}, a tokenisation of \emph{Allah}, \emph{massacre},
@@ -2443,8 +2475,9 @@ English word ``death'', but because the contexts in which they appear share stru
 and semantic properties across languages.
 
 This constitutes an \emph{existence proof} of concept-level generalisation in a fully
-ternary MoE model confirmed at 17L ($\approx$112M parameters) and persisting through Surgery~6 into
-18L ($\approx$134M parameters). The cross-lingual architecture precedes fluency---albert.\ has built
+ternary MoE model confirmed at 17L ($\approx$112M parameters) and persisting through
+subsequent surgeries into the current 26L dual-stream architecture ($\approx$187M parameters).
+The cross-lingual architecture precedes fluency---albert.\ has built
 the semantic scaffolding before it can speak fluently in any of the eight languages it was
 trained on. Notably, the \emph{death}$\to$\emph{amen} and \emph{freedom}$\to$\emph{contrat}
 clusters have been verified via direct embedding probes to have survived all six surgeries
@@ -2524,15 +2557,19 @@ $\approx$9.52, with 4--5 WALD diamond markers clustering at the base. The second
 to a floor of $\approx$9.50 (ATL 9.5015). The third (ep2922+) broke through the 9.50
 resistance level: epoch-average ATL reached \textbf{9.4873} at ep2938, with a WALD cluster
 self-calibrating its dead-neuron threshold from 9.25 to 9.00 in response to the new loss
-regime. The 9.50 level --- previously a structural resistance floor --- has now been
-conclusively breached.
+regime. The 9.50 level --- previously a structural resistance floor --- was
+conclusively breached. This 18L-era arc is one window in a longer trajectory: training
+has since continued through seven further depth surgeries and the dual-stream
+\emph{cord surgery} (\S\ref{sec:albert}) to the current 26L $2\times$256H architecture,
+with the best epoch-average reaching \textbf{9.2066} and the best single batch
+\textbf{8.6852}.
 
 \textbf{The observation log as a scientific artifact.} The ability to observe training at
 this resolution has motivated a structured field journal maintained in parallel with the
 training run: \texttt{albert\_observation\_log.md} in the \texttt{token-probes/} directory.
 The log contains timestamped field notes documenting routing table snapshots, WALD event
 clusters, cliff dive structure, expert death and resurrection events, surgery gate status,
-and embedding geometry probes. As of ep2942, the log contains 43 field notes covering the
+and embedding geometry probes. As of ep4254, the log contains 218+ field notes covering the
 full post-surgery-6 arc.
 
 This methodology---systematic observation of a training run as a scientific process rather
