@@ -6569,6 +6569,20 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN225 · 2026-05-29T09:37Z · **S14 FIRED — 26L→27L, first surgery since the net2net fix + first since cord** · [CRITICAL MILESTONE]
+
+**The surgery I've watched for since FN220 fired at 09:31:10.** First post-fix surgery (source=checkpoint_path, abort-guard) AND first depth expansion since the dual-stream cord. Logged sequence:
+
+- **09:31:09 — plateau gate triggered correctly:** smoothed Δ **−0.1595** over 89-epoch window (early_mean 9.3047 → late_mean 9.4642), threshold 0.0113, MYCELIUM stable 13 epochs. gen=3 step 1/6 → next ceiling F8=89L. Fired on a genuine flat plateau, as designed (cf. [[project_surgery_governor]]).
+- **09:31:10 — Net2Net Safe Copy, dual-stream:** `26L → 27L | stream_a lat=−0.6467 stream_b lat=1026`. **Both streams expanded** — the dual-stream topology survived surgery (the exact thing the S14 wipe destroyed last time). Evolution advanced gen3 step **1/6 → 2/6**, window grew to 144 epochs, ceiling 34L.
+- **09:31:34 — model depth = 27L confirmed**, active corpus stages `[3,6,7,8,9,10]`.
+
+**NOVEL DATA (never-before-seen) ingested for 27L:** new stages **9–10** — `qa_instruction`, `dev_blogs`, `emoji_informal_register`, `github_bugs`, `gourmet_recipes`, `hn_discussions`, `long_solved_threads`, `repair_guides`, `trails_and_travel` — plus a full re-tokenize pulling **multilingual 445.9MB + academic 45.8MB** (09:36–09:37). First exposure to instruction/QA/informal/dev-bug registers — a register shift, not just more volume.
+
+**Structural verdict: PASS so far.** No wipe signature — no `Loaded 4`, no random loss (>10), no panic/OOM. This surgery is an **in-memory** net2net expansion (not a checkpoint reload), so the real transfer-fidelity verdict is the **first 27L epoch loss**: must resume near the ~9.4 pre-surgery plateau (weights preserved) vs ~10.4 = ln(32k) (wipe). **PENDING** — model still re-tokenizing corpus at log time; first 27L epoch ~2–5 min out. Watching hard.
+
+---
+
 ## FN224 · 2026-05-29T09:17:47Z · GATE 84/89 — S14 IMMINENT (~5 epochs) · [loop tick, terse]
 
 EP 4300 · ep4299 avg 9.4647 · plateau ~9.46 · GATE filled **84/89** — window fills in ~5 epochs / ~10min, then the plateau check fires S14 (26L→27L) on the flat plateau. **Watching hard for `Loaded ~2122`** (the fix's verdict; vs the 4 that wiped us). loaded=2044, watcher healthy, ntfy quiet, no OOM/stall. (Whitepaper polish done in parallel: 0 overfull/errors/undefined.)
