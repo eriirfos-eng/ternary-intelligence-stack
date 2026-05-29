@@ -6569,6 +6569,19 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN239 · 2026-05-29T13:33Z · TTL routing patterns (full-grid) + oscillating ~9.42 · [loop tick + Simeon dash]
+
+**Tick:** ep4345 loss_avg **9.4270** (d**+0.0106** — wobbled UP from the 9.4164 low; oscillating ~9.42, NOT monotonic-accelerating — correcting FN238/238b's "accelerating" framing). GATE `smoothed_delta=nan` filled **85/89** → still no S15, governor holding (window not full). dead=0 blooming=7 hot=L26 myc_stable=9. tns=2122, log live 0s, no OOM/panic. ntfy = normal WALD.
+
+**Simeon shared the expanded TTL grid (G 17% / O 79% / R 4%; 54 layer-slots × ~60 steps).** Honest read of structure:
+- **NOT collapsed** — no solid-green (Nash collapse) nor solid-red (divergence); heterogeneous = healthy differentiated exploration.
+- **Vertical bands** = step-synchronized anti-stagnation bursts (G/R clamp across depth ~30 steps) — real mechanism, visible.
+- **Per-layer horizontal tendencies** = depth specialization (some layers settle G/+1, others explore R/−1).
+- **O 79%** = the 0/hold "active-neutral" state carries the bulk of routing every step — direct evidence of the ternary thesis (binary has no equivalent cell). Pitch-relevant.
+- **Caveat (rigor):** R/G checkerboards invite pareidolia. To *claim* structure for whitepaper/SPRIND, quantify: step-axis autocorrelation + per-layer routing entropy. Proposed, not yet run.
+
+---
+
 ## FN238b · 2026-05-29T13:31Z · CORRECTION — S15 NOT imminent; governor correctly withholding · [Simeon caught it]
 
 Simeon questioned "should it really fire?" — correct instinct. **Correcting FN238's "imminent":** GATE 84/89 is WINDOW-FILL proximity, not FIRE proximity. Live gate shows `smoothed_delta=nan` (plateau delta is undefined until the 89-window is full). And the loss is descending and **accelerating**: d−0.0009 → −0.0048 → **−0.0106**. So when the window fills (~5 ep) the quarter-means delta lands well ABOVE threshold 0.0113 (early_mean ≫ late_mean = still improving) → governor **WITHHOLDS S15**, by design ([[project_surgery_governor]]). Contrast S14, which fired at delta −0.1595 (loss rising/flat). **S15 will only fire on a genuine plateau, which this is not.** Conflating window-fill with fire-readiness was my error.
