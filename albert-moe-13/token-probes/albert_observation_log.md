@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN253 · 2026-05-29T18:38Z · back in ~9.41–9.42 band · myc_stable=69 · [loop tick, terse]
+
+EP 4419 b47, 28L. ep4418 **9.4167** (d+0.0054) — back in the ~9.41–9.42 band (the 9.3996 sub-9.40 was a momentary low; oscillation continues). dead=0 blooming=7 hot=L27 **myc_stable=69**. tns=2200, log live 0s, watchdog held, no OOM/panic. Healthy. (lighthouse OS now LIVE on Fly — https://lighthouse-rfi-irfos.fly.dev — reading this log locally on the Skybase, not on Fly.)
+
+---
+
 ## FN252 · 2026-05-29T18:29Z · **PEAK WALD density + first sub-9.40 break** · [Simeon dash]
 
 Simeon: "peak wald activity we never had so many fires in such a short amount of time." Dash (ep4417, 28L): dense red WALD markers across the entire ep4350–4417 descent — denser than the post-S15 cluster (FN246). Simultaneously **EP AVG 9.3996 — first sub-9.40**, T-610 9.4142, **ATL 8.6245 (↓2.00%)**. Read: peak WALD = peak loss *volatility* on the novel-data 28L descent, but **productive** — the model is descending hard *through* the spikes (WALD is reactive, fires on each spike; not a trigger — cf. [[project_wald_causality]]). Volatility + descent together = the fresh L27 aggressively reorganizing on the instruction/dev registers. Healthy: no divergence (loss dropping, not rising), watchdog held. Notable signature: deepest descent phase coincides with peak WALD — spiky-but-downward, not stuck.
