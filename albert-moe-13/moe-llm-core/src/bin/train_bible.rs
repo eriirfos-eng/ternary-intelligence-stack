@@ -676,7 +676,10 @@ fn fibonacci_fusion_layers(num_layers: usize) -> Vec<usize> {
     fibs
 }
 
-fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, device: &Device, root: &str) -> Result<()> {
+/// Returns Ok(true) if surgery was performed, Ok(false) if it was safely aborted
+/// (architecture mismatch) — in which case config + checkpoint are left untouched and
+/// the caller must skip fib-promotion/layer-add and keep training at the current depth.
+fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, device: &Device, root: &str) -> Result<bool> {
     println!("[{}] --- INITIATING NEURAL SURGERY: Net2Net Safe Copy ---", timestamp());
 
     let config_str = fs::read_to_string(config_path).expect("Unable to read config.json");
@@ -687,8 +690,11 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, de
 
     let mand = MandelbrotSurgery::new();
 
-    // Surgery reads from the BEST checkpoint, not the latest — prevents expanding from bad weights.
-    let source = if std::path::Path::new(best_path).exists() { best_path } else { checkpoint_path };
+    // Surgery clones from the LATEST checkpoint — it always matches the current config's
+    // architecture. It must NOT source from `best`: best can lag across surgeries, and a
+    // stale pre-cord single-stream `best` WIPED the model at S14 (2026-05-29) because the
+    // dual-stream clone found no stream tensors to copy and saved an unloadable checkpoint.
+    let source = checkpoint_path;
     let tensors = candle_core::safetensors::load(source, device)?;
     let mut new_tensors: HashMap<String, Tensor> = tensors.iter()
         .map(|(k, t)| (k.clone(), t.clone()))
@@ -714,6 +720,17 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, de
             .filter(|(k, _)| k.starts_with(&sa_prefix) || k.starts_with(&sb_prefix) || k.starts_with(&exp_prefix))
             .map(|(k, t)| (k.clone(), t.clone()))
             .collect();
+
+        // GUARD: a dual-stream config but a source with no stream tensors to clone means
+        // the source architecture does not match. Saving here would produce a checkpoint
+        // that cannot reload into the dual-stream model (the catastrophic S14 wipe). Abort:
+        // leave config + checkpoint untouched and let training continue unchanged.
+        if source_keys.is_empty() {
+            println!("[{}] *** SURGERY ABORTED: no stream_a/stream_b/experts tensors at layer {} in source '{}' \
+                      — architecture mismatch. Refusing to save an unloadable checkpoint; training continues at {}L. ***",
+                timestamp(), source_layer, source, old_layers);
+            return Ok(false);
+        }
 
         for (key, tensor) in &source_keys {
             let new_key = if key.starts_with(&sa_prefix) {
@@ -809,7 +826,7 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, de
         let _ = fs::rename(best_path, &archive_path);
         println!("[{}] Pre-surgery best archived to {}.", timestamp(), archive_path);
     }
-    Ok(())
+    Ok(true)
 }
 
 /// Mycelial cord surgery: expand single-stream 256H model into dual-stream 2×256H.
@@ -2265,7 +2282,13 @@ fn main() -> Result<()> {
             &mut global_step, &flags, &mut spore_manager
         )?;
         if needs_evolution {
-            perform_surgery(config_path, checkpoint_path, best_path, &device, &flags.root)?;
+            let surgery_done = perform_surgery(config_path, checkpoint_path, best_path, &device, &flags.root)?;
+            if !surgery_done {
+                // Surgery was safely aborted (architecture mismatch). Do NOT promote the
+                // fib target or add a layer — re-enter the loop and keep training unchanged.
+                println!("[{}] [surgery] aborted by safety guard — continuing training at current depth.", timestamp());
+                continue;
+            }
             let post_layers: usize = fs::read_to_string(config_path)
                 .ok()
                 .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
