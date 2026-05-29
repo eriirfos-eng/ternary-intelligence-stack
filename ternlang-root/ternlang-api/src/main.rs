@@ -135,6 +135,9 @@ pub struct KeyStore {
 impl KeyStore {
     /// Load from disk (creates empty file if it doesn't exist).
     pub async fn load(path: PathBuf) -> Arc<Self> {
+        if let Some(parent) = path.parent() {
+            let _ = tokio::fs::create_dir_all(parent).await;  // ensure /data exists before save()
+        }
         let data = if path.exists() {
             let raw = tokio::fs::read_to_string(&path).await.unwrap_or_default();
             serde_json::from_str::<KeyStoreData>(&raw).unwrap_or_default()
@@ -4622,12 +4625,27 @@ fn verify_stripe_signature(secret: &str, raw_body: &[u8], sig_header: &str) -> b
     }
     if timestamp.is_empty() || v1_sig.is_empty() { return false; }
 
+    // Replay protection: reject signatures outside Stripe's ±5-minute tolerance.
+    match timestamp.parse::<i64>() {
+        Ok(ts) => {
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs() as i64)
+                .unwrap_or(0);
+            if (now - ts).abs() > 300 { return false; }
+        }
+        Err(_) => return false,
+    }
+
     let payload = format!("{}.{}", timestamp, String::from_utf8_lossy(raw_body));
     let mut mac = Hmac::<Sha256>::new_from_slice(secret.as_bytes())
         .expect("HMAC accepts any key length");
     mac.update(payload.as_bytes());
-    let expected = hex::encode(mac.finalize().into_bytes());
-    expected == v1_sig
+    // Constant-time verification via the MAC itself (avoids the timing side-channel of `==`).
+    match hex::decode(v1_sig) {
+        Ok(sig_bytes) => mac.verify_slice(&sig_bytes).is_ok(),
+        Err(_) => false,
+    }
 }
 
 /// Send the API key + GitHub activation instructions to the customer via Resend.
@@ -4715,9 +4733,14 @@ async fn stripe_webhook(
         None    => return api_error(StatusCode::BAD_REQUEST, "Missing Stripe-Signature header."),
     };
 
-    if !state.stripe_webhook_secret.is_empty()
-        && !verify_stripe_signature(&state.stripe_webhook_secret, &body, &sig_header)
-    {
+    // FAIL-CLOSED: an unset/empty secret must REJECT webhooks, never skip verification.
+    // (The previous `!is_empty() && ...` skipped the check entirely when the secret was unset,
+    // letting a forged checkout.session.completed mint a free Tier-3 key.)
+    if state.stripe_webhook_secret.is_empty() {
+        eprintln!("[stripe] STRIPE_WEBHOOK_SECRET unset — refusing webhook (fail-closed)");
+        return api_error(StatusCode::SERVICE_UNAVAILABLE, "Webhook verification not configured.");
+    }
+    if !verify_stripe_signature(&state.stripe_webhook_secret, &body, &sig_header) {
         eprintln!("[stripe] signature verification failed");
         return api_error(StatusCode::UNAUTHORIZED, "Invalid webhook signature.");
     }
@@ -5584,14 +5607,23 @@ pub async fn heartbeat(
 #[tokio::main]
 async fn main() {
     let admin_key = env::var("TERNLANG_ADMIN_KEY").unwrap_or_else(|_| {
-        eprintln!("[ternlang-api] WARNING: TERNLANG_ADMIN_KEY not set — using 'admin-dev'");
-        eprintln!("[ternlang-api] Set TERNLANG_ADMIN_KEY=<secret> in production");
-        "admin-dev".to_string()
+        // FAIL-CLOSED: never run with the known-default admin key outside explicit local dev.
+        // (The default let anyone who guessed 'admin-dev' list/mint/revoke all customer keys.)
+        if env::var("TERNLANG_DEV").as_deref() == Ok("1") {
+            eprintln!("[ternlang-api] DEV MODE: TERNLANG_ADMIN_KEY unset — using 'admin-dev'");
+            "admin-dev".to_string()
+        } else {
+            eprintln!("[ternlang-api] FATAL: TERNLANG_ADMIN_KEY not set — refusing to start in production.");
+            eprintln!("[ternlang-api] Set TERNLANG_ADMIN_KEY=<secret>, or TERNLANG_DEV=1 for local dev.");
+            std::process::exit(1);
+        }
     });
 
+    // Persist on a mounted volume by default (Fly: mount a volume at /data). A relative default
+    // lived on the ephemeral container FS, so the customer key store vanished on every deploy.
     let keys_file = env::var("KEYS_FILE")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| PathBuf::from("ternlang_keys.json"));
+        .unwrap_or_else(|_| PathBuf::from("/data/ternlang_keys.json"));
 
     let port: u16 = env::var("PORT")
         .ok()
@@ -5620,7 +5652,8 @@ async fn main() {
 
     let (tracer_tx, _rx) = tokio::sync::broadcast::channel(1000);
 
-    let db_path = PathBuf::from("ternlang.db");
+    let db_path = env::var("DB_PATH").map(PathBuf::from)
+        .unwrap_or_else(|_| PathBuf::from("/data/ternlang.db"));
     let db_manager = Arc::new(DatabaseManager::new(db_path));
 
     let state = Arc::new(AppState {
