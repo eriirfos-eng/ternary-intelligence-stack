@@ -6569,6 +6569,16 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN221 · 2026-05-29T08:32:31Z · STALL — watchdog clean-stopped at 08:24 (180s silence mid-ep4291) · weights safe · [loop tick]
+
+**State:** STOPPED (watchdog) · last checkpoint ep4291 (volume meta=4291, 741 MiB) · GATE 75/89 (S14 was ~14 epochs out) · no wipe.
+
+Modal container went silent mid-ep4291 (normal through batch 41/300, then nothing) — a Modal-side hiccup/preemption. The 180s stall watchdog fired `modal app stop` cleanly (`STREAM STALLED` ntfy 08:24:43). Weights safe at the last epoch boundary; resume = `albert-train` → loads from ep4291. Detach doesn't prevent this: detach guards against local-process death, the watchdog guards against a hung container (it actively stops a stalled app to save weights + not pay for a frozen GPU).
+
+**Action underway:** implementing auto-restart-on-stall in `albert-run` (watchdog stops → bounded auto-relaunch with backoff) so transient stalls self-heal on unattended runs, + an ntfy-message pass. Resume after.
+
+---
+
 ## FN220 · 2026-05-29T08:18:07Z · plateau steady · GATE 73/89 · [loop tick, terse]
 
 EP 4290 · ep4288 avg 9.4718 · plateau ~9.47 (batch low 9.2053) · GATE filled 73/89 (~16 epochs / ~40min to S14) · watcher healthy (loaded=2044) · ntfy quiet · no OOM/stall · still 26L.
