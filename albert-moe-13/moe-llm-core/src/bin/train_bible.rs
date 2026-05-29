@@ -1,4 +1,5 @@
 use candle_core::{Device, DType, Result, Tensor};
+use candle_core::backprop::GradStore;
 use candle_nn::{Optimizer, VarBuilder, loss, VarMap};
 use moe_llm_core::model::{Transformer, TransformerConfig, clear_routing_capture, take_routing_capture, clear_entropy_capture, take_entropy_capture, clear_lb_capture, take_lb_capture, clear_tlight_capture, take_tlight_capture, clear_div_capture, take_div_capture, take_div_log_capture, take_div_f32_log_capture, set_div_enabled, set_gate_diversity_scale, clear_cord_captures, take_cord_gate_capture, take_cord_cosim_capture};
 use moe_llm_core::tokenizer::BpeTokenizer;
@@ -117,11 +118,13 @@ const LOSS_EXPLOSION_THRESHOLD: f32 = 11.0;
 const COLLAPSE_THRESHOLD:    f32 = 11.0;
 const COLLAPSE_STREAK_LIMIT: u32 = 2;
 
-// Gradient accumulation: accumulate this many micro-batch losses before
-// calling backward() + opt.step(). Equivalent to batch_size=N at no
-// extra memory cost — each forward graph is summed into accum_loss,
-// then one backward pass covers all N sequences. Mirrors the ternary
-// hold state: withhold the weight update until enough evidence accumulates.
+// Gradient accumulation: backward each micro-batch immediately and SUM ITS GRADIENTS
+// into a running GradStore (see accumulate_grads); opt.step() fires once per N. This
+// gives an effective batch of N at the memory of ONE forward graph, because each
+// micro-batch's graph is freed right after its backward. (Earlier this summed loss
+// *tensors* and ran one backward over all N — which held N full forward graphs at
+// once and OOM'd a 24GB GPU at N=4 the moment the whole body trained. Fixed 2026-05-29.)
+// Mirrors the ternary hold state: withhold the weight update until enough evidence accumulates.
 const GRAD_ACCUM_STEPS: usize = 4;
 const BATCH_SIZE: usize = 8;   // CTX=256, F16 attn: T4 16GB comfortable at 8 (params+moments ~2GB, activations ~4GB)
 // Direct LR boost applied after Adam's step for cold layers (norm < THRESHOLD).
@@ -219,6 +222,31 @@ fn global_grad_norm(varmap: &VarMap, grads: &candle_core::backprop::GradStore) -
         }
     }
     sq_sum.sqrt()
+}
+
+/// Memory-efficient gradient accumulation: fold one micro-batch's GradStore into a
+/// running accumulator by summing per-variable grads. This lets us backward() each
+/// micro-batch immediately (freeing its forward graph) instead of summing loss
+/// tensors and holding all GRAD_ACCUM_STEPS forward graphs at once. The old
+/// loss-tensor approach OOM'd once the whole body trained (it held N full dual-stream
+/// graphs); this keeps peak memory at exactly ONE graph regardless of N.
+fn accumulate_grads(acc: &mut Option<GradStore>, g: GradStore, vars: &[candle_core::Var]) -> Result<()> {
+    match acc {
+        None => *acc = Some(g),
+        Some(a) => {
+            for var in vars {
+                let t = var.as_tensor();
+                if let Some(gi) = g.get(t) {
+                    let summed = match a.get(t) {
+                        Some(prev) => (prev + gi)?,
+                        None       => gi.clone(),
+                    };
+                    a.insert(t, summed);
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Compute L2 gradient norm per transformer layer, plus embed and lm_head.
@@ -1237,8 +1265,12 @@ fn train_cycle(
             .ok();
 
         let epoch_start = Instant::now();
-        let mut accum_loss: Option<Tensor> = None;
+        let mut accum_grads: Option<GradStore> = None;
         let mut accum_exploded = false;
+        // Snapshot the trainable vars once per epoch (stable within the batch loop;
+        // surgery only mutates the set between epochs). Used to fold per-micro-batch
+        // gradients into the accumulator without holding multiple forward graphs.
+        let epoch_vars = varmap.all_vars();
 
         for batch_idx in 0..num_batches {
             let batch_start = Instant::now();
@@ -1359,12 +1391,18 @@ fn train_cycle(
                 }
             }
 
-            // Accumulate scaled loss (÷N so the effective gradient magnitude is unchanged).
-            let scaled = (batch_loss * (1.0 / GRAD_ACCUM_STEPS as f64))?;
-            accum_loss = Some(match accum_loss.take() {
-                None    => scaled,
-                Some(a) => (a + scaled)?,
-            });
+            // Scale by ÷N (so summed micro-batch grads equal the mean gradient), then
+            // backward THIS micro-batch immediately and fold its grads into the
+            // accumulator. Backwarding per micro-batch frees each forward graph right
+            // away — peak memory stays at ONE graph instead of N. (The old approach
+            // summed loss *tensors* and held all N dual-stream graphs at once, which
+            // OOM'd the moment the whole body started training.) Skip backward for an
+            // exploded micro-batch; the window is discarded at the step boundary.
+            if !accum_exploded {
+                let scaled = (batch_loss * (1.0 / GRAD_ACCUM_STEPS as f64))?;
+                let g = scaled.backward()?;
+                accumulate_grads(&mut accum_grads, g, &epoch_vars)?;
+            }
 
             total_loss      += real_loss;
             counted_batches += 1;
@@ -1380,7 +1418,7 @@ fn train_cycle(
                     skipped_steps += 1;
                     println!("[{}] [SKIP] Accum window ending batch {} — explosion, preserving weights.",
                         timestamp(), batch_idx);
-                    accum_loss     = None;
+                    accum_grads    = None;
                     accum_exploded = false;
                     *global_step  += 1;
                     continue;
@@ -1388,8 +1426,9 @@ fn train_cycle(
 
                 // ── Gradient step ─────────────────────────────────────────────
                 // backward() + clip + step + cold-layer LR boost, once per GRAD_ACCUM_STEPS.
-                if let Some(combined) = accum_loss.take() {
-                    let mut grads = combined.backward()?;
+                if let Some(mut grads) = accum_grads.take() {
+                    // grads already hold the summed (mean) gradient over the window —
+                    // each micro-batch was backwarded + folded in above.
                     // Capture expert grad variance before opt.step() consumes grads.
                     if is_step_batch && cur_div_weight > 0.0 {
                         div_grad_vals = expert_grad_variance(&varmap, &grads, config.num_layers, config.num_experts);

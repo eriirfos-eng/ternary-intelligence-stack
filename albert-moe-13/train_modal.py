@@ -174,10 +174,10 @@ def _ntfy(title: str, msg: str, priority: str = "3") -> None:
 
 @app.function(
     image=image,
-    gpu="L4",            # 24GB — required once the WHOLE body trains (LayerNorm-wall fix 2026-05-29):
-                         # full-body backward + AdamW m/v for all 187M params no longer fits T4 16GB
-                         # even at batch_size=1. L4 keeps full 256 context; ~$0.80/hr but higher
-                         # throughput → ~flat/lower $/epoch. Bump to A10G/A100-40GB if 24GB is tight.
+    gpu="T4",            # Back on T4 (16GB) to TEST: after the grad-accum fix (2026-05-29 — backward
+                         # per micro-batch + sum gradients instead of holding N forward graphs), peak
+                         # memory is ONE dual-stream graph, not N. A 187M model should fit 16GB again.
+                         # If this OOMs, bump to "L4" (24GB) — one line. See GRAD_ACCUM_STEPS note in train_bible.
     timeout=23 * 3600,   # 23-hour cap
     volumes={"/vol": vol},
     memory=16384,
