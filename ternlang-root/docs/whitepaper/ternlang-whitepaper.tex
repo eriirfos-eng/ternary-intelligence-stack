@@ -29,6 +29,22 @@
 % Let pages end naturally instead of stretching content to fill (reduces "page skip" gaps).
 \raggedbottom
 
+% Clean hyperlinks: dark coloured text, no boxes (EU contrast — dark, never grey).
+\definecolor{linkblue}{RGB}{12,71,138}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=linkblue,
+  citecolor=linkblue,
+  urlcolor=linkblue,
+  filecolor=linkblue,
+  bookmarksnumbered=true,
+  pdftitle={Ternlang: A Full-Stack Balanced Ternary Execution Architecture},
+  pdfauthor={Kepp, Karimi, Csonka, Scharler, Ehrig --- RFI-IRFOS}
+}
+
+% Clamp any over-wide diagram to the text width; never enlarges a narrower one.
+\newcommand{\fit}[1]{\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{#1}}
+
 % ── Ternlang code style ───────────────────────────────────────────────────────
 \definecolor{ternkw}{RGB}{0,164,140}
 \definecolor{terncmt}{RGB}{120,120,150}
@@ -61,11 +77,18 @@
   stringstyle=\color{ternlit},
   showstringspaces=false,
   breaklines=true,
+  breakatwhitespace=false,
+  breakindent=0pt,
+  columns=fullflexible,
+  keepspaces=true,
+  postbreak=\mbox{\textcolor{terncmt}{$\hookrightarrow$}\space},
   frame=single,
+  framexleftmargin=16pt,
   numbers=left,
   numberstyle=\tiny\color{terncmt},
-  numbersep=4pt,
-  xleftmargin=10pt
+  numbersep=5pt,
+  xleftmargin=16pt,
+  xrightmargin=6pt
 }
 
 \newtheorem{definition}{Definition}
@@ -74,9 +97,11 @@
 
 % ─────────────────────────────────────────────────────────────────────────────
 
-\title{Ternlang: A Full-Stack Balanced Ternary Execution Architecture
-       for Sparse Neural Inference and Ambiguity-Aware Agent Systems\\[2pt]
-       {\normalfont\normalsize\itshape The Death of the Bit.}}
+\title{{\normalcolor\rule{\linewidth}{2.5pt}}\\[7pt]
+       Ternlang: A Full-Stack Balanced Ternary Execution Architecture
+       for Sparse Neural Inference and Ambiguity-Aware Agent Systems\\[3pt]
+       {\normalfont\normalsize\itshape The Death of the Bit.}\\[6pt]
+       {\normalcolor\rule{\linewidth}{0.6pt}}}
 
 \author{%
 \IEEEauthorblockN{%
@@ -84,9 +109,9 @@
 \begin{tabular}{@{}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{}}
 \textbf{Simeon Kepp} & \textbf{Zabih Karimi} & \textbf{Nikoletta Csonka} & \textbf{Lisa Scharler} & \textbf{Louis Paul Ehrig}\\
 {\footnotesize Lead Architect} & {\footnotesize IT \& Network Eng.} & {\footnotesize Intl.\ Relations} & {\footnotesize Social Tech \& Ethics} & {\footnotesize Public Affairs}\\
-{\scriptsize\texttt{s.kepp}} & {\scriptsize\texttt{z.karimi}} & {\scriptsize\texttt{csonikoletta}} & {\scriptsize\texttt{l.scharler}} & {\scriptsize\texttt{l.ehrig}}\\
+{\scriptsize\href{mailto:s.kepp@ternlang.com}{\texttt{s.kepp}}} & {\scriptsize\href{mailto:z.karimi@ternlang.com}{\texttt{z.karimi}}} & {\scriptsize\href{mailto:csonikoletta@ternlang.com}{\texttt{csonikoletta}}} & {\scriptsize\href{mailto:l.scharler@ternlang.com}{\texttt{l.scharler}}} & {\scriptsize\href{mailto:l.ehrig@ternlang.com}{\texttt{l.ehrig}}}\\
 \end{tabular}}
-\thanks{All authors at RFI-IRFOS --- Research Focus Institute, Elisabethinergasse~25, 8020~Graz, Austria. Email: \texttt{<user>@ternlang.com}. LinkedIn: simeon-kepp, zabih-karimi, csonikoletta, lisa-scharler, louis-ehrig. Patent Pending A50296/2026 (TIS platform, 10 claims). Repository: \url{https://github.com/eriirfos-eng/ternary-intelligence-stack}}%
+\thanks{All authors at RFI-IRFOS --- Research Focus Institute, Elisabethinergasse~25, 8020~Graz, Austria. Email: \texttt{<user>@ternlang.com}. LinkedIn: \href{https://www.linkedin.com/in/simeon-kepp}{simeon-kepp}, \href{https://www.linkedin.com/in/zabih-karimi}{zabih-karimi}, \href{https://www.linkedin.com/in/csonikoletta}{csonikoletta}, \href{https://www.linkedin.com/in/lisa-scharler}{lisa-scharler}, \href{https://www.linkedin.com/in/louis-ehrig}{louis-ehrig}. Patent Pending A50296/2026 (TIS platform, 10 claims). Repository: \url{https://github.com/eriirfos-eng/ternary-intelligence-stack}}%
 }
 
 \begin{document}
@@ -182,6 +207,13 @@ language, virtual machine, actor model, FPGA synthesis, Verilog,
 mixture-of-experts, AI reasoning, ternary orchestration, autonomous training,
 self-evolving neural networks, consumer CPU inference, ecocentric AI, WebAssembly
 \end{IEEEkeywords}
+
+% ── Contents ──────────────────────────────────────────────────────────────────
+\noindent{\normalcolor\rule{\linewidth}{0.6pt}}
+{\setlength{\parskip}{0pt}\renewcommand{\baselinestretch}{0.96}\small
+ \tableofcontents\par}
+\noindent{\normalcolor\rule{\linewidth}{0.6pt}}
+\vspace{0.6em}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Introduction}
