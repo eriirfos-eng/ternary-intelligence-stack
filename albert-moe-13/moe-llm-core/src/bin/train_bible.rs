@@ -249,6 +249,20 @@ fn accumulate_grads(acc: &mut Option<GradStore>, g: GradStore, vars: &[candle_co
     Ok(())
 }
 
+/// Best-effort GPU memory snapshot via nvidia-smi: (used, free, total) in MB.
+/// Returns None on CPU / if nvidia-smi is unavailable. Diagnostic telemetry to
+/// distinguish a per-step leak (straight ramp in `used`) from CUDA-allocator
+/// fragmentation (sawtooth that drifts up), and to measure the real footprint.
+fn gpu_mem_mb() -> Option<(u64, u64, u64)> {
+    let out = std::process::Command::new("nvidia-smi")
+        .args(["--query-gpu=memory.used,memory.free,memory.total", "--format=csv,noheader,nounits"])
+        .output().ok()?;
+    let s = String::from_utf8_lossy(&out.stdout);
+    let line = s.lines().next()?;
+    let mut it = line.split(',').map(|x| x.trim().parse::<u64>().ok());
+    Some((it.next()??, it.next()??, it.next()??))
+}
+
 /// Compute L2 gradient norm per transformer layer, plus embed and lm_head.
 /// Returns a Vec of length num_layers + 2:
 ///   [0..num_layers] = block layer norms (blocks.N.*)
@@ -1573,6 +1587,16 @@ fn train_cycle(
                     let ln_str: Vec<String> = last_layer_norms.iter()
                         .map(|n| format!("{:.2e}", n)).collect();
                     let _ = writeln!(f, "GRAD step={} n={:.4} L={}", *global_step, last_norm, ln_str.join(","));
+                }
+
+                // GPUMEM — per-step GPU memory (diagnostic for the post-LayerNorm-fix
+                // memory creep). Every 4 batches to keep overhead < ~1%. Ramp in `used`
+                // = leak; sawtooth drift = fragmentation. Also mirrored to stdout/dashboard.
+                if batch_idx % 4 == 0 {
+                    if let Some((used, free, total)) = gpu_mem_mb() {
+                        let _ = writeln!(f, "GPUMEM step={} used={}MB free={}MB total={}MB", *global_step, used, free, total);
+                        println!("[mem] step={} GPU used={}MB free={}MB ({}MB total)", *global_step, used, free, total);
+                    }
                 }
 
                 // ROUTE — expert routing weights, emitted every 10 batches to keep log lean.
