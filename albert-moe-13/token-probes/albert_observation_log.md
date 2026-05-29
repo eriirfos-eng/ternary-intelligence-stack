@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN243 · 2026-05-29T14:32Z · 28L oscillating ~9.42 · hot=L27 holding · [loop tick, terse]
+
+EP 4359 b121, 28L. ep4357 9.4131 (d+0.0103) → ep4358 **9.4259** (d+0.0128) — oscillating ~9.41–9.43, mild upward wobble (not descending hard, not plateaued). **hot=L27** still (new layer remains most-active, integrating). dead=1, **blooming 8→3** (stack consolidating post-surgery — fewer layers in active bloom), myc_stable=9. tns=2200, log live 0s, watchdog held (no stall/OOM), ntfy = normal WALD. No S15-style trigger pending (window refilling post-S15).
+
+---
+
 ## FN242 · 2026-05-29T14:02Z · post-S15 settling · hot→L27 (new layer) · [loop tick, terse]
 
 EP 4351 b219, 28L. loss_avg **9.4235** stable (the EPOCH_SUMMARY `d+0.2169` is a cross-surgery boundary artifact, NOT a real jump — absolute loss unchanged from ep4349's 9.4229 → loss-neutral confirmed). **hot=L27** (was L26) — the freshly-added 28th layer is now most-active, expected as it differentiates from its net2net identity-init; cold=L0. **dead=1** (normal post-surgery churn, cf. FN228/238), blooming=8, myc_stable=1 (reset at surgery, climbing). tns=2200, log live 0s, **watchdog held** (no stream-stale/stall lines), no OOM/panic. ntfy = surgery + normal WALD. Plateau window reset for the new 28L cycle.
