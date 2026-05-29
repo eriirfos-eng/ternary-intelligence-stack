@@ -6569,7 +6569,13 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
-## FN238 · 2026-05-29T13:28Z · descending (new low 9.4164) · S15 imminent (GATE 84/89) · [loop tick, terse]
+## FN238b · 2026-05-29T13:31Z · CORRECTION — S15 NOT imminent; governor correctly withholding · [Simeon caught it]
+
+Simeon questioned "should it really fire?" — correct instinct. **Correcting FN238's "imminent":** GATE 84/89 is WINDOW-FILL proximity, not FIRE proximity. Live gate shows `smoothed_delta=nan` (plateau delta is undefined until the 89-window is full). And the loss is descending and **accelerating**: d−0.0009 → −0.0048 → **−0.0106**. So when the window fills (~5 ep) the quarter-means delta lands well ABOVE threshold 0.0113 (early_mean ≫ late_mean = still improving) → governor **WITHHOLDS S15**, by design ([[project_surgery_governor]]). Contrast S14, which fired at delta −0.1595 (loss rising/flat). **S15 will only fire on a genuine plateau, which this is not.** Conflating window-fill with fire-readiness was my error.
+
+---
+
+## FN238 · 2026-05-29T13:28Z · descending (new low 9.4164) · S15 [SUPERSEDED by FN238b — NOT imminent] (GATE 84/89) · [loop tick, terse]
 
 EP 4345 b128, 27L. ep4344 loss_avg **9.4164** (d−0.0106) — **new post-recovery low** (was 9.4326 @FN237), clean descent on novel data. GATE window=89 **filled=84** → **S15 ~5 epochs out**. tns=2122 stable, log live 1s, ntfy = normal WALD ticks only, no OOM/panic. **S15 will be the first surgery since the recovery + watchdog/reconciliation hardening** — watch: should grow 27L→28L (tns 2122→~2200), and the new watchdog must NOT false-restart during the surgery/re-tokenize silence (corpus bypass + 420s budget + liveness probe should hold).
 
