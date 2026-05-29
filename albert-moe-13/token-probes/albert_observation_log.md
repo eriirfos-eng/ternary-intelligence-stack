@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN238 · 2026-05-29T13:28Z · descending (new low 9.4164) · S15 imminent (GATE 84/89) · [loop tick, terse]
+
+EP 4345 b128, 27L. ep4344 loss_avg **9.4164** (d−0.0106) — **new post-recovery low** (was 9.4326 @FN237), clean descent on novel data. GATE window=89 **filled=84** → **S15 ~5 epochs out**. tns=2122 stable, log live 1s, ntfy = normal WALD ticks only, no OOM/panic. **S15 will be the first surgery since the recovery + watchdog/reconciliation hardening** — watch: should grow 27L→28L (tns 2122→~2200), and the new watchdog must NOT false-restart during the surgery/re-tokenize silence (corpus bypass + 420s budget + liveness probe should hold).
+
+---
+
 ## FN237 · 2026-05-29T13:13Z · **RECOVERY CLOSED — `Loaded 2122` / 27L, healthy** · [MILESTONE + dash evidence]
 
 `[12:51:01] Loaded 2122 tensors from checkpoint` + `Arch: 27L`. **S14 fully restored — zero permanent weight loss from the entire incident** (false-positive restart → config-sync rollback to 26L → recovered via config fix + reconciliation → re-fire → 2122 loaded). Dashboard (Simeon, 13:13): ARCH **2×27L** · 2×256H · 12E · 256CTX · TNS **2,122** · EP 4342 · chip ATL **8.8005** · GATE green.
