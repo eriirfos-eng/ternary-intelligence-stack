@@ -9,7 +9,9 @@
 % Format: IEEE two-column (IEEEtran) or ACM (acmart)
 % ─────────────────────────────────────────────────────────────────────────────
 
-\documentclass[journal,10pt,onecolumn]{IEEEtran}
+\documentclass[11pt,a4paper]{article}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{lmodern}
 
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{listings}
@@ -106,13 +108,66 @@
 \author{%
 \IEEEauthorblockN{%
 \renewcommand{\arraystretch}{1.2}%
-\begin{tabular}{@{}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{}}
+\fit{\begin{tabular}{@{}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{\hspace{1.6em}}c@{}}
 \textbf{Simeon Kepp} & \textbf{Zabih Karimi} & \textbf{Nikoletta Csonka} & \textbf{Lisa Scharler} & \textbf{Louis Paul Ehrig}\\
 {\footnotesize Lead Architect} & {\footnotesize IT \& Network Eng.} & {\footnotesize Intl.\ Relations} & {\footnotesize Social Tech \& Ethics} & {\footnotesize Public Affairs}\\
 {\scriptsize\href{mailto:s.kepp@ternlang.com}{\texttt{s.kepp}}} & {\scriptsize\href{mailto:z.karimi@ternlang.com}{\texttt{z.karimi}}} & {\scriptsize\href{mailto:csonikoletta@ternlang.com}{\texttt{csonikoletta}}} & {\scriptsize\href{mailto:l.scharler@ternlang.com}{\texttt{l.scharler}}} & {\scriptsize\href{mailto:l.ehrig@ternlang.com}{\texttt{l.ehrig}}}\\
-\end{tabular}}
+\end{tabular}}}
 \thanks{All authors at RFI-IRFOS --- Research Focus Institute, Elisabethinergasse~25, 8020~Graz, Austria. Email: \texttt{<user>@ternlang.com}. LinkedIn: \href{https://www.linkedin.com/in/simeon-kepp}{simeon-kepp}, \href{https://www.linkedin.com/in/zabih-karimi}{zabih-karimi}, \href{https://www.linkedin.com/in/csonikoletta}{csonikoletta}, \href{https://www.linkedin.com/in/lisa-scharler}{lisa-scharler}, \href{https://www.linkedin.com/in/louis-ehrig}{louis-ehrig}. Patent Pending A50296/2026 (TIS platform, 10 claims). Repository: \url{https://github.com/eriirfos-eng/ternary-intelligence-stack}}%
 }
+
+% ── Clean single-column report styling (migrated off IEEEtran) ────────────────
+% Bold, flush-left section headings (article defaults are bold; titlesec tightens
+% spacing and guarantees left alignment so sections stop drifting centre).
+\usepackage{titlesec}
+\titleformat{\section}{\Large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{1.5ex plus .8ex minus .2ex}{0.8ex plus .2ex}
+\titlespacing*{\subsection}{0pt}{1.2ex plus .6ex minus .2ex}{0.6ex plus .2ex}
+\titlespacing*{\subsubsection}{0pt}{1.0ex plus .5ex minus .2ex}{0.5ex plus .2ex}
+
+% Block paragraphs: every paragraph starts hard at the left margin (no first-line
+% indent) with vertical separation — the "truly left-aligned" look.
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em plus 0.15em minus 0.1em}
+
+% Pack pages tightly: let floats use top/bottom/here/page freely and tolerate more
+% float-heavy pages, so a table/figure never strands a half-empty page behind it.
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.72}
+\setcounter{topnumber}{4}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{6}
+% Discourage orphans/widows so paragraphs don't split awkwardly across pages.
+\clubpenalty=10000
+\widowpenalty=10000
+
+% ── IEEEtran compatibility shims (so the title/abstract/keywords body is untouched)
+\newcommand{\IEEEauthorblockN}[1]{#1}
+\newcommand{\IEEEauthorblockA}[1]{#1}
+% Abstract: centred bold heading over a narrower, compact, justified centre block
+% (house style) — the body text below it then runs full width.
+\renewenvironment{abstract}{%
+  \par\medskip
+  {\centering\bfseries Abstract\par}\nopagebreak\smallskip
+  \list{}{%
+    \setlength{\leftmargin}{0.085\linewidth}%
+    \setlength{\rightmargin}{0.085\linewidth}%
+    \setlength{\parsep}{0.4em}%
+    \setlength{\topsep}{0pt}}%
+  \item\relax\small}%
+  {\endlist\par\medskip}
+% "Keywords" block to replace IEEEkeywords — same narrower compact measure.
+\newenvironment{IEEEkeywords}{%
+  \list{}{%
+    \setlength{\leftmargin}{0.085\linewidth}%
+    \setlength{\rightmargin}{0.085\linewidth}%
+    \setlength{\topsep}{0.3em}}%
+  \item\relax\small\noindent\textbf{Keywords.}\space\itshape}%
+  {\endlist\par\medskip}
 
 \begin{document}
 
@@ -304,7 +359,7 @@ $s, c \in T$.
 
 The complete sum/carry table is:
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Balanced ternary addition (sum, carry)}
@@ -337,7 +392,7 @@ $\mathrm{neg}(t) = -t$. Note $\mathrm{neg}(0) = 0$.
 
 Hardware naturally operates in binary. We encode trits as 2-bit pairs:
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{BET 2-bit trit encoding}
@@ -563,7 +618,7 @@ The choice of 27 registers reflects the ternary motif: $27 = 3^3$.
 Instructions are variable-length, with a 1-byte opcode followed by 0–2
 operand bytes. Table~\ref{tab:isa} lists the complete opcode map.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{BET ISA opcode reference (selected)}
@@ -680,7 +735,7 @@ We evaluate sparse versus dense matrix multiply on $512 \times 512$ weight
 matrices quantized from normally distributed $\mathcal{N}(0,1)$ float weights
 using threshold~(\ref{eq:quantize}).
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Sparse vs.\ dense ternary matmul ($512 \times 512$)}
@@ -710,7 +765,7 @@ and an INT8 quantized baseline using AVX2 SIMD kernels deployed in a
 production Axum server. Throughput was measured in operations per second
 across three representative sparsity levels on a commodity x86-64 CPU.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{AVX2 SIMD ternary inference --- production hardware throughput}
@@ -1216,7 +1271,7 @@ generation on commodity consumer hardware.
 
 \subsection{Architecture}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Albert MoE-13 architecture: v2.0.0 baseline and v3.0 current state}
@@ -1287,7 +1342,7 @@ each, with the plateau sensitivity tightening $0.75\times$ per generation and a
 stuck-generation timeout preventing infinite plateaus. Surgery fires on plateau, not
 on loss threshold. The surgery history through the dual-stream cord surgery (Global Epoch 4206):
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Albert MoE-13 --- autonomous surgery history}
@@ -1636,7 +1691,7 @@ the following epoch. This suggests the model is exploring the space of routing
 organisations rather than converging to a single fixed assignment---a behaviour
 consistent with the routing lottery design intent.
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[
     >=Stealth, thick,
@@ -1756,7 +1811,7 @@ this carries additional architectural weight: the gate reset is a deliberate hol
 state applied to routing---an instruction to the system to withhold routing
 commitment until the new epoch's evidence has been accumulated.
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[
     every node/.style={font=\footnotesize},
@@ -1811,7 +1866,7 @@ neural routing level:
   \label{eq:skip_rate}
 \end{equation}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{\texttt{@sparseskip} live inference --- independently verified on two CPU-only machines (albert.\ v2.0.0)}
@@ -1845,7 +1900,7 @@ numerical error. This is the same guarantee that holds for \texttt{TSPARSE\_MATM
 at the weight-matrix level, now realised at the coarser granularity of entire expert
 modules.
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
@@ -1936,7 +1991,7 @@ applied to gradient computation.
 
 \subsection{Training Results}\label{subsec:results}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Albert MoE-13 v2.0.0 --- 16-epoch training summary (English corpus)}
@@ -1959,12 +2014,12 @@ Training hardware & HP ZBook 2013 $\cdot$ Intel CPU $\cdot$ \textbf{no GPU} \\
 \end{tabular}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Albert MoE-13 v3.0 --- current state (multilingual, 32k vocab, as of 2026-05-22)}
 \label{tab:albert_v3}
-\begin{tabular}{lr}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.40\linewidth} >{\raggedright\arraybackslash}p{0.55\linewidth}@{}}
 \toprule
 Metric & Value \\
 \midrule
@@ -1991,7 +2046,7 @@ CPU validation hardware & HP ZBook 2013 $\cdot$ Intel i7-4800MQ $\cdot$ no GPU \
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
@@ -2328,7 +2383,7 @@ output distribution while preserving its internal representations.
 The \texttt{@sparseskip} inference primitive (\S\ref{sec:sparse}) was measured
 end-to-end on the 2013 HP ZBook (Intel i7-4800MQ, 7.1\,GB RAM, Linux, no GPU):
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Albert MoE-13 \texttt{@sparseskip} inference --- CPU hardware validation}
@@ -2377,7 +2432,7 @@ Following the seed-bias fix, albert.\ continued training through five additional
 Net2Net surgeries, expanding from 12 to 17 layers while simultaneously growing its context
 window from 128 to 256 tokens. The surgery history for this phase:
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Albert MoE-13 v3.0 --- surgery history, Phase 5}
@@ -2685,7 +2740,7 @@ these three articles is \emph{structurally native} rather than bolt-on.
 
 The three trit values map directly to three regulatory stances:
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Ternary trit states and EU AI Act regulatory correspondence}
@@ -2837,7 +2892,7 @@ A stated goal of ternlang is to serve as a \emph{convergence point} for the
 fragmented ternary computing field. Table~\ref{tab:ecosystem} maps active
 projects to their interoperability path via \texttt{ternlang-compat}.
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Ecosystem compatibility map}
@@ -2875,7 +2930,7 @@ same VM that drives the MoE-13 orchestrator.
 
 Ternlang is implemented in Rust and comprises the following crates:
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{Workspace crates, test counts, and descriptions (v2.0.0)}
@@ -2933,12 +2988,12 @@ and deploys to Fly.io on every push to main.
 
 \subsection*{Technology Readiness Assessment}
 
-\begin{table}[h]
+\begin{table}[htbp]
 \centering
 \small
 \caption{TRL assessment by subsystem (2026-05-19)}
 \label{tab:trl}
-\begin{tabular}{lll}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.42\linewidth} c >{\raggedright\arraybackslash}p{0.46\linewidth}@{}}
 \toprule
 Subsystem & TRL & Basis \\
 \midrule
