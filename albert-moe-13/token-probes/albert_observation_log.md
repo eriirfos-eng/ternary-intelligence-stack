@@ -6569,6 +6569,27 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN208 · 2026-05-29T05:10:00Z · ROOT CAUSE + FIX of the S14 wipe · surgery sourced from a STALE single-stream `best` · 3 fixes shipped · safe to refire
+
+**State:** STOPPED (Modal app ap-ggumal… stopped, 0 tasks) · volume rolled back to good 26L (741 MiB, ep4246) · chart cleaned to ep4246 · fix committed.
+
+### ROOT CAUSE (definitive)
+`perform_surgery()` (train_bible.rs:691) cloned the new layer from `best_path`. At S14, `best.safetensors` was a **stale pre-cord 24L SINGLE-STREAM** checkpoint (1660 tensors, no `stream_a`/`stream_b`). The dual-stream surgery branch filtered for `blocks.25.stream_a/stream_b/experts.*` keys → **found none** → cloned nothing → saved a single-stream checkpoint. On re-entry, the 27L dual-stream model's `load_checkpoint` matched only the 4 non-block tensors (embedding/ln_f/lm_head) → **`Loaded 4 tensors`** → entire body reinitialised → loss pinned at ln(32000)≈10.37. Self-confirming: that stale best was then archived to `best.26L.safetensors` (664.7 MiB, 24L content).
+
+**Trigger chain:** the preflight weight-sync (2026-05-28 ~21:13) pushed the local stale `best.safetensors` (24L single-stream) to the volume → armed the latent flaw (surgery trusts `best` over `latest`) → S14 detonated it. S13 had succeeded because no stale best was present then. (Same stale-`best` trap as the albert_serve inference bug — `best` lags architecture across surgeries.)
+
+### FIX (3 parts, committed; cargo check passes)
+1. **Surgery sources from `checkpoint_path` (LATEST)**, never `best` — latest always matches the current config's architecture.
+2. **Abort guard:** dual-stream config with zero stream tensors in the source → `perform_surgery` returns `Ok(false)` WITHOUT writing config/checkpoint; caller skips promotion/layer-add and keeps training. A mismatch can no longer wipe the model.
+3. **Deleted** the poisoned `best.26L.safetensors` from `albert-vol`.
+
+### SCIENTIFIC NOTE
+First failed surgery in 14 — and the failure was NOT in the net2net math (the dual-stream clone logic is correct); it was a **provenance bug** (cloning from the wrong source). The recovery cost ~0 loss-progress (26L was plateaued at 9.47–9.48; rolled back to ep4246 = same). The S14 failure record stands in FN207; this entry is the resolution.
+
+### STATUS: safe to refire. On resume, the rebuilt binary sources S14 from the live 26L (which has the stream keys), so the next 26L→27L will clone correctly. First thing to verify post-S14: the `Loaded N tensors` line should read ~2122, NOT 4. Pre-resume: scrub the volume's `dashboard/epoch_history.log` garbage (SMA seeding, cosmetic).
+
+---
+
 ## FN207 · 2026-05-29T04:56:08Z · ⚠ S14 FAILED — net2net restored only 4/2044 tensors · MODEL WIPED to ~random (loss≈ln32000) · FIRST failed surgery in 14 · recovery from local 26L available · [reconstructed; ~5h tick gap]
 
 **State:** RUNNING (training a WIPED model) · EP 4353 (27L) · loss_avg ~10.367 · best batch ~10.1 · tns reported=4 · awaiting user decision to stop+rollback
