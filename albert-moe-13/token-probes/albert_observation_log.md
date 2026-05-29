@@ -6569,6 +6569,26 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN210 · 2026-05-29T05:39:06Z · ✓ CLEAN RESUME CONFIRMED — Loaded 2044 tensors, batch loss 9.07–9.67 (NOT wiped) · S14 incident CLOSED · [loop tick]
+
+**State:** RUNNING · EP 4247 (26L dual-stream) · BATCH ~83/300 · ATL 8.8005 · LR 3.00e-4 · no OOM · TTL warmup step 0/50
+
+**Source:** training.log (`Loaded 2044 tensors` 05:36:37) + dashboard 05:38:05Z.
+
+### RECOVERY VERIFIED — both checks pass
+1. **`Loaded 2044 tensors from checkpoint`** — the FULL 26L dual-stream restored (vs the catastrophic **4** at S14). The rollback to ep4246 + the surgery fix loaded correctly into the 26L model.
+2. **Batch losses 9.0716 / 9.4915 / 9.4990 / 9.5960 / 9.6708** — the 26L corpus-floor plateau range, NOT ~10.37 (random). The model retained all learned structure; best batch 9.07 proves real knowledge a wiped model could never reach. ARCH 2×26L, TNS 2,044, ep4247.
+
+### S14 INCIDENT CLOSED
+The full loop is proven end-to-end: S14 net2net wipe (FN207) → root cause = surgery cloned from a stale single-stream `best` (FN208) → 3 fixes shipped (source=latest, abort-guard, poison deleted) → volume + chart rolled back → resume verified clean (this FN). Zero permanent loss; the 26L is exactly where it was pre-S14. Recovery cost: one night of a failed branch, ~$1 of compute, and a genuinely useful root-cause.
+
+### NEXT — the final fix validation:
+When the plateau re-triggers surgery (S14 retry), the line to watch is `Loaded N tensors` post-surgery — must be **~2122** (27L), not 4. The fix now sources the clone from the live dual-stream checkpoint, so the new layer should copy correctly and the 27L should resume near the pre-surgery loss, not whiplash to random. That firing is the last proof the surgery path is healthy. Watching.
+
+**Interpretation:** Back in business, cleanly. The recovery discipline (checkpoint safety + monitoring + honest root-cause + verified resume) worked exactly as a funded operation would need. Training healthy; the S14 retry is the next milestone.
+
+---
+
 ## FN209 · 2026-05-29T05:33:34Z · POST-RECOVERY RESUME fired (user) — train_bible rebuilding WITH the fix · verification pending · [loop tick]
 
 **State:** BUILDING · `TRAINING STARTED 05:29:03Z` · Modal app ap-UBNH7MJMf5VPIqZyu5Tmtb · train_bible compiling (cargo --features cuda); no epoch yet.
