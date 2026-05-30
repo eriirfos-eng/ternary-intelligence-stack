@@ -6569,6 +6569,20 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN259 · 2026-05-30T01:19Z · ep4464 b~56 · ★ POSSIBLE FLOOR FORMING — ntfy silent 45m; no new epoch-ATL or batch-ATL since ep4455
+
+ntfy silent since ep4457 WALD (00:34 UTC, 45 min ago). Local log is 0s stale — training is running (step=3652, ep4464 b56/300). Confirmed: the ntfy "NEW EPOCH ATL" and "NEW BATCH ATL" conditions have NOT been met since ep4455 (epoch-avg ATL 8.4813, batch ATL 7.2723). The rapid post-fix descent has decelerated.
+
+**Evidence for leveling:** Batch lows in the local log: ep4461 b~220 hit 7.68, ep4464 b56 hit 7.63 — both ABOVE the batch ATL of 7.2723. Epoch-avgs for ep4458–4463 (inferred, no ntfy) are apparently ≥8.4813 (else "NEW EPOCH ATL" would have fired). The 45-minute ntfy silence from a live run is therefore expected: no new records = no ntfy.
+
+**Interpretation (critical eye):** This is the natural deceleration after the frozen-body catch-up. The model burned through weeks of banked gradient signal in ~6 epochs (ep4452–4455, d−0.48, −0.21, −0.008, −0.027), then the high-leverage updates exhausted and it settles into a slower learning regime. The "true floor" (~8.48 epoch-avg / ~7.27 batch ATL) may be where the current checkpoint+LR+corpus combination stabilises. This is **NOT divergence** (loss not rising, still oscillating healthily around 7.6–8.9 range). **NOT a stall** (log live, step advancing).
+
+**What to watch next:** Will epoch-avg break below 8.48 (confirming another descent leg), or hold in the 8.5–8.7 band (confirming this as the current floor ahead of surgery)? The surgery gate WALD fill=16.7% is still low — S16 not imminent.
+
+Health: GRAD-DIAG **2184/2184 have grad, 0 None**. GPUMEM 12,468MB flat. ROUTE spread 0.078–0.086, 12 experts active. No alarms.
+
+---
+
 ## FN258 · 2026-05-30T01:01Z · ep4461 b~220 · ntfy quiet 26m (between epoch closes), log live, healthy · [loop tick, terse]
 
 ntfy quiet since ep4457 WALD (00:34) — normal inter-epoch gap, not a stall. Log mtime 0s stale, step=2916 (ep4461 in progress, b~220/300). Recent batches: 8.25, 7.68, 9.02, 8.89 — spiky-healthy, 7.68 batch low confirms new ATL territory. GRAD-DIAG: **2184/2184 have grad, 0 None**. GPUMEM: 12,468MB (↓64MB from last tick — normal CUDA allocator variance, no creep). ROUTE step=2910 spread 0.079–0.087, 12 experts active. Verdict: **healthy, monitoring epoch-close events for ep4458/4459/4460/4461 ATLs.**
