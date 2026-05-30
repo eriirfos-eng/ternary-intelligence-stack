@@ -167,14 +167,19 @@ impl TernaryLinear {
     /// Called once before the decode loop; both caches stay valid until the next
     /// checkpoint load (weights don't change during inference).
     pub fn prepare_inference(&self) -> Result<()> {
-        let gamma_t   = self.weight.abs()?.mean_all()?;
-        let gamma     = gamma_t.to_scalar::<f32>()?;
-        let w_ternary = ternarize_ste_with_gamma(&self.weight, self.threshold, &gamma_t)?;
+        let gamma_t = self.weight.abs()?.mean_all()?;
+        let gamma   = gamma_t.to_scalar::<f32>()?;
 
-        // Keep the dense f32 cache — used by the GPU/candle training path.
-        *self.inference_cache.borrow_mut() = Some(w_ternary.detach());
+        // Dense F32 ternary cache: only the CUDA WMMA inference kernel reads this.
+        // On CPU forward() goes straight to forward_i8() via i8_cache — the F32 cache
+        // is never touched. Skip both the ternarize compute AND the ~800MB allocation
+        // on CPU to cut boot time and peak RAM roughly in half.
+        if !self.weight.device().is_cpu() {
+            let w_ternary = ternarize_ste_with_gamma(&self.weight, self.threshold, &gamma_t)?;
+            *self.inference_cache.borrow_mut() = Some(w_ternary.detach());
+        }
 
-        // Build i8 sign matrix — primary CPU inference path.
+        // i8 sign matrix — always built (AVX2 hot path on CPU; cached on CUDA too).
         let w_data  = self.weight.to_vec2::<f32>()?;
         let out_dim = w_data.len();
         let in_dim  = w_data.first().map(|r| r.len()).unwrap_or(0);
@@ -206,10 +211,13 @@ impl TernaryLinear {
         }
         let mask = act_mask.unwrap();
 
-        let gamma_t   = self.weight.abs()?.mean_all()?;
-        let gamma     = gamma_t.to_scalar::<f32>()?;
-        let w_ternary = ternarize_ste_with_gamma(&self.weight, self.threshold, &gamma_t)?;
-        *self.inference_cache.borrow_mut() = Some(w_ternary.detach());
+        let gamma_t = self.weight.abs()?.mean_all()?;
+        let gamma   = gamma_t.to_scalar::<f32>()?;
+
+        if !self.weight.device().is_cpu() {
+            let w_ternary = ternarize_ste_with_gamma(&self.weight, self.threshold, &gamma_t)?;
+            *self.inference_cache.borrow_mut() = Some(w_ternary.detach());
+        }
 
         let w_data  = self.weight.to_vec2::<f32>()?;
         let out_dim = w_data.len();
