@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN284 · 2026-05-30T23:49Z · pause lengthening (~43 min) + WALD mass creeping up — mild bounce, not divergence · [watch tick]
+Update on FN283: the predicted break **did not** come this tick — now **~43 min / ~8 epochs** with no ATL since ep4635 (8.2014, 23:06Z), the longest stretch of the watch. And the signal flipped: WALD epoch-avg mass is now **creeping up** — 8.220 (ep4635) → 8.250 → 8.260 → **8.268** (ep4640), +0.048 over 5 epochs. batch mean ticked back up 8.47→8.50. **Read: a mild post-descent bounce, not trouble** — this is the expected give-back after a strong restart-acceleration leg ([[project_restart_acceleration]] "wide swings"), magnitude tiny (+0.048 vs the >0.08 the leg just gained), and the floor is intact: min batch still **8.014** (model still reaches the low). Not divergence (no runaway; <0.05 drift), not a stall (epochs advancing to ep4641.60, fill cycling 18.8↔20.8%, dashboard HTTP 200). **No escalation.** Watch note: if this becomes a sustained climb (mass up several ticks toward ~8.30+ AND no ATL approaching the ~55-epoch governor window), it shifts into legitimate plateau→surgery territory — which would be a *normal autonomous* event (governor fires growth), not a wake-Simeon event unless a surgery fires and looks harmful. So far it's just a breather. Still no `vestigial=N` in ntfy (Modal-stdout only).
+
+---
+
 ## FN283 · 2026-05-30T23:34Z · another between-ATL pause (~28 min), predictor says break near · [watch tick, terse]
 No new ATL since ep4635 (8.2014, 23:06Z) — ~28 min, same shape as the FN280 pause. WALD ep4638 mass **8.250** (tiny uptick from 8.220 — within epoch-avg noise, not divergence), fill steady 18.8%, dead bins unchanged. The FN280/281 predictor is lining up again: batch_history live to ep4639.57, **min batch 8.003** (new low for the watch) and 45-row mean sinking 8.51→8.47 under a flat epoch-ATL → next break likely imminent. Dashboard HTTP 200, not a stall (batches advancing), not divergence (mass flat-ish). No escalation. Pattern this watch = descent legs punctuated by 20–30 min flat stretches, each resolving downward; normal for this regime. Still no `vestigial=N` in ntfy (Modal-stdout only).
 
