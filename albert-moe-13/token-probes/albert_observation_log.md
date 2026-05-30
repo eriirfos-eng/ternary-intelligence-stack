@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN280 · 2026-05-30T22:49Z · longer plateau (~32 min no ATL) but WALD stable ×3, batches drifting down · [watch tick]
+No new epoch-ATL since ep4628 (8.2252, 22:17Z) — now **~32 min / ~5 epochs**, a real flat stretch (longer than the FN277/FN279 pauses). **But all signs say healthy plateau, not trouble:** three consecutive WALD reports (ep4629/4631/4632) are essentially identical — fill steady **20.8%**, mass **8.269→8.261→8.262** (flat, not rising → no divergence), dead bins stable (~3–7 low, ~9.3–9.5+ high). batch_history live to ep4633.50, min batch **8.028**, and the 45-row mean has ticked *down* 8.55→8.47 — i.e. the batch cloud is sinking even while epoch-ATL holds, a mild precursor that the next ATL break is near. Dashboard HTTP 200. Not a stall (batches advancing), not divergence (mass flat). No escalation. Context: surgery governor uses a long (~55-epoch) window, so 5 flat epochs is nowhere near plateau-fire territory yet — just noting the stretch. Past eligibility (~ep4632) now; still no `vestigial=N` surfaced (Modal-stdout only, not pushed to ntfy).
+
+---
+
 ## FN279 · 2026-05-30T22:34Z · routine WALD coverage report + brief between-ATL pause · [watch tick, terse]
 First WALD telemetry of the watch: `WALD epoch=4629 step=3000 fill=20.8% mass=8.269 dead_low=3.00-7.00(4.00) dead_high=9.50+(5.50) sever…` (ntfy 22:24Z, prio 4; message truncated at "sever" in the push — likely "severity=", full text only in Modal stdout). **Read as routine, not a firing:** fill 20.8% (up from 18.8% at ep4620, histogram filling normally); mass 8.269 tracks current loss; `dead_low 3–7` and `dead_high 9.5+` are simply the loss-space bins the model no longer visits — expected for a model concentrated at ~8.2, not a fault (WALD is a *reactive* coverage detector, [[project_wald_causality]] — spike precedes firing, none seen). No new ATL since ep4628 (8.2252, 22:17Z, ~17 min) — another short pause like FN277, batch_history advancing to ep4631.37 (min batch 8.11), so not a stall. Dashboard HTTP 200. No escalation. If the next WALD shows a severity spike or `dead_*` widening sharply, revisit. Still watching for first `vestigial=N` (~ep4632 eligibility now reached).
 
