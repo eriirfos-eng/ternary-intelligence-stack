@@ -78,16 +78,49 @@ def cmd_setup():
     print("\n[setup] done — run:  modal run train_modal.py")
 
 
+def _pull_file(remote: str, local_abs: str, timeout_s: int = 600) -> int:
+    """Download one file from the volume with a progress ticker and hard timeout."""
+    import threading
+    cmd = ["modal", "volume", "get", "--force", _VOL, remote, local_abs]
+    print(f"  $ {' '.join(cmd)}")
+    proc = subprocess.Popen(cmd, cwd=_HERE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+    # Ticker thread — prints a dot every 5 s so the terminal doesn't look frozen
+    _done = threading.Event()
+    def _tick():
+        while not _done.wait(5):
+            print(".", end="", flush=True)
+    threading.Thread(target=_tick, daemon=True).start()
+
+    try:
+        out, _ = proc.communicate(timeout=timeout_s)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.communicate()
+        _done.set()
+        print(f"\n  ERROR: timed out after {timeout_s}s — volume may be locked by active training run")
+        return 1
+    finally:
+        _done.set()
+
+    if out:
+        print(f"\n  {out.strip()}")
+    else:
+        print()
+    return proc.returncode
+
+
 def cmd_pull():
     print("[pull] downloading latest checkpoint from volume ...")
+    print("       (dots = download in progress; large .safetensors can take several minutes)")
     for remote, local in _DOWNLOADS:
         local_abs = os.path.join(_HERE, local)
         print(f"\n  {remote}  ->  {local}")
-        rc = _run(["modal", "volume", "get", "--force", _VOL, remote, local_abs])
+        # Large safetensors files (~800 MB) get 10 minutes; small metadata files get 60 s
+        timeout = 600 if remote.endswith(".safetensors") else 60
+        rc = _pull_file(remote, local_abs, timeout_s=timeout)
         if rc != 0:
             if "best" in os.path.basename(remote):
-                # The all-time-best snapshot only exists once the model beats its prior
-                # best; its absence is normal (not an error) — don't raise a scary WARNING.
                 print(f"  (skip) no best-checkpoint on volume yet — {os.path.basename(remote)} not written")
             else:
                 print(f"  WARNING: could not pull {remote} (exit {rc})")
