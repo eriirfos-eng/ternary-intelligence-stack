@@ -207,12 +207,10 @@ def _ntfy(title: str, msg: str, priority: str = "3") -> None:
 
 @app.function(
     image=image,
-    gpu="L4",            # 24GB — the correct-sized card for HONEST full-body training. T4 16GB was
-                         # tested (2026-05-29) and OOMs at step 1: forward graph (~10GB) + full-body
-                         # backward grads (~10GB) ≈ 20GB. (T4 only ever "fit" before because the
-                         # LayerNorm bug froze the body → trivial backward.) The grad-accum fix already
-                         # removed the multi-graph 4× waste; this 20GB is the legitimate one-graph cost.
-                         # Future: gradient checkpointing could shrink the forward graph back under 16GB.
+    gpu="T4",            # 16GB. LayerNorm gradient bug fixed (2026-05-30); observed memory 12.2GB
+                         # consistently during training. Previous OOM on 2026-05-29 was due to frozen
+                         # body (buggy fused LayerNorm). With ACTUAL full-body training + grad fix,
+                         # T4 has sufficient headroom (~3.8GB buffer). Extends runway until new funds.
     timeout=23 * 3600,   # 23-hour cap
     volumes={"/vol": vol},
     memory=16384,
