@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN283 · 2026-05-30T23:34Z · another between-ATL pause (~28 min), predictor says break near · [watch tick, terse]
+No new ATL since ep4635 (8.2014, 23:06Z) — ~28 min, same shape as the FN280 pause. WALD ep4638 mass **8.250** (tiny uptick from 8.220 — within epoch-avg noise, not divergence), fill steady 18.8%, dead bins unchanged. The FN280/281 predictor is lining up again: batch_history live to ep4639.57, **min batch 8.003** (new low for the watch) and 45-row mean sinking 8.51→8.47 under a flat epoch-ATL → next break likely imminent. Dashboard HTTP 200, not a stall (batches advancing), not divergence (mass flat-ish). No escalation. Pattern this watch = descent legs punctuated by 20–30 min flat stretches, each resolving downward; normal for this regime. Still no `vestigial=N` in ntfy (Modal-stdout only).
+
+---
+
 ## FN282 · 2026-05-30T23:19Z · steady descent continues → ep4635 new ATL 8.2014 · [watch tick, terse]
 **ep4635 NEW ATL 8.2014** (d−0.0125, 23:06Z) — descent rolling on, now right at the 8.20 line. WALD ep4635 mass **8.220** (still tracking down from 8.237). batch_history live to ep4637.60, min batch 8.041, mean 8.51 (steady). Dashboard HTTP 200, no STALL/WALD-spike/divergence. No new ATL since ep4635 (~13 min, normal gap). No escalation. Run is in a clean groove — three ATLs in ~30 min (4633/4635), each d ≈ −0.011 to −0.013. Still no `vestigial=N` in ntfy (Modal-stdout only).
 
