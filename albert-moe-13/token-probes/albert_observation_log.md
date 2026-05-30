@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN276 · 2026-05-30T21:49Z · holding — descent continues, two clean ATL breaks · [watch tick, terse]
+Two new ATLs since FN275: ep4622 (implied) then **ep4623 avg 8.2469** (d−0.0075, chip 4.6541) via ntfy 21:42Z. batch_history streaming to ep4624.86 (~8.30–8.41 in-epoch, normal mid-epoch spread). Dashboard HTTP 200. No STALL/WALD/divergence; no `vestigial=N` line surfaced to ntfy yet (telemetry is in the Modal stdout, not pushed). Descent steady, decelerating gently (d shrank 0.0285→0.0075 — expected as it settles below 8.25). No escalation. Still watching for the first `MYCELIUM … vestigial=N` and resurrection-eligibility window (~ep4632).
+
+---
+
 ## FN275 · 2026-05-30T21:34Z · holding — descent continues, no new events (6 min quiet, mid-epoch) · [watch tick, terse]
 ~5 min post-handover. ntfy quiet since ep4621 ATL 8.2544 (21:28Z) — normal mid-epoch gap (ep4622 in flight, was batch 53/300 at 21:29). Dashboard HTTP 200, no STALL/WALD/divergence. Nothing actionable; descent ongoing. No escalation. Next: watch for ep4622+ epoch close and the first `MYCELIUM … vestigial=N` line.
 
