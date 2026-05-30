@@ -58,8 +58,11 @@ pub struct MyceliumReport {
     pub hottest_layer:         usize,
     /// Layer index with the lowest sustained gradient pressure.
     pub coldest_layer:         usize,
-    /// Number of experts consistently dead this epoch.
+    /// Number of experts consistently dead (all-Red) this epoch.
     pub dead_expert_count:     usize,
+    /// Number of experts vestigial (routed but weight-starved + stalled) this epoch.
+    /// Reported regardless of whether vestigial_rescue is enabled.
+    pub vestigial_expert_count: usize,
     /// Number of experts consistently blooming (G) this epoch.
     pub blooming_expert_count: usize,
     /// Per-layer average gradient pressure (last history window).
@@ -71,6 +74,8 @@ pub struct MyceliumModule {
     activation_history: Vec<Vec<VecDeque<ExpertState>>>,
     // gradient_pressure[layer] = per-epoch average grad norm history
     gradient_pressure:  Vec<VecDeque<f32>>,
+    // weight_mass_history[layer][expert] = per-epoch mean |weight| (substance axis)
+    weight_mass_history: Vec<Vec<VecDeque<f32>>>,
     num_layers:         usize,
     num_experts:        usize,
     /// Epochs of history to retain.
@@ -81,6 +86,15 @@ pub struct MyceliumModule {
     bloom_threshold:    usize,
     /// Noise applied when seeding a resurrected expert from its neighbour.
     resurrection_noise: f32,
+    /// When true, vestigial (routed-but-weight-starved, stalled) experts also
+    /// become resurrection candidates. Default OFF — the flux signal is pure
+    /// telemetry unless explicitly enabled (the afferent nerve is wired to the
+    /// effector only on the operator's nod). See classify_flux / F9.
+    vestigial_rescue:   bool,
+    /// Epochs an expert must stay vestigial-and-not-recovering before it is
+    /// eligible for vestigial rescue. Guards genuine dormant→germinate recovery
+    /// (e.g. CTX 0→2%): only a demonstrably *stalled* slot is rescued.
+    vestigial_patience: usize,
 }
 
 impl MyceliumModule {
@@ -91,12 +105,18 @@ impl MyceliumModule {
                 num_layers
             ],
             gradient_pressure: vec![VecDeque::with_capacity(20); num_layers],
+            weight_mass_history: vec![
+                vec![VecDeque::with_capacity(20); num_experts];
+                num_layers
+            ],
             num_layers,
             num_experts,
             history_len:        20,
             dead_threshold:     8,
             bloom_threshold:    5,
             resurrection_noise: 0.02,
+            vestigial_rescue:   false,
+            vestigial_patience: 12,
         }
     }
 
@@ -136,6 +156,29 @@ impl MyceliumModule {
         self.num_layers += 1;
         self.activation_history.push(vec![VecDeque::with_capacity(20); self.num_experts]);
         self.gradient_pressure.push(VecDeque::with_capacity(20));
+        self.weight_mass_history.push(vec![VecDeque::with_capacity(20); self.num_experts]);
+    }
+
+    /// Record per-(layer, expert) mean |weight| for this epoch — the substance
+    /// axis of flux health. Call once per epoch alongside record_epoch().
+    /// `mass[layer][expert]` = mean absolute weight of that expert's MLP block.
+    pub fn record_substance(&mut self, mass: &[Vec<f32>]) {
+        for (layer, experts) in mass.iter().enumerate() {
+            if layer >= self.num_layers { break; }
+            for (expert, &m) in experts.iter().enumerate() {
+                if expert >= self.num_experts { break; }
+                let hist = &mut self.weight_mass_history[layer][expert];
+                if hist.len() >= self.history_len { hist.pop_front(); }
+                hist.push_back(m);
+            }
+        }
+    }
+
+    /// Enable/disable vestigial rescue and set its patience window (epochs).
+    /// OFF by default: leaving this unset keeps the flux signal observational.
+    pub fn set_vestigial_rescue(&mut self, enabled: bool, patience: usize) {
+        self.vestigial_rescue   = enabled;
+        self.vestigial_patience = patience.max(1);
     }
 
     /// Average gradient pressure for a layer over its history window.
@@ -197,6 +240,55 @@ impl MyceliumModule {
         blooming
     }
 
+    /// Experts that are VESTIGIAL — routed but weight-starved — and have NOT
+    /// recovered for `vestigial_patience` epochs. This is the blind spot the
+    /// single-axis dead detector misses: such experts never go all-Red (they
+    /// still receive routing), so they would never be rescued otherwise.
+    ///
+    /// (layer, e) is flagged when, over the last `patience` epochs:
+    ///   - weight mass < 10% of the layer's median expert mass EVERY epoch (starved),
+    ///   - it is NOT consistently Red and is currently non-Red (still routed —
+    ///     this is what distinguishes vestigial from dead),
+    ///   - its mass is flat or declining (not recovering) — the guard that leaves
+    ///     a genuine dormant->germinate recovery (e.g. CTX 0->2%) untouched.
+    fn vestigial_experts(&self) -> Vec<(usize, usize)> {
+        const STARVE_FRAC:  f32 = 0.10;  // below 10% of the typical expert in the layer
+        const RECOVER_FRAC: f32 = 1.05;  // >5% growth across the window = recovering, skip
+        let p = self.vestigial_patience;
+        let mut out = Vec::new();
+        for layer in 0..self.num_layers {
+            // Layer median expert mass from the most recent recorded epoch.
+            let latest: Vec<f32> = (0..self.num_experts)
+                .map(|e| *self.weight_mass_history[layer][e].back().unwrap_or(&0.0))
+                .collect();
+            let med = median(&latest);
+            if med <= 1e-9 { continue; }
+            let starve_thr = STARVE_FRAC * med;
+            for expert in 0..self.num_experts {
+                let mhist = &self.weight_mass_history[layer][expert];
+                let ahist = &self.activation_history[layer][expert];
+                if mhist.len() < p || ahist.len() < p { continue; }
+                // Newest-first window of the last `p` epochs of mass.
+                let win: Vec<f32> = mhist.iter().rev().take(p).cloned().collect();
+                // Starved every epoch in the window.
+                if !win.iter().all(|&m| m < starve_thr) { continue; }
+                // Still routed: not all-Red over the window AND currently non-Red.
+                let all_red = ahist.iter().rev().take(p).all(|&s| s == ExpertState::Red);
+                let latest_red = ahist.back().map(|&s| s == ExpertState::Red).unwrap_or(true);
+                if all_red || latest_red { continue; }
+                // Not recovering: newest-half mean must not exceed oldest-half mean by >5%.
+                let half = p / 2;
+                if half >= 1 {
+                    let newest_mean = win[..half].iter().sum::<f32>() / half as f32;
+                    let oldest_mean = win[p - half..].iter().sum::<f32>() / half as f32;
+                    if newest_mean > oldest_mean * RECOVER_FRAC { continue; }
+                }
+                out.push((layer, expert));
+            }
+        }
+        out
+    }
+
     /// The most consistently active (Green) expert in a given layer — used as
     /// the seed for resurrecting a dead expert in the same layer.
     fn most_active_expert(&self, layer: usize) -> Option<usize> {
@@ -208,9 +300,16 @@ impl MyceliumModule {
         })
     }
 
-    /// Generate ResurrectionJobs for all currently dead experts.
+    /// Generate ResurrectionJobs for all currently dead experts — plus vestigial
+    /// (stalled, routed-but-starved) experts when `vestigial_rescue` is enabled.
+    /// Dead and vestigial sets are disjoint by construction (dead = all-Red,
+    /// vestigial = currently non-Red).
     fn generate_resurrections(&self) -> Vec<ResurrectionJob> {
-        self.dead_experts()
+        let mut candidates = self.dead_experts();
+        if self.vestigial_rescue {
+            candidates.extend(self.vestigial_experts());
+        }
+        candidates
             .into_iter()
             .filter_map(|(layer, dead_expert)| {
                 let seed = self.most_active_expert(layer)?;
@@ -227,16 +326,18 @@ impl MyceliumModule {
 
     /// Produce a full epoch report: resurrections, pressure map, bloom/dead counts.
     pub fn generate_report(&self) -> MyceliumReport {
+        let dead         = self.dead_experts();
+        let vestigial    = self.vestigial_experts();
         let resurrections = self.generate_resurrections();
-        let dead_expert_count = resurrections.len();
-        let blooming = self.blooming_experts();
+        let blooming     = self.blooming_experts();
         let layer_pressure: Vec<f32> = (0..self.num_layers).map(|l| self.avg_pressure(l)).collect();
         MyceliumReport {
             resurrections,
-            hottest_layer:         self.hottest_layer(),
-            coldest_layer:         self.coldest_layer(),
-            dead_expert_count,
-            blooming_expert_count: blooming.len(),
+            hottest_layer:          self.hottest_layer(),
+            coldest_layer:          self.coldest_layer(),
+            dead_expert_count:      dead.len(),
+            vestigial_expert_count: vestigial.len(),
+            blooming_expert_count:  blooming.len(),
             layer_pressure,
         }
     }
@@ -387,5 +488,64 @@ mod flux_tests {
         let rep = classify_flux(&weight, &route);
         assert!(rep.vestigial.is_empty(), "no vestigial in a balanced regime");
         assert!(rep.dormant.is_empty(),   "no dormant in a balanced regime");
+    }
+}
+
+#[cfg(test)]
+mod vestigial_rescue_tests {
+    use super::*;
+
+    /// Feed `epochs` identical epochs of TLIGHT + per-expert mass into the module.
+    fn feed(m: &mut MyceliumModule, epochs: usize, tlight: &str, mass: &[f32]) {
+        for _ in 0..epochs {
+            m.record_epoch(&[tlight.to_string()], &[0.0]);
+            m.record_substance(&[mass.to_vec()]);
+        }
+    }
+
+    #[test]
+    fn vestigial_flagged_dead_separate() {
+        // 4 experts: e0/e1 healthy+green; e2 routed(green) but starved+flat = vestigial;
+        // e3 starved+red = dead. Median stays healthy (2 of 4 dense).
+        let mut m = MyceliumModule::new(1, 4);
+        m.set_lb_off_mode(true);            // dead_threshold 8 -> 3 so 4 epochs suffice
+        m.set_vestigial_rescue(true, 4);
+        feed(&mut m, 4, "GGOR", &[1.0, 1.0, 0.001, 0.001]); // e2 routed via Orange (thin), e3 Red (dead)
+        let rep = m.generate_report();
+        assert_eq!(rep.vestigial_expert_count, 1, "e2 is the only vestigial");
+        assert_eq!(rep.dead_expert_count, 1, "e3 is the only dead");
+        let targets: Vec<usize> = rep.resurrections.iter().map(|j| j.dead_expert).collect();
+        assert!(targets.contains(&2), "vestigial e2 must be a rescue candidate when enabled");
+        assert!(targets.contains(&3), "dead e3 must be a rescue candidate");
+    }
+
+    #[test]
+    fn rescue_off_keeps_vestigial_observational() {
+        let mut m = MyceliumModule::new(1, 4);
+        m.set_lb_off_mode(true);            // dead_threshold -> 3
+        m.set_vestigial_rescue(false, 4);   // rescue OFF, but patience set to 4
+        feed(&mut m, 4, "GGOR", &[1.0, 1.0, 0.001, 0.001]); // e2 routed via Orange (thin), e3 Red (dead)
+        let rep = m.generate_report();
+        assert_eq!(rep.vestigial_expert_count, 1, "still counted for telemetry");
+        let targets: Vec<usize> = rep.resurrections.iter().map(|j| j.dead_expert).collect();
+        assert!(!targets.contains(&2), "vestigial must NOT be rescued when OFF");
+        assert!(targets.contains(&3), "dead is still rescued regardless of the flag");
+    }
+
+    #[test]
+    fn recovering_vestigial_is_spared() {
+        // e2 is starved every epoch but its mass is RISING (dormant->germinate, like CTX 0->2%).
+        // The recovery guard must leave it alone even with rescue ON.
+        let mut m = MyceliumModule::new(1, 4);
+        m.set_lb_off_mode(true);
+        m.set_vestigial_rescue(true, 4);
+        for mass2 in [0.0005f32, 0.0008, 0.0020, 0.0040] {
+            m.record_epoch(&["GGGR".to_string()], &[0.0]);
+            m.record_substance(&[vec![1.0, 1.0, mass2, 0.001]]);
+        }
+        let rep = m.generate_report();
+        let targets: Vec<usize> = rep.resurrections.iter().map(|j| j.dead_expert).collect();
+        assert!(!targets.contains(&2), "a recovering slot must be spared");
+        assert_eq!(rep.vestigial_expert_count, 0, "recovering slot is not vestigial");
     }
 }

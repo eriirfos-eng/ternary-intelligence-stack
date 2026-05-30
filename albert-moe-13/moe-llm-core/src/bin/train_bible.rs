@@ -49,6 +49,12 @@ struct TrainFlags {
     batches_per_epoch: usize,
     /// Micro-batch size per forward pass. Default 8 (GPU). Use 2 for CPU to avoid freezing.
     batch_size: usize,
+    /// Enable vestigial-expert rescue: let mycelium resurrection also act on experts
+    /// that are routed but weight-starved and stalled (the flux blind spot, F9).
+    /// Default OFF — the flux signal stays observational unless this is passed.
+    vestigial_rescue: bool,
+    /// Epochs an expert must remain vestigial-and-not-recovering before rescue.
+    vestigial_patience: usize,
 }
 
 fn parse_args() -> TrainFlags {
@@ -66,6 +72,8 @@ fn parse_args() -> TrainFlags {
         spores_dir:          String::new(),
         batches_per_epoch:   300,
         batch_size:          8,
+        vestigial_rescue:    false,
+        vestigial_patience:  12,
     };
     for arg in &args[1..] {
         match arg.as_str() {
@@ -73,6 +81,7 @@ fn parse_args() -> TrainFlags {
             "--seed-experts"    => flags.seed_experts = true,
             "--break-symmetry"  => flags.break_symmetry = true,
             "--cord-surgery"    => flags.cord_surgery = true,
+            "--vestigial-rescue" => flags.vestigial_rescue = true,
             _ => {
                 if let Some(v) = arg.strip_prefix("--lb-weight=") {
                     if let Ok(w) = v.parse::<f64>() { flags.lb_weight = w; }
@@ -92,6 +101,8 @@ fn parse_args() -> TrainFlags {
                     if let Ok(n) = v.parse::<usize>() { flags.batches_per_epoch = n.max(1); }
                 } else if let Some(v) = arg.strip_prefix("--batch-size=") {
                     if let Ok(n) = v.parse::<usize>() { flags.batch_size = n.max(1); }
+                } else if let Some(v) = arg.strip_prefix("--vestigial-patience=") {
+                    if let Ok(n) = v.parse::<usize>() { flags.vestigial_patience = n.max(1); }
                 }
             }
         }
@@ -579,6 +590,42 @@ fn per_expert_abs_weight(varmap: &VarMap, num_experts: usize) -> Vec<f32> {
     }
     (0..num_experts)
         .map(|e| if cnt[e] > 0 { sum[e] / cnt[e] as f32 } else { 0.0 })
+        .collect()
+}
+
+/// Per-(layer, expert) mean |weight| of each expert's MLP — the substance axis
+/// fed to MyceliumModule::record_substance for vestigial detection. Returns a
+/// nested Vec indexed [layer][expert]. Acquires its own varmap lock, so it must
+/// NOT be called while another varmap lock is held.
+fn per_layer_expert_abs_weight(varmap: &VarMap, num_layers: usize, num_experts: usize) -> Vec<Vec<f32>> {
+    let mut sum = vec![vec![0.0f32; num_experts]; num_layers];
+    let mut cnt = vec![vec![0u64;  num_experts]; num_layers];
+    let all_vars = match varmap.data().lock() {
+        Ok(v) => v,
+        Err(_) => return vec![vec![0.0; num_experts]; num_layers],
+    };
+    for (name, var) in all_vars.iter() {
+        if !name.contains("weight") || !name.contains("experts.") { continue; }
+        let li = name.strip_prefix("blocks.")
+            .and_then(|s| s.split('.').next())
+            .and_then(|s| s.parse::<usize>().ok());
+        let ei = name.split("experts.")
+            .nth(1)
+            .and_then(|s| s.split('.').next())
+            .and_then(|s| s.parse::<usize>().ok());
+        if let (Some(l), Some(e)) = (li, ei) {
+            if l < num_layers && e < num_experts {
+                if let Ok(d) = var.as_tensor().flatten_all().and_then(|t| t.to_vec1::<f32>()) {
+                    sum[l][e] += d.iter().map(|w| w.abs()).sum::<f32>();
+                    cnt[l][e] += d.len() as u64;
+                }
+            }
+        }
+    }
+    (0..num_layers)
+        .map(|l| (0..num_experts)
+            .map(|e| if cnt[l][e] > 0 { sum[l][e] / cnt[l][e] as f32 } else { 0.0 })
+            .collect())
         .collect()
 }
 
@@ -1794,6 +1841,9 @@ fn train_cycle(
             .map(|&s| if epoch_layer_norm_count > 0 { s / epoch_layer_norm_count as f32 } else { 0.0 })
             .collect();
         mycelium.record_epoch(&last_tlight_states, &epoch_layer_norms);
+        // Substance axis (per-layer, per-expert mean |weight|) for vestigial detection.
+        let le_mass = per_layer_expert_abs_weight(&varmap, config.num_layers, config.num_experts);
+        mycelium.record_substance(&le_mass);
         let report = mycelium.generate_report();
         // Track consecutive epochs where the same layer holds the hot position.
         // This is the MYCELIUM stability signal used by the surgery gate.
@@ -1807,8 +1857,9 @@ fn train_cycle(
             let pressure_str: Vec<String> = report.layer_pressure.iter()
                 .map(|&p| format!("{:.5}", p)).collect();
             let _ = writeln!(f,
-                "MYCELIUM epoch={} dead={} blooming={} hot=L{} cold=L{} pressure=[{}] myc_stable={}",
-                total_epochs, report.dead_expert_count, report.blooming_expert_count,
+                "MYCELIUM epoch={} dead={} vestigial={} blooming={} hot=L{} cold=L{} pressure=[{}] myc_stable={}",
+                total_epochs, report.dead_expert_count, report.vestigial_expert_count,
+                report.blooming_expert_count,
                 report.hottest_layer, report.coldest_layer, pressure_str.join(","),
                 mycelium_consecutive_hot);
         }
@@ -2361,6 +2412,12 @@ fn main() -> Result<()> {
     }
     let mut mycelium = MyceliumModule::new(initial_layers, 12);
     mycelium.set_lb_off_mode(flags.lb_weight == 0.0);
+    mycelium.set_vestigial_rescue(flags.vestigial_rescue, flags.vestigial_patience);
+    println!("[{}] [mycelium] vestigial-rescue {} (patience={} epochs){}",
+        timestamp(),
+        if flags.vestigial_rescue { "ON" } else { "OFF (observational)" },
+        flags.vestigial_patience,
+        if flags.vestigial_rescue { " — stalled routed-but-starved experts are resurrection candidates" } else { "" });
     let mut wald     = WaldModule::new();
 
     loop {

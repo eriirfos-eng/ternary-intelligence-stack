@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN269 · 2026-05-30T~21:0xZ · SHIPPED: vestigial→resurrection wiring (flux nerve → self-repair effector), default OFF · [code]
+Closed the FN266c gap end-to-end, per Simeon's nod. The flux signal is now wired into mycelium's existing resurrection — the afferent nerve connected to the effector — but **behind a default-OFF `--vestigial-rescue` flag** (the flag is the per-run nod; unset = pure telemetry, behaviour unchanged). New: `MyceliumModule::record_substance` (per-(layer,expert) weight-mass history), `vestigial_experts()` detector with the **patience + recovery guard** (starved <10% of layer median every epoch for `--vestigial-patience` epochs, default 12; still-routed/non-Red; AND mass flat-or-declining — a *rising* slot like CTX 0→2% is spared), gated `generate_resurrections`, `MYCELIUM … vestigial=N …` log field (emitted regardless of flag). `train_bible.rs` feeds substance each epoch + parses `--vestigial-rescue`/`--vestigial-patience`. 5 unit tests green (incl. zero-false-positive in balanced regime + recovering-slot-spared), builds clean. Design doc `docs/VESTIGIAL_RESCUE.md`; F9 updated. **Ready for the in-progress restart**: add `--vestigial-rescue` to the train cmd to activate; omit to keep observational. Takes effect on next `albert-train` rebuild/deploy. Insight surfaced while testing: a vestigial expert is routed (Green/Orange) so it can rank high by TLIGHT-green yet be a poor reseed *source* — seeding should eventually prefer highest weight-mass, not green-count (logged as open tuning Q).
+
+---
+
 ## FN268 · 2026-05-30T20:51Z · still down — restart not yet fired · training paused ~ep4620 · [loop tick, terse]
 
 2nd tick of silence. ntfy `albert-rfi-irfos`: no new events since WALD ep4615 (20:11Z); last TRAINING STARTED was the 19:28Z container, no newer one → restart **not yet re-fired**. Dashboard localhost:8888 still HTTP 000. batch_history tail steady at ep4620.14/8.4245 (training reached ep4620 ~20:39Z per the last download, then paused). No crash/divergence signal — consistent with Simeon's deliberate restart-prep window (dataset stitched last tick). Watch: if silence persists well past the usual restart turnaround, flag it; otherwise expect a fresh TRAINING STARTED + post-restart whiplash on resume.
