@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN279 · 2026-05-30T22:34Z · routine WALD coverage report + brief between-ATL pause · [watch tick, terse]
+First WALD telemetry of the watch: `WALD epoch=4629 step=3000 fill=20.8% mass=8.269 dead_low=3.00-7.00(4.00) dead_high=9.50+(5.50) sever…` (ntfy 22:24Z, prio 4; message truncated at "sever" in the push — likely "severity=", full text only in Modal stdout). **Read as routine, not a firing:** fill 20.8% (up from 18.8% at ep4620, histogram filling normally); mass 8.269 tracks current loss; `dead_low 3–7` and `dead_high 9.5+` are simply the loss-space bins the model no longer visits — expected for a model concentrated at ~8.2, not a fault (WALD is a *reactive* coverage detector, [[project_wald_causality]] — spike precedes firing, none seen). No new ATL since ep4628 (8.2252, 22:17Z, ~17 min) — another short pause like FN277, batch_history advancing to ep4631.37 (min batch 8.11), so not a stall. Dashboard HTTP 200. No escalation. If the next WALD shows a severity spike or `dead_*` widening sharply, revisit. Still watching for first `vestigial=N` (~ep4632 eligibility now reached).
+
+---
+
 ## FN278 · 2026-05-30T22:19Z · plateau resolved → fresh descent leg, two new ATLs · [watch tick, terse]
 The FN277 pause broke exactly as hoped — back into descent: **ep4627 ATL 8.2341** (d−0.0128, 22:10Z) and **ep4628 ATL 8.2252** (d−0.0089, 22:17Z). So the ~22 min between-ATL gap was just a pause, not a plateau; governor stays quiet. batch_history live to ep4629.17, min batch 8.010, mean 8.54 (normal noise, one 9.77 outlier batch — single noisy minibatch, not a trend). Dashboard HTTP 200, no STALL/WALD/divergence. Approaching resurrection-eligibility window (~ep4632, 12-epoch patience from the ep4620 restart). No escalation. Still watching for the first `vestigial=N` line.
 
