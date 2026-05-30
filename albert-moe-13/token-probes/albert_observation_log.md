@@ -6586,16 +6586,6 @@ Infra: T4 16GB is genuinely too small for honest full-body backward (forward ~10
 
 ---
 
-## FN255 · 2026-05-30T00:00Z · ★ THE BACKBONE WAS NEVER LEARNING — fixed; first trained-body checkpoint; epoch-avg 9.20→8.73 in ONE epoch
-
-For an unknown stretch (likely since the candle/GPU work weeks ago), albert was training **only its lm_head** — the entire 28L dual-stream backbone + embedding got **zero gradient**. Loss crept down ~−0.001/epoch purely from the head recalibrating, which hid the bug. Caught because Simeon noticed the per-layer gradient-norm panel had gone cold (all `0.000e+0`) — the loss curve alone would never have shown it.
-
-Root cause: `candle_nn::LayerNorm::forward` (candle 0.8.4) takes a fused fast-path on contiguous+affine inputs → `ops::layer_norm` CustomOp3, which has **no `bwd`** → silently drops the input gradient. Attention emits `.contiguous()`, so ln1/ln2/ln_f all became gradient walls; ln_f sits between body and head → only the head trained. Diagnosed on CPU at 16-dim (autograd graph is device-independent — exonerated STE, tfloat32, T4, dual-stream). Live `[GRAD-DIAG] blocks: 0 have grad / 2184 None`.
-
-Fixed with `DiffLayerNorm` (primitive autograd ops, numerically identical, checkpoint-compatible) → `2184/2184 blocks have grad`, ‖g‖ 0.0026→~6–8. That unmasked a multi-graph grad-accum OOM (summed loss tensors held 4 forward graphs → rewrote to backward-per-micro-batch + GradStore folding) and an L1 aux-loss memory bomb (abs() over 2184 weights firing at loss<8.0, ~8.5GB spike → ablated, redundant with AdamW wd anyway). Moved T4→L4 24GB (honest full-body backward ~20GB).
-
-Result: first checkpoint EVER with a trained body (ep4452, all 300 steps). Epoch-avg **9.20→8.7263 (−0.4782) in one epoch** (~400× the frozen crawl); broke sub-9.2/9.1/9.0 floors in one epoch; batch ATL cascaded to **7.51** and still falling; routing alive (CMP 100%, INT 92–100%), bars dancing L0–L27. ntfy: "CRITICAL DEPTH — surgery may fire soon." That plunge is weeks of frozen learning released at once. Guards added (ste.rs::grad_tests, diff_layer_norm::tests). New dashboard GPUMEM chip. L1 stays OFF.
-
 ## FN254 · 2026-05-29T18:50Z · creeping down ~9.41 · myc_stable=72 · [loop tick, terse]
 
 EP 4422 b34, 28L. ep4420 9.4130 → ep4421 **9.4115** (d−0.0015) — slow grind ~9.41. dead=3 (minor churn) blooming=7 hot=L27 **myc_stable=72**. tns=2200, log live 0s, watchdog held, WALD sparse, no OOM/panic. Healthy, uneventful.
