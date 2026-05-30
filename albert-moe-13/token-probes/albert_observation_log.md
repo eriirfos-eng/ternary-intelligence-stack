@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN258 · 2026-05-30T01:01Z · ep4461 b~220 · ntfy quiet 26m (between epoch closes), log live, healthy · [loop tick, terse]
+
+ntfy quiet since ep4457 WALD (00:34) — normal inter-epoch gap, not a stall. Log mtime 0s stale, step=2916 (ep4461 in progress, b~220/300). Recent batches: 8.25, 7.68, 9.02, 8.89 — spiky-healthy, 7.68 batch low confirms new ATL territory. GRAD-DIAG: **2184/2184 have grad, 0 None**. GPUMEM: 12,468MB (↓64MB from last tick — normal CUDA allocator variance, no creep). ROUTE step=2910 spread 0.079–0.087, 12 experts active. Verdict: **healthy, monitoring epoch-close events for ep4458/4459/4460/4461 ATLs.**
+
+---
+
 ## FN257 · 2026-05-30T00:40Z · ep4458 b~240 · descent continuing, all systems nominal · [loop tick, terse]
 
 ep-avg trajectory: ep4452→8.7263 · ep4453→8.5164 · ep4454→8.5080 · ep4455→8.4813 · ep4457 WALD mass=8.513 (just closed); ep4458 in progress (b~240/300, batches 7.81–8.93, spiky-healthy). GRAD-DIAG: **2184/2184 have grad, 0 None** — fix stable across epochs. GPUMEM: 12532MB flat (no creep). ROUTE spread 0.080–0.091 across 12 experts — no Nash collapse. WALD fill=16.7%, mass descending ~8.73→8.51 — productive, no divergence. Log live (1s stale). Local wrapper + Modal detached alive. **Verdict: clean ongoing descent, no intervention.**
