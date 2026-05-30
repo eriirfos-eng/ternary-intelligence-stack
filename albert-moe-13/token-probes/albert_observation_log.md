@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN257 · 2026-05-30T00:40Z · ep4458 b~240 · descent continuing, all systems nominal · [loop tick, terse]
+
+ep-avg trajectory: ep4452→8.7263 · ep4453→8.5164 · ep4454→8.5080 · ep4455→8.4813 · ep4457 WALD mass=8.513 (just closed); ep4458 in progress (b~240/300, batches 7.81–8.93, spiky-healthy). GRAD-DIAG: **2184/2184 have grad, 0 None** — fix stable across epochs. GPUMEM: 12532MB flat (no creep). ROUTE spread 0.080–0.091 across 12 experts — no Nash collapse. WALD fill=16.7%, mass descending ~8.73→8.51 — productive, no divergence. Log live (1s stale). Local wrapper + Modal detached alive. **Verdict: clean ongoing descent, no intervention.**
+
+---
+
 ## FN256 · 2026-05-30T00:22Z · ep4456 · post-fix descent CONFIRMED — steepest in training history; now watching critically for over-fast collapse
 
 First 15-min monitoring tick after the FN255 fixes. **The descent is real and sustained, not a one-epoch artifact.** Epoch-avg across the last 4 closed epochs: ep4452 **8.7263** → ep4453 **8.5164** (d−0.21) → ep4454 **8.5080** (d−0.008) → ep4455 **8.4813** (d−0.027). Batch ATL still carving new lows: 7.4461 → 7.2910 → **7.2723** (dash ATL 7.2723 ↓17.36%). For scale: the frozen-body model crawled ~−0.001/epoch for weeks; the first post-fix epoch alone moved −0.48. The dashboard cliff (ep~4452) is the single steepest drop in albert's history — weeks of frozen-backbone learning released at once.
