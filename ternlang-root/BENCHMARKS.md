@@ -504,6 +504,8 @@ CuTern advantage expected at: hidden_dim ≥ 1024 (fills multiple SMs per launch
 
 ## §13 — Albert MoE-13: Held-Out Perplexity Evaluation
 
+> **⚠ Re-measure pending (2026-05-30).** The figures below predate two events: (a) growth to **28L dual-stream** (was 18L), and (b) the **2026-05-30 gradient-wall fix** — for an unknown prior period albert was training only its `lm_head` while the entire backbone received zero gradient (candle's fused LayerNorm had no backward; see observation log FN255). With the body now training end-to-end, loss is dropping ~400× faster than before (epoch-avg 9.20 → 8.73 in a single epoch and still falling). A held-out perplexity number captured mid-plunge would be obsolete within hours, so the current figure is intentionally **not** frozen here — it will be re-measured once loss stabilizes after the next autonomous surgery.
+
 Run: `cargo run --release -p moe-llm-core --bin eval_perplexity`  
 Evaluates the current checkpoint on Alice in Wonderland (~150KB, held-out, <1 min on CPU).  
 Pass a path argument to evaluate any other corpus file.
@@ -559,10 +561,28 @@ cargo run --release -p moe-llm-core --bin eval_perplexity data/corpus/stage_3/bi
 
 ## §14 — Training Cost: Hard Numbers
 
-Verified from Modal.com billing dashboard, billing cycle May 1–Jun 1, 2026.  
-Run: overnight training session (ep334→ep461, ~127 epochs) + next-day continuation (ep462→ep475, ~14 epochs).
+All figures below are read directly from the Modal.com billing dashboard — raw billed amounts, no estimates.
 
-### §16a — Measured Session Cost
+### §14a — Verified Full-Day Cost at Current Model Size (28L dual-stream)
+
+**Source: Modal.com Usage & Billing dashboard, day of 2026-05-29 (24h), captured 2026-05-30.**
+
+| Metric | Verified Value |
+|--------|---------------|
+| **Total billed (24h)** | **$24.06** |
+| — by resource: T4 GPU | $12.40 |
+| — by resource: CPU | $8.41 |
+| — by resource: Memory | $3.25 |
+| — by app: Ephemeral (training runs) | $19.11 |
+| — by app: Deployed (albert-serve inference) | $4.95 |
+| **All-in rate** | **~$1.00 / GPU-hour** ($24.06 ÷ 24) |
+| **Training-only rate** | **~$0.80 / GPU-hour** ($19.11 ÷ 24) |
+
+This is the honest cost of the **28L dual-stream** model on Modal T4 — substantially higher than the 12L/17L-era figures below, because the model is far deeper and the day included heavy iteration. **Note:** as of 2026-05-30 training moved to **Modal L4 (24GB)** — once the 28L backbone actually trains end-to-end (post the LayerNorm gradient-wall fix), it needs ~20GB and no longer fits a 16GB T4. A fresh verified full-day L4 figure will be captured once a 24h L4 run completes. Path back to the cheaper T4 = gradient checkpointing (recompute activations in backward).
+
+### §14a-hist — Historical Session Cost (12L / 17L era — for reference)
+
+Verified from Modal.com billing dashboard, billing cycle May 1–Jun 1, 2026. Run: overnight session (ep334→ep461, ~127 epochs) + continuation (ep462→ep475, ~14 epochs). These per-epoch figures predate the depth growth to 28L and the dual-stream cord; kept for the cost-scaling trajectory, not as current rates.
 
 | Metric | Verified Value |
 |--------|---------------|
@@ -573,10 +593,9 @@ Run: overnight training session (ep334→ep461, ~127 epochs) + next-day continua
 | Epochs completed | 141 (ep334–ep475) |
 | Tokens per epoch | 307,200 (300 batches × 4 samples × 256 CTX) |
 | Total tokens processed | ~43.3M |
-| **Cost per epoch (all-in, 12L era)** | **~$0.004** |
-| **Cost per epoch (all-in, 17L current)** | **~$0.021** |
-| **Cost per million training tokens** | **~$0.013** |
-| Credits remaining (post-session) | $12.28 |
+| Cost per epoch (all-in, 12L era) | ~$0.004 |
+| Cost per epoch (all-in, 17L era) | ~$0.021 |
+| Cost per million training tokens | ~$0.013 |
 
 *Source: Modal.com / albert-training / Usage dashboard, captured 2026-05-13.*
 
