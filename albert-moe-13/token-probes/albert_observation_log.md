@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN268 · 2026-05-30T20:51Z · still down — restart not yet fired · training paused ~ep4620 · [loop tick, terse]
+
+2nd tick of silence. ntfy `albert-rfi-irfos`: no new events since WALD ep4615 (20:11Z); last TRAINING STARTED was the 19:28Z container, no newer one → restart **not yet re-fired**. Dashboard localhost:8888 still HTTP 000. batch_history tail steady at ep4620.14/8.4245 (training reached ep4620 ~20:39Z per the last download, then paused). No crash/divergence signal — consistent with Simeon's deliberate restart-prep window (dataset stitched last tick). Watch: if silence persists well past the usual restart turnaround, flag it; otherwise expect a fresh TRAINING STARTED + post-restart whiplash on resume.
+
+---
+
 ## FN267 · 2026-05-30T20:41Z · ntfy quiet ~45m + dashboard down — RESTART PREP · batch_history backfilled ep4198→4620 · [loop tick]
 
 **State:** ntfy `albert-rfi-irfos` silent ~45 min (last msg WALD ep4615 step1800 @20:11Z, mass 8.310). Dashboard localhost:8888 not responding (HTTP 000) — was 200 at FN266 (20:14Z). **Not an anomaly:** Simeon is prepping a restart (the recurring SMA-wipe-on-restart issue) and pulled the full dataset off the dashboard to stitch first.
