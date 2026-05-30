@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN262 · 2026-05-30T02:13Z · ep4471 b~231 · descent continuing; WALD fill 18.8% (creeping up) · [loop tick, terse]
+
+NEW BATCH ATL ep4470 b232 → **7.2478** (d−0.0189). WALD ep4470 step=5700 fill=**18.8%**, mass=8.512 — fill crept from 16.7% (FN260) to 18.8% over ~5 epochs. Still low (need ~100% to trigger surgery), but the fill direction bears watching as the descent continues. mass=8.512 stable (vs 8.519 FN260, 8.513 FN257 — oscillating, no sustained drift). ep4471 b~231 batches 8.63–8.95, no new batch ATL this step. GRAD-DIAG **2184/2184**. GPUMEM 12,500MB flat. Descent pattern: stair-step (burst ATL → consolidation → burst). Verdict: **healthy, monitoring WALD fill rate.**
+
+---
+
 ## FN261 · 2026-05-30T01:56Z · ep4469 b~107 · ★ NEW ATLs — descent resumed; FN259 floor was temporary
 
 **FN259/FN260 "floor" was a pause, not a stop.** At 01:46 UTC: **NEW EPOCH ATL ep4467 avg 8.4709** (d−0.0104, previous 8.4813) + **NEW BATCH ATL ep4468 b5 → 7.2667** (d−0.0056, previous 7.2723). Both records broken. The 45-min ntfy silence (01:01–01:46) was a multi-epoch consolidation before another descent leg — consistent with the model needing several epochs to absorb the gradient signal before making a new push. The WALD mass uptick (8.513→8.519) flagged in FN260 was noise, not drift.
