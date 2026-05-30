@@ -6569,6 +6569,20 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN264 · 2026-05-30T08:24Z · ep4524 b~92 · OVERNIGHT BURST: batch ATL 7.2478 → 6.7694 · epoch-avg plateau continues · all systems nominal
+
+**Batch ATL: 6.7694** (ep4519 b260, d−0.0691 from 6.8385). Since FN263 (~6h ago, ep4474), the batch-level ATL descended from 7.2478 all the way to 6.7694 — a drop of nearly half a nat. This is the largest overnight burst since the DiffLayerNorm fix. The step chain visible in ntfy: 7.2478 (FN262) → multiple intermediate ATLs → 6.8385 → 6.7694.
+
+**Epoch-avg: consolidation.** Best epoch-avg remains 8.4709 (ep4467), since_best=56 at ep4523. Epoch-avgs hovering 8.49–8.54, not breaking the ATL floor. This is characteristic of the stair-step pattern: batch-level learns fast, noisy batches inflate epoch mean until a consolidation epoch locks in a new floor. Expect epoch-avg ATL break to follow if the next burst materializes.
+
+**WALD:** fill oscillating 16.7–18.8% (ep4512→ep4520), mass slowly declining 8.525→8.504. No surge toward surgery threshold.
+
+**Infra:** GPUMEM 12,468–12,532MB (flat, well inside L4 24GB). All 30 per-layer grad norms non-zero (backbone training confirmed). ROUTE uniform 0.079–0.091 across 12 experts. ENTR=4.869 stable. tns=2200. No divergence (DIVWD/DIVGRAD all zero). No Nash collapse. No OOM.
+
+**Current:** ep4524, batch ~92/300 (mid-epoch). LR 2.11e-4 (cosine decay, still ~halfway). Batch losses 7.42–9.20 this epoch — wide variance, low mins indicate productive exploration.
+
+---
+
 ## FN263 · 2026-05-30T02:30Z · ep4474 b~42 · consolidation phase; no new ATLs; WALD fill oscillating · [loop tick, terse]
 
 WALD ep4471 step=6000 fill=**16.7%** (down from 18.8% FN262 — oscillation, not a trend), mass=8.521 (+0.009 from 8.512 — still noise range). No new epoch-ATL or batch-ATL since ep4470 (FN262). ep4474 b~42 batches 7.57–8.96; best batch 7.57, above the ATL floor of 7.2478 — confirming another consolidation window in the stair-step pattern. GRAD-DIAG **2184/2184**. GPUMEM 12,500MB flat. No alarms.
