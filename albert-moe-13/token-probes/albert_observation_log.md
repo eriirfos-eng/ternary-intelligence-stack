@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN277 · 2026-05-30T22:04Z · short plateau — no new ATL ~22 min, training advancing normally · [watch tick, terse]
+No new ntfy ATL since ep4623 (8.2469, 21:42Z) — ep4624/4625/4626 did not beat it, so `since_best` is climbing (normal after the sharp descent leg; d had already decayed 0.0285→0.0075). **Not a stall:** batch_history is live and advancing to ep4627.09, and the min batch in the last 45 rows is **8.033** (below the epoch-ATL), so the model still hits low-loss batches — the run is healthy, just between ATL breaks. Sampled-batch spread 8.03–9.12, mean 8.57 (normal mid-epoch noise; server-side all-300 epoch-ATL runs lower). Dashboard HTTP 200, no STALL/WALD/divergence. No escalation. Watching whether this resolves into a new descent leg or a longer plateau (plateau→surgery governor territory if it persists), and still for the first `vestigial=N` line.
+
+---
+
 ## FN276 · 2026-05-30T21:49Z · holding — descent continues, two clean ATL breaks · [watch tick, terse]
 Two new ATLs since FN275: ep4622 (implied) then **ep4623 avg 8.2469** (d−0.0075, chip 4.6541) via ntfy 21:42Z. batch_history streaming to ep4624.86 (~8.30–8.41 in-epoch, normal mid-epoch spread). Dashboard HTTP 200. No STALL/WALD/divergence; no `vestigial=N` line surfaced to ntfy yet (telemetry is in the Modal stdout, not pushed). Descent steady, decelerating gently (d shrank 0.0285→0.0075 — expected as it settles below 8.25). No escalation. Still watching for the first `MYCELIUM … vestigial=N` and resurrection-eligibility window (~ep4632).
 
