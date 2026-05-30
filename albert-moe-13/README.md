@@ -8,6 +8,10 @@ Part of the [Ternary Intelligence Stack](https://github.com/eriirfos-eng/ternary
 
 ---
 
+![albert. live dashboard — loss curve with surgery markers, expert routing heatmap, TTL states, per-layer gradient norms](docs/dashboard-live.png)
+
+---
+
 ## Run the Benchmark (one line)
 
 ```bash
@@ -317,10 +321,6 @@ T4 GPU training via Modal gives ~40× speedup over CPU for the 21L architecture.
 ### vs. Standard MoE (Mixtral, Switch Transformer)
 
 Standard MoE uses float32 weights and routes for capacity, not sparsity. Albert achieves two simultaneous savings: weight-level ternary sparsity inside each expert, plus expert-level skip at the routing layer via `@sparseskip`. The TTL adds a third dimension: real-time per-expert execution budget control based on utilization telemetry.
-
----
-
-<img width="1865" height="932" alt="image" src="https://github.com/user-attachments/assets/0da015d9-44c4-454b-bf7e-d0dac787a93b" />
 
 ---
 
