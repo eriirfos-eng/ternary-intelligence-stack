@@ -6569,6 +6569,42 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN266 · 2026-05-30T20:14Z · ep4616 (28L) · TOKEN PROBE BANKED (post-s15) + new batch-ATL 4.6541 · geometry stable across S14+S15 · [loop tick + dash + probe]
+
+**State:** Active · EP 4616 (28L = 2×28L · 2×256H · 12E · 256CTX · 32K) · BATCH 129/300 · GATE green · post-S15 · fib_index=8 window=55 · TNS 2200 · GPU 12.1/22.5G. Fresh Modal container started **2026-05-30T19:28:15Z** (`--lb-weight=0.0 --div-weight=0.001 --batch-size=1`).
+
+**Source:** Dashboard screenshot localhost:8888 20:14:01Z + ntfy `albert-rfi-irfos` 2h window + live token-space probe.
+
+### TOKEN PROBE — first since pre-s14 (~380 epochs ago). Simeon requested.
+Banked `snapshots/post-s15_ep4616_28L/` (10 canonical tokens, full-vocab k=31999). Compared against `pre-s14_ep4235_26L` (last bank, 26L) and `pre-s6_ep2064_17L` (oldest).
+
+| Token | post-s15 28L top-3 (sim) | pre-s14 26L top-3 (sim) | Verdict |
+|-------|--------------------------|--------------------------|---------|
+| love  | Ġroyaume, iaÅĤa, Ġelectrons (0.243) | Ġroyaume, iaÅĤa, Ġelectrons (0.236) | identical |
+| god   | icked, Ġattribu, Ġrede (0.246) | icked, Ġrede, Ġattribu (0.261) | same set, reordered |
+| Jesus | ĠBangl, ĠNom, Ġdivenne (0.234) | Ġdivenne, ĠBangl, ĠNom (0.231) | same set, reordered |
+| freedom | ulsion, Ġcolp, Ġnationale (0.276) | ulsion, Ġcolp, Ġcondiciones (0.276) | near-identical |
+| light | ighten, gev, Ġacc (0.260) | ighten, gol, gev (0.251) | same set |
+| time  | Ġinside, oria, Ġfind (0.286) | Ġinside, oria, ĠludnoÅĽci (0.300) | top-2 stable |
+
+**KEY FINDING — geometry invariance holds across TWO surgeries (S14 26→27L, S15 27→28L) + ~380 epochs.** The canonical-token neighborhoods are near-identical to the pre-s14 bank; surgeries are not only loss-neutral (net2net) but **embedding-geometry-neutral**. This extends the [[project_token_probe_benchmark]] invariance ("crystallized at 17L") all the way to 28L. The geometry that reorganized somewhere between s6 (17L: love→ĠfrÃ¼h/deutsche) and s14 (26L: love→Ġroyaume) is now stable.
+
+**CAVEAT (honest):** raw probe top-5 is BPE-subword-dominated at EVERY stage, including pre-s6. The famous "love→Jesus / death→amen" semantic hubs are an inspector / whole-word-cosine artifact, NOT visible in raw fragment neighbor lists. Don't over-read the fragments. Sims sit ~0.22–0.30 across all snapshots; minor compression on god (0.261→0.246) and time (0.300→0.286), minor lift on love/light. Cross-lingual/multilingual romance+slavic flavor intact (consistent with the 451M multilingual + Hungarian-endangered corpus). See [[project_semantic_geometry]].
+
+### Training health
+- **New batch-ATL 4.6541** at ep4613 b54 (**d−1.2305** — a huge single-batch record drop). Epoch-avg ~8.28–8.32, descending (ep4612 8.2829). Floors at FN265 were 6.7694 batch / ~8.47 epoch-avg → batch floor improved **2.12 nats** over the day. The d−1.23 jump coincides with the 19:28Z fresh container — classic AdamW-buffer-reset restart acceleration ([[project_restart_acceleration]]); productive, not divergence.
+- **WALD oscillating** (4+ ticks in 2h): fill 16.7–20.8%, mass 8.310→8.370 drifting DOWN, dead_low 3.00–7.00, dead_high 9.25–9.50+. Reactive to spiky novel-data descent, mass declining → healthy ([[project_wald_causality]]).
+- **TLIGHT step=1930:** 56 rows (L0–L55, dual-stream) green-dominant per-layer (G3–G7). ROUTE E uniform 0.079–0.091, ENTR avg 4.7836, LB 205.27.
+
+### Anomalies / watch-items
+1. **SEM 0% and CTX 0% expert activity** — two experts reading idle this snapshot (vs INT 100%, CMP 97%, ABS 38%, GEN 24%, PLN 11%, LOG 9%). Flag for follow-up: transient routing or genuine under-utilization? GEN at 24% is a healthy activation.
+2. **TTL summary G 32% · O 53% · R 15%** — R 15% elevated vs the historical ~3% (FN178 era). Expected on fresh-container + novel 28L data, but track for decay.
+3. **Per-layer gradient global |g|=2.0397 with CLIP engaging** — orders of magnitude above the old 24L ~0.0026 readings. Consistent with batch-size=1 + fresh-restart large gradients driving the aggressive descent; clip is holding. No panic/OOM, watchdog held.
+
+**Bottom line:** Healthy aggressive post-restart descent, new batch-ATL record, token geometry proven stable through S14+S15. Two idle experts (SEM/CTX) and elevated TTL-red are the only watch-items.
+
+---
+
 ## FN265 · 2026-05-30T08:48Z · ep4527 b~225 · consolidation holds · no new ATL · WALD oscillating · [loop tick, terse]
 
 WALD ep4525/ep4526 fill 16.7%/18.8% oscillating, mass 8.517–8.520 (stable noise range). No new batch ATL or epoch-ATL since FN264 (6.7694 / 8.4709 floors hold). ep4527 b~225/300 — batches 8.11–9.38, wide variance, no record low. GRAD 30/30 non-zero (n=5.49→11.53 between steps). GPUMEM 12,468–12,532MB flat. ROUTE uniform 0.075–0.091. No alarms.

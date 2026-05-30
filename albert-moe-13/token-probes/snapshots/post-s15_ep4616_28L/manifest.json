@@ -1,0 +1,134 @@
+{
+  "label": "post-s15",
+  "epoch": 4616,
+  "arch_layers": 28,
+  "loss": 8.3171,
+  "timestamp": "2026-05-30T20:18:07+00:00",
+  "note": "Mid-run 28L probe, post-S15. First probe since pre-s14_ep4235_26L (~380 epochs). ATL 4.6541, GATE green, descending. Loop-driven by Simeon.",
+  "host": "localhost:8888",
+  "neighbors_k": 32000,
+  "tokens": [
+    "love",
+    "god",
+    "Jesus",
+    "death",
+    "war",
+    "truth",
+    "freedom",
+    "mother",
+    "light",
+    "time"
+  ],
+  "summary": {
+    "love": {
+      "resolved": "Ġlove",
+      "top5": [
+        "Ġroyaume",
+        "iaÅĤa",
+        "Ġelectrons",
+        "manif",
+        "ĠPerl"
+      ],
+      "top_sim": 0.2426
+    },
+    "god": {
+      "resolved": "Ġgod",
+      "top5": [
+        "icked",
+        "Ġattribu",
+        "Ġrede",
+        "Ġbelgijski",
+        "Ġataque"
+      ],
+      "top_sim": 0.2455
+    },
+    "Jesus": {
+      "resolved": "ĠJesus",
+      "top5": [
+        "ĠBangl",
+        "ĠNom",
+        "Ġdivenne",
+        "reward",
+        "Ġgrup"
+      ],
+      "top_sim": 0.2343
+    },
+    "death": {
+      "resolved": "Ġdeath",
+      "top5": [
+        "imbab",
+        "Ġdemi",
+        "ĠBo",
+        "Ġintermedi",
+        "ĠGel"
+      ],
+      "top_sim": 0.234
+    },
+    "war": {
+      "resolved": "Ġwar",
+      "top5": [
+        "Ġexpres",
+        "Ġcarica",
+        "Ġciasc",
+        "Ġslight",
+        "Ġuruch"
+      ],
+      "top_sim": 0.279
+    },
+    "truth": {
+      "resolved": "Ġtruth",
+      "top5": [
+        "lock",
+        "tout",
+        "itale",
+        "integra",
+        "Ġother"
+      ],
+      "top_sim": 0.2621
+    },
+    "freedom": {
+      "resolved": "Ġfreedom",
+      "top5": [
+        "ulsion",
+        "Ġcolp",
+        "Ġnationale",
+        "ĠmÃ©todo",
+        "Ġcondiciones"
+      ],
+      "top_sim": 0.2762
+    },
+    "mother": {
+      "resolved": "Ġmother",
+      "top5": [
+        "ĠDublin",
+        "ĠDuitse",
+        "Ġeuro",
+        "Ġinven",
+        "Ġbestimmte"
+      ],
+      "top_sim": 0.2229
+    },
+    "light": {
+      "resolved": "Ġlight",
+      "top5": [
+        "ighten",
+        "gev",
+        "Ġacc",
+        "||||",
+        "gol"
+      ],
+      "top_sim": 0.2595
+    },
+    "time": {
+      "resolved": "Ġtime",
+      "top5": [
+        "Ġinside",
+        "oria",
+        "Ġfind",
+        "Ġrivers",
+        "Ġdrze"
+      ],
+      "top_sim": 0.2859
+    }
+  }
+}
