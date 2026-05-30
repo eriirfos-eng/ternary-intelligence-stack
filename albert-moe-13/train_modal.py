@@ -207,10 +207,9 @@ def _ntfy(title: str, msg: str, priority: str = "3") -> None:
 
 @app.function(
     image=image,
-    gpu="T4",            # 16GB. LayerNorm gradient bug fixed (2026-05-30); observed memory 12.2GB
-                         # consistently during training. Previous OOM on 2026-05-29 was due to frozen
-                         # body (buggy fused LayerNorm). With ACTUAL full-body training + grad fix,
-                         # T4 has sufficient headroom (~3.8GB buffer). Extends runway until new funds.
+    gpu="L4",            # 24GB. T4 16GB OOMed immediately despite 12.2GB observed on L4 (2026-05-30).
+                         # Memory spikes during backward/checkpoint exceed buffer; L4 provides safe margin.
+                         # LayerNorm gradient bug fixed. Stay on L4 until new funds arrive.
     timeout=23 * 3600,   # 23-hour cap
     volumes={"/vol": vol},
     memory=16384,
