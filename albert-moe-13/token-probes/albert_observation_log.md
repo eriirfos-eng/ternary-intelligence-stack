@@ -6569,6 +6569,20 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN274 · 2026-05-30T21:29Z · 🌙 NIGHTSHIFT HANDOVER — Claude on watch, Simeon = 15s-away human-in-loop · ep4621 new ATL 8.2544 descending · [handover]
+
+Simeon handed albert over for his office nightshift; ntfy alarms loud+armed, he can be back in ~15s if anything breaks. Taking the watch in a healthy state: **ep4621 NEW EPOCH ATL 8.2544** (d−0.0285) — post-restart descent live, already below the pre-restart ~8.28 band (restart acceleration, [[project_restart_acceleration]]). WALD ep4620 mass 8.292 fill 18.8% normal. Dashboard HTTP 200. Stall cleared (recovered 21:15Z).
+
+**WATCH PROTOCOL (this shift):**
+- LOG + commit every 15m tick (training progress, WALD, ATL, descent, first `vestigial=N`, any `Resurrected LxEy`). Token probe if a surgery fires.
+- ESCALATE to Simeon immediately (chat + he has ntfy) on: genuine stall w/ no auto-recovery, loss divergence/explosion, OOM/crash, surgery firing, or a vestigial resurrection that looks harmful.
+- Will NOT without his nod: restart the run, change flags/config, kill/redeploy, or anything destructive — he's 15s away.
+- Vestigial-rescue ON; eligibility opens ~ep4632 (12-epoch patience from the ep4620 restart). No resurrection should fire before then.
+
+**Dashboard snapshot (Simeon "last look" 21:29:31, ep4622):** striking post-restart descent — near-vertical cliff from the ~8.6 plateau to a new floor **EP AVG 8.2544** (T-610 8.2616), batch ATL **6.5302**, GATE green, BATCH 53/300, TNS 2200, GPU 12.1/22.5G. Per-layer **global |g|=1.7358** (settling from 2.04, clip active). TTL G34/O50/R16. **Expert activity shift:** SYN **0%**, SEM **0%**, CTX **2%** (recovered from 0 — dormant→germinate live, vindicates the no-force call), INF 2 MEM 3 LNG 3 LOG 13 GEN 23 ABS 39 PLN 21 **CMP 94 INT 100**. So the 0%/starved set now = SYN+SEM (CTX climbing out). Healthy, descending hard — good state to hold the watch in.
+
+---
+
 ## FN273 · 2026-05-30T21:23Z · resume HEALTHY — recovered, running at ep4620, WALD mass 8.292 · vestigial patience clock reset · [loop tick]
 
 Post-restart sequence on ntfy: `WATCH: recovered` 21:15:01Z ("anomaly cleared (was stall); ep? avg nan" — cold-start, no avg yet) → `WALD epoch=4620 step=300` 21:21Z, **fill 18.8% mass 8.292** (healthy; slightly below the pre-restart ~8.31 band). Training is advancing past the ep4619 freeze → clean productive resume, no divergence. Dashboard localhost:8888 HTTP 200. No epoch-ATL/batch-ATL ntfy yet (~10 min in, ep4620 mid-flight at step 300).
