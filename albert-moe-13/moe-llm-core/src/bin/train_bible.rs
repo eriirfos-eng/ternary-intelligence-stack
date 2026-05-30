@@ -49,9 +49,10 @@ struct TrainFlags {
     batches_per_epoch: usize,
     /// Micro-batch size per forward pass. Default 8 (GPU). Use 2 for CPU to avoid freezing.
     batch_size: usize,
-    /// Enable vestigial-expert rescue: let mycelium resurrection also act on experts
-    /// that are routed but weight-starved and stalled (the flux blind spot, F9).
-    /// Default OFF — the flux signal stays observational unless this is passed.
+    /// Vestigial-expert rescue: let mycelium resurrection also act on experts that
+    /// are routed but weight-starved and stalled (the flux blind spot, F9).
+    /// Default ON — opt out with --no-vestigial-rescue (the patience + recovery
+    /// guards spare slots that are still recovering, e.g. CTX 0->2%).
     vestigial_rescue: bool,
     /// Epochs an expert must remain vestigial-and-not-recovering before rescue.
     vestigial_patience: usize,
@@ -72,7 +73,7 @@ fn parse_args() -> TrainFlags {
         spores_dir:          String::new(),
         batches_per_epoch:   300,
         batch_size:          8,
-        vestigial_rescue:    false,
+        vestigial_rescue:    true,   // ON by default — flux nerve wired to self-repair; opt out with --no-vestigial-rescue
         vestigial_patience:  12,
     };
     for arg in &args[1..] {
@@ -81,7 +82,8 @@ fn parse_args() -> TrainFlags {
             "--seed-experts"    => flags.seed_experts = true,
             "--break-symmetry"  => flags.break_symmetry = true,
             "--cord-surgery"    => flags.cord_surgery = true,
-            "--vestigial-rescue" => flags.vestigial_rescue = true,
+            "--vestigial-rescue"    => flags.vestigial_rescue = true,  // explicit-on (now the default)
+            "--no-vestigial-rescue" => flags.vestigial_rescue = false, // opt-out, no rebuild needed
             _ => {
                 if let Some(v) = arg.strip_prefix("--lb-weight=") {
                     if let Ok(w) = v.parse::<f64>() { flags.lb_weight = w; }

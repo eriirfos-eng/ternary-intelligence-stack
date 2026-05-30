@@ -6569,6 +6569,25 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN271 · 2026-05-30T~21:0xZ · vestigial-rescue now DEFAULT ON — Simeon's call, next albert-train picks it up · [code]
+Per Simeon ("wire it in completely, high confidence"), flipped `train_bible` default `vestigial_rescue: false → true`. A plain `albert-train` now activates flux-gated vestigial rescue (patience=12, recovery-spare guard intact). Kept a no-rebuild opt-out `--no-vestigial-rescue`; `--vestigial-patience=N` still tunes. Library default (`MyceliumModule::new`) stays OFF — only the albert trainer opts in. Startup banner logs the live state. Build clean, 8 mycelium tests green. Doc + F9 updated to default-ON. So the restart Simeon is about to issue will run WITH rescue live (no extra flag needed). Residual risk (honest): if a useful sparse/pruned slot is ever mis-rescued it re-densifies — but the patience + recovery + median-starvation guards make that rare, and the STE will re-prune if it's truly redundant. Watch the `MYCELIUM … vestigial=N …` field + any `MYCELIUM: Resurrected LxEy` lines on resume.
+
+---
+
+## FN270 · 2026-05-30T21:05Z · ⚠ STALL — training frozen at ep4619 ~45m, watchdog warned, NO restart fired · [loop tick — flag]
+
+**ntfy fired a STALL warning** (20:40Z, priority 4): `STALL: no training.log activity for 20 min. ep4619 loss_avg=8.3304 loaded=2200 stale=1232s`. So the training.log last advanced ~20:20Z; as of this tick (21:05Z) that's **~45 min frozen at ep4619**, no recovery, no new `TRAINING STARTED` since the 19:28Z container.
+
+**Reconciled timeline:** ep4615 WALD (20:11Z) → progressed to ep4619 → log went stale ~20:20Z → STALL alert 20:40Z → still frozen 21:05Z. batch_history tail ep4620.14 (from the 20:39Z download, slightly ahead of the stall point). Dashboard localhost:8888 down (HTTP 000) throughout.
+
+**Diagnosis:** model state looks healthy at freeze — `loaded=2200` (full dual-stream tensor count, matches FN241), loss_avg 8.3304 (normal ~8.28–8.33 band). This is a **liveness stall, not divergence/collapse**. Two readings: (a) Simeon stopped the container for the restart-prep he flagged (stitch done FN267) and simply hasn't re-issued the train cmd yet — benign; (b) a genuine hang at ep4619. **Critical:** the watchdog was hardened to WARN-not-kill (FN241), so it will **not auto-recover** — if (b), it needs a manual restart. Either way, training is currently NOT advancing.
+
+**Action:** flagged to Simeon this tick. No code/data action taken (won't restart his run unprompted). Watch next tick for `TRAINING STARTED`; if still frozen, escalate.
+
+**RESOLVED (21:0xZ):** Simeon confirms he **hadn't started the restart yet** — reading (a) correct, fully benign. No hang. The container is simply down between his prep and the restart he's about to issue.
+
+---
+
 ## FN269 · 2026-05-30T~21:0xZ · SHIPPED: vestigial→resurrection wiring (flux nerve → self-repair effector), default OFF · [code]
 Closed the FN266c gap end-to-end, per Simeon's nod. The flux signal is now wired into mycelium's existing resurrection — the afferent nerve connected to the effector — but **behind a default-OFF `--vestigial-rescue` flag** (the flag is the per-run nod; unset = pure telemetry, behaviour unchanged). New: `MyceliumModule::record_substance` (per-(layer,expert) weight-mass history), `vestigial_experts()` detector with the **patience + recovery guard** (starved <10% of layer median every epoch for `--vestigial-patience` epochs, default 12; still-routed/non-Red; AND mass flat-or-declining — a *rising* slot like CTX 0→2% is spared), gated `generate_resurrections`, `MYCELIUM … vestigial=N …` log field (emitted regardless of flag). `train_bible.rs` feeds substance each epoch + parses `--vestigial-rescue`/`--vestigial-patience`. 5 unit tests green (incl. zero-false-positive in balanced regime + recovering-slot-spared), builds clean. Design doc `docs/VESTIGIAL_RESCUE.md`; F9 updated. **Ready for the in-progress restart**: add `--vestigial-rescue` to the train cmd to activate; omit to keep observational. Takes effect on next `albert-train` rebuild/deploy. Insight surfaced while testing: a vestigial expert is routed (Green/Orange) so it can rank high by TLIGHT-green yet be a poor reseed *source* — seeding should eventually prefer highest weight-mass, not green-count (logged as open tuning Q).
 

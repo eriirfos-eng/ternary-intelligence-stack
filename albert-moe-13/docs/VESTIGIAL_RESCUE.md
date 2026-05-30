@@ -77,23 +77,25 @@ positives by construction (unit-tested).
 
 ## Activation
 
-**Default OFF.** With no flag, the flux signal is pure telemetry: the per-epoch
-`FLUX` and `MYCELIUM … vestigial=N …` log lines are emitted, vestigial experts
-are *counted*, but **no resurrection is triggered from them**. Behaviour is
-identical to before this change. The flag is the operator's per-run nod.
+**Default ON** (since 2026-05-30 — wired in completely so a plain `albert-train`
+picks it up). The patience + recovery guards below are what make default-on safe:
+only a demonstrably stalled slot is ever touched, and a recovering one is spared.
 
 ```bash
-# observational only (default) — nothing changes
+# default: vestigial rescue active, patience 12 epochs
 albert-train ...
 
-# enable vestigial rescue, default patience 12 epochs
-albert-train ... --vestigial-rescue
+# tune the patience window
+albert-train ... --vestigial-patience=15
 
-# enable with a custom patience window
-albert-train ... --vestigial-rescue --vestigial-patience=15
+# opt out entirely (no rebuild needed) — falls back to pure telemetry
+albert-train ... --no-vestigial-rescue
 ```
 
-Startup banner records the state: `[mycelium] vestigial-rescue ON (patience=12 epochs) …`.
+Either way the per-epoch `FLUX` and `MYCELIUM … vestigial=N …` lines are emitted,
+so the count is always observable. The startup banner records the live state:
+`[mycelium] vestigial-rescue ON (patience=12 epochs) …`. The library default
+(`MyceliumModule::new`) stays OFF — only the albert trainer opts in by default.
 
 ## Implementation map
 
