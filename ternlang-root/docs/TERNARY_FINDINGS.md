@@ -18,6 +18,20 @@ makes sparsity, skipping, and three-way semantics natural.
 | # | Date | Finding | Basis |
 |---|------|---------|-------|
 
+## F0 — The triangle: the most stable form in the universe (the genesis)
+*structural / geometric · Simeon's first finding, years before the rest — the one that triggered all of this*
+The one that started everything: stability does not come from a 0 and a 1, not
+from I/O, not from two lines — it comes from a **triangle**. *Honest basis:* the
+triangle is the **only inherently rigid polygon** — fix its three edge lengths and
+it cannot deform without breaking one of them (which is why every truss, geodesic
+dome and space-frame is triangulated; a four-sided frame racks and collapses, a
+triangle holds). Three is also the minimum to define a plane, to enclose an area,
+and to break a tie. Two states are a *hinge*; three are a *structure*. Everything
+below — radix economy, ternary sparsity, the dormant `0`, balanced arithmetic,
+two-axis health — is this one shape re-expressed in arithmetic, silicon, and
+weights. It earns **F0**, not F1: it does not sit *first in* the list, it sits
+*underneath* it, as the origin every other finding indexes from.
+
 ## F1 — Radix economy: base 3 is the most efficient integer base
 *2026-05-28 · mathematical (classic result)*
 The "radix economy" of a number system is minimized at base *e* (≈2.718); base 3
