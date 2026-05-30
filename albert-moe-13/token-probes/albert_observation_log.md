@@ -6569,6 +6569,13 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN272 · 2026-05-30T21:13Z · RESTART LIVE — TRAINING STARTED 21:12:40Z · [loop/boot]
+Restart fired by Simeon; ntfy `TRAINING STARTED` at **21:12:40Z** (caught via armed background watch). Modal container up, fib_index=8 window=55, cmd `--lb-weight=0.0 --div-weight=0.001 --batch-size=1` (standard — note NO `--vestigial-rescue` flag, which is expected now that rescue is DEFAULT ON). Dashboard localhost:8888 back to HTTP 200. ~22 min total downtime (frozen ep4619 ~20:20Z → boot 21:12Z), benign (Simeon's deliberate restart-prep window). Corpus reload (~11min) before first epoch; expect resume ~ep4619 + post-restart whiplash (epoch-avg jump then descent, AdamW buffer reset → restart acceleration [[project_restart_acceleration]]).
+
+**OPEN — confirm default-on binary is live:** the cmd line can't tell us whether this container rebuilt from commit 2d75fcd (default-on) or ran a cached image. **Confirmation signals (Modal log / dashboard):** (1) startup banner `[mycelium] vestigial-rescue ON (patience=12 epochs)`; (2) the MYCELIUM telemetry line now carries a `vestigial=N` field (new schema). If neither appears, the rebuild didn't pick up the commit → needs a fresh `albert-train modal` build. Watch first MYCELIUM line of this run.
+
+---
+
 ## FN271 · 2026-05-30T~21:0xZ · vestigial-rescue now DEFAULT ON — Simeon's call, next albert-train picks it up · [code]
 Per Simeon ("wire it in completely, high confidence"), flipped `train_bible` default `vestigial_rescue: false → true`. A plain `albert-train` now activates flux-gated vestigial rescue (patience=12, recovery-spare guard intact). Kept a no-rebuild opt-out `--no-vestigial-rescue`; `--vestigial-patience=N` still tunes. Library default (`MyceliumModule::new`) stays OFF — only the albert trainer opts in. Startup banner logs the live state. Build clean, 8 mycelium tests green. Doc + F9 updated to default-ON. So the restart Simeon is about to issue will run WITH rescue live (no extra flag needed). Residual risk (honest): if a useful sparse/pruned slot is ever mis-rescued it re-densifies — but the patience + recovery + median-starvation guards make that rare, and the STE will re-prune if it's truly redundant. Watch the `MYCELIUM … vestigial=N …` field + any `MYCELIUM: Resurrected LxEy` lines on resume.
 
