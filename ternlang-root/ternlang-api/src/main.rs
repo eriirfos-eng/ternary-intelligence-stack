@@ -6039,8 +6039,9 @@ async fn main() {
         // Lighthouse internal console (GitHub-OAuth gated; self-auths via signed session cookie)
         // /lighthouse → reverse-proxy to the lighthouse workplace-OS app. The old in-process
         // console handlers are retired; the OS owns this surface now (it self-auths via GitHub OAuth).
-        .route("/lighthouse",       any(lighthouse_proxy))
-        .route("/lighthouse/*rest", any(lighthouse_proxy))
+        .route("/lighthouse",         any(lighthouse_proxy))
+        .route("/lighthouse/",        any(lighthouse_proxy))
+        .route("/lighthouse/{*rest}", any(lighthouse_proxy))
         .route("/kpi",                  get(kpi_page))
         .route("/kpi/{filename}",       get(kpi_data))
         .route("/api/kpi/upload/{filename}", post(kpi_upload))

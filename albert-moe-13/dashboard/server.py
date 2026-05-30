@@ -1,4 +1,5 @@
 import http.server
+import io
 import json
 import socketserver
 import os
@@ -248,6 +249,42 @@ def _auto_merge_loop():
 _merge_thread = threading.Thread(target=_auto_merge_loop, daemon=True)
 _merge_thread.start()
 
+# ── CSV validation: ensure batch_history.csv is not being written ────────────
+_csv_cache = None
+_csv_cache_mtime = None
+_csv_cache_lock = threading.Lock()
+
+def _is_csv_being_written(csv_path: str) -> bool:
+    """Check if CSV file is currently being written (size changing)."""
+    try:
+        size1 = os.path.getsize(csv_path)
+        time.sleep(0.01)  # 10ms check interval
+        size2 = os.path.getsize(csv_path)
+        return size1 != size2  # Size changed = being written
+    except OSError:
+        return False
+
+def _get_batch_history_csv() -> str:
+    """Get batch_history.csv with caching, skipping if file is being written."""
+    global _csv_cache, _csv_cache_mtime
+    csv_path = os.path.join(DIRECTORY, "batch_history.csv")
+    try:
+        mtime = os.path.getmtime(csv_path)
+        with _csv_cache_lock:
+            # Return cached version if file hasn't changed
+            if _csv_cache is not None and _csv_cache_mtime == mtime:
+                return _csv_cache
+            # Skip read if file is currently being written (merge in progress)
+            if _is_csv_being_written(csv_path):
+                return _csv_cache or ""  # Return cached or empty if none cached yet
+            # Read and cache the file
+            with open(csv_path, 'r', encoding='utf-8', errors='ignore') as f:
+                _csv_cache = f.read()
+                _csv_cache_mtime = mtime
+                return _csv_cache
+    except OSError:
+        return _csv_cache or ""
+
 # Simple token-bucket rate limiter: max 10 requests/second per IP for training.log
 _rate_buckets: dict[str, tuple[float, float]] = defaultdict(lambda: (10.0, time.monotonic()))
 _RATE_LIMIT   = 10.0   # requests per second
@@ -269,8 +306,22 @@ class RangeAwareHandler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
     def send_head(self):
-        # Only intercept range requests for training.log — everything else served normally.
+        # Special handling for batch_history.csv — avoid serving partial writes during merge
         clean_path = self.path.split('?')[0]
+        if clean_path.endswith('batch_history.csv'):
+            csv_content = _get_batch_history_csv()
+            try:
+                csv_bytes = csv_content.encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/csv; charset=utf-8')
+                self.send_header('Content-Length', str(len(csv_bytes)))
+                self.send_header('Cache-Control', 'no-cache, must-revalidate')
+                self.end_headers()
+                return io.BytesIO(csv_bytes) if csv_bytes else io.BytesIO(b'')
+            except Exception:
+                self.send_error(500)
+                return None
+        # Only intercept range requests for training.log — everything else served normally.
         if clean_path.endswith('training.log'):
             ip = self.client_address[0]
             if not _check_rate(ip):

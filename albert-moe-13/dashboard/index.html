@@ -1312,8 +1312,22 @@
     let batchLog         = [];   // [{step,global_epoch,batch,layers,loss,grad_norm,layer_norms,route_weights,entropy,tele_sparsity,tele_activity}]
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
     let smaLog           = [];   // [{x,y}] — full batch point history; source of truth for SMA computation
-    let smaCacheFull     = [[], [], [], [], [], [], [], []]; // pre-computed SMA values: [21,55,144,377,610,987,1597,2584]
+    // Restore smaCacheFull from localStorage if available (survives page refresh intact)
+    let smaCacheFull     = (() => {
+        const stored = localStorage.getItem('smaCacheFull_json');
+        if (stored) try {
+            const restored = JSON.parse(stored);
+            if (Array.isArray(restored) && restored.length === 8) return restored;
+        } catch (e) { /* ignore parse errors */ }
+        return [[], [], [], [], [], [], [], []];
+    })();
     const SMA_SIZES      = [21, 55, 144, 377, 610, 987, 1597, 2584]; // Fibonacci SMA periods; ds indices 1-5,7-9
+    // Helper to persist SMA cache across page refreshes (survives CSV race conditions)
+    function saveSmaCacheToStorage() {
+        try {
+            localStorage.setItem('smaCacheFull_json', JSON.stringify(smaCacheFull));
+        } catch (e) { /* quota exceeded or other error — silent fail */ }
+    }
     let totalPts         = 0;
     let newPointStartIdx = Infinity; // index of first "new" pt — only those get drop animation
     let pulseActive      = false;
@@ -3662,6 +3676,7 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             updateSma(7, 987,  5);
             updateSma(8, 1597, 6);
             updateSma(9, 2584, 7);
+            saveSmaCacheToStorage(); // Persist SMAs after each poll increment
             if (!ds[6].hidden) ds[6].data = tma(merged, 30);
             // Bollinger Bands on SMA-144 window
             if (bbVisible) {
@@ -3902,7 +3917,10 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
         // SMA datasets: ds 1-5 → ci 0-4; ds 7-9 → ci 5-7
         if (checked && (idx >= 1 && idx <= 5 || idx >= 7 && idx <= 9)) {
             const ci = idx <= 5 ? idx - 1 : idx - 2;
-            if (!smaCacheFull[ci].length) smaCacheFull[ci] = sma(smaLog, SMA_SIZES[ci]);
+            if (!smaCacheFull[ci].length) {
+                smaCacheFull[ci] = sma(smaLog, SMA_SIZES[ci]);
+                saveSmaCacheToStorage(); // Persist when lazy-computing hidden SMA
+            }
             chart.data.datasets[idx].data = smaPreseedData(smaCacheFull[ci]);
         }
         chart.update('none');
@@ -5717,6 +5735,7 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                 smaCacheFull[ci] = sma(smaLog, w);
                 chart.data.datasets[dsIdx].data = smaPreseedData(smaCacheFull[ci]);
             });
+            saveSmaCacheToStorage(); // Persist SMAs so page refresh survives CSV race conditions
             chart.update('none');
         }
     }).finally(() => {
