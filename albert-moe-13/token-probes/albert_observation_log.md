@@ -6569,28 +6569,6 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
-## FN256 · 2026-05-30T00:22Z · ep4456 · post-fix descent CONFIRMED — steepest in training history, now critically watching for over-fast collapse
-
-First 15-min monitoring tick after the FN255 fixes. **The descent is real and sustained, not a one-epoch artifact.** Epoch-avg trajectory across the last 4 closed epochs: ep4452 **8.7263** → ep4453 **8.5164** (d−0.21) → ep4454 **8.5080** (d−0.008) → ep4455 **8.4813** (d−0.027). Batch ATL still carving new lows: 7.4461 → 7.2910 → **7.2723** (chip 7.2723, dash shows ATL 7.2723 ↓17.36%). For scale: the frozen-body model crawled ~−0.001/epoch for weeks; the first post-fix epoch alone moved −0.48. The dashboard cliff (ep~4452) is the single steepest drop in albert's history — weeks of frozen-backbone learning released at once.
-
-**Health check (critical eye, per directive):**
-- GRAD-DIAG holding: `2184/2184 blocks have grad, 0 None` — the fix is stable across epochs, not a transient. ‖g‖ global 10.69 (per-layer panel; CLIP firing constantly — healthy, the body is making large updates and the clamp is working).
-- GPU flat at 12.5G / 22.5G (green) — grad-accum one-graph memory holds rock-steady, no creep across 1280+ steps. L1 ablation confirmed (no spike at loss<8.0; we are now WELL below 8.0).
-- Routing fully alive: CMP 88%, INT 100%, ABS 37%, LOG 27%, GEN 16% — broad specialist engagement, not collapsed to one expert.
-- TTL: G23 / O69 / R8 — healthy spread, "BALANCED H=4.85–4.87" and "TTL-GREEN 25–26%" events firing (green experts emerging, the routing-lottery working as designed).
-- WALD fill creeping 16.7%→18.8%, mass dropping 8.63→8.56 — the loss distribution's center of mass is sliding down with the descent. Sparse fires, no divergence.
-- EP-AVG line now **8.4813** (was stuck ~9.40 for the entire frozen era). WORST trail 9.5824 (the pre-fix plateau, now a ceiling far above).
-
-**What to watch critically from here (the new-regime risks):**
-1. **Over-fast collapse / instability** — a drop this steep can overshoot. Watch for a sudden loss *spike* that doesn't recover (divergence), or routing collapsing to a single expert (Nash). So far: descending cleanly through WALD spikes, no divergence.
-2. **Surgery firing mid-plunge** — ntfy already warned "CRITICAL DEPTH." The plateau gate could fire S16 (28L→29L) while loss is still dropping fast; that would be the governor mis-reading a *productive* descent as a plateau. Watch the GATE chip — if it fires during active descent, flag it (we don't want a surgery interrupting the catch-up).
-3. **Where does it level off?** The real question: the frozen model "converged" at a fake floor (~9.40, head-only). The true floor with a trained body is unknown — this descent reveals it for the first time. Watch for the natural plateau.
-4. **Checkpoint integrity** — each epoch now saves a real trained-body checkpoint; confirm no save errors as loss moves fast.
-
-Verdict: **healthy, historic, and behaving exactly as the fix predicted.** No intervention. Next tick ~15min.
-
----
-
 ## FN256 · 2026-05-30T00:22Z · ep4456 · post-fix descent CONFIRMED — steepest in training history; now watching critically for over-fast collapse
 
 First 15-min monitoring tick after the FN255 fixes. **The descent is real and sustained, not a one-epoch artifact.** Epoch-avg across the last 4 closed epochs: ep4452 **8.7263** → ep4453 **8.5164** (d−0.21) → ep4454 **8.5080** (d−0.008) → ep4455 **8.4813** (d−0.027). Batch ATL still carving new lows: 7.4461 → 7.2910 → **7.2723** (dash ATL 7.2723 ↓17.36%). For scale: the frozen-body model crawled ~−0.001/epoch for weeks; the first post-fix epoch alone moved −0.48. The dashboard cliff (ep~4452) is the single steepest drop in albert's history — weeks of frozen-backbone learning released at once.
