@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN281 · 2026-05-30T23:04Z · plateau broke as predicted → ep4633 new ATL 8.2139 · [watch tick, terse]
+The FN280 read held: the sinking batch cloud preceded the break. **ep4633 NEW ATL 8.2139** (d−0.0113, 22:52Z) — the ~32 min flat stretch resolved into a clean descent, no governor action needed. Confirms the heuristic "epoch-ATL flat + 45-row batch mean falling = next break imminent" (worth keeping). WALD ep4634 mass **8.237** (still falling), fill cycled back to 18.8% (normal sawtooth as the histogram window rolls). batch_history live to ep4635.42, min batch 8.068. Dashboard HTTP 200, no divergence/stall. No new ATL since ep4633 (~12 min, normal). No escalation. Still no `vestigial=N` in ntfy (Modal-stdout only).
+
+---
+
 ## FN280 · 2026-05-30T22:49Z · longer plateau (~32 min no ATL) but WALD stable ×3, batches drifting down · [watch tick]
 No new epoch-ATL since ep4628 (8.2252, 22:17Z) — now **~32 min / ~5 epochs**, a real flat stretch (longer than the FN277/FN279 pauses). **But all signs say healthy plateau, not trouble:** three consecutive WALD reports (ep4629/4631/4632) are essentially identical — fill steady **20.8%**, mass **8.269→8.261→8.262** (flat, not rising → no divergence), dead bins stable (~3–7 low, ~9.3–9.5+ high). batch_history live to ep4633.50, min batch **8.028**, and the 45-row mean has ticked *down* 8.55→8.47 — i.e. the batch cloud is sinking even while epoch-ATL holds, a mild precursor that the next ATL break is near. Dashboard HTTP 200. Not a stall (batches advancing), not divergence (mass flat). No escalation. Context: surgery governor uses a long (~55-epoch) window, so 5 flat epochs is nowhere near plateau-fire territory yet — just noting the stretch. Past eligibility (~ep4632) now; still no `vestigial=N` surfaced (Modal-stdout only, not pushed to ntfy).
 
