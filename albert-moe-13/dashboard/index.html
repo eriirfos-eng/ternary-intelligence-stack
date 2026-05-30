@@ -3347,14 +3347,9 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                         if (window.mycBrainUpdate) mycBrainUpdate({ grad: latestGrad });
                         if (window.mycFlowUpdate) mycFlowUpdate({ grad: latestGrad });
                         _streamBC.postMessage({ type: 'grad', data: latestGrad });
-                        if (latestGrad.norm > 1.0) {
-                            const now = Date.now();
-                            if (now - lastClipTs > 30000) {
-                                lastClipTs = now;
-                                liveEvent('clip', `CLIP ∥g∥=${latestGrad.norm.toFixed(3)}`, 'warn',
-                                    `Gradient clipped — global norm was <b>${latestGrad.norm.toFixed(4)}</b>, clamped to 1.0.<br>Optimizer step damped. Model making large weight updates.`);
-                            }
-                        }
+                        // CLIP events intentionally NOT streamed to the events feed: now that the
+                        // whole body trains, gradient clipping fires constantly (healthy) and would
+                        // flood the feed. ‖g‖ is still visible in the per-layer gradient panel.
                     }
                     continue;
                 }
