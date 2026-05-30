@@ -551,6 +551,37 @@ fn emit_telemetry(varmap: &VarMap, config: &TransformerConfig, log_path: &str) {
     }
 }
 
+/// Per-expert mean |weight| across ALL layers — the "substance" axis of flux health.
+/// Mirrors the expert-activity computation inside emit_telemetry but returns the raw
+/// (un-normalised) values for classify_flux. Acquires its own varmap lock, so it must
+/// NOT be called while another varmap lock is held.
+fn per_expert_abs_weight(varmap: &VarMap, num_experts: usize) -> Vec<f32> {
+    let mut sum = vec![0.0f32; num_experts];
+    let mut cnt = vec![0u64; num_experts];
+    let all_vars = match varmap.data().lock() {
+        Ok(v) => v,
+        Err(_) => return vec![0.0; num_experts],
+    };
+    for (name, var) in all_vars.iter() {
+        if !name.contains("weight") || !name.contains("experts.") { continue; }
+        let ei = name.split("experts.")
+            .nth(1)
+            .and_then(|s| s.split('.').next())
+            .and_then(|s| s.parse::<usize>().ok());
+        if let Some(e) = ei {
+            if e < num_experts {
+                if let Ok(d) = var.as_tensor().flatten_all().and_then(|t| t.to_vec1::<f32>()) {
+                    sum[e] += d.iter().map(|w| w.abs()).sum::<f32>();
+                    cnt[e] += d.len() as u64;
+                }
+            }
+        }
+    }
+    (0..num_experts)
+        .map(|e| if cnt[e] > 0 { sum[e] / cnt[e] as f32 } else { 0.0 })
+        .collect()
+}
+
 /// Generate a unit vector in R^dim, deterministic from seed, via Box-Muller over LCG.
 fn deterministic_unit_vec(dim: usize, seed: usize) -> Vec<f64> {
     let mut state = (seed as u64)
@@ -1781,6 +1812,23 @@ fn train_cycle(
                 report.hottest_layer, report.coldest_layer, pressure_str.join(","),
                 mycelium_consecutive_hot);
         }
+        // ── Flux health: two-axis ternary liveness (observational only) ───────
+        // Composes weight-mass (substance) x routing-mass (flow) to catch
+        // "vestigial" experts — still routed but weight-starved — that the
+        // single-axis TLIGHT dead detector above misses (weight-dead != TLIGHT-dead).
+        // Pure telemetry: no weights touched, no resurrection triggered from it, so
+        // genuinely dormant slots are left to re-germinate on their own.
+        if epoch_route_count > 0 {
+            let route_share: Vec<f32> = epoch_route_acc.iter()
+                .map(|&s| s / epoch_route_count as f32)
+                .collect();
+            let weight_mass = per_expert_abs_weight(&varmap, config.num_experts);
+            let flux = moe_llm_core::mycelium::classify_flux(&weight_mass, &route_share);
+            if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
+                let _ = writeln!(f, "{}", flux.log_line(total_epochs as usize));
+            }
+        }
+
         if !report.resurrections.is_empty() {
             println!("[{}] MYCELIUM: {} dead expert(s) detected — performing resurrection.",
                 timestamp(), report.resurrections.len());

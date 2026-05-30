@@ -245,3 +245,147 @@ impl MyceliumModule {
 impl Default for MyceliumModule {
     fn default() -> Self { Self::new(3, 12) }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Flux-based expert health — two-axis ternary liveness.
+//
+// The dead-expert detector above keys on a SINGLE axis: sustained TLIGHT-Red
+// (routing/gradient pressure). That misses a real failure mode under LB-off +
+// ternary STE: an expert still ROUTED (~uniform share) whose MLP weights have
+// been driven into the ternary-zero state. It is "weight-dead" yet never goes
+// TLIGHT-Red, so resurrection never fires. (weight-dead != TLIGHT-dead.)
+//
+// Nature defends FLUX, not connectivity: mycelium reinforces hyphae carrying
+// nutrient throughput and withdraws from idle-but-attached ones. So we measure
+// two independent ternary axes per expert and compose them:
+//
+//   substance in {-1 starved, 0 thin, +1 dense}    — mean |weight| of the expert
+//   flow      in {-1 unrouted, 0 trickle, +1 busy}  — routing mass to the expert
+//
+//   healthy   <=> substance = +1  AND  flow = +1
+//   vestigial <=> substance = -1  AND  flow >= 0   (routed but starved — the blind spot)
+//   dormant   <=> substance = -1  AND  flow = -1   (idle on both axes — viable seed-bank reserve)
+//
+// OBSERVATIONAL ONLY. classify_flux is pure; the caller emits a FLUX telemetry
+// line. No weights are touched and no resurrection is triggered from it — by
+// design, so genuinely dormant experts re-germinate on their own when a niche
+// reappears rather than being force-revived.
+
+/// One ternary axis bucket. `to_trit()` yields -1 / 0 / +1.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum Trit { Low, Mid, High }
+
+impl Trit {
+    pub fn to_trit(self) -> i8 {
+        match self { Trit::Low => -1, Trit::Mid => 0, Trit::High => 1 }
+    }
+    /// Bucket a raw value against the population median:
+    ///   Low  : value <  0.25 x median  (far below the typical expert — starved/unrouted)
+    ///   High : value >= 0.75 x median  (at or near the typical expert — substantial)
+    ///   Mid  : in between
+    /// Median-relative so a globally balanced regime (all experts similar)
+    /// produces all-High and zero false positives.
+    fn bucket(v: f32, median: f32) -> Trit {
+        if median <= 1e-9 { return Trit::Mid; }
+        let r = v / median;
+        if r < 0.25 { Trit::Low } else if r >= 0.75 { Trit::High } else { Trit::Mid }
+    }
+}
+
+/// Derived two-axis health classification for a single expert.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum ExpertHealth {
+    Healthy,      // dense + busy
+    Vestigial,    // starved but still routed — the TLIGHT blind spot
+    Dormant,      // starved AND unrouted — seed-bank reserve
+    Transitional, // anything in between
+}
+
+/// Per-epoch flux report. Pure data; format with `log_line()`.
+#[derive(Debug)]
+pub struct FluxReport {
+    pub substance: Vec<Trit>,
+    pub flow:      Vec<Trit>,
+    pub health:    Vec<ExpertHealth>,
+    pub vestigial: Vec<usize>,
+    pub dormant:   Vec<usize>,
+}
+
+impl FluxReport {
+    /// Greppable one-liner for the training log / dashboard parser.
+    pub fn log_line(&self, epoch: usize) -> String {
+        let sub: Vec<String> = self.substance.iter().map(|t| t.to_trit().to_string()).collect();
+        let flw: Vec<String> = self.flow.iter().map(|t| t.to_trit().to_string()).collect();
+        let vidx: Vec<String> = self.vestigial.iter().map(|i| i.to_string()).collect();
+        format!(
+            "FLUX epoch={} vestigial={} dormant={} SUB={} FLOW={} VIDX=[{}]",
+            epoch, self.vestigial.len(), self.dormant.len(),
+            sub.join(","), flw.join(","), vidx.join(",")
+        )
+    }
+}
+
+fn median(xs: &[f32]) -> f32 {
+    if xs.is_empty() { return 0.0; }
+    let mut s: Vec<f32> = xs.to_vec();
+    s.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let n = s.len();
+    if n % 2 == 1 { s[n / 2] } else { 0.5 * (s[n / 2 - 1] + s[n / 2]) }
+}
+
+/// Classify each expert on two independent ternary axes and compose into a health
+/// state. `weight_mass[e]` = mean |weight| of expert e's MLP (substance axis);
+/// `routing_mass[e]` = epoch-average routing share of expert e (flow axis). If the
+/// slices differ in length the shorter is used.
+pub fn classify_flux(weight_mass: &[f32], routing_mass: &[f32]) -> FluxReport {
+    let n = weight_mass.len().min(routing_mass.len());
+    let w = &weight_mass[..n];
+    let r = &routing_mass[..n];
+    let w_med = median(w);
+    let r_med = median(r);
+
+    let substance: Vec<Trit> = w.iter().map(|&v| Trit::bucket(v, w_med)).collect();
+    let flow:      Vec<Trit> = r.iter().map(|&v| Trit::bucket(v, r_med)).collect();
+
+    let mut health    = Vec::with_capacity(n);
+    let mut vestigial = Vec::new();
+    let mut dormant   = Vec::new();
+    for e in 0..n {
+        let h = match (substance[e], flow[e]) {
+            (Trit::High, Trit::High) => ExpertHealth::Healthy,
+            (Trit::Low,  Trit::Low)  => { dormant.push(e);   ExpertHealth::Dormant }
+            (Trit::Low,  _)          => { vestigial.push(e); ExpertHealth::Vestigial }
+            _                        => ExpertHealth::Transitional,
+        };
+        health.push(h);
+    }
+    FluxReport { substance, flow, health, vestigial, dormant }
+}
+
+#[cfg(test)]
+mod flux_tests {
+    use super::*;
+
+    #[test]
+    fn vestigial_is_routed_but_weight_starved() {
+        // experts 0,1 healthy; 2 vestigial (routed, ~zero weight); 3 dormant (idle on both).
+        let weight = [1.00, 0.90, 0.0005, 0.0004];
+        let route  = [0.30, 0.30, 0.30,   0.001];
+        let rep = classify_flux(&weight, &route);
+        assert_eq!(rep.health[0], ExpertHealth::Healthy);
+        assert_eq!(rep.health[2], ExpertHealth::Vestigial, "routed + weight-starved must be vestigial");
+        assert_eq!(rep.health[3], ExpertHealth::Dormant,   "idle on both axes must be dormant");
+        assert!(rep.vestigial.contains(&2));
+        assert!(rep.dormant.contains(&3));
+    }
+
+    #[test]
+    fn balanced_regime_has_no_false_positives() {
+        // lb-on style: all experts similar weight + near-uniform routing → nobody flagged.
+        let weight = [0.80, 0.85, 0.90, 1.00, 0.95, 0.88];
+        let route  = [0.16, 0.17, 0.17, 0.16, 0.17, 0.17];
+        let rep = classify_flux(&weight, &route);
+        assert!(rep.vestigial.is_empty(), "no vestigial in a balanced regime");
+        assert!(rep.dormant.is_empty(),   "no dormant in a balanced regime");
+    }
+}
