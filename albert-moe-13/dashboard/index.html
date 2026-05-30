@@ -1253,8 +1253,8 @@
     // Override with ?preseed_notch_lo=0&preseed_notch_hi=0 to disable.
     const PRESEED_NOTCH_LO   = _qp.has('preseed_notch_lo') ? parseFloat(_qp.get('preseed_notch_lo')) : 380;
     const PRESEED_NOTCH_HI   = _qp.has('preseed_notch_hi') ? parseFloat(_qp.get('preseed_notch_hi')) : 525;
-    // Loss floor — also keep 8.8 to guard against any other sub-8.8 artefacts.
-    const PRESEED_LOSS_MIN   = _qp.has('preseed_loss_min') ? parseFloat(_qp.get('preseed_loss_min')) : 8.8;
+    // Loss floor — lowered to 6.0 so new ATLs below 8.8 are not silently dropped.
+    const PRESEED_LOSS_MIN   = _qp.has('preseed_loss_min') ? parseFloat(_qp.get('preseed_loss_min')) : 6.0;
 
     // ── State ──────────────────────────────────────────────────────────
     let lastBytePos      = 0;   // byte offset into training.log — only fetch new bytes
@@ -3634,14 +3634,22 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             function updateSma(dsIdx, w, ci) {
                 const cache = smaCacheFull[ci];
                 const n = smaLog.length;
-                if (cache.length === 0) {
+                // Large catch-up poll: O(w × appended) blows up for large w; full O(n)
+                // recompute is cheaper. 10k threshold distinguishes catch-up from normal
+                // polls (~300 pts/poll). Skip recompute for hidden datasets — computed
+                // lazily in toggleDataset() when the user enables them.
+                if (cache.length === 0 || (appended > 10000 && !ds[dsIdx].hidden)) {
+                    if (ds[dsIdx].hidden) return;
                     smaCacheFull[ci] = sma(smaLog, w);
                 } else {
-                    for (let i = n - appended; i < n; i++) {
-                        if (i < w - 1) continue;
-                        let sum = 0;
-                        for (let j = i - w + 1; j <= i; j++) sum += smaLog[j].y;
-                        cache.push({ x: smaLog[i].x, y: sum / w });
+                    // O(appended) sliding window — avoids O(w × appended) inner loop.
+                    let runSum = 0;
+                    const start = n - appended;
+                    for (let j = Math.max(0, start - w + 1); j < start; j++) runSum += smaLog[j].y;
+                    for (let i = start; i < n; i++) {
+                        runSum += smaLog[i].y;
+                        if (i >= w) runSum -= smaLog[i - w].y;
+                        if (i >= w - 1) cache.push({ x: smaLog[i].x, y: runSum / w });
                     }
                 }
                 if (!ds[dsIdx].hidden) ds[dsIdx].data = smaPreseedData(smaCacheFull[ci]);
@@ -5700,11 +5708,14 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             // the chart viewport at this point only covers the narrow scatter seedSlice
             // range (last ~16 epochs); smaVisibleSlice would return [] for the full
             // history and the lines would be invisible across the wider epoch-avg range.
+            // Only compute SMA caches for visible datasets — 1.5M-point history makes
+            // all-8 eager computation ~768MB of V8 objects. Hidden ones are computed
+            // lazily on-demand in toggleDataset() when the user enables them.
             [[1,21,0],[2,55,1],[3,144,2],[4,377,3],[5,610,4],
              [7,987,5],[8,1597,6],[9,2584,7]].forEach(([dsIdx, w, ci]) => {
+                if (chart.data.datasets[dsIdx].hidden) return;
                 smaCacheFull[ci] = sma(smaLog, w);
-                if (!chart.data.datasets[dsIdx].hidden)
-                    chart.data.datasets[dsIdx].data = smaPreseedData(smaCacheFull[ci]);
+                chart.data.datasets[dsIdx].data = smaPreseedData(smaCacheFull[ci]);
             });
             chart.update('none');
         }

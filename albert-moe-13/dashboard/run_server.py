@@ -26,7 +26,58 @@ LOG_PATH       = os.path.expanduser("~/.albert/training.log")
 EPOCH_HIST_PATH = os.path.expanduser("~/.albert/epoch_history.log")
 os.makedirs(os.path.expanduser("~/.albert"), exist_ok=True)
 
-_epoch_hist_lock = threading.Lock()
+_epoch_hist_lock  = threading.Lock()
+_batch_hist_lock  = threading.Lock()
+BATCH_HIST_PATH   = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dashboard', 'batch_history.csv')
+BATCH_HIST_PATH   = os.path.normpath(BATCH_HIST_PATH)
+_BATCH_LOG_RE     = re.compile(r'Epoch\s+\d+\s+\(Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)')
+BATCHES_PER_EPOCH = 300
+
+def _commit_batch_history():
+    """Append any batch-loss lines from training.log that are not yet in batch_history.csv.
+    Runs every 5 minutes — covers detached Modal runs where albert-train stream() is silent."""
+    if not os.path.isfile(LOG_PATH):
+        return
+    with _batch_hist_lock:
+        # Find highest x already committed so we only scan for newer points.
+        last_x = -1.0
+        if os.path.isfile(BATCH_HIST_PATH):
+            with open(BATCH_HIST_PATH, 'rb') as f:
+                f.seek(0, 2)
+                tail_start = max(0, f.tell() - 256)
+                f.seek(tail_start)
+                for raw in f.read().decode('utf-8', errors='replace').splitlines():
+                    comma = raw.find(',')
+                    if comma > 0:
+                        try: last_x = max(last_x, float(raw[:comma]))
+                        except ValueError: pass
+        new_rows = []
+        with open(LOG_PATH, 'r', encoding='utf-8', errors='replace') as f:
+            for raw in f:
+                m = _BATCH_LOG_RE.search(raw)
+                if not m:
+                    continue
+                ep, batch, loss = int(m.group(1)), int(m.group(2)), float(m.group(3))
+                if not (1.0 < loss < 50.0):
+                    continue
+                x = ep + batch / BATCHES_PER_EPOCH
+                if x > last_x:
+                    new_rows.append(f'{x:.6f},{loss:.4f}\n')
+                    last_x = x
+        if new_rows:
+            with open(BATCH_HIST_PATH, 'a', encoding='utf-8') as f:
+                f.writelines(new_rows)
+
+def _batch_history_sync_loop():
+    """Background thread: commit training.log batch lines → batch_history.csv every 5 min."""
+    while True:
+        try:
+            _commit_batch_history()
+        except Exception:
+            pass
+        time.sleep(300)
+
+threading.Thread(target=_batch_history_sync_loop, daemon=True).start()
 
 def _sync_epoch_history():
     """Extract EPOCH_SUMMARY lines from training.log → epoch_history.log.

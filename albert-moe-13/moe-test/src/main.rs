@@ -766,7 +766,7 @@ fn perplexity_on_text(
     Ok((avg_loss, count))
 }
 
-/// Full benchmark suite: speed + @sparseskip + perplexity. Exits after printing results.
+/// Full benchmark suite: speed + @sparseskip. Exits after printing results.
 /// Usage: moe-test --bench [--csv <path>]
 fn run_bench_mode(csv_path: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
     let dev = Device::Cpu;
@@ -858,25 +858,10 @@ fn run_bench_mode(csv_path: Option<&str>) -> Result<(), Box<dyn std::error::Erro
 
     // ── [3/3] Perplexity ───────────────────────────────────────────────
     println!("\n{}", sep);
-    println!("[3/3] PERPLEXITY  (eval_sample.txt)");
+    println!("[3/3] PERPLEXITY");
     println!("{}", sep);
-
-    let eval_candidates = [
-        "eval_sample.txt",
-        "data/corpus/stage_3/bible.txt",
-        "../data/corpus/stage_3/bible.txt",
-    ];
-    let eval_path = eval_candidates.iter().find(|p| std::path::Path::new(p).exists()).copied();
-    let (avg_loss, tokens_evaluated) = if let Some(path) = eval_path {
-        eprintln!("  Evaluating on {}...", path);
-        let text = fs::read_to_string(path)?;
-        let result = perplexity_on_text(&lm, &text)?;
-        eprintln!("  done.");
-        result
-    } else {
-        println!("  No eval file found — place eval_sample.txt in current directory to enable");
-        (f64::NAN, 0)
-    };
+    println!("  Skipped — use `moe-test --eval <file>` to run perplexity separately.");
+    let (avg_loss, tokens_evaluated) = (f64::NAN, 0usize);
     let ppl = avg_loss.exp();
 
     if !avg_loss.is_nan() {
