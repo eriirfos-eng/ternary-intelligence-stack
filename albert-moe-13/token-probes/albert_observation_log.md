@@ -6569,6 +6569,14 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN273 · 2026-05-30T21:23Z · resume HEALTHY — recovered, running at ep4620, WALD mass 8.292 · vestigial patience clock reset · [loop tick]
+
+Post-restart sequence on ntfy: `WATCH: recovered` 21:15:01Z ("anomaly cleared (was stall); ep? avg nan" — cold-start, no avg yet) → `WALD epoch=4620 step=300` 21:21Z, **fill 18.8% mass 8.292** (healthy; slightly below the pre-restart ~8.31 band). Training is advancing past the ep4619 freeze → clean productive resume, no divergence. Dashboard localhost:8888 HTTP 200. No epoch-ATL/batch-ATL ntfy yet (~10 min in, ep4620 mid-flight at step 300).
+
+**Note on vestigial-rescue timing:** MyceliumModule state (activation + weight-mass history) is **in-memory, not checkpointed** → it resets to empty on every restart. So even though rescue is ON, `vestigial_experts()` needs `patience`=12 fresh epochs of history before it can flag anything → **earliest possible resurrection ≈ ep4632**. Nothing fires before then by construction; don't expect `Resurrected LxEy` lines this early. Watch: first `MYCELIUM … vestigial=N …` line (confirms the new field is streaming), the post-restart whiplash→descent, and rescue eligibility opening ~ep4632.
+
+---
+
 ## FN272 · 2026-05-30T21:13Z · RESTART LIVE — TRAINING STARTED 21:12:40Z · [loop/boot]
 Restart fired by Simeon; ntfy `TRAINING STARTED` at **21:12:40Z** (caught via armed background watch). Modal container up, fib_index=8 window=55, cmd `--lb-weight=0.0 --div-weight=0.001 --batch-size=1` (standard — note NO `--vestigial-rescue` flag, which is expected now that rescue is DEFAULT ON). Dashboard localhost:8888 back to HTTP 200. ~22 min total downtime (frozen ep4619 ~20:20Z → boot 21:12Z), benign (Simeon's deliberate restart-prep window). Corpus reload (~11min) before first epoch; expect resume ~ep4619 + post-restart whiplash (epoch-avg jump then descent, AdamW buffer reset → restart acceleration [[project_restart_acceleration]]).
 
