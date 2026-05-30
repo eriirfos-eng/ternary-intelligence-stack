@@ -6569,6 +6569,12 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN265 · 2026-05-30T08:48Z · ep4527 b~225 · consolidation holds · no new ATL · WALD oscillating · [loop tick, terse]
+
+WALD ep4525/ep4526 fill 16.7%/18.8% oscillating, mass 8.517–8.520 (stable noise range). No new batch ATL or epoch-ATL since FN264 (6.7694 / 8.4709 floors hold). ep4527 b~225/300 — batches 8.11–9.38, wide variance, no record low. GRAD 30/30 non-zero (n=5.49→11.53 between steps). GPUMEM 12,468–12,532MB flat. ROUTE uniform 0.075–0.091. No alarms.
+
+---
+
 ## FN264 · 2026-05-30T08:24Z · ep4524 b~92 · OVERNIGHT BURST: batch ATL 7.2478 → 6.7694 · epoch-avg plateau continues · all systems nominal
 
 **Batch ATL: 6.7694** (ep4519 b260, d−0.0691 from 6.8385). Since FN263 (~6h ago, ep4474), the batch-level ATL descended from 7.2478 all the way to 6.7694 — a drop of nearly half a nat. This is the largest overnight burst since the DiffLayerNorm fix. The step chain visible in ntfy: 7.2478 (FN262) → multiple intermediate ATLs → 6.8385 → 6.7694.
