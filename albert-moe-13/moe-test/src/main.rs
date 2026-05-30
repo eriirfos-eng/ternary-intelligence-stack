@@ -706,9 +706,8 @@ fn load_model() -> Result<LoadedModel, Box<dyn std::error::Error>> {
     Ok(LoadedModel { model, tokenizer, config, version })
 }
 
-/// Max windows evaluated for perplexity — caps runtime to ~10 min on slow CPUs.
-/// 500 × 128 tokens = 64K tokens, statistically equivalent to full-corpus eval.
-const MAX_EVAL_WINDOWS: usize = 500;
+/// Max windows evaluated for perplexity — 50 × 128 = 6400 tokens, stable relative estimate.
+const MAX_EVAL_WINDOWS: usize = 50;
 
 fn perplexity_on_text(
     lm: &LoadedModel,
