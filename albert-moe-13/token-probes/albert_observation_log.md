@@ -6569,6 +6569,14 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN261 · 2026-05-30T01:56Z · ep4469 b~107 · ★ NEW ATLs — descent resumed; FN259 floor was temporary
+
+**FN259/FN260 "floor" was a pause, not a stop.** At 01:46 UTC: **NEW EPOCH ATL ep4467 avg 8.4709** (d−0.0104, previous 8.4813) + **NEW BATCH ATL ep4468 b5 → 7.2667** (d−0.0056, previous 7.2723). Both records broken. The 45-min ntfy silence (01:01–01:46) was a multi-epoch consolidation before another descent leg — consistent with the model needing several epochs to absorb the gradient signal before making a new push. The WALD mass uptick (8.513→8.519) flagged in FN260 was noise, not drift.
+
+Current: ep4469 b~107, batches 7.83, 7.85, 9.10, 8.52 (spiky-healthy). GPUMEM 12,436MB (slightly down from 12,500 — good, no creep). GRAD-DIAG **2184/2184**. ROUTE spread 0.078–0.085, uniform. Verdict: **descent active, no alarms. Floor still unknown — model continues revealing it.**
+
+---
+
 ## FN260 · 2026-05-30T01:38Z · ep4466 b~264 · floor holding; WALD mass micro-uptick worth watching · [loop tick, terse]
 
 ntfy: only ep4465 WALD (01:32, step=4200, fill=16.7%, mass=8.519). No new epoch-ATL or batch-ATL — floor hypothesis from FN259 continues to hold. ⚠ WALD mass edged 8.513→8.519 (ep4457→ep4465, +0.006) — within noise for one tick but noting it: if mass continues rising over next few epochs it would indicate the loss distribution centre is drifting up slightly. Watch. Local log: ep4466 b264, batches 8.24–8.81 (routine oscillation range, well above batch ATL 7.27 — the early post-fix excitement has settled). GRAD-DIAG **2184/2184 have grad**. GPUMEM 12,500MB (stable). ROUTE spread 0.077–0.086. No alarms.
