@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN278 · 2026-05-30T22:19Z · plateau resolved → fresh descent leg, two new ATLs · [watch tick, terse]
+The FN277 pause broke exactly as hoped — back into descent: **ep4627 ATL 8.2341** (d−0.0128, 22:10Z) and **ep4628 ATL 8.2252** (d−0.0089, 22:17Z). So the ~22 min between-ATL gap was just a pause, not a plateau; governor stays quiet. batch_history live to ep4629.17, min batch 8.010, mean 8.54 (normal noise, one 9.77 outlier batch — single noisy minibatch, not a trend). Dashboard HTTP 200, no STALL/WALD/divergence. Approaching resurrection-eligibility window (~ep4632, 12-epoch patience from the ep4620 restart). No escalation. Still watching for the first `vestigial=N` line.
+
+---
+
 ## FN277 · 2026-05-30T22:04Z · short plateau — no new ATL ~22 min, training advancing normally · [watch tick, terse]
 No new ntfy ATL since ep4623 (8.2469, 21:42Z) — ep4624/4625/4626 did not beat it, so `since_best` is climbing (normal after the sharp descent leg; d had already decayed 0.0285→0.0075). **Not a stall:** batch_history is live and advancing to ep4627.09, and the min batch in the last 45 rows is **8.033** (below the epoch-ATL), so the model still hits low-loss batches — the run is healthy, just between ATL breaks. Sampled-batch spread 8.03–9.12, mean 8.57 (normal mid-epoch noise; server-side all-300 epoch-ATL runs lower). Dashboard HTTP 200, no STALL/WALD/divergence. No escalation. Watching whether this resolves into a new descent leg or a longer plateau (plateau→surgery governor territory if it persists), and still for the first `vestigial=N` line.
 
