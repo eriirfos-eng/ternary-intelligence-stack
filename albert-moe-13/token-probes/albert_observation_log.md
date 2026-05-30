@@ -6569,6 +6569,16 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN267 · 2026-05-30T20:41Z · ntfy quiet ~45m + dashboard down — RESTART PREP · batch_history backfilled ep4198→4620 · [loop tick]
+
+**State:** ntfy `albert-rfi-irfos` silent ~45 min (last msg WALD ep4615 step1800 @20:11Z, mass 8.310). Dashboard localhost:8888 not responding (HTTP 000) — was 200 at FN266 (20:14Z). **Not an anomaly:** Simeon is prepping a restart (the recurring SMA-wipe-on-restart issue) and pulled the full dataset off the dashboard to stitch first.
+
+**Action this tick (Simeon-directed):** ran `scripts/merge_batch_history.py` — stitched ALL `~/Desktop/Downloads/albert_full_*.csv` into `dashboard/batch_history.csv` so the next restart's chart/SMA pre-seed is complete and doesn't bomb away. Result: **+494,545 unique points → 1,521,938 total**, contiguous ep4198→4620 (tail 4620.14 / loss 8.4245). Remaining holes (ep2126–2172, 2187–2200, 2888–2889, 4071, 4085–4087, 4215–4234) were never downloaded — pre-existing, not introduced here. Path memory corrected: downloads live at `~/Desktop/Downloads/` (capital D), not lowercase.
+
+**Last known training state (FN266, 20:14Z):** ep4616 28L, batch-ATL 4.6541 (record), epoch-avg ~8.28–8.32 descending, WALD oscillating fill ~20% mass ~8.31. No epoch-ATL/batch-ATL ntfy since → consistent with the container being brought down for restart, not a stall. Will re-confirm descent + watch for the new `TRAINING STARTED` ntfy on next tick.
+
+---
+
 ## FN266 · 2026-05-30T20:14Z · ep4616 (28L) · TOKEN PROBE BANKED (post-s15) + new batch-ATL 4.6541 · geometry stable across S14+S15 · [loop tick + dash + probe]
 
 **State:** Active · EP 4616 (28L = 2×28L · 2×256H · 12E · 256CTX · 32K) · BATCH 129/300 · GATE green · post-S15 · fib_index=8 window=55 · TNS 2200 · GPU 12.1/22.5G. Fresh Modal container started **2026-05-30T19:28:15Z** (`--lb-weight=0.0 --div-weight=0.001 --batch-size=1`).
