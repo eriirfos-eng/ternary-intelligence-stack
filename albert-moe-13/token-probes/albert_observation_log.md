@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN325 · 2026-05-31T09:49Z · plateau upper-band, WALD mass ticked up (8.282) · [watch tick, terse]
+Plateau oscillating in the upper band: ep4718–4722 all 8.47–8.49. WALD ep4722 mass **8.282** (up from the 8.250 watch low; back in the 8.270–8.290 oscillation range). No new ATL since ep4670 (8.1835, ~6h25m). csv fresh (09:48:46Z, ~23 s), at ep4722, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN324 · 2026-05-31T09:38Z · plateau oscillating back up after floor touch, unchanged · [watch tick, terse]
 Plateau resuming its oscillation: ep4718–4721 back up to 8.47–8.49 after the ep4715/4716 floor touch (~8.40). ntfy quiet since ep4717 WALD (09:10Z). No new ATL since ep4670 (8.1835, ~6h15m). csv fresh (09:38:35Z, just now), at ep4721, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Same read as FN323: WALD mass drifting slowly lower (8.250 still the watch low), but sampled means oscillate and no ATL push yet. Still no `vestigial=N` (Modal-stdout only).
 
