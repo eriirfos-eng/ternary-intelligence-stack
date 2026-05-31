@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN333 · 2026-05-31T13:17Z · post-surgery resume CLEAN — mild whiplash (ep4749 8.55), already recovering (ep4750 8.44); WALD step reset, ceiling F9=144L · [watch tick]
+~12 min after the cut. **Net2Net absorbed cleanly — no OOM, fast recovery.** The whiplash was *mild and brief*: ep4748 (last pre-cut full) 8.4344 → **ep4749 (surgery epoch) 8.5515** (whiplash peak, +0.12; min dipped to 6.9622 — new capacity already catching good batches) → **ep4750 8.4396, basically back to the pre-cut 8.43 band** in a single epoch. That's the expected behaviour of a function-preserving Net2Net expansion (small disruption, quick re-absorption) — a violent post-cut trough would have been the worry; this isn't one. **WALD re-initialised:** @13:15:47 ep4749 **step reset 36900→300** (fresh post-rebuild counter), mass **8.382** (up from pre-cut 8.258 — coverage re-settling around the new layer, fill 20.8% normal). csv very fresh (~6 s, ep4750) — training healthy and fast. **Ceiling clarified: F9=144L** (the gen-3 Fibonacci layer target — long horizon). Best EP-AVG ATL still 8.1835 (ep4670). **Now watching for the payoff:** does the larger model carve a NEW descent leg *below* the old ~8.28 server plateau (the whole point of the added capacity)? Need a few more epochs. Token-probe benchmark deferred until the post-cut loss steadies (1–2 more epochs). Governor quiet post-fire, no escalation.
+
+---
+
 ## FN332 · 2026-05-31T13:05Z · ★ SURGERY FIRED — plateau gate triggered Net2Net layer expansion (gen3 step2/6) ★ · [watch tick, MILESTONE]
 **The FN328–331 plateau resolved into a surgery — autonomously, exactly as the governor is designed to.** At 13:01:24 the gate fired:
 
