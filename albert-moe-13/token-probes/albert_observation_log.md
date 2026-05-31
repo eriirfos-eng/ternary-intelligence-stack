@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN320 · 2026-05-31T08:36Z · plateau unchanged, ep4713 opening low (n=26, noise-level) · [watch tick, terse]
+ntfy 0 in 60 min (stable plateau, confirmed-benign silence). Sampled means ep4704–4712 still 8.42–8.49, oscillating. ep4713 showing mean **8.1972** with only **n=26** batches — well within sampling noise at that count, no meaningful signal yet (≈0.21-nats sampled-vs-server offset applies, so effective server-level would be ~8.0 for those 26 batches; could just be easy-batch cluster). Not enough data to call a descent. No new ATL since ep4670 (8.1835, 03:24Z, ~315 min). csv fresh (08:36:00Z, ~11 s), HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Watching whether ep4713 completes below the plateau band (~8.42). Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN319 · 2026-05-31T08:19Z · lower plateau holding, ntfy quiet, unchanged · [watch tick, terse]
 No change: ntfy 0 in 45 min (WALD aged out, stable coverage — confirmed-benign pattern per FN287). Sampled means 8.42–8.48 (ep4708 8.4522, ep4709 8.4702, ep4710 8.4239), oscillation steady. No new ATL since ep4670 (8.1835, 03:24Z, ~295 min). csv fresh (08:18:13Z, ~58 s), at ep4710, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Still no `vestigial=N` (Modal-stdout only).
 
