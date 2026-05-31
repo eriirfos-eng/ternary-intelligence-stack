@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN293 · 2026-05-31T02:04Z · up-drift reversed — plateau oscillating/stable, not regressing · [watch tick, terse]
+The FN292 up-drift eased off: sampled means ep4658 8.4337, ep4659 8.4210 — back down from the 8.49 peak, so the plateau is **oscillating in an 8.41–8.49 band (mean-reverting), not progressively regressing**. WALD quiet again since ep4657 (8.275) — consistent with stable coverage (change-gated; now confirmed-benign per FN292). No ATL since ep4635 (8.2014) ≈ 178 min / ~25 epochs. csv fresh (02:04:00Z, ~6 s), at ep4660, HTTP 200, no divergence — healthy stable plateau, not a stall. No escalation. 25 vs ~55-epoch governor window; the surgery-plausibility from FN292 recedes since the drift didn't sustain. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN292 · 2026-05-31T01:49Z · ✓ push-path test RESOLVED BENIGN (WALD resumed) + plateau now drifting mildly UP · [watch tick]
 **Two findings:**
 **(1) Push-path test resolved — channel is ALIVE.** WALD pushes **resumed**: ep4656 (01:41Z) and ep4657 (01:48Z), both mass 8.275. This confirms the FN287 hypothesis and clears the FN286 worry: the ~70 min ntfy silence was *not* a degraded alarm path — WALD is change-gated, and the flat plateau simply gave it nothing to report; the moment state shifted it pushed again. The trainer→ntfy send path works. Simeon's safety net is intact. (Note: still no *ATL* push because no new ATL has crossed — correct.)
