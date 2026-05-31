@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN300 · 2026-05-31T03:49Z · ep4670 break was a single step-down, now oscillating at a marginally lower level · [watch tick, terse]
+The ep4670 ATL (8.1835) looks like a **single step-down, not the start of a sustained leg** — no new ATL since (ep4671/4672/4673 sampled means 8.42–8.49, back in-band). But it did move the floor: **WALD ep4673 mass 8.248** (down from the plateau's 8.275), so the model settled onto a marginally lower plateau. ntfy healthy (ATL ep4670 + WALD ep4673 both pushed). No new ATL since ep4670 (03:24Z, ~25 min). csv fresh (03:48:13Z, ~53 s), at ep4674, HTTP 200, no divergence — healthy, not a stall. No escalation. Watching whether the new lower level kicks off a fresh leg or just re-plateaus lower. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN299 · 2026-05-31T03:34Z · ★ PLATEAU BROKE → ep4670 new ATL 8.1835 + push-path test CONCLUSIVELY benign · [watch tick]
 The ~35-epoch plateau ended in a **descent break, not a surgery**: **ep4670 NEW EPOCH ATL 8.1835** (d−0.0179, ntfy 03:24:54Z) — first new low since ep4635 (8.2014), ~258 min / 35 epochs of plateau resolved downward on its own. The governor never needed to fire; the model found a fresh descent vector by itself (clean validation of "plateau that mean-reverts then breaks down" being a normal, self-resolving phase — the FN284→FN298 arc).
 **Push-path test → CONCLUSIVELY BENIGN.** A genuine new ATL crossed AND it pushed to ntfy normally and immediately. That closes the FN286/287/292 thread for good: the long silences were purely the plateau (change-gated WALD + no new ATL = nothing to send), never a degraded alarm. Simeon's safety net is fully functional. Also a clean calibration check: ep4670 sampled mean 8.3964 → server ATL 8.1835 (sampled runs ~0.21 high, as assumed throughout).
