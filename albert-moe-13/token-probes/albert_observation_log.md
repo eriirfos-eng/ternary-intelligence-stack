@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN297 · 2026-05-31T03:04Z · plateau unchanged, holding 8.39–8.50 band · [watch tick, terse]
+No change: ep4666 8.4406, ep4667 8.4557 — mid-band, oscillation 8.39–8.50 holding, no break. ntfy 0 in 45 min. No ATL since ep4635 (8.2014) ≈ 238 min / ~33 epochs. csv fresh (03:03:56Z, ~10 s), at ep4668, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. 33 vs ~55-epoch governor window. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN296 · 2026-05-31T02:49Z · plateau unchanged, mid-band oscillation · [watch tick, terse]
 No change: sampled means ep4664 8.4419, ep4665 8.4312 — mid-band, still oscillating 8.39–8.50, mean-reverting, no break. ntfy 0 in 45 min. No ATL since ep4635 (8.2014) ≈ 223 min / ~31 epochs. csv fresh (02:48:32Z, ~33 s), at ep4666, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. 31 vs ~55-epoch governor window. Still no `vestigial=N` (Modal-stdout only).
 
