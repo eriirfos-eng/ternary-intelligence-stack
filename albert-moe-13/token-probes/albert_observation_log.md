@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN313 · 2026-05-31T07:04Z · lower plateau holding at ep4700, WALD mass oscillating just under 8.30 · [watch tick, terse]
+Crossed ep4700. Steady: WALD ep4698/4699 mass **8.294 / 8.284** — oscillating at the upper edge (8.284–8.294) but still **under the ~8.30 threshold** (FN311/312 test holds: no real regression leg). Sampled means 8.40–8.49 (ep4698 8.4520, ep4699 8.4587). No new ATL since ep4670 (8.1835, 03:24Z, ~220 min). csv fresh (07:02:48Z, ~77 s), at ep4700, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. (Pitch day: albert. holding ATL 8.1835 cleanly.) Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN312 · 2026-05-31T06:49Z · up-drift settled — confirmed noise (mass back to 8.286, not past 8.30) · [watch tick, terse]
 FN311's test resolved as noise: WALD ep4696 mass **8.286** (back down from 8.290; oscillating 8.282–8.290, never pushed past the ~8.30 threshold I set). Sampled means still oscillating 8.40–8.49 (ep4696 8.4044, ep4697 8.4829). So the FN310/311 wobble was plateau breathing, not a regression leg. No new ATL since ep4670 (8.1835, 03:24Z, ~205 min). csv fresh (06:47:46Z, ~78 s), at ep4698, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Still no `vestigial=N` (Modal-stdout only).
 
