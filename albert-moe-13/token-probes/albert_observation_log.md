@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN324 · 2026-05-31T09:38Z · plateau oscillating back up after floor touch, unchanged · [watch tick, terse]
+Plateau resuming its oscillation: ep4718–4721 back up to 8.47–8.49 after the ep4715/4716 floor touch (~8.40). ntfy quiet since ep4717 WALD (09:10Z). No new ATL since ep4670 (8.1835, ~6h15m). csv fresh (09:38:35Z, just now), at ep4721, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Same read as FN323: WALD mass drifting slowly lower (8.250 still the watch low), but sampled means oscillate and no ATL push yet. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN323 · 2026-05-31T09:19Z · WALD mass hits watch low (8.250) but sampled means bounce — mixed signal, model running lower · [watch tick]
 Two WALD pushes: ep4716 mass **8.250** (09:04Z) and ep4717 mass **8.272** (09:11Z). **8.250 is the lowest WALD mass of the entire watch** (previous low: 8.246 at ep4673/4674, right after the ep4670 ATL break). This matters: WALD mass tracks the running average of loss values the model visits — the drop says the model IS operating at a lower loss level than the ~8.265–8.290 plateau band, even though the ATL hasn't broken yet. Sampled means tell a more mixed story: ep4715/4716 at ~8.40 (floor) → ep4717 8.4390 → ep4718 8.4692 (bouncing back). So the FN322 floor-touch resolved like FN293 (transient, not a sustained descent leg) at the sampled level. No new ATL push (ntfy clean). **Net interpretation:** the model is oscillating around a center of gravity that is gradually drifting lower (WALD mass 8.275→8.250); the next genuine descent leg is likely but no confirmed ATL yet. No escalation. csv fresh (09:19:09Z, seconds), at ep4718, HTTP 200. Still no `vestigial=N` (Modal-stdout only).
 
