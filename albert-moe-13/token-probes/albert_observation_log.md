@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN328 · 2026-05-31T12:11Z · WALD mass nudging DOWN off the plateau ceiling (8.30→8.25) — mild, watch for follow-through · [watch tick, terse]
+~43 min since FN327. First directional signal in a while: WALD mass stepped **down** — 8.304 (ep4729 peak) → 8.298 (ep4733) → 8.261 (ep4738) → **8.254 (ep4741)**, the lowest of this watch series and below the 8.28–8.30 band it had been pinned to. Sampled per-epoch means echo it faintly: ep4738 8.4136 / ep4739 8.4095 (mild local lows) before bouncing to ep4740–4741 8.45–8.47, ep4742 8.3655 (partial n=104). Read: the upper-band oscillation may be tipping into a shallow descent leg — encouraging but NOT yet an ATL (sampled ~8.41 − 0.21 calibration ≈ 8.20, still above the ep4670 best 8.1835, now ~8h40m old). Could equally be noise; need 2–3 more epochs trending to confirm. csv fresh (~21 s, ep4742), 1.556M rows, dashboard HTTP 200. Governor quiet, no escalation, no `vestigial=N`. No token probe (no surgery pending). Flag for next tick: does WALD mass hold <8.27 and do sampled means break <8.40?
+
+---
+
 ## FN327 · 2026-05-31T11:28Z · plateau holding, FN326 oscillation resolved back down · [watch tick, terse]
 ~33 min since FN326. WALD continued through ep4733 (11:10:33Z, mass 8.298) — the 8.30 flag touch at ep4729 (FN326) did NOT develop: mass settled 8.29–8.30, no climb. Sampled per-epoch means ep4727–4736 steady in the 8.44–8.52 band (ep4734 8.4725, ep4735 8.5242, ep4736 8.4469 partial n=177), no sustained direction — same plateau as the last several ticks. csv fresh (~7 s, now at ep4736.67), 1.55M rows, dashboard HTTP 200. No new ATL since ep4670 (8.1835, ~8h). Healthy plateau, not a stall; governor quiet, no escalation. Still no `vestigial=N` line in ntfy (Modal-stdout only). No token-probe run this tick (no surgery pending; geometry stable since 17L per the probe-benchmark cadence).
 
