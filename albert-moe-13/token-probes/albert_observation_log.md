@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN290 · 2026-05-31T01:19Z · plateau holds (~18 epochs / ~133 min), low-end dips recurring · [watch tick, terse]
+Steady: ntfy 0 in 45 min, no ATL since ep4635 (8.2014) ≈ 133 min / ~18 epochs. Sampled means 8.39–8.47; the **low-end ~8.39 now recurs** (ep4650 8.3942, ep4653 8.3963) — a hint the band *might* be inching down, but ep4651/4652 still ~8.45, so not a confirmed descent. csv fresh (01:17:48Z, ~76 s), at ep4653, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. 18 vs ~55-epoch governor window. Push-path test armed (dips still too shallow to be the trigger). Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN289 · 2026-05-31T01:04Z · plateau holds (~16 epochs / ~118 min); ep4650 lowest sampled dip, unconfirmed · [watch tick, terse]
 Same regime: ntfy 0 in 45 min, no ATL since ep4635 (8.2014) ≈ 118 min / ~16 epochs. Sampled means still 8.39–8.47; **ep4650 = 8.3942 is the lowest of the window** (a touch below the band) but ep4651 bounced to 8.4596 → a single-epoch dip, not a confirmed descent. csv fresh (01:02:35Z, ~90 s), at ep4651, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. 16 vs ~55-epoch governor window. Push-path test still armed (ep4650 dip too small/unsustained to count as the "genuine descent" trigger). Still no `vestigial=N` (Modal-stdout only).
 
