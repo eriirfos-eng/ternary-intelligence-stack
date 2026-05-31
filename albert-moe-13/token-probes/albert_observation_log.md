@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN329 · 2026-05-31T12:31Z · FN328 follow-through: WALD down-step HELD (<8.27) but sampled means did NOT break <8.40 — shallow shift, not a descent leg · [watch tick, terse]
+~20 min since FN328. Checking the FN328 flag (WALD mass <8.27 AND sampled means <8.40?): **half confirmed.** WALD mass held the lower band — ep4741 8.254 → ep4742 8.258 (both <8.27), so the step down off the 8.30 ceiling stuck rather than snapping back. But sampled per-epoch means did **not** break 8.40: ep4742 8.4089 / ep4743 8.4380 / ep4744 8.4211 — they eased down ~0.03–0.05 off the prior 8.45–8.52 band but are pinned just above 8.40 (closest was ep4739 8.4095). Read: a shallow LATERAL shift to a marginally lower plateau band, not an accelerating descent. No new ATL (calibrated ~8.42 − 0.21 ≈ 8.21, still above ep4670 best 8.1835, now ~9h). WALD cadence sparse (6 pushes/2h; latest ep4742 @12:17, csv already at ep4744 — training live, WALD just between fires). csv fresh (~18 s), 1.556M rows, dashboard 200, governor quiet, no `vestigial=N`, no surgery/probe. Flag unchanged for next tick: need sampled means to actually print <8.40 (and ideally <8.35) to call a real descent.
+
+---
+
 ## FN328 · 2026-05-31T12:11Z · WALD mass nudging DOWN off the plateau ceiling (8.30→8.25) — mild, watch for follow-through · [watch tick, terse]
 ~43 min since FN327. First directional signal in a while: WALD mass stepped **down** — 8.304 (ep4729 peak) → 8.298 (ep4733) → 8.261 (ep4738) → **8.254 (ep4741)**, the lowest of this watch series and below the 8.28–8.30 band it had been pinned to. Sampled per-epoch means echo it faintly: ep4738 8.4136 / ep4739 8.4095 (mild local lows) before bouncing to ep4740–4741 8.45–8.47, ep4742 8.3655 (partial n=104). Read: the upper-band oscillation may be tipping into a shallow descent leg — encouraging but NOT yet an ATL (sampled ~8.41 − 0.21 calibration ≈ 8.20, still above the ep4670 best 8.1835, now ~8h40m old). Could equally be noise; need 2–3 more epochs trending to confirm. csv fresh (~21 s, ep4742), 1.556M rows, dashboard HTTP 200. Governor quiet, no escalation, no `vestigial=N`. No token probe (no surgery pending). Flag for next tick: does WALD mass hold <8.27 and do sampled means break <8.40?
 
