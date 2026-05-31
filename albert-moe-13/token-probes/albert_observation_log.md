@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN312 · 2026-05-31T06:49Z · up-drift settled — confirmed noise (mass back to 8.286, not past 8.30) · [watch tick, terse]
+FN311's test resolved as noise: WALD ep4696 mass **8.286** (back down from 8.290; oscillating 8.282–8.290, never pushed past the ~8.30 threshold I set). Sampled means still oscillating 8.40–8.49 (ep4696 8.4044, ep4697 8.4829). So the FN310/311 wobble was plateau breathing, not a regression leg. No new ATL since ep4670 (8.1835, 03:24Z, ~205 min). csv fresh (06:47:46Z, ~78 s), at ep4698, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN311 · 2026-05-31T06:34Z · up-drift mixed: WALD mass nudged to 8.290 but sampled means reversing down · [watch tick, terse]
 Mixed signal on the FN310 wobble: WALD ep4694 mass **8.290** (new top of the oscillation: 8.262→8.278→8.285→8.290, a gentle ~+0.03 creep over ~16 epochs) — BUT sampled means are turning back **down** (ep4694 8.4697, ep4695 8.4579, ep4696 8.4042). Net: still a stable plateau with a mild upward bias, most likely oscillation noise (the sampled reversal argues against a real regression). No new ATL since ep4670 (8.1835, 03:24Z, ~190 min / ~26 epochs since break). csv fresh (06:33:14Z, ~51 s), at ep4696, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Keep watching the WALD-mass top (if it pushes past ~8.30 while sampled means also climb, that's a real upward leg; right now they disagree → noise). Still no `vestigial=N` (Modal-stdout only).
 
