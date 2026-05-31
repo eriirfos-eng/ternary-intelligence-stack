@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN322 · 2026-05-31T09:04Z · two consecutive epochs at band floor (8.40) — descent precursor pattern · [watch tick]
+Two consecutive epochs below the plateau mid-band: **ep4715 8.4067, ep4716 8.3989** — touching the 8.39–8.40 floor last seen at ep4663/4653 (~6h ago), and below the recent 8.42–8.49 oscillation. This is the same signature that preceded the ep4670 ATL break (FN280/281 predictor: batch cloud sinks toward the floor, then a new ATL follows). Not calling it yet — needs one more low epoch or an ntfy ATL push to confirm. ntfy 0 in 30 min (no ATL yet, still ep4670 8.1835). csv fresh (09:03:00Z, ~64 s), at ep4716, HTTP 200, no divergence — healthy, not a stall. No escalation. Watching ep4717 to see if the floor holds or breaks downward.
+
+---
+
 ## FN321 · 2026-05-31T08:54Z · plateau unchanged, FN320 low-open confirmed noise · [watch tick, terse]
 ep4713 closed at **8.4434 (n=291)** — the FN320 low opening (8.1972 n=26) was pure sampling noise, as read. ep4714 8.4658, ep4715 in-flight 8.4260. Plateau band 8.42–8.49 holds. ntfy 0 in 30 min. No new ATL since ep4670 (8.1835, 03:24Z, ~330 min). csv fresh (08:54:27Z, just now), at ep4715, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Still no `vestigial=N` (Modal-stdout only).
 
