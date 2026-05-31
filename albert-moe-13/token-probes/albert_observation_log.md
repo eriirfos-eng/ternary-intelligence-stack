@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN310 · 2026-05-31T06:19Z · mild up-drift at the plateau (mass ~8.285, fill 22.9%), within prior pattern · [watch tick, terse]
+Slight upward wobble: WALD ep4692/4693 mass **8.285 / 8.282** (just above the recent 8.278 top), fill ep4693 22.9% (a touch above the usual 18.8–20.8%), sampled means creeping to 8.48–8.50 (ep4692 8.4793, ep4693 8.4877). **Same signature as the FN292 transient up-drift** (which reversed at FN293) — within the oscillation, magnitude tiny (mass +0.007), not divergence. No new ATL since ep4670 (8.1835, 03:24Z, ~175 min). csv fresh (06:18:42Z, ~23 s), at ep4694, HTTP 200 — healthy plateau, not a stall. No escalation. Watching whether it reverses (like FN293) or persists. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN309 · 2026-05-31T06:04Z · lower plateau holding, unchanged · [watch tick, terse]
 No change: sampled means 8.41–8.49 (ep4690 8.4335, ep4691 8.4739), oscillation steady. WALD quiet since ep4689 (~26 min, stable coverage). No new ATL since ep4670 (8.1835, 03:24Z, ~160 min). csv fresh (06:02:43Z, ~82 s), at ep4692, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Still no `vestigial=N` (Modal-stdout only).
 
