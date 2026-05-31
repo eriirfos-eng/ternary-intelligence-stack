@@ -6569,6 +6569,21 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN332 · 2026-05-31T13:05Z · ★ SURGERY FIRED — plateau gate triggered Net2Net layer expansion (gen3 step2/6) ★ · [watch tick, MILESTONE]
+**The FN328–331 plateau resolved into a surgery — autonomously, exactly as the governor is designed to.** At 13:01:24 the gate fired:
+
+`smoothed Δ0.0094 over 144 epochs · early_mean=8.2865 → late_mean=8.2771 · threshold=0.0113 · MYCELIUM stable 129 epochs · gen=3 step=2/6 · next ceiling F9` → immediately followed by `Net2Net layer expansion initiated — OOM risk if batch too large`.
+
+**Why it fired now:** the smoothed ATL trend over the trailing 144 epochs was Δ0.0094 — *below* the gen-3 threshold 0.0113 — i.e. the descent had flattened to a true plateau, so the gate released growth. This is the same gate I watched fill across FN328–331: the "flat band" (sampled means pinned 8.42–8.51, server ATL ~8.28) and the "WALD silence" (FN331) were the plateau the gate was measuring. **The watch did not need intervention; the governor self-resolved it by firing — validates [[project_surgery_governor]] and [[feedback_no_forced_layers]] (this layer was EARNED, not injected).**
+
+**Numbers of record:** server-side ATL plateau early 8.2865 / late 8.2771 (confirms my +0.21 sampled→ATL calibration: sampled ~8.45 − 0.21 ≈ 8.24, in-band). Best ATL remains ep4670 8.1835 — the 144-epoch window sat *above* best, which is precisely the "oscillating above best without new progress" signature of a plateau. MYCELIUM 129 epochs stable entering the cut. gen=3 step=2/6 — Gen3 Fibonacci arc advances one step.
+
+**State now:** Net2Net expansion in progress → a layer is being grown into the dual-stream. CSV went stale (~271 s at read) — consistent with training paused for checkpoint + model rebuild, NOT a stall. **OOM risk flagged** (Net2Net warns if batch too large — recall the batch 6→3 history). 
+
+**Watch next tick (critical):** (1) does training RESUME without OOM after the expansion? (2) first post-surgery epoch loss — expect a JUMP UP (whiplash) then a fresh descent leg from the larger model; (3) WALD/MYCELIUM re-settling; (4) new layer count + the F-ceiling. No token-probe pre-cut was possible (autonomous + instant) — will run the probe benchmark once the model stabilizes post-expansion to capture the geometry shift.
+
+---
+
 ## FN331 · 2026-05-31T13:00Z · flat plateau continues; WALD silent ~40 min (longest gap this watch) — change-gate just has nothing to fire on · [watch tick, terse]
 ~12 min since FN330. Pure continuation: sampled means ep4745–4748 = 8.5052 / 8.4631 / 8.4573 / 8.4187 (partial n=132) — back in the 8.42–8.51 band, no break <8.40. The only mildly notable thing is **WALD silence**: no ntfy push since ep4742 @12:17:06 (~40 min, ~6 epochs; csv now at ep4748), the longest WALD gap I've logged this watch. Reading it as benign — WALD is change-gated on loss-space coverage, and a flat plateau gives it nothing to fire on (last mass 8.258, fill ~19–23% steady). Training itself is live (csv fresh ~78 s, advancing ep4742→4748). No new ATL since ep4670 (8.1835, ~10h). Dashboard 200, governor quiet, no `vestigial=N`, no surgery/probe. Nothing actionable; if WALD stays silent another ~30 min I'll sanity-check the ntfy publisher side, but csv freshness says training is fine.
 
