@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN323 · 2026-05-31T09:19Z · WALD mass hits watch low (8.250) but sampled means bounce — mixed signal, model running lower · [watch tick]
+Two WALD pushes: ep4716 mass **8.250** (09:04Z) and ep4717 mass **8.272** (09:11Z). **8.250 is the lowest WALD mass of the entire watch** (previous low: 8.246 at ep4673/4674, right after the ep4670 ATL break). This matters: WALD mass tracks the running average of loss values the model visits — the drop says the model IS operating at a lower loss level than the ~8.265–8.290 plateau band, even though the ATL hasn't broken yet. Sampled means tell a more mixed story: ep4715/4716 at ~8.40 (floor) → ep4717 8.4390 → ep4718 8.4692 (bouncing back). So the FN322 floor-touch resolved like FN293 (transient, not a sustained descent leg) at the sampled level. No new ATL push (ntfy clean). **Net interpretation:** the model is oscillating around a center of gravity that is gradually drifting lower (WALD mass 8.275→8.250); the next genuine descent leg is likely but no confirmed ATL yet. No escalation. csv fresh (09:19:09Z, seconds), at ep4718, HTTP 200. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN322 · 2026-05-31T09:04Z · two consecutive epochs at band floor (8.40) — descent precursor pattern · [watch tick]
 Two consecutive epochs below the plateau mid-band: **ep4715 8.4067, ep4716 8.3989** — touching the 8.39–8.40 floor last seen at ep4663/4653 (~6h ago), and below the recent 8.42–8.49 oscillation. This is the same signature that preceded the ep4670 ATL break (FN280/281 predictor: batch cloud sinks toward the floor, then a new ATL follows). Not calling it yet — needs one more low epoch or an ntfy ATL push to confirm. ntfy 0 in 30 min (no ATL yet, still ep4670 8.1835). csv fresh (09:03:00Z, ~64 s), at ep4716, HTTP 200, no divergence — healthy, not a stall. No escalation. Watching ep4717 to see if the floor holds or breaks downward.
 
