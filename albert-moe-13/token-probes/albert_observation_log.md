@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN326 · 2026-05-31T10:55Z · WALD mass briefly crossed 8.30 watch flag (8.304) then pulled back — oscillation, not a regression leg · [watch tick]
+Big gap since FN325 (~66 min) due to Lighthouse/Postgres migration work. 8 WALD pushes in the window — notably the mass briefly touched the **8.30 watch flag** at ep4729 (8.304) before pulling back to 8.292 at ep4730. FN311 flag condition: "WALD mass past ~8.30 AND sampled means climbing together → real regression leg." **Read: flag was touched but NOT confirmed** — sampled means ep4729 8.4425 (mid-band, not climbing with mass), and mass reversed immediately (8.304→8.292 in one epoch). This is the same oscillation noise pattern as FN292/FN310 — transient upper wobble, not a sustained regression. Sampled means ep4722–4731 all oscillating 8.44–8.49, no sustained direction. No new ATL since ep4670 (8.1835, 03:24Z, ~7h30m). csv fresh (10:54:16Z, ~82 s), at ep4731, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN325 · 2026-05-31T09:49Z · plateau upper-band, WALD mass ticked up (8.282) · [watch tick, terse]
 Plateau oscillating in the upper band: ep4718–4722 all 8.47–8.49. WALD ep4722 mass **8.282** (up from the 8.250 watch low; back in the 8.270–8.290 oscillation range). No new ATL since ep4670 (8.1835, ~6h25m). csv fresh (09:48:46Z, ~23 s), at ep4722, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Still no `vestigial=N` (Modal-stdout only).
 
