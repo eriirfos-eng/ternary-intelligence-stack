@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN289 · 2026-05-31T01:04Z · plateau holds (~16 epochs / ~118 min); ep4650 lowest sampled dip, unconfirmed · [watch tick, terse]
+Same regime: ntfy 0 in 45 min, no ATL since ep4635 (8.2014) ≈ 118 min / ~16 epochs. Sampled means still 8.39–8.47; **ep4650 = 8.3942 is the lowest of the window** (a touch below the band) but ep4651 bounced to 8.4596 → a single-epoch dip, not a confirmed descent. csv fresh (01:02:35Z, ~90 s), at ep4651, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. 16 vs ~55-epoch governor window. Push-path test still armed (ep4650 dip too small/unsustained to count as the "genuine descent" trigger). Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN288 · 2026-05-31T00:49Z · plateau matures (~13 epochs / ~103 min), still healthy & normal · [watch tick, terse]
 Plateau continues per FN287's read: no ntfy in 40 min, no ATL since ep4635 (8.2014, 23:06Z) ≈ **103 min / ~13 epochs**. Per-epoch sampled means still flat **8.43–8.47** (ep4640→4649), no clear new ATL — ep4635 stands. **This is a flat plateau, not a stall** (the escalation-relevant distinction): csv fresh (00:47:55Z, ~70 s ago), advancing to ep4649, loss flat-not-rising, batches still hit lows (ep4649 even had a single min=5.75 — an anomalously easy minibatch, pure noise, epoch mean still 8.45). Dashboard HTTP 200, no divergence. **No escalation** — a plateau is a normal training phase the surgery governor is *designed* to resolve autonomously (fires growth at its window). 13 epochs vs ~55-epoch window → still well short. Push-path test still armed/unresolved (needs a genuine descent to trigger; ntfy-quiet remains fully explained by the plateau). Still no `vestigial=N` (Modal-stdout only).
 
