@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN331 · 2026-05-31T13:00Z · flat plateau continues; WALD silent ~40 min (longest gap this watch) — change-gate just has nothing to fire on · [watch tick, terse]
+~12 min since FN330. Pure continuation: sampled means ep4745–4748 = 8.5052 / 8.4631 / 8.4573 / 8.4187 (partial n=132) — back in the 8.42–8.51 band, no break <8.40. The only mildly notable thing is **WALD silence**: no ntfy push since ep4742 @12:17:06 (~40 min, ~6 epochs; csv now at ep4748), the longest WALD gap I've logged this watch. Reading it as benign — WALD is change-gated on loss-space coverage, and a flat plateau gives it nothing to fire on (last mass 8.258, fill ~19–23% steady). Training itself is live (csv fresh ~78 s, advancing ep4742→4748). No new ATL since ep4670 (8.1835, ~10h). Dashboard 200, governor quiet, no `vestigial=N`, no surgery/probe. Nothing actionable; if WALD stays silent another ~30 min I'll sanity-check the ntfy publisher side, but csv freshness says training is fine.
+
+---
+
 ## FN330 · 2026-05-31T12:48Z · FN328–329 down-nudge did NOT develop — sampled means reverted up to 8.43–8.51; oscillation confirmed, flag CLOSED · [watch tick, terse]
 ~17 min since FN329. Flag answer (means break <8.40?): **NO.** Sampled per-epoch means bounced back up — ep4742 8.4089 → ep4744 8.4297 → **ep4745 8.5052** → ep4746 8.4651 (partial n=167). The shallow dip toward 8.40 reverted into the familiar 8.43–8.51 upper band, so the FN328 WALD down-step (8.30→8.25) reads as **oscillation noise, not a descent leg** — same verdict as FN292/FN310/FN326. Closing the down-nudge flag. WALD ntfy quiet — no push since ep4742 @12:17 (mass 8.258); csv already at ep4746, so training is live and WALD is simply between change-gated fires (5 pushes/2h, all in the 8.25–8.30 band). No new ATL since ep4670 (8.1835, ~9h40m). csv fresh (~43 s), 1.5568M rows, dashboard 200, governor quiet, no `vestigial=N`, no surgery/probe. Back to baseline plateau-watch; nothing actionable.
 
