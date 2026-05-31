@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN311 · 2026-05-31T06:34Z · up-drift mixed: WALD mass nudged to 8.290 but sampled means reversing down · [watch tick, terse]
+Mixed signal on the FN310 wobble: WALD ep4694 mass **8.290** (new top of the oscillation: 8.262→8.278→8.285→8.290, a gentle ~+0.03 creep over ~16 epochs) — BUT sampled means are turning back **down** (ep4694 8.4697, ep4695 8.4579, ep4696 8.4042). Net: still a stable plateau with a mild upward bias, most likely oscillation noise (the sampled reversal argues against a real regression). No new ATL since ep4670 (8.1835, 03:24Z, ~190 min / ~26 epochs since break). csv fresh (06:33:14Z, ~51 s), at ep4696, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Keep watching the WALD-mass top (if it pushes past ~8.30 while sampled means also climb, that's a real upward leg; right now they disagree → noise). Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN310 · 2026-05-31T06:19Z · mild up-drift at the plateau (mass ~8.285, fill 22.9%), within prior pattern · [watch tick, terse]
 Slight upward wobble: WALD ep4692/4693 mass **8.285 / 8.282** (just above the recent 8.278 top), fill ep4693 22.9% (a touch above the usual 18.8–20.8%), sampled means creeping to 8.48–8.50 (ep4692 8.4793, ep4693 8.4877). **Same signature as the FN292 transient up-drift** (which reversed at FN293) — within the oscillation, magnitude tiny (mass +0.007), not divergence. No new ATL since ep4670 (8.1835, 03:24Z, ~175 min). csv fresh (06:18:42Z, ~23 s), at ep4694, HTTP 200 — healthy plateau, not a stall. No escalation. Watching whether it reverses (like FN293) or persists. Still no `vestigial=N` (Modal-stdout only).
 
