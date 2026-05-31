@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN301 · 2026-05-31T04:04Z · re-plateaued at the lower level, stable · [watch tick, terse]
+Confirms FN300: after the ep4670 step-down the model **re-plateaued at the marginally lower level** — WALD ep4674 mass **8.246** (≈ ep4673's 8.248, stable, vs the old 8.275), sampled means 8.40–8.49 (ep4674 8.4449, ep4675 8.4074). No new ATL since ep4670 (8.1835, 03:24Z, ~40 min). ntfy healthy (WALD ep4673/4674 pushing). csv fresh (04:03:23Z, ~40 s), at ep4676, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. New lower plateau didn't (yet) spawn a fresh leg. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN300 · 2026-05-31T03:49Z · ep4670 break was a single step-down, now oscillating at a marginally lower level · [watch tick, terse]
 The ep4670 ATL (8.1835) looks like a **single step-down, not the start of a sustained leg** — no new ATL since (ep4671/4672/4673 sampled means 8.42–8.49, back in-band). But it did move the floor: **WALD ep4673 mass 8.248** (down from the plateau's 8.275), so the model settled onto a marginally lower plateau. ntfy healthy (ATL ep4670 + WALD ep4673 both pushed). No new ATL since ep4670 (03:24Z, ~25 min). csv fresh (03:48:13Z, ~53 s), at ep4674, HTTP 200, no divergence — healthy, not a stall. No escalation. Watching whether the new lower level kicks off a fresh leg or just re-plateaus lower. Still no `vestigial=N` (Modal-stdout only).
 
