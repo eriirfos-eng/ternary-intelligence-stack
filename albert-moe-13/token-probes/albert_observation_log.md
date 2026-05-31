@@ -6569,6 +6569,13 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN299 · 2026-05-31T03:34Z · ★ PLATEAU BROKE → ep4670 new ATL 8.1835 + push-path test CONCLUSIVELY benign · [watch tick]
+The ~35-epoch plateau ended in a **descent break, not a surgery**: **ep4670 NEW EPOCH ATL 8.1835** (d−0.0179, ntfy 03:24:54Z) — first new low since ep4635 (8.2014), ~258 min / 35 epochs of plateau resolved downward on its own. The governor never needed to fire; the model found a fresh descent vector by itself (clean validation of "plateau that mean-reverts then breaks down" being a normal, self-resolving phase — the FN284→FN298 arc).
+**Push-path test → CONCLUSIVELY BENIGN.** A genuine new ATL crossed AND it pushed to ntfy normally and immediately. That closes the FN286/287/292 thread for good: the long silences were purely the plateau (change-gated WALD + no new ATL = nothing to send), never a degraded alarm. Simeon's safety net is fully functional. Also a clean calibration check: ep4670 sampled mean 8.3964 → server ATL 8.1835 (sampled runs ~0.21 high, as assumed throughout).
+csv fresh (03:33:18Z, ~47 s), at ep4672, HTTP 200, no divergence. **No escalation** (good news). Back in descent — watching whether this is a single break or the start of a new leg; ep4671 sampled 8.4176 (≈ the new level). Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN298 · 2026-05-31T03:19Z · plateau unchanged (~35 epochs), oscillation steady · [watch tick, terse]
 No change: ep4668 8.4819, ep4669 8.4798 — upper-mid band, oscillation 8.39–8.50 steady, no break. ntfy 0 in 45 min. No ATL since ep4635 (8.2014) ≈ 253 min / ~35 epochs. csv fresh (03:17:34Z, ~90 s), at ep4670, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. 35 vs ~55-epoch governor window (~20 epochs of margin left before plateau-fire becomes plausible). Still no `vestigial=N` (Modal-stdout only).
 
