@@ -6569,6 +6569,11 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN316 · 2026-05-31T07:34Z · no change since FN315 (~3 min) · [watch tick, terse]
+Quick re-check ~3 min after FN315: unchanged. WALD ep4703 mass 8.282 (latest), sampled means 8.42–8.46, no new ATL since ep4670 (8.1835). csv fresh (07:33:48Z, ~17 s), at ep4704, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN315 · 2026-05-31T07:31Z · lower plateau holding, mass easing (8.282), session-log updated · [watch tick, terse]
 Steady: WALD ep4701/4702/4703 mass **8.289 / 8.289 / 8.282** (easing off the upper edge, back under the band center). Sampled means 8.42–8.45. No new ATL since ep4670 (8.1835, 03:24Z, ~250 min). csv fresh (07:30:59Z, ~40 s), at ep4704, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. Also this tick: rolled the overnight watch + pitch-day prep into `ternlang-root/docs/session_log.md`. Still no `vestigial=N` (Modal-stdout only).
 
