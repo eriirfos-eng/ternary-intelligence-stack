@@ -6569,6 +6569,13 @@ Fibonacci plateau conditions met at ep4206:
 
 ---
 
+## FN292 · 2026-05-31T01:49Z · ✓ push-path test RESOLVED BENIGN (WALD resumed) + plateau now drifting mildly UP · [watch tick]
+**Two findings:**
+**(1) Push-path test resolved — channel is ALIVE.** WALD pushes **resumed**: ep4656 (01:41Z) and ep4657 (01:48Z), both mass 8.275. This confirms the FN287 hypothesis and clears the FN286 worry: the ~70 min ntfy silence was *not* a degraded alarm path — WALD is change-gated, and the flat plateau simply gave it nothing to report; the moment state shifted it pushed again. The trainer→ntfy send path works. Simeon's safety net is intact. (Note: still no *ATL* push because no new ATL has crossed — correct.)
+**(2) Plateau has turned from flat to mildly UP.** The low-end dips (ep4650/4653 ~8.39–8.41) have given way to a gentle rise: sampled means ep4655→4658 = 8.474 / 8.491 / 8.493 / 8.506, and WALD mass ticked 8.262→**8.275**. So ~23 epochs in, the plateau is now *slowly regressing*, not descending. **Still benign:** magnitude tiny (mass +0.013 over ~20 epochs), batches still reach 7.3–8.0 (no divergence), csv fresh (01:48:56Z, ~10 s), at ep4658, HTTP 200. **No escalation.** This is exactly the slow-regression signature the plateau/surgery governor exists to catch — at ~23 epochs vs its ~55-epoch window, a next autonomous surgery (Net2Net layer add) becomes *plausible if the drift persists*; that would be a NORMAL event, flagged to Simeon only if a surgery fires AND looks harmful. Watch flag updated: now watching the **upward** drift (mass toward ~8.30+ / sampled toward ~8.55) and for a `surgery`/governor line. Still no `vestigial=N` (Modal-stdout only).
+
+---
+
 ## FN291 · 2026-05-31T01:34Z · plateau holds (~20 epochs / ~148 min), unchanged & healthy · [watch tick, terse]
 Steady, no change: ntfy 0 in 45 min, no ATL since ep4635 (8.2014) ≈ 148 min / ~20 epochs. Sampled means 8.41–8.47 (ep4653 8.4108, ep4654 8.4344). csv fresh (01:32:34Z, ~90 s), at ep4655, HTTP 200, no divergence — healthy plateau, not a stall. No escalation. 20 vs ~55-epoch governor window. Push-path test armed. Still no `vestigial=N` (Modal-stdout only).
 
