@@ -1196,15 +1196,28 @@ async fn openai_chat_completions(
 }
 
 async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Response {
-    // Serve the website to browsers; return JSON manifest to API clients.
+    // Serve the WEBSITE by default; the JSON manifest only to clients that
+    // *explicitly* ask for JSON. Previously we keyed off `Accept: text/html`,
+    // which meant browsers got HTML but crawlers / link-unfurlers / monitors that
+    // send `Accept: */*` (Googlebot included) got a bare JSON blob — invisible to
+    // SEO and "looks broken" to anyone not in a browser. Now the homepage is
+    // reachable + indexable for everyone; only `Accept: application/json` (and not
+    // text/html) gets the API manifest. `Vary: Accept` so caches don't cross the
+    // two variants.
     let accept = headers
         .get("accept")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
-    if accept.contains("text/html") {
-        return Html(INDEX_HTML).into_response();
+    let wants_json = accept.contains("application/json") && !accept.contains("text/html");
+    if !wants_json {
+        let mut resp = Html(INDEX_HTML).into_response();
+        resp.headers_mut().insert(
+            axum::http::header::VARY,
+            axum::http::HeaderValue::from_static("Accept"),
+        );
+        return resp;
     }
-    Json(json!({
+    let mut resp = Json(json!({
         "name":    "Ternlang API",
         "version": state.version,
         "by":      "RFI-IRFOS (ZVR: 1015608684)",
@@ -1243,7 +1256,12 @@ async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Respons
             "description": "POST /mcp — 34 tools, all free. Pass X-Ternlang-Key for server-side persistent memory and REST API access.",
         },
         "acquire_key": "https://ternlang.com/#licensing"
-    })).into_response()
+    })).into_response();
+    resp.headers_mut().insert(
+        axum::http::header::VARY,
+        axum::http::HeaderValue::from_static("Accept"),
+    );
+    resp
 }
 
 // ─── GET /health ─────────────────────────────────────────────────────────────
