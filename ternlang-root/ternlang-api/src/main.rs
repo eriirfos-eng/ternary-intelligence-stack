@@ -285,6 +285,24 @@ impl KeyStore {
 
         self.data.write().await.keys.insert(raw.clone(), entry.clone());
         self.save().await;
+
+        // Mirror every signup with an email into the lighthouse CRM as a lead
+        // (fire-and-forget — key issuance never blocks on or fails because of the CRM).
+        // Covers both admin-issued and Stripe-checkout keys, since both call generate().
+        if !entry.email.is_empty() {
+            let (email, key_id, tier_n) = (entry.email.clone(), entry.key_id.clone(), entry.tier);
+            tokio::spawn(async move {
+                let base = std::env::var("LIGHTHOUSE_URL").unwrap_or_else(|_| "https://ternlang.com/lighthouse".into());
+                let sk   = std::env::var("LIGHTHOUSE_SIGNUP_KEY").or_else(|_| std::env::var("LIGHTHOUSE_INBOX_KEY")).unwrap_or_default();
+                if sk.is_empty() { return; }
+                let _ = reqwest::Client::new()
+                    .post(format!("{}/api/crm/signup", base.trim_end_matches('/')))
+                    .header("X-Signup-Key", sk)
+                    .json(&serde_json::json!({ "email": email, "tier": format!("tier{tier_n}"), "key_id": key_id }))
+                    .timeout(std::time::Duration::from_secs(8))
+                    .send().await;
+            });
+        }
         (raw, entry)
     }
 
