@@ -28,6 +28,7 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 - **[Model Card](https://github.com/rfi-irfos/ternary-intelligence-stack/blob/main/MODEL_CARD.md)** — Architecture, training status, EU AI Act compliance notes
 - **[Convergence Log](https://github.com/rfi-irfos/ternary-intelligence-stack/blob/main/albert-moe-13/docs/convergence_log.md)** — Live training loss history across all albert. versions
 - **[Agent Albert CLI](https://github.com/rfi-irfos/ternary-intelligence-stack/tree/main/agent_albert_cli)** — Terminal-native, model-agnostic AI agent built in pure Rust
+- **[Rusty Penguin](https://github.com/rfi-irfos/rusty-penguin)** — Bare-metal, pure-Rust ternary OS — the substrate that will eventually run the stack on the metal
 - **[Roadmap](https://github.com/rfi-irfos/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** — Phases 1–20 and priority matrix
 - **[Session Log](https://github.com/rfi-irfos/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** — Production fixes and deployment notes
 
@@ -74,6 +75,19 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && sourc
 ```
 ```bash
 albert-cli    # launch immediately
+```
+
+---
+
+## 4. Rusty Penguin
+
+A bare-metal operating system written in pure Rust, built ground-up on the same balanced-ternary logic as the rest of the stack — `trit`: `−1` (reject) · `0` (hold) · `+1` (affirm) — modelled into its subsystems rather than bolted on. Boots on real x86-64 hardware from an ISO, no Linux underneath: its own kernel (long mode, paging, preemptive multitasking with per-process isolation), an Aero-style desktop, a from-scratch TCP/IP + TLS 1.3 stack with a CA trust store, a real on-disk filesystem, and a Linux-ABI compatibility shim that runs existing ELF binaries (DOOM included).
+
+The long game: **Rusty Penguin is meant to become the substrate the Ternary Intelligence Stack runs on** — a ternary-native OS hosting ternary-native intelligence, all the way down to the metal, with no binary substrate in between. Today it is an honest, brick-by-brick work in progress (every milestone verified in QEMU or against published vectors); the [Session Log](https://github.com/rfi-irfos/rusty-penguin/blob/main/SESSION_LOG.md) tracks exactly what is proven and what is still open.
+
+```bash
+git clone https://github.com/rfi-irfos/rusty-penguin && cd rusty-penguin
+bash iso/build.sh        # build the bootable ISO
 ```
 
 ---
