@@ -216,3 +216,54 @@ Recorded with these caveats rather than as a blanket "ternary is faster" claim �
 the engines are a fair test bed precisely because comparison is their hot path,
 and the result is that ternary helps exactly when the *problem* is ternary.
 Bricks: `desktop-metal/src/tjs.rs` (`ternary_bench`), `tcss.rs` (`bench_spec_cmp`).
+
+---
+
+# Negative results & boundaries — ternary tested, did NOT win
+
+These are findings too. Recording where ternary was applied, measured, and showed
+no advantage keeps the wins above defensible and maps the technique's boundary —
+so a reviewer who tries to break F1–F10 finds we already drew the line ourselves.
+
+## N1 — @sparseskip in a CSS cascade / language engine: standard culling, not a ternary win (2026-06-02)
+
+Built a from-scratch `no_std` CSS engine (`desktop-metal/src/tcss.rs`) and JS
+interpreter (`tjs.rs`) for PinguBrowser, then applied **@sparseskip** — physically
+skip the `0`/dormant state's work, the same move the kernel uses for zero-weight
+inference (F2/F6) and dirty-rect render (F3/F7).
+
+**Measured (host shim of the no_std code, `bench_sparseskip`):**
+- Cascade dormancy gate `is_rule_dormant()`: **84.4 % of declaration-applies
+  skipped** (152 of 180) on a representative sheet × page — sounds like a big win.
+- **But a binary engine culls non-matching rules identically:** same 28 applies,
+  same 153 selector match-checks. **Ternary delta = 0.**
+- JS: `&&`/`||` short-circuit skipping is universal (C, Python, every language);
+  operand skipping (`x*0` ⇒ skip evaluating `x`) is **semantically unsafe** in JS
+  because operands can have side effects, so it can't be done at all.
+
+**Why it fails — the boundary.** @sparseskip's genuine wins all share one shape: a
+**dense numeric structure with many zeros a binary system would otherwise compute,
+and no side effects** (neural weights, pixel rows, audio samples). A CSS cascade
+and an AST walk do not have that shape — their dormancy-skipping is already
+standard and side-effect-bound. **Conclusion: ternary @sparseskip pays in dense
+compute, not in selector/AST traversal.** The gate is kept in `tcss.rs` only
+because it is the correct abstraction for the *one* place it would pay —
+**incremental re-styling** (skip dormant/unchanged subtrees on re-render, F3's
+dirty-rect principle applied to style) — pending a DOM-diff layer we have not
+built. If that measures a real skip win over full-tree restyle, it earns a real F-number then.
+
+## N2 — Unified balanced-ternary comparator `cmp3 {-1,0,+1}`: tie on ordering, loss on short-circuit (2026-06-02)
+
+Routing every comparison (`< <= > >= == !=` in JS; specificity ordering in CSS)
+through one balanced-ternary comparator. Op-counts (`tjs.rs::ternary_bench`,
+`tcss.rs::bench_spec_cmp`):
+- Pure 2-way ordering (insertion sort): **TIE** — 80 vs 80 primitive compares.
+- Short-circuitable compare (CSS specificity): **binary WINS** — 100 vs 128 ops,
+  because `if a<b {} else if a>b {}` stops at the first true branch while
+  `(a>b)-(a<b)` always evaluates both.
+- Genuine 3-way dispatch (classify less/equal/greater): **ternary wins** —
+  15 vs 21 ops.
+
+So the comparator is a win **only** on full three-way dispatch (logged narrowly as
+F10), and a tie-or-loss everywhere else. Recorded here so "ternary comparator" is
+never cited as a blanket speedup.
