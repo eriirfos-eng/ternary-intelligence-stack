@@ -28,7 +28,7 @@ Built by [RFI-IRFOS](https://ternlang.com) · Graz, Austria · Whitepaper [https
 - **[Model Card](https://github.com/rfi-irfos/ternary-intelligence-stack/blob/main/MODEL_CARD.md)** — Architecture, training status, EU AI Act compliance notes
 - **[Convergence Log](https://github.com/rfi-irfos/ternary-intelligence-stack/blob/main/albert-moe-13/docs/convergence_log.md)** — Live training loss history across all albert. versions
 - **[Agent Albert CLI](https://github.com/rfi-irfos/ternary-intelligence-stack/tree/main/agent_albert_cli)** — Terminal-native, model-agnostic AI agent built in pure Rust
-- **[Rusty Penguin](https://github.com/rfi-irfos/rusty-penguin)** — Bare-metal, pure-Rust ternary OS — the substrate that will eventually run the stack on the metal
+- **[Rusty Penguin](https://github.com/rfi-irfos/rusty-penguin)** — Bare-metal, pure-Rust ternary OS
 - **[Roadmap](https://github.com/rfi-irfos/ternary-intelligence-stack/blob/main/ternlang-root/docs/ROADMAP.md)** — Phases 1–20 and priority matrix
 - **[Session Log](https://github.com/rfi-irfos/ternary-intelligence-stack/blob/main/ternlang-root/docs/session_log.md)** — Production fixes and deployment notes
 
