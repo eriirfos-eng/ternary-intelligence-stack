@@ -124,3 +124,7 @@ Built by [RFI-IRFOS](https://ternlang.com), Graz, Austria — a registered Austr
 <div align="center">
   <img src="ternlang-root/ternlang-web/assets/ternlang_logo_notext.png" alt="Ternlang Logo" width="100">
 </div>
+
+## Contributors
+
+Built by the RFI-IRFOS core team — see [CONTRIBUTORS.md](CONTRIBUTORS.md).
