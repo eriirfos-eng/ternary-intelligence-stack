@@ -178,3 +178,41 @@ up here; it expresses a system state (routed-but-empty vs idle-reserve) that the
 one-axis binary detector could not represent at all. Confirmed live: SEM/CTX read
 weight-0% while routing stayed ~uniform; CTX then self-recovered to 2% (the
 dormant→germinate path), validating that the two states needed distinguishing.
+
+## F10 — One balanced-ternary comparator across a from-scratch JS+CSS engine (2026-06-02)
+
+Building Rusty Penguin's from-scratch **TernaryJS** interpreter and **tcss** CSS
+engine (pure-Rust, `no_std`, bare metal), every comparison was routed through a
+single balanced-ternary comparator `cmp3(a, b) -> {-1, 0, +1}` instead of
+separate `<` / `==` primitives. JS `< <= > >= == !=` and the CSS cascade's
+specificity ordering all share that one operation.
+
+**Measured (op-count, no_std — counting `<`/`>` primitives executed):**
+
+| Workload | Unified ternary | Naive binary | Result |
+|---|---|---|---|
+| JS insertion-sort (pure 2-way ordering) | 80 | 80 | **tie** |
+| JS 3-way classify (less/equal/greater dispatch) | 15 | 21 | **−29% (15 vs 21)** |
+| JS combined mix | 95 | 101 | ~6% fewer |
+| CSS specificity comparator | 2 cmp always | 1 cmp (short-circuits) | **binary wins** |
+
+**Honest basis — narrow, measured, not a general speedup.** The win is real but
+*only* appears where the work is genuinely **3-way**: a single `cmp3` replaces a
+`<` plus a conditional `==` when you must branch on less/equal/greater (JS
+classify, `Array.sort` comparator semantics, a `switch`-on-sign). For ordinary
+ordering it is an exact tie, and for the CSS specificity case binary actually
+does *fewer* ops because `if a<b {} else if a>b {}` short-circuits while
+`(a>b) - (a<b)` always evaluates both. So:
+
+- **Genuine win:** 3-way dispatch saves the second primitive compare (~6% on a
+  representative JS mix; up to −29% on pure-classify workloads).
+- **No win:** pure 2-way ordering (tie) and short-circuitable comparisons
+  (binary ahead).
+- **Primary value is correctness/code-sharing:** one comparator, no `<`-vs-`==`
+  skew, branchless. Magnitude is entirely data-dependent on how often the
+  workload needs full three-way branching.
+
+Recorded with these caveats rather than as a blanket "ternary is faster" claim —
+the engines are a fair test bed precisely because comparison is their hot path,
+and the result is that ternary helps exactly when the *problem* is ternary.
+Bricks: `desktop-metal/src/tjs.rs` (`ternary_bench`), `tcss.rs` (`bench_spec_cmp`).
