@@ -1312,22 +1312,20 @@
     let batchLog         = [];   // [{step,global_epoch,batch,layers,loss,grad_norm,layer_norms,route_weights,entropy,tele_sparsity,tele_activity}]
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
     let smaLog           = [];   // [{x,y}] — full batch point history; source of truth for SMA computation
-    // Restore smaCacheFull from localStorage if available (survives page refresh intact)
-    let smaCacheFull     = (() => {
-        const stored = localStorage.getItem('smaCacheFull_json');
-        if (stored) try {
-            const restored = JSON.parse(stored);
-            if (Array.isArray(restored) && restored.length === 8) return restored;
-        } catch (e) { /* ignore parse errors */ }
-        return [[], [], [], [], [], [], [], []];
-    })();
+    // PERF: smaCacheFull is rebuilt from batch_history.csv on every load (the preseed
+    // block calls sma(smaLog, w) for each visible series), so persisting it to
+    // localStorage was redundant — and catastrophic at scale. Each cache holds one
+    // point per batch (~1.5M+), so JSON.stringify(smaCacheFull) churned ~100 MB of
+    // objects on the MAIN THREAD every single poll (500 ms), only for setItem to throw
+    // QuotaExceeded (~5 MB cap) and discard the result. That one redundant write was the
+    // dominant source of the dashboard freeze. Start empty; the preseed fills it.
+    let smaCacheFull     = [[], [], [], [], [], [], [], []];
+    localStorage.removeItem('smaCacheFull_json'); // reclaim any oversized blob from older builds
     const SMA_SIZES      = [21, 55, 144, 377, 610, 987, 1597, 2584]; // Fibonacci SMA periods; ds indices 1-5,7-9
-    // Helper to persist SMA cache across page refreshes (survives CSV race conditions)
-    function saveSmaCacheToStorage() {
-        try {
-            localStorage.setItem('smaCacheFull_json', JSON.stringify(smaCacheFull));
-        } catch (e) { /* quota exceeded or other error — silent fail */ }
-    }
+    // No-op: see the note above. The CSV preseed is the real refresh-recovery path, and it
+    // is robust to a partially-written CSV (non-finite tail values are skipped on parse).
+    // Persisting million-point caches froze the tab; recomputing from CSV does not.
+    function saveSmaCacheToStorage() { /* intentionally disabled — preseed rebuilds from CSV */ }
     let totalPts         = 0;
     let newPointStartIdx = Infinity; // index of first "new" pt — only those get drop animation
     let pulseActive      = false;
@@ -3860,10 +3858,15 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             // (With POLL_MS=500 and T4 at ~400ms/batch, bursts are rare.)
             const isLive = newPts.length <= 20;
             newPointStartIdx = isLive ? merged.length - newPts.length : Infinity;
-            chart.update(isLive && !isInteracting ? undefined : 'none');
+            // PERF: only relayout the chart when this poll actually delivered batch points.
+            // A poll that brought only non-batch log lines (e.g. an EPOCH_SUMMARY) changed
+            // nothing the chart draws, so a full Chart.js update() there was wasted work.
+            if (newPts.length > 0) chart.update(isLive && !isInteracting ? undefined : 'none');
 
-            // Advance viewport with new data (not during pan/zoom or manual zoom)
-            if (!isInteracting && !userHasZoomed && merged.length > 0) {
+            // Advance viewport with new data (not during pan/zoom or manual zoom).
+            // PERF: only when this poll brought new points — otherwise the scales are
+            // unchanged and the extra chart.update('none') was a wasted relayout.
+            if (newPts.length > 0 && !isInteracting && !userHasZoomed && merged.length > 0) {
                 const fv   = document.getElementById('viewFilter').value;
                 const maxX = merged[merged.length - 1].x;
                 const minX = merged[0].x;
@@ -3891,14 +3894,19 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                 chart.update('none');
             }
 
-            const minPt = newPts.reduce((a, b) => b.y < a.y ? b : a, newPts[newPts.length - 1]);
-            const prevATL = allTimeBestBatch;
-            updateTopbar(minPt.y < bestLoss ? minPt : newPts[newPts.length - 1]);
-            updateGateChip(); // keep overlay in sync on every poll cycle
-            if (!isReplay && allTimeBestBatch < prevATL && prevATL < Infinity) {
-                const impPct = ((prevATL - allTimeBestBatch) / prevATL * 100).toFixed(3);
-                notify('albert. — NEW ATL', `${allTimeBestBatch.toFixed(4)} · ↓${impPct}% vs ${prevATL.toFixed(4)}`);
+            // Topbar / ATL tracking only when batch points actually arrived (reduce over
+            // an empty newPts would dereference undefined). The gate chip below is updated
+            // unconditionally so epoch-summary-only polls still refresh the overlay.
+            if (newPts.length > 0) {
+                const minPt = newPts.reduce((a, b) => b.y < a.y ? b : a, newPts[newPts.length - 1]);
+                const prevATL = allTimeBestBatch;
+                updateTopbar(minPt.y < bestLoss ? minPt : newPts[newPts.length - 1]);
+                if (!isReplay && allTimeBestBatch < prevATL && prevATL < Infinity) {
+                    const impPct = ((prevATL - allTimeBestBatch) / prevATL * 100).toFixed(3);
+                    notify('albert. — NEW ATL', `${allTimeBestBatch.toFixed(4)} · ↓${impPct}% vs ${prevATL.toFixed(4)}`);
+                }
             }
+            updateGateChip(); // keep overlay in sync on every poll cycle
         } catch (e) {
             console.error('poll error', e);
         }
@@ -4689,6 +4697,15 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
 
         ctx2d.clearRect(0, 0, W, H);
 
+        // PERF: build one layer→snap lookup per column ONCE, instead of an O(numL)
+        // Array.find() inside the numL×numT cell loop (which was ~numL²·numT ≈ 50k
+        // scans per render for a 29-layer model). Now the cell loop is O(1) per cell.
+        const snapMaps = tlightHistory.map(s => {
+            const m = new Map();
+            if (s && s.layers) for (const l of s.layers) m.set(l.layer, l);
+            return m;
+        });
+
         // Layer labels + cells
         ctx2d.font = '8px "JetBrains Mono", monospace';
         ctx2d.textBaseline = 'middle';
@@ -4701,7 +4718,7 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
 
             for (let ti = 0; ti < numT; ti++) {
                 const snap      = tlightHistory[ti];
-                const layerSnap = snap?.layers.find(l => l.layer === li);
+                const layerSnap = snapMaps[ti].get(li);
                 ctx2d.fillStyle = !snap || snap.step === null || !layerSnap ? 'rgba(255,255,255,0.04)'
                     : (layerSnap.r > 0) ? '#ef4444'
                     : (layerSnap.g > 0) ? '#22c55e'
