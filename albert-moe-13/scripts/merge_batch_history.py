@@ -55,7 +55,12 @@ def parse_csv(path: Path) -> dict[float, float]:
                     global_epoch = int(parts[1])
                     batch        = int(parts[2])
                     loss         = float(parts[4])
-                    x = global_epoch + batch / 300.0
+                    # Round to 6 decimals — the SAME precision the CSV is written at.
+                    # Without this, a full-precision Downloads key (4668 + 1/300 =
+                    # 4668.00333333...) never matches the truncated key read back from
+                    # the CSV (4668.003333), so every run re-adds the same points as
+                    # "new" and they collide to duplicate rows on write (the +515446 bug).
+                    x = round(global_epoch + batch / 300.0, 6)
                     if not (LOSS_MIN <= loss <= LOSS_MAX):
                         continue  # skip rows from other training runs
                     rows[x] = loss
@@ -82,7 +87,9 @@ def main():
             for row in reader:
                 if len(row) == 2:
                     try:
-                        existing[float(row[0])] = float(row[1])
+                        # Round to 6 decimals so existing keys match freshly-computed
+                        # Downloads keys exactly — same canonical precision everywhere.
+                        existing[round(float(row[0]), 6)] = float(row[1])
                     except ValueError:
                         pass
         print(f"Existing batch_history.csv: {len(existing):,} rows")
