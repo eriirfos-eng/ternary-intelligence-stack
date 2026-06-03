@@ -8621,3 +8621,4 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [iter 32] ~05:46 — WALD silent, raw mean ~8.45, ep4822, mass ~8.24. descent stalled, no crossing below 8.1835. ~4.5h watch.
 - [iter 33] ~05:53 — WALD @ep4822/4823, mass 8.241–8.251, raw mean ~8.43, ep4824. descent stalled, no crossing below 8.1835. ~4.6h, 33 iters, dawn.
 - [iter 34] ~06:00 — unchanged. mass 8.251, raw mean ~8.45, ep4824. descent stalled, no crossing below 8.1835. ~4.7h, 34 iters, 06:00 Graz.
+- [iter 35] ~06:07 — WALD @ep4825 mass 8.226 (retests night-low). ep4825 raw mean 8.36 (lowest recent). faint positive flicker, band-low holding ~8.226, but still no crossing below 8.1835 (~0.043 to go).
