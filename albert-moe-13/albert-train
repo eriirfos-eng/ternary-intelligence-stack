@@ -81,8 +81,11 @@ if args.local:
     if contributor:
         print(f"[albert-train] auto-spore: every checkpoint → albert-spores (as '{contributor}')")
 
-    # Start dashboard — pass --cpu in contributor mode for relaxed stale thresholds
-    dash_args = [sys.executable, DASH_SRV]
+    # Start dashboard — pass --cpu in contributor mode for relaxed stale thresholds.
+    # --no-batch-sync: this local path uses a variable batches-per-epoch (30 for
+    # contributors) and computes x itself below, so the server must NOT also reconcile
+    # batch_history.csv (it assumes 300) — one writer only.
+    dash_args = [sys.executable, DASH_SRV, "--no-batch-sync"]
     if contributor:
         dash_args.append("--cpu")
     dash_proc = subprocess.Popen(
@@ -202,19 +205,14 @@ print(f"[albert-train] launching:  {' '.join(modal_cmd)}")
 print(f"[albert-train] log → {LOG}")
 print()
 
-log_f        = open(LOG,           "w")  # overwrite — each run starts with a clean local log
-epoch_hist_f = open(EPOCH_HIST,    "a")  # append — gate chip reads this for since_best/wald_fill
-batch_hist_f = open(BATCH_HISTORY, "a")  # append — preserves history across runs
+log_f = open(LOG, "w")  # overwrite — each run starts with a clean local log
 
-# Load x-values already in batch_history.csv so restarts never write duplicates.
-_seen_x: set[float] = set()
-if os.path.exists(BATCH_HISTORY):
-    with open(BATCH_HISTORY) as _bh:
-        for _row in _bh:
-            _comma = _row.find(',')
-            if _comma > 0:
-                try: _seen_x.add(float(_row[:_comma]))
-                except ValueError: pass
+# batch_history.csv and epoch_history.log are DERIVED files. The dashboard server
+# reconciles both from training.log: restart-safe (it trims a superseded tail when a
+# resume re-runs an epoch) and deduped (epoch_history keyed by epoch number). albert-train
+# therefore writes only training.log — exactly one writer per file. This removes both the
+# double-writer race and the x-collision dedup bug (x = epoch + batch/300 is not unique
+# across restarts) that silently dropped every re-run point and froze the dashboard chart.
 
 modal_proc = subprocess.Popen(
     modal_cmd,
@@ -231,20 +229,6 @@ def stream():
         sys.stdout.flush()
         log_f.write(line)
         log_f.flush()
-        stripped = line.strip()
-        if stripped.startswith('EPOCH_SUMMARY '):
-            epoch_hist_f.write(stripped + '\n')
-            epoch_hist_f.flush()
-        m = _BATCH_RE.match(stripped)
-        if m:
-            epoch = int(m.group(1))
-            batch = int(m.group(2))
-            loss  = m.group(3)
-            x = epoch + batch / BATCHES_PER_EPOCH
-            if x not in _seen_x:
-                _seen_x.add(x)
-                batch_hist_f.write(f"{x:.6f},{loss}\n")
-                batch_hist_f.flush()
 
 stream_thread = threading.Thread(target=stream, daemon=True)
 stream_thread.start()
@@ -262,7 +246,6 @@ signal.signal(signal.SIGINT, on_sigint)
 modal_proc.wait()
 stream_thread.join(timeout=3)
 log_f.close()
-batch_hist_f.close()
 
 print("\n[albert-train] Modal run ended.")
 print("[albert-train] Dashboard still running at http://localhost:8888/dashboard/")

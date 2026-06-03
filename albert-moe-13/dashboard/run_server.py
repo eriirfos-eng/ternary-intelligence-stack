@@ -33,51 +33,112 @@ BATCH_HIST_PATH   = os.path.normpath(BATCH_HIST_PATH)
 _BATCH_LOG_RE     = re.compile(r'Epoch\s+\d+\s+\(Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)')
 BATCHES_PER_EPOCH = 300
 
+# The server owns batch_history.csv on the Modal path (where the binary's 300 batches/epoch
+# matches BATCHES_PER_EPOCH above). On --local/--contributor the per-epoch count differs
+# (e.g. 30 for contributors), so albert-train computes x itself and writes the CSV directly;
+# --no-batch-sync tells the server to stand down there and avoid a double-writer race.
+BATCH_SYNC = '--no-batch-sync' not in sys.argv
+
+# The chart x-coordinate is x = epoch + batch/BATCHES_PER_EPOCH, which is NOT unique
+# across restarts: when training resumes from a checkpoint it RE-RUNS the current epoch
+# from batch 0, producing x-values that already exist in the CSV from the interrupted run.
+# A naive "x > last_x" guard silently drops every one of those points — the chart appears
+# frozen even though training streams fine. We key off the RUN_START sentinel that
+# train_modal.py writes at the top of each container's log: when a new run is seen, any
+# CSV tail at-or-after the run's first x is stale and gets superseded by the fresh data.
+_last_reconciled_run = None   # the RUN_START marker we've already trimmed against
+
+def _parse_current_run(log_path):
+    """Return (run_marker, {x: loss}) for batch lines after the LAST RUN_START sentinel.
+    run_marker is the full RUN_START line (carries ts=, so each restart is distinct)."""
+    run_marker = None
+    run_pts = {}
+    if not os.path.isfile(log_path):
+        return run_marker, run_pts
+    with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+        for raw in f:
+            if raw.startswith('RUN_START'):
+                run_marker = raw.strip()
+                run_pts.clear()          # a new run supersedes earlier lines in this log
+                continue
+            m = _BATCH_LOG_RE.search(raw)
+            if not m:
+                continue
+            ep, batch, loss = int(m.group(1)), int(m.group(2)), float(m.group(3))
+            if not (1.0 < loss < 50.0):
+                continue
+            run_pts[round(ep + batch / BATCHES_PER_EPOCH, 6)] = round(loss, 4)
+    return run_marker, run_pts
+
 def _commit_batch_history():
-    """Append any batch-loss lines from training.log that are not yet in batch_history.csv.
-    Runs every 5 minutes — covers detached Modal runs where albert-train stream() is silent."""
+    """Restart-safe merge of the live training.log into batch_history.csv.
+
+    Forward case (run extends past the CSV): append the new points.
+    Restart case (run re-runs an epoch already on disk): trim the stale CSV tail
+    at-or-after the run's first x ONCE, then forward-append from there. This replaces
+    the old monotonic 'x > last_x' guard, which dropped every re-run point and froze
+    the chart after each Modal resume/preemption."""
+    global _last_reconciled_run
     if not os.path.isfile(LOG_PATH):
         return
     with _batch_hist_lock:
-        # Find highest x already committed so we only scan for newer points.
-        last_x = -1.0
+        run_marker, run_pts = _parse_current_run(LOG_PATH)
+        if not run_pts:
+            return
+        run_min_x = min(run_pts)
+
+        # Load existing CSV rows + frontier.
+        csv_lines = []
+        csv_max_x = -1.0
         if os.path.isfile(BATCH_HIST_PATH):
-            with open(BATCH_HIST_PATH, 'rb') as f:
-                f.seek(0, 2)
-                tail_start = max(0, f.tell() - 256)
-                f.seek(tail_start)
-                for raw in f.read().decode('utf-8', errors='replace').splitlines():
-                    comma = raw.find(',')
-                    if comma > 0:
-                        try: last_x = max(last_x, float(raw[:comma]))
-                        except ValueError: pass
-        new_rows = []
-        with open(LOG_PATH, 'r', encoding='utf-8', errors='replace') as f:
-            for raw in f:
-                m = _BATCH_LOG_RE.search(raw)
-                if not m:
-                    continue
-                ep, batch, loss = int(m.group(1)), int(m.group(2)), float(m.group(3))
-                if not (1.0 < loss < 50.0):
-                    continue
-                x = ep + batch / BATCHES_PER_EPOCH
-                if x > last_x:
-                    new_rows.append(f'{x:.6f},{loss:.4f}\n')
-                    last_x = x
+            with open(BATCH_HIST_PATH, 'r', encoding='utf-8', errors='replace') as f:
+                for raw in f:
+                    s = raw.rstrip('\n')
+                    if not s:
+                        continue
+                    comma = s.find(',')
+                    if comma <= 0:
+                        continue
+                    try:
+                        x = float(s[:comma])
+                    except ValueError:
+                        continue
+                    csv_lines.append((x, s))
+                    if x > csv_max_x:
+                        csv_max_x = x
+
+        is_new_run = run_marker is not None and run_marker != _last_reconciled_run
+
+        if is_new_run and run_min_x <= csv_max_x:
+            # New run re-ran an epoch already on disk — supersede the stale tail (once).
+            kept     = [s for x, s in csv_lines if x < run_min_x]
+            run_rows = [f'{x:.6f},{loss:.4f}' for x, loss in sorted(run_pts.items())]
+            with open(BATCH_HIST_PATH, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(kept + run_rows) + '\n')
+            _last_reconciled_run = run_marker
+            return
+
+        # Forward-only: append run points beyond the CSV frontier.
+        if is_new_run:
+            _last_reconciled_run = run_marker
+        new_rows = [f'{x:.6f},{loss:.4f}' for x, loss in sorted(run_pts.items()) if x > csv_max_x]
         if new_rows:
             with open(BATCH_HIST_PATH, 'a', encoding='utf-8') as f:
-                f.writelines(new_rows)
+                f.write('\n'.join(new_rows) + '\n')
 
 def _batch_history_sync_loop():
-    """Background thread: commit training.log batch lines → batch_history.csv every 5 min."""
+    """Background thread: reconcile training.log → batch_history.csv every 60 s.
+    Runs once immediately on start so a restart's re-run epoch is recovered at boot,
+    not after a multi-minute wait."""
     while True:
         try:
             _commit_batch_history()
         except Exception:
             pass
-        time.sleep(300)
+        time.sleep(60)
 
-threading.Thread(target=_batch_history_sync_loop, daemon=True).start()
+if BATCH_SYNC:
+    threading.Thread(target=_batch_history_sync_loop, daemon=True).start()
 
 def _sync_epoch_history():
     """Extract EPOCH_SUMMARY lines from training.log → epoch_history.log.
@@ -354,7 +415,12 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(f.read(length))
 
     def _gen_batch_history(self):
-        """Serve batch_history.csv extended with any batch lines from training.log not yet in it."""
+        """Serve batch_history.csv as the single source of truth.
+
+        On any change to the CSV or the live log, reconcile the log into the CSV first
+        (_commit_batch_history is restart-safe: it trims a superseded tail on a new run,
+        else forward-appends), then serve the reconciled file. No more ad-hoc 'x > last_x'
+        tail-append here — that guard is exactly what froze the chart on a resume."""
         global _batch_csv_cache
         csv_path = os.path.join(PROJECT, 'dashboard', 'batch_history.csv')
         try:
@@ -368,42 +434,22 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
                 _batch_csv_cache[1] == log_size):
             body = _batch_csv_cache[2]
         else:
-            # Read existing CSV and find last x value by peeking at its tail
-            csv_bytes = b''
-            last_x = -1.0
+            # Bring the CSV current with the live log (cheap: only writes on change).
+            # Skipped under --no-batch-sync, where albert-train owns the CSV directly.
+            if BATCH_SYNC:
+                try:
+                    _commit_batch_history()
+                except Exception:
+                    pass
+            body = b''
             if os.path.isfile(csv_path):
                 with open(csv_path, 'rb') as f:
-                    f.seek(0, 2)
-                    tail_start = max(0, f.tell() - 256)
-                    f.seek(tail_start)
-                    for raw in f.read().decode('utf-8', errors='replace').splitlines():
-                        comma = raw.find(',')
-                        if comma > 0:
-                            try:
-                                last_x = float(raw[:comma])
-                            except ValueError:
-                                pass
-                with open(csv_path, 'rb') as f:
-                    csv_bytes = f.read()
-            # Append any batch lines from training.log with x > last_x
-            extra = []
-            if os.path.isfile(LOG_PATH):
-                pat = re.compile(
-                    r'Epoch\s+\d+\s+\(Global\s+(\d+)\),\s+Batch\s+(\d+):\s+loss\s*=\s*([\d.]+)'
-                )
-                with open(LOG_PATH, 'r', encoding='utf-8', errors='replace') as f:
-                    for raw in f:
-                        m = pat.search(raw)
-                        if not m:
-                            continue
-                        ep, batch, loss = int(m.group(1)), int(m.group(2)), float(m.group(3))
-                        if not (1.0 < loss < 50.0):
-                            continue
-                        x = ep + batch / 300.0
-                        if x > last_x:
-                            extra.append(f'{x:.6f},{loss:.4f}')
-            tail = ('\n' + '\n'.join(extra)).encode('utf-8') if extra else b''
-            body = csv_bytes + tail
+                    body = f.read()
+            # Re-stat: _commit may have rewritten the file (mtime moved); cache on the new value.
+            try:
+                csv_mtime = os.path.getmtime(csv_path) if os.path.isfile(csv_path) else csv_mtime
+            except OSError:
+                pass
             _batch_csv_cache = (csv_mtime, log_size, body)
         self.send_response(200)
         self.send_header('Content-Type', 'text/csv; charset=utf-8')
