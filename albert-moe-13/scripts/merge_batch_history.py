@@ -15,8 +15,10 @@ import os
 import sys
 from pathlib import Path
 
-# Reject rows from other training runs — lower bound updated as batch=8/F16 reaches 9.3x.
-LOSS_MIN    = 8.0
+# Reject rows from other training runs by loss band. Lower bound is 1.0 (no real run
+# has sub-1 loss) so sub-8 breakthrough data is NOT dropped — training is now below 8.0
+# and an 8.0 floor would silently discard every good point from a Downloads export.
+LOSS_MIN    = 1.0
 LOSS_MAX    = 13.0
 
 DOWNLOADS   = Path.home() / "Desktop" / "Downloads"
