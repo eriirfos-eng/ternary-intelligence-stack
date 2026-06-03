@@ -8711,3 +8711,5 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [tick 2026-06-03T23:28:44Z] ntfy still silent (~1.75h, publisher down). batch_history fresh (mtime 23:27): ep4941->ep4943.7, batch loss 7.96/8.01 - DIPPING under 8.0, lower than last tick (8.03-8.60). Descent continuing, healthy, no stall/divergence. Watching via local data.
 
 - [tick 2026-06-03T23:46:53Z] ntfy PUBLISHER RECOVERED after ~2h outage - WALD flowing again (ep4945 mass 8.158, 3min gap = normal ~7min cadence restored). batch_history ep4946.3 (mtime 23:45), loss 8.17-8.51 normal noise. Training stayed healthy throughout the telemetry blackout (publisher died, never Modal). Descending, no divergence. Back to dual-signal monitoring.
+
+- [tick 2026-06-03T23:58:44Z] ntfy INTERMITTENT/lagging - came back but last msg ep4945 (15min gap), behind the real epoch. batch_history fresh (mtime 23:57) ep4948.08, loss 8.22-8.62 normal noise, descending. Training healthy + advancing; ntfy publisher flaky so leaning on local data. No stall/divergence.
