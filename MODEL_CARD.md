@@ -50,7 +50,7 @@ weights, targeting inference on edge hardware and low-power devices.
 |----------|-------|
 | Architecture | **Dual-stream** Ternary MoE (Mixture of Experts) |
 | Streams | **2** (bifurcated via cord surgery ep4202, 2026-05-27) |
-| Layers | **26** per stream |
+| Layers | **28** per stream |
 | Hidden size | **2×256H** (256H per stream) |
 | Anastomosis gates | **6** — bidirectional F32 cross-stream fusion at Fibonacci layers [2,3,5,8,13,21] |
 | Experts | 12 per stream (Top-3 routing; shared FFN weights, independent routing gates) |

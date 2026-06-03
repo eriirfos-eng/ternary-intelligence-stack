@@ -81,18 +81,19 @@ The architecture combines:
 |-----------|-------|
 | **Streams** | **2 (dual-stream — cord surgery 2026-05-27)** |
 | Hidden size | **2×256H** (256H per stream) |
-| Layers | **26** (13 Net2Net surgeries + 1 cord surgery: 12L→26L dual-stream; see surgery log below) |
+| Layers | **28** per stream (15 Net2Net surgeries + 1 cord surgery: 12L→28L dual-stream; see surgery log below) |
 | Anastomosis gates | **6** — at Fibonacci layers [2,3,5,8,13,21]; `Linear(512,2)`, F32; cross-stream fusion soft-gated by gradient |
 | Attention heads | 4 per stream |
 | Experts | 12 per stream |
 | Context length | 256 tokens |
 | Vocabulary | 32,000 tokens (ByteLevel BPE — EN/DE/FR/ES/PT/IT/NL/PL) |
 | Routing | Top-3 sparse — @sparseskip, 75% experts skipped per step |
-| TTL routing | EMA-based trit states per stream per layer — **52 TTL rows** (L0–L25 stream A, L26–L51 stream B) |
+| TTL routing | EMA-based trit states per stream per layer — **56 TTL rows** (L0–L27 stream A, L0–L27 stream B) |
 | Quantization | STE with gamma-scaled ternary, gamma cached every 20 steps |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps · BATCH=1 (post-cord) |
-| **Total parameters** | **~194.4M** |
-| **Safetensors** | **2,044 tensors · 741.4 MB** |
+| **Total parameters** | **207,976,972** (exact; 91.8% ternary matmul weights) |
+| **Safetensors (training)** | **2,200 tensors · 793.58 MB** (F32 reference checkpoint) |
+| **Packed footprint** | **~101 MB / 4.08 bits per param** deployable (ternary weights 5-trit-packed + f32 embeddings); **39.7 MB / 1.6 bits** weights-only — see [docs/FOOTPRINT.md](docs/FOOTPRINT.md) |
 | Corpus | **451,418,681 tokens** (stages 1–13, cache-loaded) |
 
 **Surgery log — 13 Net2Net surgeries + 1 cord surgery:**
