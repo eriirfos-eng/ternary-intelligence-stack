@@ -8660,3 +8660,10 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
     clean. Live run untouched — picks this up only on the next pull/restart.
   - To A/B it: restart once with `--atl-seed-scale=0` (control) and once with
     `--atl-seed-scale=0.2` (treatment), compare post-surgery descent slope.
+
+### resumed watch (415s) — 2026-06-03 morning
+
+- [tick ~06:06Z] live (ntfy): ep4834, WALD mass 8.250, fill 18.8%, dead_low 3-7,
+  dead_high 9.25+. healthy, consistent with fresh ATL 8.1539 @ ep4832. no anomalies.
+  HONEST FLAG: local dashboard/training.log tail shows a stale ep1355 @ 10.14 run
+  (separate/old local process, not the Modal run) — noted, not acted on.
