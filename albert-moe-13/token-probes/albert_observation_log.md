@@ -8603,3 +8603,4 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [iter 14] ~03:40 — calm. WALD silent, raw mean ~8.45 (noise), ep4802, mass 8.238. flat plateau, no crossing/event.
 - [iter 15] ~03:47 — calm. WALD silent, raw mean ~8.45 (noise), ep4803, mass 8.238. flat plateau holding, no crossing/event.
 - [iter 16] ~03:54 — calm. WALD silent, raw mean ~8.43 (ep4804 partial 8.39, faint dip?), mass 8.238. flat plateau, no crossing/event.
+- [iter 17] ~04:01 — calm. dip hint resolved to noise (ep4804 full=8.43). WALD silent, raw mean ~8.45, ep4805, mass 8.238. flat plateau, no crossing/event.
