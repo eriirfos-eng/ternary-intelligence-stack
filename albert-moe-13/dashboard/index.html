@@ -5667,6 +5667,64 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
         }
     } catch(e) {}
 
+    // ── Hot-preseed refresh ────────────────────────────────────────────
+    // When the auto-merge loop updates batch_history.csv while the page is
+    // already open, the preseed is stale. Poll /api/csv_mtime every 60 s;
+    // if the file grew, re-parse it and splice the new points into smaLog.
+    let _preseedCsvMtime = null;
+
+    function _refreshPreseedFromCsv(batchText) {
+        const newLog = [];
+        let _lx = -Infinity;
+        for (const line of batchText.split('\n')) {
+            const comma = line.indexOf(',');
+            if (comma < 0) continue;
+            const x = parseFloat(line.slice(0, comma));
+            const y = parseFloat(line.slice(comma + 1));
+            if (isFinite(x) && isFinite(y) && x >= PRESEED_EPOCH_MIN && y >= PRESEED_LOSS_MIN && y < 50 && x !== _lx && !(x >= PRESEED_NOTCH_LO && x <= PRESEED_NOTCH_HI)) {
+                newLog.push({ x, y });
+                _lx = x;
+            }
+        }
+        if (newLog.length <= smaPreSeedLen) return; // nothing new
+
+        const newPreseedMaxX = newLog[newLog.length - 1].x;
+        // Preserve live data beyond the new preseed tail (avoid duplicates).
+        const liveData = smaLog.slice(smaPreSeedLen).filter(pt => pt.x > newPreseedMaxX);
+        smaLog.length = 0;
+        for (const pt of newLog)  smaLog.push(pt);
+        for (const pt of liveData) smaLog.push(pt);
+        smaPreSeedLen  = newLog.length;
+        smaPreseedMaxX = newPreseedMaxX;
+
+        // Update all-time best
+        for (const pt of newLog) { if (pt.y < allTimeBestBatch) allTimeBestBatch = pt.y; }
+        if (allTimeBestBatch < Infinity)
+            document.getElementById('v-best').textContent = allTimeBestBatch.toFixed(4);
+
+        // Recompute visible SMA caches from full smaLog
+        const _ds = chart.data.datasets;
+        [[1,21,0],[2,55,1],[3,144,2],[4,377,3],[5,610,4],[7,987,5],[8,1597,6],[9,2584,7]].forEach(([di, w, ci]) => {
+            smaCacheFull[ci] = sma(smaLog, w);
+            if (!_ds[di].hidden) _ds[di].data = smaPreseedData(smaCacheFull[ci]);
+        });
+        chart.update('none');
+    }
+
+    function _pollPreseedMtime() {
+        fetch('/api/csv_mtime?t=' + Date.now())
+            .then(r => r.ok ? r.json() : null).catch(() => null)
+            .then(d => {
+                if (!d) return;
+                if (_preseedCsvMtime === null) { _preseedCsvMtime = d.mtime; return; }
+                if (d.mtime === _preseedCsvMtime) return;
+                _preseedCsvMtime = d.mtime;
+                fetch('/dashboard/batch_history.csv?t=' + Date.now())
+                    .then(r => r.ok ? r.text() : '').catch(() => '')
+                    .then(_refreshPreseedFromCsv);
+            });
+    }
+
     // Pre-seed smaLog (batch points) and epochLog in parallel before the poll loop.
     // batch_history.csv   — x,y per line; x = global_epoch + batch/300; ~2MB
     // epoch_history.log   — EPOCH_SUMMARY lines only; ~200 bytes/epoch
@@ -5766,6 +5824,11 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             if (el && el.type === 'checkbox') el.dispatchEvent(new Event('change'));
         });
         setInterval(poll, POLL_MS);
+        // Seed the CSV mtime baseline and start periodic hot-preseed refresh.
+        // If auto-merge updated batch_history.csv after the preseed was loaded,
+        // the new data will be injected within 60 s without a page reload.
+        _pollPreseedMtime();
+        setInterval(_pollPreseedMtime, 60 * 1000);
     });
 
 

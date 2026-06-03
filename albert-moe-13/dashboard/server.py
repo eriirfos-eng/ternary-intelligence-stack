@@ -387,7 +387,25 @@ class RangeAwareHandler(http.server.SimpleHTTPRequestHandler):
         if self.path.startswith('/api/mycelium'):
             self._handle_mycelium()
             return
+        if self.path.startswith('/api/csv_mtime'):
+            self._handle_csv_mtime()
+            return
         super().do_GET()
+
+    def _handle_csv_mtime(self):
+        csv_path = os.path.join(DIRECTORY, "batch_history.csv")
+        try:
+            mtime = os.path.getmtime(csv_path)
+            size  = os.path.getsize(csv_path)
+        except OSError:
+            mtime, size = 0, 0
+        body = json.dumps({"mtime": mtime, "size": size}).encode()
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Cache-Control', 'no-store')
+        self.end_headers()
+        self.wfile.write(body)
 
     def _handle_mycelium(self):
         parsed = urllib.parse.urlparse(self.path)
@@ -430,9 +448,27 @@ class RangeAwareHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         # Suppress per-request noise for the hot poll and mycelium endpoints
         first = args[0] if args else ''
-        if 'training.log' in first or '/api/mycelium' in first:
+        if 'training.log' in first or '/api/mycelium' in first or '/api/csv_mtime' in first:
             return
         super().log_message(format, *args)
+
+# ── Startup merge — run once synchronously before serving any requests ────────
+# Ensures batch_history.csv includes all Downloads CSVs before the browser
+# fetches it for the preseed, so the historical chart is never stale at boot.
+print("[startup] merging Downloads CSVs into batch_history.csv ...")
+try:
+    _r = subprocess.run(
+        [sys.executable, MERGE_PY],
+        cwd=PROJECT, capture_output=True, text=True, timeout=300,
+    )
+    if _r.returncode == 0:
+        for _l in _r.stdout.splitlines():
+            if "Total unique points" in _l or "Wrote" in _l or "error" in _l.lower():
+                print(f"[startup]  {_l}")
+    else:
+        print(f"[startup] merge failed (rc={_r.returncode}): {_r.stderr[:300]}")
+except Exception as _e:
+    print(f"[startup] merge error: {_e}")
 
 with socketserver.TCPServer(("127.0.0.1", PORT), RangeAwareHandler) as httpd:
     httpd.allow_reuse_address = True
