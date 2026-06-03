@@ -8546,3 +8546,28 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 **Gradient:** global |g|=0.0023.
 
 **Interpretation:** EP AVG 9.2148 confirms 24L stabilized well below the oscillation peak of 9.241 — the ntfy silence was the model running quietly in a lower mass range without triggering WALD thresholds. TTL black scar cleared. ABS pullback to 52% is the key routing shift to watch: 24L may route descent differently than 23L did. Gap to ATL 9.2045: **0.010**.
+
+---
+
+## [OVERNIGHT WATCH — restart documented] 2026-06-03 ~02:09 CEST (00:09Z) — 29L
+
+**Restart:** Simeon restarted albert training overnight. No prior documentation of this restart existed; this entry opens the overnight watch. Resumed live on Modal. Architecture has grown since the last logged window (was 24L): now **2×29L · 2×256H · 12E · 256CTX · 32K**, TNS 2,278.
+
+**Live state (dashboard + bitstream):**
+- EP **4786 (29L)**, BATCH ~37/300, GPU 12.6/22.5G, LR ~1.84e-4.
+- **EP-AVG 8.2266** (chart floor 7.9648). Best EP-AVG ATL ~8.1835 → currently **+0.043 above** the prior best epoch-avg. Batch ATL 4.7007 (↓28.02% badge).
+- Live batch losses this window: 7.9890 / 8.4051 / 8.4407 — oscillating ~8.0–8.4.
+
+**Bitstream (training.log):** gradient clipping **ACTIVE** — global |g| = **4.1655 ⚡CLIP**; per-layer grad norms elevated (orange L21–L28 ~0.004–0.026). DIVWD ratios ~0.00 (wd-dominated, grads tiny vs wd ~6.2).
+
+**ntfy (albert-rfi-irfos):** WALD firing on the spike band — ep4783 (fill 20.8%, mass 8.242, dead_low 3.00–6.75, dead_high 9.25+), ep4784 (fill 18.8%, mass 8.255, dead_low 3.00–7.00). Quiet since (no WALD in the trailing ~8m at 00:09Z).
+
+**TTL routing:** G 33% · O 51% · **R 15%** — red elevated. Post-expansion turbulence signature.
+
+**Expert routing (last 60 steps):** INT 100% · CMP 95% · GEN 28% · ABS 32% · PLN 24% · LOG 11% · LNG 2% · SYN 2% · SEM/CTX/INF/MEM 0%. PLN/CMP/INT carry the load; ABS is the swing expert (32%).
+
+**Events bar:** SPIKE 8.831 (+0.604) · SPIKE 8.973 (+0.688) · SPIKE 8.989 · BALANCED H=4.720/4.724 · EPOCH avg 8.2266/8.2844 · TTL-GREEN 33–36%.
+
+**Interpretation:** classic post-expansion (29L) whiplash. The model oscillates ~8.0–8.4 with WALD-grade spikes (8.83–8.99), gradient clipping firing (|g|=4.16), and 15% red routing as the 3 new layers integrate. EP-AVG 8.2266 sits **just above** the best epoch-avg ATL (~8.18) — the descent leg has not yet reclaimed the prior best. **Watch overnight:** (a) EP-AVG dropping back below ~8.18 = descent resuming; vs (b) WALD severance escalating = turbulence persisting. Routing crystallization at 29L not yet stable (ABS the tell).
+
+— overnight /loop armed: re-check bitstream + ntfy every ~415s, append here. Caveat: /loop runs while this session + machine stay awake; if the ZBook sleeps the loop pauses, but Modal training + ntfy keep running independently.
