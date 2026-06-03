@@ -465,10 +465,21 @@ class RangeRequestHandler(http.server.SimpleHTTPRequestHandler):
             self._handle_mycelium()
             return
 
-        # CPU mode: redirect bare dashboard requests to CPU-safe URL params.
+        # Redirect bare root to dashboard — DIRECTORY is albert-moe-13/ so / is not index.html
+        clean = self.path.split('?')[0].rstrip('/')
+        if clean == '':
+            if CPU_MODE:
+                self.send_response(302)
+                self.send_header('Location', f'/dashboard/?{CPU_PARAMS}')
+            else:
+                self.send_response(302)
+                self.send_header('Location', '/dashboard/')
+            self.end_headers()
+            return
+
+        # CPU mode: redirect bare /dashboard to CPU-safe URL params.
         if CPU_MODE and 'stale_s' not in self.path and 'mycelium' not in self.path:
-            clean = self.path.split('?')[0].rstrip('/')
-            if clean in ('/dashboard', ''):
+            if clean == '/dashboard':
                 self.send_response(302)
                 self.send_header('Location', f'/dashboard/?{CPU_PARAMS}')
                 self.end_headers()

@@ -446,8 +446,9 @@ class RangeAwareHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def log_message(self, format, *args):
-        # Suppress per-request noise for the hot poll and mycelium endpoints
-        first = args[0] if args else ''
+        # Suppress per-request noise for the hot poll and mycelium endpoints.
+        # Cast to str: in Python 3.13 send_error passes HTTPStatus enum objects as args.
+        first = str(args[0]) if args else ''
         if 'training.log' in first or '/api/mycelium' in first or '/api/csv_mtime' in first:
             return
         super().log_message(format, *args)
