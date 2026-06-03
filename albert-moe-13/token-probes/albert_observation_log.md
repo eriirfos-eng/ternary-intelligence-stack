@@ -8699,3 +8699,5 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
   shipped + pushed to main this session.)
 
 - [tick 2026-06-03T21:46:57Z] live (ntfy): ep4918->ep4927, WALD firing normally (ep4926 brief fill blip 22.9% @ step9000, back to 20.8% @ ep4927), mass steady ~8.17. No fresh EP_AVG print since 8.0895 (ep4918) - descent leg intact, no stall/divergence. chip 4.6541 flat. Healthy. [HONEST FLAG: a concurrent dashboard/data-reconcile process is actively rewriting this repo; an earlier copy of this tick was clobbered by its working-tree reset, re-committed here.]
+
+- [tick 2026-06-03T21:58:42Z] live (ntfy): one new msg since last tick - WALD ep4928 @ 21:43, mass 8.147 (down from 8.170, still descending), fill 20.8%, dead bands unchanged. No new EP_AVG print. Quiet ~9min since last msg (borderline, WALD usually every ~7min) - watching, not alarmed. No stall/divergence.
