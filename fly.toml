@@ -12,6 +12,13 @@ primary_region = 'fra'
 [env]
   PORT = '8080'
 
+# The KPI publisher writes its append-only log + html to /data/kpi (served at
+# ternlang.com/kpi). Declaring the volume here keeps that history across deploys and
+# stops the "volume mounted but not in config" prompt that blocks non-interactive deploys.
+[mounts]
+  source = 'ternlang_data'
+  destination = '/data'
+
 [http_service]
   internal_port = 8080
   force_https = true
