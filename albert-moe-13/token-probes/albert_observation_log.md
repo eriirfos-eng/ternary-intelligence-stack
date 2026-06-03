@@ -8667,3 +8667,23 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
   dead_high 9.25+. healthy, consistent with fresh ATL 8.1539 @ ep4832. no anomalies.
   HONEST FLAG: local dashboard/training.log tail shows a stale ep1355 @ 10.14 run
   (separate/old local process, not the Modal run) — noted, not acted on.
+
+### 2026-06-03 — hard descent leg + a GPU-utilization observation
+
+- [~06:40Z] albert DIPPING HARD: the post-surgery plateau (~8.42) broke into a steep
+  descent leg — EP_AVG 8.2490, batch ATL down to ~6.30, ep4840 (29L, gen3 step3/6).
+  Expert activity at the dip: INT 100%, CMP 95%, GEN 35%, ABS/PLN 20-26%, others low.
+  This is the larger model finally paying off — watch where the new floor settles.
+
+- **OBSERVATION (Simeon, worth digging in): GPU memory now OSCILLATES per batch.**
+  Before the last surgery albert held a flat VRAM footprint for a whole run (~12.2 GB);
+  since this surgery it jumps across decimals (12.4 / 12.5 / 12.6 GB) batch-to-batch.
+  Hypothesis (Simeon): a side-effect of routing + how hard @sparseskip culls per
+  layer/expert — different inputs route to different experts and skip different zero
+  weights, so the live activation/compute footprint varies per batch.
+  HONEST framing for the findings log IF we measure it: this is VRAM (memory), not
+  compute-utilization; the sparseskip link is a HYPOTHESIS until we correlate per-batch
+  VRAM against per-batch active-expert count + zero-skip ratio. If that correlation
+  holds, it's a genuine, measurable sign that ternary sparse routing makes compute
+  data-dependent (a real ternary-vs-dense distinction) — candidate finding, not a claim
+  yet. TODO: log per-batch (vram, n_active_experts, mean_zero_frac) and regress.
