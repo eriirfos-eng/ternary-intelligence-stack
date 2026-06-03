@@ -8627,3 +8627,36 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [iter 38] ~06:28 — WALD silent, raw mean oscillating 8.37–8.51 (~8.42), ep4829, mass 8.226. stalled plateau, no crossing below 8.1835. ~5.2h, 38 iters.
 - [iter 39] ~06:35 — WALD @ep4830 mass 8.251 (off night-low). raw mean oscillating 8.42–8.51, ep4830. stalled plateau, no crossing below 8.1835. ~5.4h, 39 iters.
 - [iter 40] ~06:42 — WALD @ep4830/4831, mass 8.251–8.255, raw mean ~8.47, ep4832. stalled plateau, no crossing below 8.1835. ~5.5h, 40 iters.
+
+## 2026-06-03 — morning: ATL crossed + natural-selection upgrade built
+
+- **MORNING STATE (~05:48 local):** albert crossed below the old 8.1835 wall. Live
+  best_loss = **8.153886 @ ep4832** (29L, gen3 step3/6, ceiling F10=233, threshold
+  0.01125). The overnight "stalled plateau" read (iters 38-40) was the floor right
+  before the break — the descent leg resumed and set a genuine new ATL. The 29L
+  function-preserving surgery's gentle kick DID eventually beat the prior best
+  unaided, just slower than the 28L reset descent (consistent with the overnight
+  hypothesis: a function-preserving kick is real but mild exploration energy).
+
+- **NATURAL-SELECTION UPGRADE BUILT (both bricks, default-OFF, behind a flag).**
+  Frames albert's existing evolution honestly — mutation (AdamW reset + Net2Net
+  surgery), variation (12 experts + LB + entropy), implicit selection (gradient),
+  whole-organism selection (collapse→rollback), diversity guard (mycelium vestigial
+  rescue) — and adds the one missing piece: an explicit per-expert *fitness
+  scorekeeper*.
+  - **Brick 1 (observational, always on, zero training-behaviour change):** each
+    time albert hits a new all-time-best epoch, `EvolutionManager::record_atl_credit`
+    folds that epoch's per-expert routing share into a credit vector (gentle
+    exponential forgetting, leap-weighted, persisted in the `.evolution` sidecar as
+    `c:`/`ce:` lines, survives Modal restarts). Logs `ATL_BEST`/`ATL_CREDIT` lines.
+  - **Brick 2 (flag-gated `--atl-seed-scale=F`, default 0.0 = symmetric A/B
+    control):** on the NEXT plateau-gated surgery, the new layer's router is gently
+    row-scaled toward the top-credited experts (`1 + scale·prior[e]`, prior is
+    centered zero-mean + unit-max-abs, so no net gate inflation; bounded; fully
+    learnable-away; LB still counters monoculture). Only ever tilts a layer the
+    plateau gate already chose to add — honours the no-forced-layers decree.
+  - 15/15 evolution unit tests pass (3 new: credit accumulation, prior gating at
+    `ATL_CREDIT_MIN_EVENTS=8`, save/load roundtrip). `cargo check --bin train_bible`
+    clean. Live run untouched — picks this up only on the next pull/restart.
+  - To A/B it: restart once with `--atl-seed-scale=0` (control) and once with
+    `--atl-seed-scale=0.2` (treatment), compare post-surgery descent slope.

@@ -59,6 +59,27 @@ const THRESHOLD_DECAY: f32 = 0.75;
 /// generation without adding a layer (prevents eternal autumn).
 const GENERATION_TIMEOUT_MULTIPLIER: usize = 3;
 
+// ── Natural-selection scorekeeper (per-expert ATL credit) ───────────────────
+// Albert already has mutation (AdamW reset + Net2Net surgery), variation (12
+// experts + load-balancing + entropy), implicit selection (gradient), and
+// whole-organism selection (collapse→rollback to best). The missing piece was
+// explicit per-expert *fitness credit*: a record of which experts were carrying
+// the load each time the colony hit a new all-time-best epoch (ATL). This is a
+// pure scorekeeper — recording it changes no training behaviour. It is read only
+// by the flag-gated, default-OFF post-surgery gate-seeding nudge (Brick 2), which
+// gently tilts a newly-added layer's router toward the proven experts while
+// load-balancing still pushes back against monoculture.
+
+/// Exponential forgetting applied to ATL credit before each new best-ATL epoch is
+/// folded in. <1.0 lets the scorekeeper track the model's *current* expert usage
+/// rather than its whole history — early-training routing is not late-training
+/// routing. 0.9 ≈ a ~7-best half-life.
+const ATL_CREDIT_DECAY: f32 = 0.9;
+
+/// Minimum best-ATL epochs that must accumulate before the credit prior is trusted
+/// enough to seed a surgery. Below this the prior returns all-zero (no nudge).
+const ATL_CREDIT_MIN_EVENTS: usize = 8;
+
 pub struct EvolutionManager {
     pub loss_history:                 VecDeque<f32>,
     pub plateau_threshold:            f32,
@@ -93,6 +114,14 @@ pub struct EvolutionManager {
     gen_start_threshold:        f32,
     /// First loss recorded this generation (for GENERATION_COMPLETE log).
     gen_start_loss:             Option<f32>,
+
+    // ── Per-expert ATL credit (natural-selection scorekeeper) ──────────────────
+    /// Accumulated fitness credit per expert index, earned when the colony hits a
+    /// new all-time-best epoch loss. Sized lazily to num_experts on first record.
+    /// OBSERVATIONAL — never read by the training step, only by Brick 2's nudge.
+    pub expert_atl_credit:      Vec<f32>,
+    /// Number of best-ATL epochs that have contributed credit (lifetime counter).
+    pub atl_credit_events:      usize,
 }
 
 impl EvolutionManager {
@@ -114,6 +143,8 @@ impl EvolutionManager {
             gen_epochs_no_surgery:        0,
             gen_start_threshold:          0.020,
             gen_start_loss:               None,
+            expert_atl_credit:            Vec::new(),
+            atl_credit_events:            0,
         }
     }
 
@@ -367,6 +398,72 @@ impl EvolutionManager {
         );
     }
 
+    /// Lazily size the per-expert credit vector. No-op once correctly sized.
+    fn ensure_credit_slots(&mut self, num_experts: usize) {
+        if self.expert_atl_credit.len() != num_experts {
+            self.expert_atl_credit = vec![0.0; num_experts];
+        }
+    }
+
+    /// BRICK 1 — fold a new all-time-best epoch into per-expert ATL credit.
+    ///
+    /// `route_share[e]` = the fraction of routing mass expert e carried during the
+    /// best epoch (epoch_route_acc / epoch_route_count, aggregated across layers).
+    /// `improvement` = how far the ATL dropped, in nats; a bigger leap earns
+    /// proportionally more credit, bounded so a single jump can't dominate forever
+    /// and a noise-tiny best still registers. Pure bookkeeping — no side effects on
+    /// weights, optimizer, or the surgery gate.
+    pub fn record_atl_credit(&mut self, route_share: &[f32], improvement: f32) {
+        self.ensure_credit_slots(route_share.len());
+        // Forget a little of the past so credit tracks the model's *current* shape.
+        for c in self.expert_atl_credit.iter_mut() { *c *= ATL_CREDIT_DECAY; }
+        // Weight this best by the size of the leap: 1.0× floor, 3.0× ceiling.
+        let weight = (1.0 + improvement.max(0.0) * 4.0).min(3.0);
+        for (e, &share) in route_share.iter().enumerate() {
+            if e < self.expert_atl_credit.len() {
+                self.expert_atl_credit[e] += share * weight;
+            }
+        }
+        self.atl_credit_events += 1;
+    }
+
+    /// BRICK 2 input — ATL credit centered to zero mean and scaled to unit max-abs,
+    /// for use as a gentle routing prior on a freshly-added layer's gate.
+    ///
+    /// Returns an all-zero vector (→ no nudge) until ATL_CREDIT_MIN_EVENTS best
+    /// epochs have accumulated. Centering guarantees the nudge neither inflates nor
+    /// deflates the gate overall — it only re-tilts *between* experts, leaving
+    /// load-balancing free to counter any drift toward monoculture.
+    pub fn atl_credit_prior(&self, num_experts: usize) -> Vec<f32> {
+        if self.expert_atl_credit.len() != num_experts
+            || self.atl_credit_events < ATL_CREDIT_MIN_EVENTS {
+            return vec![0.0; num_experts];
+        }
+        let mean = self.expert_atl_credit.iter().sum::<f32>() / num_experts as f32;
+        let centered: Vec<f32> = self.expert_atl_credit.iter().map(|&c| c - mean).collect();
+        let max_abs = centered.iter().fold(0.0_f32, |m, &v| m.max(v.abs()));
+        if max_abs <= 1e-6 { return vec![0.0; num_experts]; }
+        centered.iter().map(|&v| v / max_abs).collect()
+    }
+
+    /// One-line telemetry of current ATL-credit standings (highest-credited first).
+    pub fn atl_credit_telemetry(&self) -> String {
+        if self.expert_atl_credit.is_empty() {
+            return "ATL_CREDIT events=0 (no best-ATL epoch recorded yet)".to_string();
+        }
+        let total: f32 = self.expert_atl_credit.iter().sum::<f32>().max(1e-9);
+        let mut idx: Vec<usize> = (0..self.expert_atl_credit.len()).collect();
+        idx.sort_by(|&a, &b| {
+            self.expert_atl_credit[b]
+                .partial_cmp(&self.expert_atl_credit[a])
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        let parts: Vec<String> = idx.iter()
+            .map(|&e| format!("E{}={:.0}%", e, 100.0 * self.expert_atl_credit[e] / total))
+            .collect();
+        format!("ATL_CREDIT events={} share=[{}]", self.atl_credit_events, parts.join(" "))
+    }
+
     /// Reset loss history and start the Fibonacci-scaled post-surgery cooldown.
     pub fn reset_history(&mut self) {
         self.loss_history.clear();
@@ -427,6 +524,15 @@ impl EvolutionManager {
                 .collect();
             content.push_str(&format!("h:{}\n", hist.join(",")));
         }
+        // Persist per-expert ATL credit so the natural-selection scorekeeper survives
+        // Modal restarts (tagged lines — order-independent, backward-compatible).
+        if !self.expert_atl_credit.is_empty() {
+            let cr: Vec<String> = self.expert_atl_credit.iter()
+                .map(|v| format!("{:.6}", v))
+                .collect();
+            content.push_str(&format!("c:{}\n", cr.join(",")));
+            content.push_str(&format!("ce:{}\n", self.atl_credit_events));
+        }
         if let Err(e) = fs::write(path, &content) {
             eprintln!("[evolution] Warning: could not save state to {}: {}", path, e);
         }
@@ -479,16 +585,27 @@ impl EvolutionManager {
             self.gen_start_threshold = thr;
         }
 
-        // Restore loss_history from the optional h: line — allows the plateau gate to
-        // resume mid-window across restarts instead of starting from scratch each time.
-        if let Some(hist_line) = lines.next() {
-            let trimmed = hist_line.trim();
+        // Optional tagged tail lines — parsed by PREFIX so they're order-independent
+        // and old 2-line / h-only checkpoints still load cleanly:
+        //   h:  loss_history (resumes the plateau window mid-flight across restarts)
+        //   c:  per-expert ATL credit (the natural-selection scorekeeper)
+        //   ce: best-ATL event count
+        for line in lines {
+            let trimmed = line.trim();
             if let Some(hist_str) = trimmed.strip_prefix("h:") {
                 self.loss_history.clear();
                 for tok in hist_str.split(',') {
                     if let Ok(v) = tok.trim().parse::<f32>() {
                         self.loss_history.push_back(v);
                     }
+                }
+            } else if let Some(cred_str) = trimmed.strip_prefix("c:") {
+                self.expert_atl_credit = cred_str.split(',')
+                    .filter_map(|tok| tok.trim().parse::<f32>().ok())
+                    .collect();
+            } else if let Some(ev_str) = trimmed.strip_prefix("ce:") {
+                if let Ok(v) = ev_str.trim().parse::<usize>() {
+                    self.atl_credit_events = v;
                 }
             }
         }
@@ -651,5 +768,57 @@ mod tests {
         assert_eq!(em2.gen_base_fib_index, em.gen_base_fib_index);
         assert_eq!(em2.gen_step,           em.gen_step);
         assert!((em2.plateau_threshold - em.plateau_threshold).abs() < 1e-5);
+    }
+
+    // ── Natural-selection scorekeeper (ATL credit) ──────────────────────────────
+
+    #[test]
+    fn atl_credit_accumulates_toward_carrying_experts() {
+        let mut em = em_at(12);
+        // Expert 2 carries most load on every best epoch; expert 0 carries none.
+        let share = vec![0.0, 0.05, 0.60, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.0, 0.0, 0.0];
+        for _ in 0..10 { em.record_atl_credit(&share, 0.01); }
+        assert_eq!(em.atl_credit_events, 10);
+        // The heavy carrier must end with the most credit.
+        let argmax = (0..12).max_by(|&a, &b|
+            em.expert_atl_credit[a].partial_cmp(&em.expert_atl_credit[b]).unwrap()).unwrap();
+        assert_eq!(argmax, 2);
+    }
+
+    #[test]
+    fn atl_prior_is_zero_until_enough_events_then_centered() {
+        let mut em = em_at(12);
+        let share = vec![0.0, 0.0, 0.6, 0.0, 0.1, 0.1, 0.1, 0.0, 0.0, 0.1, 0.0, 0.0];
+        // Below the min-events threshold → no nudge.
+        for _ in 0..(ATL_CREDIT_MIN_EVENTS - 1) { em.record_atl_credit(&share, 0.0); }
+        assert!(em.atl_credit_prior(12).iter().all(|&v| v == 0.0));
+        // Cross the threshold → a real, zero-mean, unit-max-abs prior.
+        em.record_atl_credit(&share, 0.0);
+        let prior = em.atl_credit_prior(12);
+        let mean: f32 = prior.iter().sum::<f32>() / 12.0;
+        assert!(mean.abs() < 1e-5, "prior must be zero-mean, got {mean}");
+        assert!(prior.iter().any(|&v| v != 0.0), "prior must be non-trivial past threshold");
+        let max_abs = prior.iter().fold(0.0_f32, |m, &v| m.max(v.abs()));
+        assert!((max_abs - 1.0).abs() < 1e-5, "prior must be unit max-abs, got {max_abs}");
+        // Heaviest carrier (expert 2) gets the most positive nudge.
+        let argmax = (0..12).max_by(|&a, &b| prior[a].partial_cmp(&prior[b]).unwrap()).unwrap();
+        assert_eq!(argmax, 2);
+    }
+
+    #[test]
+    fn atl_credit_survives_save_load() {
+        let mut em = em_at(12);
+        let share = vec![0.0, 0.1, 0.5, 0.1, 0.1, 0.05, 0.05, 0.05, 0.05, 0.0, 0.0, 0.0];
+        for _ in 0..9 { em.record_atl_credit(&share, 0.02); }
+        let path = "/tmp/evo_test_state_credit.txt";
+        em.save_state(path);
+
+        let mut em2 = EvolutionManager::new();
+        assert!(em2.load_state(path));
+        assert_eq!(em2.atl_credit_events, em.atl_credit_events);
+        assert_eq!(em2.expert_atl_credit.len(), 12);
+        for (a, b) in em2.expert_atl_credit.iter().zip(em.expert_atl_credit.iter()) {
+            assert!((a - b).abs() < 1e-4, "credit drifted across save/load: {a} vs {b}");
+        }
     }
 }

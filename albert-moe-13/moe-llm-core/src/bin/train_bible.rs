@@ -56,6 +56,13 @@ struct TrainFlags {
     vestigial_rescue: bool,
     /// Epochs an expert must remain vestigial-and-not-recovering before rescue.
     vestigial_patience: usize,
+    /// BRICK 2 — natural-selection gate seeding. When > 0, the NEXT plateau-gated
+    /// surgery gently row-scales the new layer's router toward the experts that
+    /// historically carried albert's best epochs (the ATL-credit prior), by this
+    /// factor. 0.0 (default) = symmetric init (the A/B control). Suggested A/B
+    /// treatment: 0.15–0.30. Centered + bounded + fully learnable-away; LB still
+    /// counters monoculture. Only ever tilts a layer the gate already chose to add.
+    atl_seed_scale: f32,
 }
 
 fn parse_args() -> TrainFlags {
@@ -75,6 +82,7 @@ fn parse_args() -> TrainFlags {
         batch_size:          8,
         vestigial_rescue:    true,   // ON by default — flux nerve wired to self-repair; opt out with --no-vestigial-rescue
         vestigial_patience:  12,
+        atl_seed_scale:      0.0,    // OFF by default — symmetric init is the A/B control
     };
     for arg in &args[1..] {
         match arg.as_str() {
@@ -105,6 +113,8 @@ fn parse_args() -> TrainFlags {
                     if let Ok(n) = v.parse::<usize>() { flags.batch_size = n.max(1); }
                 } else if let Some(v) = arg.strip_prefix("--vestigial-patience=") {
                     if let Ok(n) = v.parse::<usize>() { flags.vestigial_patience = n.max(1); }
+                } else if let Some(v) = arg.strip_prefix("--atl-seed-scale=") {
+                    if let Ok(w) = v.parse::<f32>() { flags.atl_seed_scale = w.max(0.0); }
                 }
             }
         }
@@ -807,7 +817,54 @@ fn fibonacci_fusion_layers(num_layers: usize) -> Vec<usize> {
 /// Returns Ok(true) if surgery was performed, Ok(false) if it was safely aborted
 /// (architecture mismatch) — in which case config + checkpoint are left untouched and
 /// the caller must skip fib-promotion/layer-add and keep training at the current depth.
-fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, device: &Device, root: &str) -> Result<bool> {
+/// BRICK 2 — gently tilt a freshly-added layer's router toward the experts that
+/// historically carried albert's best epochs. Row-scales the new layer's gate
+/// weight (`*.moe.gate.weight`, shape [num_experts × hidden]) by `1 + scale·prior[e]`
+/// per expert row. `prior` is the centered, unit-max-abs ATL-credit prior from the
+/// EvolutionManager — so the scaling is mean-1 (no net gate inflation), bounded, and
+/// fully learnable-away; load-balancing still pushes back against any drift toward
+/// monoculture. No-op when scale ≤ 0 or the prior is empty/zero (the A/B control).
+/// Returns the number of gate tensors nudged.
+fn apply_atl_gate_nudge(
+    new_tensors: &mut HashMap<String, Tensor>,
+    prefixes:    &[String],
+    prior:       &[f32],
+    scale:       f32,
+    device:      &Device,
+) -> Result<usize> {
+    if scale <= 0.0 || prior.is_empty() || prior.iter().all(|&v| v == 0.0) {
+        return Ok(0);
+    }
+    let gate_keys: Vec<String> = new_tensors.keys()
+        .filter(|k| k.ends_with(".moe.gate.weight")
+                    && prefixes.iter().any(|p| k.starts_with(p)))
+        .cloned()
+        .collect();
+    let mut touched = 0;
+    for key in gate_keys {
+        if let Some(t) = new_tensors.get(&key) {
+            let dims = t.shape().dims().to_vec();
+            // Gate weight is [num_experts, hidden] — one row per expert. Skip anything
+            // whose row count doesn't match the prior (defensive — never corrupt).
+            if dims.len() == 2 && dims[0] == prior.len() {
+                let (rows, cols) = (dims[0], dims[1]);
+                let mut flat = t.flatten_all()?.to_vec1::<f32>()?;
+                for e in 0..rows {
+                    let factor = 1.0 + scale * prior[e];
+                    for c in 0..cols { flat[e * cols + c] *= factor; }
+                }
+                new_tensors.insert(key.clone(), Tensor::from_vec(flat, (rows, cols), device)?);
+                touched += 1;
+            }
+        }
+    }
+    Ok(touched)
+}
+
+fn perform_surgery(
+    config_path: &str, checkpoint_path: &str, best_path: &str, device: &Device, root: &str,
+    atl_prior: &[f32], atl_seed_scale: f32,
+) -> Result<bool> {
     println!("[{}] --- INITIATING NEURAL SURGERY: Net2Net Safe Copy ---", timestamp());
 
     let config_str = fs::read_to_string(config_path).expect("Unable to read config.json");
@@ -894,6 +951,21 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, de
             }
         }
 
+        // ── Natural selection, brick 2 (flag-gated, default OFF) ──────────────
+        // Gently tilt BOTH new stream routers toward the proven experts. Applied
+        // after the Mandelbrot perturbation so the nudge rides on top of the broken
+        // symmetry. Only touches a layer the plateau gate already chose to add.
+        let nudged = apply_atl_gate_nudge(
+            &mut new_tensors, &[new_sa_prefix.clone(), new_sb_prefix.clone()],
+            atl_prior, atl_seed_scale, device,
+        )?;
+        if nudged > 0 {
+            let prior_str: Vec<String> = atl_prior.iter().map(|v| format!("{:+.2}", v)).collect();
+            println!("[{}] [atl-seed] gentle router nudge on {} gate tensor(s) at new layer {} \
+                      (scale={:.3}, prior=[{}]).",
+                timestamp(), nudged, target_layer, atl_seed_scale, prior_str.join(","));
+        }
+
         // Check if new Fibonacci fusion layers emerged at this depth
         let old_fusion = fibonacci_fusion_layers(old_layers);
         let new_fusion = fibonacci_fusion_layers(new_layers);
@@ -941,6 +1013,17 @@ fn perform_surgery(config_path: &str, checkpoint_path: &str, best_path: &str, de
         println!("[{}] Symmetry break: Mandelbrot perturbation applied to {} tensors in layer {} (c_im={:.4}).",
             timestamp(), tensor_count, target_layer,
             moe_llm_core::mandelbrot::layer_c_im(target_layer));
+
+        // Natural selection, brick 2 (flag-gated, default OFF) — single-stream variant.
+        let nudged = apply_atl_gate_nudge(
+            &mut new_tensors, &[target_prefix.clone()], atl_prior, atl_seed_scale, device,
+        )?;
+        if nudged > 0 {
+            let prior_str: Vec<String> = atl_prior.iter().map(|v| format!("{:+.2}", v)).collect();
+            println!("[{}] [atl-seed] gentle router nudge on {} gate tensor(s) at new layer {} \
+                      (scale={:.3}, prior=[{}]).",
+                timestamp(), nudged, target_layer, atl_seed_scale, prior_str.join(","));
+        }
 
         config_json["num_layers"] = json!(new_layers);
         fs::write(config_path, serde_json::to_string_pretty(&config_json).unwrap())?;
@@ -1932,12 +2015,33 @@ fn train_cycle(
 
         // ── Best Checkpoint (save only when avg_loss improves) — LLB §11.6 ───
         if avg_loss < best_epoch_loss {
+            let improvement = best_epoch_loss - avg_loss; // nats gained vs previous ATL
             best_epoch_loss = avg_loss;
             last_best_epoch = total_epochs;
             save_checkpoint(&varmap, best_path)?;
             fs::write(best_meta_path, avg_loss.to_string())?;
             fs::write(&best_epoch_path, total_epochs.to_string())?;
-            println!("[{}] ★ New best epoch loss: {:.4} — best checkpoint saved.", timestamp(), avg_loss);
+
+            // ── Natural selection, brick 1: credit the experts that carried this
+            //    all-time-best epoch. Purely observational — no weight, optimizer,
+            //    or gate state is touched here; this only populates the scorekeeper
+            //    that Brick 2's (default-OFF) post-surgery nudge later reads.
+            if epoch_route_count > 0 {
+                let route_share: Vec<f32> = epoch_route_acc.iter()
+                    .map(|&s| s / epoch_route_count as f32)
+                    .collect();
+                evolution_manager.record_atl_credit(&route_share, improvement);
+                evolution_manager.save_state(evo_path); // persist credit immediately
+                let cred = evolution_manager.atl_credit_telemetry();
+                println!("[{}] ★ New best epoch loss: {:.4} (Δ{:.4}) — best saved. {}",
+                    timestamp(), avg_loss, improvement, cred);
+                if let Ok(mut f) = OpenOptions::new().create(true).append(true).open(log_path) {
+                    let _ = writeln!(f, "ATL_BEST epoch={} loss={:.4} improvement={:.4} {}",
+                        total_epochs, avg_loss, improvement, cred);
+                }
+            } else {
+                println!("[{}] ★ New best epoch loss: {:.4} — best checkpoint saved.", timestamp(), avg_loss);
+            }
         }
 
         // ── Spore ingestion — scan albert-spores for new collaborator checkpoints ─
@@ -2425,7 +2529,7 @@ fn main() -> Result<()> {
     loop {
         // Read current config — layer depth governs corpus selection; num_streams governs
         // whether cord surgery should fire before the next train cycle begins.
-        let (num_layers, num_streams) = {
+        let (num_layers, num_streams, num_experts) = {
             let cfg: Value = fs::read_to_string(config_path)
                 .ok()
                 .and_then(|s| serde_json::from_str(&s).ok())
@@ -2433,6 +2537,7 @@ fn main() -> Result<()> {
             (
                 cfg["num_layers"].as_u64().unwrap_or(3) as usize,
                 cfg["num_streams"].as_u64().unwrap_or(1) as usize,
+                cfg["num_experts"].as_u64().unwrap_or(12) as usize,
             )
         };
 
@@ -2458,7 +2563,17 @@ fn main() -> Result<()> {
             &mut global_step, &flags, &mut spore_manager
         )?;
         if needs_evolution {
-            let surgery_done = perform_surgery(config_path, checkpoint_path, best_path, &device, &flags.root)?;
+            // BRICK 2 input: the centered ATL-credit prior (all-zero, → no nudge, when
+            // --atl-seed-scale is unset or too few best epochs have accumulated).
+            let atl_prior = evolution_manager.atl_credit_prior(num_experts);
+            if flags.atl_seed_scale > 0.0 {
+                println!("[{}] [atl-seed] scale={:.3} active — {}",
+                    timestamp(), flags.atl_seed_scale, evolution_manager.atl_credit_telemetry());
+            }
+            let surgery_done = perform_surgery(
+                config_path, checkpoint_path, best_path, &device, &flags.root,
+                &atl_prior, flags.atl_seed_scale,
+            )?;
             if !surgery_done {
                 // Surgery was safely aborted (architecture mismatch). Do NOT promote the
                 // fib target or add a layer — re-enter the loop and keep training unchanged.
