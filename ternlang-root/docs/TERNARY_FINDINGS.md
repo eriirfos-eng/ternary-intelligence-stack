@@ -217,6 +217,46 @@ the engines are a fair test bed precisely because comparison is their hot path,
 and the result is that ternary helps exactly when the *problem* is ternary.
 Bricks: `desktop-metal/src/tjs.rs` (`ternary_bench`), `tcss.rs` (`bench_spec_cmp`).
 
+## F11 — Multiply-free, zero-skip ternary GEMM: the arithmetic win is real in the dense domain N1 predicted; wall-clock needs a kernel (2026-06-03)
+
+The positive bookend to N1. The keras `TernaryDense` export PR
+(keras-team/keras#22960) stores the kernel at 1.58 bits as `{-1, 0, +1}`. The
+matmul that reads it is a **dense, side-effect-free numeric structure with many
+zeros** — the exact shape N1 named as @sparseskip's true home. So we measured it
+head-on (`benchmarks/bench_ternary_gemm.py`, jax CPU, `Y = X[64,2048] @
+W[2048,2048]`).
+
+**Arithmetic (hardware-independent, exact):**
+- **100 % of the multiplies are eliminated** at every sparsity — a ternary
+  weight is `+1`, `-1`, or `0`, so there is nothing to multiply, only add /
+  subtract / skip.
+- **Adds collapse to exactly the non-zero fraction:** a 67 %-zero kernel does
+  **1/3** of the adds and none of the multiplies; a 90 %-zero kernel does
+  **1/10**. The multiply-free and zero-skip results were verified equal to
+  dense `X @ W` to < 1e-2 at every level.
+
+This is the contrast that makes N1 a *boundary* and not a dead end: in the
+CSS/AST domain the ternary delta was **0**; here, in dense compute, the delta is
+**every multiply and most of the adds**.
+
+**Wall-clock (the honest catch):** stock framework ops do **not** cash that win
+at realistic sparsity. Against XLA's fp32 BLAS matmul (~7 ms, flat across
+sparsity because BLAS computes the zeros anyway):
+- mask decomposition `X·W⁺ − X·W⁻`: ~2× **slower** (two BLAS matmuls).
+- jax CPU sparse zero-skip: slower until **~99 % zeros**, where it finally
+  crosses (1.76× at 99 %, 0.71× at 98 %).
+
+Trained ternary weights sit around 30–70 % zeros, well below that crossover, so
+the realized speedup lives in a **custom adds-only / bit-serial / LUT kernel**
+(the bitnet.cpp / T-MAC approach), not in a portable matmul. The 1.58-bit packed
+format the PR adds is exactly the substrate such a kernel reads.
+
+**Conclusion.** @sparseskip's compute win is **real and large as arithmetic** in
+precisely the domain N1 predicted, and the remaining gap to wall-clock is a
+kernel, not the math. F2/F6 (zero-weight inference, VRAM-bandwidth) tell the same
+story from the model and render side; this puts a measured GEMM number on it.
+Brick: `benchmarks/bench_ternary_gemm.py`.
+
 ---
 
 # Negative results & boundaries — ternary tested, did NOT win
