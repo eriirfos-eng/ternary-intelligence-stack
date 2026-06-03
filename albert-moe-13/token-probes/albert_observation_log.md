@@ -8614,3 +8614,4 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [iter 25] ~04:57 — WALD @ep4813 mass 8.248 (band-high, fill 22.9%). raw mean ~8.47, ep4814. ~3.4h: descent stalled on plateau, mass oscillating 8.229–8.248, no crossing below 8.1835.
 - [iter 26] ~05:04 — WALD silent, raw mean ~8.43, ep4815, mass ~8.24. descent parked on plateau, no crossing below 8.1835.
 - [iter 27] ~05:11 — WALD @ep4816 mass 8.268 (NEW band-high, ceiling drifting up). raw mean steady ~8.43, ep4817, no collapse. descent stalled ~0.08 above 8.1835, marginally rising. verdict firming: gentle reset alone (fn-preserving surgery) did NOT beat prior best without intervention.
+- [iter 28] ~05:18 — unchanged. mass 8.268 (parked at elevated band-high), raw mean ~8.45, ep4818. descent stalled, no crossing below 8.1835. ~4h watch.
