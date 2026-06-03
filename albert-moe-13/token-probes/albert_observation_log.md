@@ -8697,3 +8697,5 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
   dead_low 3.00-6.75, dead_high 9.25+ — consistent, no severance spike, no stall/divergence.
   chip 4.6541 flat. Healthy. (Watch re-armed at 15m cadence per Simeon; lighthouse OS work
   shipped + pushed to main this session.)
+
+- [tick 2026-06-03T21:46:57Z] live (ntfy): ep4918->ep4927, WALD firing normally (ep4926 brief fill blip 22.9% @ step9000, back to 20.8% @ ep4927), mass steady ~8.17. No fresh EP_AVG print since 8.0895 (ep4918) - descent leg intact, no stall/divergence. chip 4.6541 flat. Healthy. [HONEST FLAG: a concurrent dashboard/data-reconcile process is actively rewriting this repo; an earlier copy of this tick was clobbered by its working-tree reset, re-committed here.]
