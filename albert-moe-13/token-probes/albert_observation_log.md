@@ -8610,3 +8610,4 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [iter 21] ~04:29 — WALD single fire @ep4809, mass 8.243 (bounced from 8.229). raw mean faint downtick (ep4809=8.41 vs ~8.45). still oscillating band 8.229–8.243, no crossing below 8.1835.
 - [iter 22] ~04:36 — WALD @ep4809/4810, mass 8.247 (band-high, up from 8.229). raw mean ~8.47, ep4811. oscillating 8.229–8.247, no crossing below 8.1835.
 - [iter 23] ~04:43 — mass 8.247 (no new WALD), raw mean swinging 8.40–8.47 in band, ep4812. ~3h steady oscillation 8.229–8.247, no crossing below 8.1835.
+- [iter 24] ~04:50 — WALD @ep4812, mass 8.236 (eased back mid-band). raw mean ~8.46, ep4813. oscillating 8.229–8.247, no crossing below 8.1835.
