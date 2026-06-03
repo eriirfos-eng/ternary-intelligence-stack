@@ -8687,3 +8687,13 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
   holds, it's a genuine, measurable sign that ternary sparse routing makes compute
   data-dependent (a real ternary-vs-dense distinction) — candidate finding, not a claim
   yet. TODO: log per-batch (vram, n_active_experts, mean_zero_frac) and regress.
+
+### 15-minute watch (re-armed) — 2026-06-03 evening
+
+- [tick Wed/2026-06-03T21:27:51Z/1780522071] live (ntfy albert-rfi-irfos, 55 msgs/24h): albert at ep4918, EP_AVG
+  **8.0895** d-0.0292, still descending. This is BELOW the prior best ATL 8.1835 (ep4670)
+  and below this morning's fresh 8.1539 (ep4832) — the descent leg is holding, new floor
+  not yet settled. WALD firing steadily ep4908-4918 at fill 20.8%, mass ~8.16-8.17,
+  dead_low 3.00-6.75, dead_high 9.25+ — consistent, no severance spike, no stall/divergence.
+  chip 4.6541 flat. Healthy. (Watch re-armed at 15m cadence per Simeon; lighthouse OS work
+  shipped + pushed to main this session.)
