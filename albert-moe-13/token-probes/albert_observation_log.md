@@ -8594,3 +8594,4 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [iter 5] ~02:37 — mass 8.237 (osc 8.23–8.24), raw mean ~8.42, ep4791. NO crossing below 8.1835 yet; steady high-variance plateau.
 - [iter 6] ~02:44 — mass 8.228 (NEW night-low; trail 8.255→8.239→8.230→8.228). raw mean ~8.40. slow mass descent toward 8.1835, ~0.044 to go. no crossing/collapse.
 - [iter 7] ~02:51 — mass 8.228 (holding, no new low this tick), raw mean ~8.44, ep4794. epochs slowing (~2-3min each at 29L). no crossing/event.
+- [iter 8] ~02:58 — ★ WALD QUIET: no severance events in 13m (was firing every epoch 4783–4792). WALD is reactive to spikes, so silence = the post-29L spike band is narrowing, whiplash subsiding. raw mean steady ~8.45, ep4795. last known mass 8.228. positive turn.
