@@ -8626,3 +8626,4 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [iter 37] ~06:21 — honest correction: descent did NOT cleanly continue. ep4827=8.37 but ep4828 bounced to 8.51 → still oscillating 8.37–8.51, marginally lower floor at best. mass night-low 8.226 holds, no crossing below 8.1835. stalled-plateau read stands.
 - [iter 38] ~06:28 — WALD silent, raw mean oscillating 8.37–8.51 (~8.42), ep4829, mass 8.226. stalled plateau, no crossing below 8.1835. ~5.2h, 38 iters.
 - [iter 39] ~06:35 — WALD @ep4830 mass 8.251 (off night-low). raw mean oscillating 8.42–8.51, ep4830. stalled plateau, no crossing below 8.1835. ~5.4h, 39 iters.
+- [iter 40] ~06:42 — WALD @ep4830/4831, mass 8.251–8.255, raw mean ~8.47, ep4832. stalled plateau, no crossing below 8.1835. ~5.5h, 40 iters.
