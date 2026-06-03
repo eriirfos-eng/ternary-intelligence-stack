@@ -8619,3 +8619,4 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [iter 30] ~05:32 — WALD @ep4819 mass 8.239 (eased back). raw mean ~8.45, ep4820. oscillating 8.239–8.268, descent stalled, no crossing below 8.1835. ~4.2h watch, 30 iters.
 - [iter 31] ~05:39 — unchanged. WALD @ep4819/4820, mass 8.239–8.248, raw mean ~8.47, ep4821. descent stalled, no crossing below 8.1835. ~4.4h, 31 iters.
 - [iter 32] ~05:46 — WALD silent, raw mean ~8.45, ep4822, mass ~8.24. descent stalled, no crossing below 8.1835. ~4.5h watch.
+- [iter 33] ~05:53 — WALD @ep4822/4823, mass 8.241–8.251, raw mean ~8.43, ep4824. descent stalled, no crossing below 8.1835. ~4.6h, 33 iters, dawn.
