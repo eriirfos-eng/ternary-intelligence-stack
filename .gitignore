@@ -75,3 +75,4 @@ albert-moe-13/crates/moe-core/training.log
 albert-moe-13/models/bible_ternary_v*.safetensors
 albert-moe-13/models/registry/
 dashboard/three.min.js
+albert-moe-13/lofty/
