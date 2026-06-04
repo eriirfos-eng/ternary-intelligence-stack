@@ -38,13 +38,15 @@ Simeon leads the architectural vision and research direction of the Ternary Inte
 
 Nikoletta is the team's critical evaluator and strategic anchor. Her core directive is truth over comfort. She does not soften assessments — if something is genuinely flawed, she says so plainly; if she calls something good, it earned that verdict without diplomatic cushioning. In a field flooded with hype, this makes her the most reliable signal the team has.
 
-She oversees the full external footprint of the stack: global partnerships, fundraising, fund application status (including SPRIND and EU grant pipelines), lead management, and social media presence. She ensures the stack's public narrative stays grounded in what TIS actually does — not what AI hype cycles demand.
+She oversees the full external footprint of the stack: global partnerships, fundraising, fund application status (including SPRIND and EU grant pipelines), and lead management. She ensures the stack's public narrative stays grounded in what TIS actually does — not what AI hype cycles demand.
+
+Nikoletta owns the full talent pipeline. When a candidate reaches out or a CV comes in, she is the first line: she reviews applications, runs the initial calls, makes the selection assessment, and decides who advances. She owns the process from first contact to handoff — keeping recruitment standards rigorous and the bar honest.
 
 Nikoletta leads EU AI Act alignment, regulatory positioning, and international strategic partnerships, keeping TIS on the right side of both compliance and credibility.
 
 | Role | Focus |
 |---|---|
-| Strategic Outreach · Regulatory Alignment · Fundraising | EU AI Act Compliance · International Relations · Partnerships · Lead Management · Social Media |
+| Strategic Outreach · Regulatory Alignment · Fundraising · Talent Acquisition | EU AI Act Compliance · International Relations · Partnerships · Lead Management · Recruitment Pipeline |
 
 **Academic Background**
 - **PTE University, Pécs, Hungary** (Pécsi Tudományegyetem) — University of Pécs
