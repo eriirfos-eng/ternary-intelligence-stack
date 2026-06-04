@@ -8753,3 +8753,5 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [tick 2026-06-04T04:43:49Z] ntfy current (WALD ep4988 mass 8.149, 2min gap) - momentary fill bump to 22.9 pct + dead_high to 9.50 (same harmless blip as ep4926). batch_history (mtime 04:42) ep4989.2, loss 7.83-9.46 normal band. Healthy, advancing, no stall/divergence.
 
 - [tick 2026-06-04T04:58:48Z] No change: ntfy lagging (ep4988, 17min gap), training healthy via batch_history (mtime 04:57) ep4991.4, loss 7.84-8.62 normal band. Advancing, no stall/divergence.
+
+- [WATCH ENDED 2026-06-04T05:12:23Z] 15-min overnight watch concluded (Simeon back at the helm). Summary: albert held healthy the WHOLE night, ep4918 -> ep4991, descent intact (batch-loss lows down to ~7.06-7.19), no stall, no divergence at any tick. Only issue was the ntfy telemetry PUBLISHER (flaky/intermittent for ~hours) - training itself was never affected; local batch_history was the reliable signal throughout. Recommend a restart of the ntfy publisher on the Modal side.
