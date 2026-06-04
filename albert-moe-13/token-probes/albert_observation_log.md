@@ -8723,3 +8723,5 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [tick 2026-06-04T00:58:40Z] No change: ntfy still down (~2h), training healthy via batch_history (mtime 00:58) ep4956.8, loss 8.55-8.85 normal band. Advancing, no stall/divergence.
 
 - [tick 2026-06-04T01:13:51Z] Batch loss NEW LOW for this watch: 7.06 (was 7.81 earlier) - descent deepening. batch_history live (mtime 01:12) ep4958.9. ntfy flickered back (1 WALD ep4956 mass 8.177 fill 20.8  (prev line truncated by a shell printf escape) ...fill ~21 pct, still lagging/intermittent. Net: healthy, no stall/divergence.
+
+- [tick 2026-06-04T01:28:43Z] ntfy recovering - fresh WALD ep4960 mass 8.169 fill ~21 pct, gap down to 1min (catching up). batch_history (mtime 01:27) ep4961, loss 8.09-8.71 normal band (back up from the 7.06 dip, just noise). Healthy, advancing, no stall/divergence.
