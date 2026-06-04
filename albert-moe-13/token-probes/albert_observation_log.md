@@ -8741,3 +8741,5 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [tick 2026-06-04T03:13:57Z] No change: ntfy intermittent (WALD ep4974 mass 8.180, 9min gap), training healthy via batch_history (mtime 03:12) ep4976.2, loss 8.17-8.42 normal band. Advancing, no stall/divergence.
 
 - [tick 2026-06-04T03:28:57Z] No change: ntfy lagging (ep4974, 24min gap), training healthy via batch_history (mtime 03:27) ep4978.3, loss dipping 7.33 (descent intact). No stall/divergence.
+
+- [tick 2026-06-04T03:43:43Z] No change: ntfy silent, training healthy via batch_history (mtime 03:42) ep4980.5, loss 7.42-8.02 normal band. Advancing, no stall/divergence.
