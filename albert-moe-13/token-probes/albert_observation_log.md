@@ -8719,3 +8719,5 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [tick 2026-06-04T00:28:42Z] No change in posture: ntfy still down (~1h), training healthy via batch_history (mtime 00:28) ep4952.45, loss dipping to 7.81 (descent continuing). No stall/divergence.
 
 - [tick 2026-06-04T00:43:44Z] No change: ntfy still down (~1.5h), training healthy via batch_history (mtime 00:43) ep4954.6, loss 8.08-8.30 normal band. Advancing, no stall/divergence.
+
+- [tick 2026-06-04T00:58:40Z] No change: ntfy still down (~2h), training healthy via batch_history (mtime 00:58) ep4956.8, loss 8.55-8.85 normal band. Advancing, no stall/divergence.
