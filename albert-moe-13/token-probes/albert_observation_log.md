@@ -8715,3 +8715,5 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [tick 2026-06-03T23:58:44Z] ntfy INTERMITTENT/lagging - came back but last msg ep4945 (15min gap), behind the real epoch. batch_history fresh (mtime 23:57) ep4948.08, loss 8.22-8.62 normal noise, descending. Training healthy + advancing; ntfy publisher flaky so leaning on local data. No stall/divergence.
 
 - [tick 2026-06-04T00:18:29Z] ntfy silent again (0 msgs/30m - publisher stays flaky/intermittent). batch_history live (mtime 00:18) ep4951.00, loss 8.27-9.04 (9.04 = normal epoch-boundary batch spike). Training advancing healthy, no stall/divergence. Local data remains the reliable signal; ntfy publisher needs a restart on the Modal side when convenient (training unaffected).
+
+- [tick 2026-06-04T00:28:42Z] No change in posture: ntfy still down (~1h), training healthy via batch_history (mtime 00:28) ep4952.45, loss dipping to 7.81 (descent continuing). No stall/divergence.
