@@ -351,21 +351,34 @@ fn expert_grad_variance(
     let all_vars = varmap.data().lock().unwrap();
     let mut layer_expert_sq: Vec<Vec<f32>> = vec![vec![0.0; num_experts]; num_layers];
     for (name, var) in all_vars.iter() {
-        // Match: blocks.{L}.moe.experts.{E}.c_fc.weight or c_proj.weight
+        // Match single-stream:  blocks.{li}.moe.experts.{ei}.{c_fc|c_proj}.weight
+        //   or  dual-stream:    blocks.{li}.{stream_a|stream_b}.moe.experts.{ei}.{c_fc|c_proj}.weight
         let parts: Vec<&str> = name.split('.').collect();
-        if parts.len() >= 6
+        let (li_str, ei_str) = if parts.len() >= 7
             && parts[0] == "blocks"
             && parts[2] == "moe"
             && parts[3] == "experts"
             && (parts[5] == "c_fc" || parts[5] == "c_proj")
             && parts.last() == Some(&"weight")
         {
-            if let (Ok(li), Ok(ei)) = (parts[1].parse::<usize>(), parts[4].parse::<usize>()) {
-                if li < num_layers && ei < num_experts {
-                    if let Some(g) = grads.get(var.as_tensor()) {
-                        if let Ok(s) = g.sqr().and_then(|t| t.sum_all()).and_then(|t| t.to_scalar::<f32>()) {
-                            if s.is_finite() { layer_expert_sq[li][ei] += s; }
-                        }
+            (parts[1], parts[4])
+        } else if parts.len() >= 8
+            && parts[0] == "blocks"
+            && (parts[2] == "stream_a" || parts[2] == "stream_b")
+            && parts[3] == "moe"
+            && parts[4] == "experts"
+            && (parts[6] == "c_fc" || parts[6] == "c_proj")
+            && parts.last() == Some(&"weight")
+        {
+            (parts[1], parts[5])
+        } else {
+            continue;
+        };
+        if let (Ok(li), Ok(ei)) = (li_str.parse::<usize>(), ei_str.parse::<usize>()) {
+            if li < num_layers && ei < num_experts {
+                if let Some(g) = grads.get(var.as_tensor()) {
+                    if let Ok(s) = g.sqr().and_then(|t| t.sum_all()).and_then(|t| t.to_scalar::<f32>()) {
+                        if s.is_finite() { layer_expert_sq[li][ei] += s; }
                     }
                 }
             }
@@ -393,26 +406,38 @@ fn expert_wd_ratio(
     let mut layer_expert_grad_sq:   Vec<Vec<f32>> = vec![vec![0.0; num_experts]; num_layers];
     let mut layer_expert_weight_sq: Vec<Vec<f32>> = vec![vec![0.0; num_experts]; num_layers];
     for (name, var) in all_vars.iter() {
+        // Match single-stream:  blocks.{li}.moe.experts.{ei}.{c_fc|c_proj}.weight
+        //   or  dual-stream:    blocks.{li}.{stream_a|stream_b}.moe.experts.{ei}.{c_fc|c_proj}.weight
         let parts: Vec<&str> = name.split('.').collect();
-        if parts.len() >= 6
+        let (li_str, ei_str) = if parts.len() >= 7
             && parts[0] == "blocks"
             && parts[2] == "moe"
             && parts[3] == "experts"
             && (parts[5] == "c_fc" || parts[5] == "c_proj")
             && parts.last() == Some(&"weight")
         {
-            if let (Ok(li), Ok(ei)) = (parts[1].parse::<usize>(), parts[4].parse::<usize>()) {
-                if li < num_layers && ei < num_experts {
-                    // Gradient norm contribution
-                    if let Some(g) = grads.get(var.as_tensor()) {
-                        if let Ok(s) = g.sqr().and_then(|t| t.sum_all()).and_then(|t| t.to_scalar::<f32>()) {
-                            if s.is_finite() { layer_expert_grad_sq[li][ei] += s; }
-                        }
+            (parts[1], parts[4])
+        } else if parts.len() >= 8
+            && parts[0] == "blocks"
+            && (parts[2] == "stream_a" || parts[2] == "stream_b")
+            && parts[3] == "moe"
+            && parts[4] == "experts"
+            && (parts[6] == "c_fc" || parts[6] == "c_proj")
+            && parts.last() == Some(&"weight")
+        {
+            (parts[1], parts[5])
+        } else {
+            continue;
+        };
+        if let (Ok(li), Ok(ei)) = (li_str.parse::<usize>(), ei_str.parse::<usize>()) {
+            if li < num_layers && ei < num_experts {
+                if let Some(g) = grads.get(var.as_tensor()) {
+                    if let Ok(s) = g.sqr().and_then(|t| t.sum_all()).and_then(|t| t.to_scalar::<f32>()) {
+                        if s.is_finite() { layer_expert_grad_sq[li][ei] += s; }
                     }
-                    // Weight norm contribution (for wd equivalent)
-                    if let Ok(s) = var.as_tensor().sqr().and_then(|t| t.sum_all()).and_then(|t| t.to_scalar::<f32>()) {
-                        if s.is_finite() { layer_expert_weight_sq[li][ei] += s; }
-                    }
+                }
+                if let Ok(s) = var.as_tensor().sqr().and_then(|t| t.sum_all()).and_then(|t| t.to_scalar::<f32>()) {
+                    if s.is_finite() { layer_expert_weight_sq[li][ei] += s; }
                 }
             }
         }

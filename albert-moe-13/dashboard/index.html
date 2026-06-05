@@ -696,7 +696,7 @@
         }
         #anomaly-label {
             font-size: 9px;
-            color: var(--muted2);
+            color: #ffffff;
             text-transform: uppercase;
             letter-spacing: 0.8px;
             flex-shrink: 0;
@@ -947,7 +947,7 @@
         </span>
     </div>
     <div class="tb-cell controls">
-        <button id="muteBtn" title="Toggle sound" style="background:none;border:none;cursor:pointer;padding:3px 5px;color:#505050;display:flex;align-items:center">
+        <button id="muteBtn" title="Toggle sound" style="background:none;border:none;cursor:pointer;padding:3px 5px;color:#ffffff;display:flex;align-items:center">
             <svg id="muteIcon" viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
                 <path d="M1 4h2l3-2v8L3 8H1z"/>
                 <path id="muteWave1" d="M8 4.5c.8.5 1 1 1 1.5s-.2 1-.8 1.5"/>
@@ -955,7 +955,7 @@
                 <line id="muteLine" x1="8" y1="4" x2="11" y2="9" style="display:none"/>
             </svg>
         </button>
-        <button id="annotToggleBtn" title="Manual annotations ON — click to hide" style="background:none;border:none;cursor:pointer;padding:3px 5px;display:flex;align-items:center;color:#22d3ee;">
+        <button id="annotToggleBtn" title="Manual annotations ON — click to hide" style="background:none;border:none;cursor:pointer;padding:3px 5px;display:flex;align-items:center;color:#ffffff;">
             <svg viewBox="0 0 12 12" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="2" y1="10" x2="5" y2="7"/>
                 <line x1="5" y1="7" x2="9.5" y2="2.5"/>
@@ -1105,6 +1105,7 @@
 
 <div id="anomaly-strip">
     <span id="anomaly-label">EVENTS</span>
+    <button id="anomaly-clear-btn" title="Clear all events" style="background:none;border:none;cursor:pointer;padding:2px 5px;color:#6b7280;display:flex;align-items:center;font-size:12px;line-height:1;flex-shrink:0;font-weight:600;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#6b7280'">&#x2715;</button>
     <div id="anomaly-scroll">
         <span style="color:#2a3a50;font-size:10px;letter-spacing:1px">WAITING FOR ANOMALY DATA</span>
     </div>
@@ -1311,6 +1312,10 @@
         _anomalyRenderPending = true;
         requestAnimationFrame(() => { _anomalyRenderPending = false; renderAnomalyFeed(); });
     }
+    function clearAnomalyEvents() {
+        anomalyEvents = [];
+        scheduleAnomalyRender();
+    }
 
     let batchLog         = [];   // [{step,global_epoch,batch,layers,loss,grad_norm,layer_norms,route_weights,entropy,tele_sparsity,tele_activity}]
     let epochLog         = [];   // [{local_epoch,global_epoch,layers,avg_loss,clipped,skipped}]
@@ -1355,7 +1360,7 @@
     let spikeFiredEp  = -1;
     let waldEvents       = [];   // permanent dead-zone markers — never capped
     let waldVisible      = localStorage.getItem('waldVisible') !== '0'; // default on
-    let annotVisible     = true; // manual drawing annotations — reset to visible on page load
+    let annotVisible     = localStorage.getItem('annotVisible') !== '0'; // persisted across reloads
     let lastWaldDeadLow  = '';   // dead_low string of last fired Wald event
     let lastWaldDeadHigh = '';   // dead_high string of last fired Wald event
     let sporeEvents      = [];   // permanent spore ingestion markers
@@ -5955,7 +5960,8 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
         document.getElementById('muteWave1').style.display = muted ? 'none' : '';
         document.getElementById('muteWave2').style.display = muted ? 'none' : '';
         document.getElementById('muteLine').style.display  = muted ? ''     : 'none';
-        muteIcon.style.color = muted ? '#ef4444' : '#505050';
+        muteBtn.style.color  = muted ? '#ef4444' : '#ffffff';
+        muteBtn.style.filter = muted ? 'none' : 'drop-shadow(0 0 4px rgba(255,255,255,0.5))';
         if (muted) stopSiren();
     }
     applyMuteUI();
@@ -5970,8 +5976,9 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
 
     const waldToggleBtn = document.getElementById('waldToggleBtn');
     function applyWaldToggleUI() {
-        waldToggleBtn.style.color = waldVisible ? '#4ade80' : '#374151';
-        waldToggleBtn.style.opacity = waldVisible ? '1' : '0.45';
+        waldToggleBtn.style.color  = waldVisible ? '#ffffff' : '#4b5563';
+        waldToggleBtn.style.filter = waldVisible ? 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' : 'none';
+        waldToggleBtn.style.opacity = '1';
         waldToggleBtn.title = waldVisible ? 'WALD markers ON — click to hide' : 'WALD markers OFF — click to show';
     }
     applyWaldToggleUI();
@@ -5985,13 +5992,15 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
 
     const annotToggleBtn = document.getElementById('annotToggleBtn');
     function applyAnnotToggleUI() {
-        annotToggleBtn.style.color   = annotVisible ? '#22d3ee' : '#374151';
-        annotToggleBtn.style.opacity = annotVisible ? '1' : '0.45';
+        annotToggleBtn.style.color  = annotVisible ? '#ffffff' : '#4b5563';
+        annotToggleBtn.style.filter = annotVisible ? 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' : 'none';
+        annotToggleBtn.style.opacity = '1';
         annotToggleBtn.title = annotVisible ? 'Manual annotations ON — click to hide' : 'Manual annotations OFF — click to show';
     }
     applyAnnotToggleUI();
     annotToggleBtn.addEventListener('click', () => {
         annotVisible = !annotVisible;
+        localStorage.setItem('annotVisible', annotVisible ? '1' : '0');
         applyAnnotToggleUI();
         requestAnimationFrame(() => chart.render());
     });
