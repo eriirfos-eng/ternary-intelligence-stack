@@ -16,8 +16,30 @@ mkdir -p /data/kpi
 ) &
 KPI_PID=$!
 
-# Kill the background Spine loop when this script exits (crash or SIGTERM from Fly.io)
-trap "kill $KPI_PID 2>/dev/null; wait $KPI_PID 2>/dev/null" EXIT
+# Local Watchdog: Kills the API if it hangs for 3 consecutive checks (30s)
+# This triggers Fly.io's auto-restart policy.
+(
+  echo "[Watchdog] Starting stability monitor..."
+  FAIL_COUNT=0
+  while true; do
+    sleep 10
+    # Try to ping the health endpoint locally
+    if curl -sf http://localhost:8080/health > /dev/null; then
+      FAIL_COUNT=0
+    else
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+      echo "[Watchdog] Health check failed ($FAIL_COUNT/3)"
+      if [ $FAIL_COUNT -ge 3 ]; then
+        echo "[Watchdog] API hung. Killing process for auto-restart."
+        kill -9 $(pgrep ternlang-api)
+      fi
+    fi
+  done
+) &
+WATCHDOG_PID=$!
+
+# Kill background processes when this script exits
+trap "kill $KPI_PID $WATCHDOG_PID 2>/dev/null; wait $KPI_PID $WATCHDOG_PID 2>/dev/null" EXIT
 
 # Start the Rust API (exec replaces this shell process; trap still fires on exit)
 echo "[API] Starting ternlang-api on port $PORT..."
