@@ -23,6 +23,10 @@ import urllib.request
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _VOL  = "albert-vol"
+# Sentinel a streaming `albert-train` run's watchdog honors: while a checkpoint pull is hogging the
+# connection, the silenced training stream must NOT be mistaken for a hang. Kept fresh during the
+# download and removed when it ends; the watchdog only honors it while its mtime is recent.
+_PULL_LOCK = os.path.join(os.path.expanduser("~/.albert"), "pull.active")
 
 _UPLOADS = [
     # (local path relative to albert-moe-13/, remote path on volume)
@@ -90,6 +94,8 @@ def _pull_file(remote: str, local_abs: str, timeout_s: int = 600) -> int:
     def _tick():
         while not _done.wait(5):
             print(".", end="", flush=True)
+            try: os.utime(_PULL_LOCK, None)   # keep the watchdog's pull sentinel fresh mid-download
+            except OSError: pass
     threading.Thread(target=_tick, daemon=True).start()
 
     try:
@@ -113,17 +119,26 @@ def _pull_file(remote: str, local_abs: str, timeout_s: int = 600) -> int:
 def cmd_pull():
     print("[pull] downloading latest checkpoint from volume ...")
     print("       (dots = download in progress; large .safetensors can take several minutes)")
-    for remote, local in _DOWNLOADS:
-        local_abs = os.path.join(_HERE, local)
-        print(f"\n  {remote}  ->  {local}")
-        # Large safetensors files (~800 MB) get 10 minutes; small metadata files get 60 s
-        timeout = 600 if remote.endswith(".safetensors") else 60
-        rc = _pull_file(remote, local_abs, timeout_s=timeout)
-        if rc != 0:
-            if "best" in os.path.basename(remote):
-                print(f"  (skip) no best-checkpoint on volume yet — {os.path.basename(remote)} not written")
-            else:
-                print(f"  WARNING: could not pull {remote} (exit {rc})")
+    # Raise the pull sentinel so a concurrent streaming run's watchdog defers its stall-kill: this
+    # big download silences the training stream AND chokes the watchdog's container probe, which
+    # would otherwise look exactly like a hang. The ticker keeps it fresh; finally clears it.
+    os.makedirs(os.path.dirname(_PULL_LOCK), exist_ok=True)
+    open(_PULL_LOCK, "w").close()
+    try:
+        for remote, local in _DOWNLOADS:
+            local_abs = os.path.join(_HERE, local)
+            print(f"\n  {remote}  ->  {local}")
+            # Large safetensors files (~800 MB) get 10 minutes; small metadata files get 60 s
+            timeout = 600 if remote.endswith(".safetensors") else 60
+            rc = _pull_file(remote, local_abs, timeout_s=timeout)
+            if rc != 0:
+                if "best" in os.path.basename(remote):
+                    print(f"  (skip) no best-checkpoint on volume yet — {os.path.basename(remote)} not written")
+                else:
+                    print(f"  WARNING: could not pull {remote} (exit {rc})")
+    finally:
+        try: os.remove(_PULL_LOCK)
+        except OSError: pass
     print("\n[pull] done")
 
 

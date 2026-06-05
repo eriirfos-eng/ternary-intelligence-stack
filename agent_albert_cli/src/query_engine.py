@@ -31,7 +31,7 @@ class QueryEngineConfig:
     compact_after_turns: int = 12
     structured_output: bool = False
     structured_retry_limit: int = 2
-    model: str = "albert:latest"
+    model: str = "qwen3:0.6b"
     lite_mode: bool = False
 
 @dataclass(frozen=True)
