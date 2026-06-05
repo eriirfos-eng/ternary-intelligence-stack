@@ -32,12 +32,15 @@
             --red:     #ef4444;
             --blue:    #3b82f6;
             --shadow:  0 4px 20px rgba(0,0,0,0.5);
+            --font-sans: 'Inter', 'Inter Display', system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            --tip-sub: #cbd5e1;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background: var(--bg);
             color: var(--text);
-            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            font-family: var(--font-sans);
             font-size: 12px;
             height: 100vh;
             display: flex;
@@ -480,8 +483,8 @@
             position: fixed;
             background: var(--bg2);
             border: 1px solid var(--border2);
-            color: var(--text);
-            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            color: #ffffff;
+            font-family: var(--font-sans);
             font-size: 11px;
             padding: 8px 12px;
             border-radius: 10px;
@@ -861,8 +864,8 @@
             position: fixed;
             background: var(--bg2);
             border: 1px solid var(--border2);
-            color: var(--text);
-            font-family: inherit;
+            color: #ffffff;
+            font-family: var(--font-sans);
             font-size: 11px;
             padding: 6px 10px;
             border-radius: 8px;
@@ -2482,8 +2485,10 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                 legend: { display: false },
                 tooltip: {
                     backgroundColor: '#0d1117',
-                    bodyColor: '#94a3b8',
+                    bodyColor: '#ffffff',
                     titleColor: '#22d3ee',
+                    bodyFont: { family: "'Inter','Inter Display',system-ui,-apple-system,'Segoe UI',sans-serif", weight: '600' },
+                    titleFont: { family: "'Inter','Inter Display',system-ui,-apple-system,'Segoe UI',sans-serif", weight: '700' },
                     callbacks: {
                         label: c => ` loss ${c.parsed.y.toFixed(4)}  @ epoch ${c.parsed.x.toFixed(3)}`
                     }
@@ -4246,7 +4251,7 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             cell.querySelector('.expert-act').textContent = pctStr + '%';
             cell.onmouseenter = ev => showTip(ev,
                 `<b>E${e} · ${eName}</b><br>` +
-                `<span style="color:#64748b;font-size:10px">${EXPERT_DESC[e] || ''}</span><br><br>` +
+                `<span style="color:var(--tip-sub);font-size:10px">${EXPERT_DESC[e] || ''}</span><br><br>` +
                 `${EXPERT_HUMAN[e] || ''}<br><br>` +
                 `${actLabel}: <b>${pctStr}%</b> (relative to most-dominant expert in window)`);
         });
@@ -4865,8 +4870,8 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             pill.addEventListener('mouseenter', e => showTip(e,
                 (ICON_SVG[ev.icon] ? '<span style="display:inline-flex;align-items:center;gap:5px;vertical-align:middle">' + ICON_SVG[ev.icon] + '</span> ' : '') +
                 '<b>' + esc(ev.text) + '</b><br>' +
-                esc(ev.detail) + '<br><span style="color:#64748b">' + esc(ev.ts) + '</span>' +
-                (ev.cx != null ? '<br><span style="color:#334155;font-size:10px">click to locate on chart</span>' : '')));
+                esc(ev.detail) + '<br><span style="color:var(--tip-sub)">' + esc(ev.ts) + '</span>' +
+                (ev.cx != null ? '<br><span style="color:var(--accent);font-size:10px">click to locate on chart</span>' : '')));
             pill.addEventListener('mouseleave', hideTip);
             pill.addEventListener('click', () => {
                 if (ev.cx == null) return;
@@ -5635,7 +5640,7 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
         banner.id = 'notif-banner';
         banner.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:9999;' +
             'background:#0d1f2d;border:1px solid #22d3ee44;color:#22d3ee;' +
-            'font-family:monospace;font-size:10px;padding:7px 12px;border-radius:6px;' +
+            'font-family:var(--font-sans);font-size:10px;padding:7px 12px;border-radius:6px;' +
             'cursor:pointer;letter-spacing:.5px;';
         banner.textContent = '𒀭  enable sounds & notifications';
         banner.addEventListener('click', () => {
@@ -5735,11 +5740,15 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             .then(r => r.ok ? r.text() : '').catch(() => ''),
     ]).then(([batchText, epochText]) => {
         let _lastPreseedX = -Infinity;
+        let _rawPreseedATL = Infinity; // unfiltered — tracks true historical minimum regardless of PRESEED_LOSS_MIN floor
         for (const line of batchText.split('\n')) {
             const comma = line.indexOf(',');
             if (comma < 0) continue;
             const x = parseFloat(line.slice(0, comma));
             const y = parseFloat(line.slice(comma + 1));
+            if (isFinite(x) && isFinite(y) && y > 1.0 && y < 50) {
+                if (y < _rawPreseedATL) _rawPreseedATL = y;
+            }
             if (isFinite(x) && isFinite(y) && x >= PRESEED_EPOCH_MIN && y >= PRESEED_LOSS_MIN && y < 50 && x !== _lastPreseedX && !(x >= PRESEED_NOTCH_LO && x <= PRESEED_NOTCH_HI)) {
                 smaLog.push({ x, y });
                 _lastPreseedX = x;
@@ -5777,8 +5786,11 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             document.getElementById('v-tns').textContent = _preseedTns.toLocaleString();
         else if (_tnsStored)
             document.getElementById('v-tns').textContent = parseInt(_tnsStored).toLocaleString();
-        // Derive true ATL floors from pre-seed data — these never reset
+        // Derive true ATL floors from pre-seed data — these never reset.
+        // _rawPreseedATL is the unfiltered minimum (ignores PRESEED_LOSS_MIN floor) so ATL
+        // stays correct even after training crosses below the visualization floor.
         for (const pt of smaLog) { if (pt.y < allTimeBestBatch) allTimeBestBatch = pt.y; }
+        if (_rawPreseedATL < allTimeBestBatch) allTimeBestBatch = _rawPreseedATL;
         for (const e  of epochLog) { if (e.avg_loss < allTimeBestEpoch) allTimeBestEpoch = e.avg_loss; }
         // Seed session trackers so RUN_START / restart never shows a value above the true historical min
         bestLoss     = allTimeBestBatch;
@@ -8464,7 +8476,7 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
                     if (!gNames.length && !rNames.length) tip += ' · all normal';
                     if (!_tooltip) {
                         _tooltip = document.createElement('div');
-                        _tooltip.style.cssText = 'position:fixed;background:rgba(10,20,35,0.93);color:#b0d0f0;font:10px monospace;padding:4px 9px;border-radius:3px;border:1px solid rgba(60,120,200,0.4);pointer-events:none;z-index:9999;white-space:nowrap;';
+                        _tooltip.style.cssText = 'position:fixed;background:rgba(10,20,35,0.93);color:#ffffff;font:600 10px var(--font-sans);padding:4px 9px;border-radius:3px;border:1px solid rgba(60,120,200,0.4);pointer-events:none;z-index:9999;white-space:nowrap;';
                         document.body.appendChild(_tooltip);
                     }
                     _tooltip.textContent = tip;
