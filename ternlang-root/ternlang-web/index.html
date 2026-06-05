@@ -226,6 +226,23 @@
       #mobile-pagenav { display: none !important; }
     }
   </style>
+<!-- Lighthouse first-party tracker — ternlang.com -->
+<script>
+(function () {
+  var q = new URLSearchParams(window.location.search);
+  var img = new Image();
+  img.src = 'https://ternlang.com/lighthouse/api/track/pixel.gif'
+    + '?p='            + encodeURIComponent(window.location.pathname)
+    + '&r='            + encodeURIComponent(document.referrer || '')
+    + '&utm_source='   + encodeURIComponent(q.get('utm_source')   || '')
+    + '&utm_medium='   + encodeURIComponent(q.get('utm_medium')   || '')
+    + '&utm_campaign=' + encodeURIComponent(q.get('utm_campaign') || '');
+  img.width = 1; img.height = 1;
+  img.style.cssText = 'position:absolute;left:-9999px;pointer-events:none';
+  img.referrerPolicy = 'no-referrer-when-downgrade';
+  document.body.appendChild(img);
+})();
+</script>
 </head>
 <body class="bg-t_bg text-t_text antialiased">
 

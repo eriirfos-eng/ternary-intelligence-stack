@@ -777,6 +777,12 @@ static KPI_HTML:        &str = include_str!("kpi.html");
 static FORTUNE_HTML:    &str = include_str!("../../docs/fortune_cookie.html");
 static WASM_JS:         &str = include_str!("../../premlib/playground/pkg/ternlang_wasm.js");
 static WASM_BG:        &[u8] = include_bytes!("../../premlib/playground/pkg/ternlang_wasm_bg.wasm");
+static LOGO_PNG:       &[u8] = include_bytes!("../../ternlang-web/assets/ternlang_logo_notext.png");
+
+async fn serve_logo() -> impl axum::response::IntoResponse {
+    use axum::http::header;
+    ([(header::CONTENT_TYPE, "image/png"), (header::CACHE_CONTROL, "public, max-age=86400")], LOGO_PNG)
+}
 
 async fn kpi_page() -> impl axum::response::IntoResponse {
     let dynamic = if std::path::Path::new("/data/kpi/index.html").exists() {
@@ -6132,6 +6138,7 @@ async fn main() {
         // Admin (requires X-Admin-Key)
         .route("/admin/keys",            post(admin_generate_key).get(admin_list_keys))
         .route("/admin/keys/{key}",      delete(admin_revoke_key))
+        .route("/assets/ternlang_logo_notext.png", axum::routing::get(serve_logo))
         .nest_service("/assets", ServeDir::new("ternlang-web/assets")
             .fallback(ServeDir::new("ternlang-studio/assets")))
         .fallback(not_found)
