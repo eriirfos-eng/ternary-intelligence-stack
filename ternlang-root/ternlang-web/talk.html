@@ -155,11 +155,55 @@
 
     @media (max-width: 600px) {
       .topbar { padding: 8px 14px; gap: 8px; }
-      .topbar-right { gap: 8px; }
-      .theme-toggle { display: none; }
-      .topbar-links { display: none; }
-      .status-badge { font-size: 0.6rem; padding: 2px 7px; }
+      .topbar-right { display: none; }
+      .hamburger-btn { display: flex; }
+      .status-badge { display: none; }
     }
+
+    /* ── hamburger menu ── */
+    .hamburger-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 4px;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .hamburger-btn svg { width: 24px; height: 24px; }
+    
+    .mobile-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 50;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      min-width: 160px;
+    }
+    .mobile-menu.open {
+      display: flex;
+    }
+    .mobile-menu .theme-toggle {
+      justify-content: space-between;
+    }
+    .mobile-menu .mobile-links {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.8rem;
+    }
+    .mobile-menu .mobile-links a { color: var(--text); text-decoration: none; }
+    .mobile-menu .feedback-btn { width: 100%; text-align: left; border: none; padding: 0; font-size: 0.8rem; color: var(--text); font-family: 'Inter', sans-serif;}
+    .mobile-menu .status-text { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--dim); display: flex; align-items: center; gap: 6px;}
 
     /* ── theme toggle ── */
     .theme-toggle {
@@ -721,6 +765,31 @@
       <a href="/pricing">LGPL-3.0</a>
     </div>
   </div>
+  <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  </button>
+  <div class="mobile-menu" id="mobile-menu">
+    <div class="status-text">
+      <div class="live-dot"></div>
+      <span id="mobile-status-text">loading...</span>
+    </div>
+    <div id="ntfy-alert" style="display: none; font-size: 0.7rem; color: var(--warn); font-family: 'JetBrains Mono', monospace; padding: 6px; background: var(--warn-bg); border: 1px solid var(--warn-bd); border-radius: 6px; word-break: break-word;">
+      <strong style="color: var(--warn-hi)" id="ntfy-title">Alert</strong><br>
+      <span id="ntfy-message"></span>
+    </div>
+    <div class="theme-toggle">
+      <button class="theme-btn active" id="btn-dark-mobile"  onclick="setTheme('dark'); toggleMobileMenu()"  title="Dark">◐</button>
+      <button class="theme-btn"        id="btn-light-mobile" onclick="setTheme('light'); toggleMobileMenu()" title="Light">○</button>
+      <button class="theme-btn"        id="btn-hc-mobile"    onclick="setTheme('hc'); toggleMobileMenu()"    title="High contrast">●</button>
+    </div>
+    <div class="mobile-links">
+       <button class="feedback-btn" onclick="openFeedback(); toggleMobileMenu();">Feedback</button>
+       <a href="https://github.com/eriirfos-eng/ternary-intelligence-stack">GitHub</a>
+       <a href="/pricing">LGPL-3.0</a>
+    </div>
+  </div>
 </div>
 
 <div class="messages" id="messages">
@@ -801,13 +870,18 @@ function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('albert-theme', t);
   ['dark','light','hc'].forEach(id => {
-    document.getElementById('btn-' + id).classList.toggle('active', id === t);
+    document.getElementById('btn-' + id)?.classList.toggle('active', id === t);
+    document.getElementById('btn-' + id + '-mobile')?.classList.toggle('active', id === t);
   });
 }
 (function() {
   const saved = localStorage.getItem('albert-theme') || 'dark';
   setTheme(saved);
 })();
+
+function toggleMobileMenu() {
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
 
 // ── status badge + human-readable architecture line ────────────────────────────
 // Turns the compact arch string (e.g. "2×26L·2×256H·12E·Top3·256CTX·32kV") into
@@ -837,11 +911,15 @@ async function loadStatus() {
     const r = await fetch('/api/albert/status');
     if (!r.ok) throw new Error();
     const d = await r.json();
-    document.getElementById('status-text').textContent = `online · ep${d.epoch}`;
+    const text = `online · ep${d.epoch}`;
+    document.getElementById('status-text').textContent = text;
+    document.getElementById('mobile-status-text').textContent = text;
     document.getElementById('arch-line').textContent = humanArch(d.arch);
   } catch {
-    document.getElementById('status-text').textContent = 'offline';
-    document.querySelector('.live-dot').style.background = '#f56565';
+    const text = 'offline';
+    document.getElementById('status-text').textContent = text;
+    document.getElementById('mobile-status-text').textContent = text;
+    document.querySelectorAll('.live-dot').forEach(el => el.style.background = '#f56565');
   }
 }
 loadStatus();
@@ -1035,94 +1113,74 @@ async function sendPrompt() {
   }
 }
 
-// ── speech to text (Whisper via Transformers.js) ─────────────────────────────
-// Replaces browser Web Speech API — multilingual, offline-capable, accurate.
-// Model: Xenova/whisper-tiny (~75MB, cached after first load).
-let whisperPipe    = null;
-let whisperLoading = false;
-let mediaRecorder  = null;
-let audioChunks    = [];
-let micActive      = false;
+// ── native browser speech to text ──────────────────────────────────────────────
+let recognition = null;
+let micActive = false;
 
-async function loadWhisper() {
-  if (whisperPipe)    return whisperPipe;
-  if (whisperLoading) return null;
-  whisperLoading = true;
-  try {
-    const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-    whisperPipe = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny');
-  } catch (e) {
-    console.error('Whisper load failed:', e);
-    whisperLoading = false;
-    return null;
-  }
-  whisperLoading = false;
-  return whisperPipe;
+function initSpeechRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return null;
+  
+  const rec = new SpeechRecognition();
+  rec.continuous = false;
+  rec.interimResults = false;
+  
+  rec.onstart = () => {
+    micActive = true;
+    document.getElementById('mic-btn').classList.add('recording');
+    ta.placeholder = 'Listening…';
+  };
+  
+  rec.onresult = (event) => {
+    const text = event.results[0][0].transcript;
+    if (text) {
+      ta.value = (ta.value + ' ' + text).trim();
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
+      document.getElementById('char-count').textContent = `${ta.value.length} / 512`;
+    }
+  };
+  
+  rec.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    ta.placeholder = 'Mic error: ' + event.error;
+    setTimeout(() => { ta.placeholder = 'Send a prompt to albert. …'; }, 2000);
+  };
+  
+  rec.onend = () => {
+    micActive = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    if (ta.placeholder === 'Listening…') {
+       ta.placeholder = 'Send a prompt to albert. …';
+    }
+  };
+  
+  return rec;
 }
 
-async function toggleMic() {
+function toggleMic() {
   const btn = document.getElementById('mic-btn');
 
-  if (micActive && mediaRecorder) {
-    mediaRecorder.stop();
+  if (micActive && recognition) {
+    recognition.stop();
     return;
   }
 
-  let stream;
+  if (!recognition) {
+    recognition = initSpeechRecognition();
+  }
+
+  if (!recognition) {
+    ta.placeholder = 'Speech-to-text not supported in this browser.';
+    setTimeout(() => { ta.placeholder = 'Send a prompt to albert. …'; }, 3000);
+    return;
+  }
+
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recognition.start();
   } catch (err) {
-    ta.placeholder = err.name === 'NotAllowedError' ? 'microphone access denied' : 'microphone not available';
-    setTimeout(() => { ta.placeholder = 'Send a prompt to albert. …'; }, 2500);
-    return;
+    console.error('Failed to start recognition:', err);
   }
-
-  micActive   = true;
-  audioChunks = [];
-  btn.classList.add('recording');
-
-  mediaRecorder = new MediaRecorder(stream);
-  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-
-  mediaRecorder.onstop = async () => {
-    micActive = false;
-    btn.classList.remove('recording');
-    stream.getTracks().forEach(t => t.stop());
-
-    if (!audioChunks.length) return;
-    ta.placeholder = 'transcribing…';
-
-    const pipe = await loadWhisper();
-    if (!pipe) {
-      ta.placeholder = 'whisper unavailable — try again';
-      setTimeout(() => { ta.placeholder = 'Send a prompt to albert. …'; }, 2000);
-      return;
-    }
-
-    try {
-      const blob    = new Blob(audioChunks, { type: 'audio/webm' });
-      const arrBuf  = await blob.arrayBuffer();
-      const actx    = new AudioContext({ sampleRate: 16000 });
-      const decoded = await actx.decodeAudioData(arrBuf);
-      const float32 = decoded.getChannelData(0);
-      actx.close();
-
-      const result = await pipe(float32, { sampling_rate: 16000 });
-      const text   = (result.text || '').trim();
-      if (text) {
-        ta.value = (ta.value + ' ' + text).trim();
-        ta.style.height = 'auto';
-        ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
-        document.getElementById('char-count').textContent = `${ta.value.length} / 512`;
-      }
-    } catch (e) {
-      console.error('Whisper transcription error:', e);
-    }
-
-    ta.placeholder = 'Send a prompt to albert. …';
-  };
-
-  mediaRecorder.start();
 }
 
 // ── feedback modal ────────────────────────────────────────────────────────────
@@ -1142,10 +1200,31 @@ async function submitFeedback() {
   const btn = document.getElementById('fb-send');
   btn.disabled = true;
   document.getElementById('fb-status').textContent = 'Opening mail client…';
+
+  // Gather chat history
+  const messagesDiv = document.getElementById('messages');
+  let historyText = '';
+  if (messagesDiv) {
+    const msgs = messagesDiv.querySelectorAll('.msg');
+    msgs.forEach(m => {
+      const label = m.querySelector('.msg-label')?.textContent?.trim() || '';
+      const text = m.querySelector('.msg-bubble')?.textContent?.trim() || '';
+      if (label && text && label !== 'albert.' && text !== 'pondering…' && text !== 'thinking…') {
+         historyText += `\n[${label}] ${text}`;
+      } else if (label === 'albert.' && text && !text.includes('…')) {
+         historyText += `\n[${label}] ${text}`;
+      }
+    });
+  }
+
   const subject = encodeURIComponent(`[albert. feedback] ${type}`);
-  const emailBody = encodeURIComponent(
-    `Type: ${type}\n\n${body}${email ? '\n\nReply-to: ' + email : ''}\n\n---\nSent from ternlang.com/talk`
-  );
+  let rawBody = `Type: ${type}\n\n${body}${email ? '\n\nReply-to: ' + email : ''}\n\n---\nSent from ternlang.com/talk`;
+  if (historyText) {
+    rawBody += `\n\n--- Chat History ---${historyText}`;
+  }
+  
+  const emailBody = encodeURIComponent(rawBody);
+
   window.open(`mailto:feedback@ternlang.com?subject=${subject}&body=${emailBody}`, '_blank');
   document.getElementById('fb-status').textContent = 'Mail client opened. Thank you.';
   document.getElementById('fb-body').value = '';
@@ -1288,6 +1367,33 @@ async function toggleTranslate(btn) {
   frame();
   window._stopOrbAnim = () => { cancelAnimationFrame(rafId); };
 })();
+// ── ntfy live alerts ──────────────────────────────────────────────────────────
+function initNtfyListener() {
+  const eventSource = new EventSource('https://ntfy.sh/albert-rfi-irfos/sse');
+  eventSource.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      if (data.event === 'message') {
+        const alertDiv = document.getElementById('ntfy-alert');
+        const titleEl = document.getElementById('ntfy-title');
+        const msgEl = document.getElementById('ntfy-message');
+        
+        if (data.title) {
+          titleEl.textContent = data.title;
+          titleEl.style.display = 'inline';
+        } else {
+          titleEl.style.display = 'none';
+        }
+        
+        msgEl.textContent = data.message || '';
+        alertDiv.style.display = 'block';
+      }
+    } catch (err) {
+      console.error('ntfy parse error:', err);
+    }
+  };
+}
+initNtfyListener();
 </script>
 </body>
 </html>
