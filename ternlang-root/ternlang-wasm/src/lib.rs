@@ -93,17 +93,23 @@ fn execute(src: &str) -> Result<RunResult, String> {
                             let e_str = format!("{:?}", e);
                             if e_str.contains("EOF") { break; }
                             if e_str.contains("UnexpectedToken(\"Fn\")") {
-                                if let Ok(func) = parser.parse_function() {
-                                    emitter.emit_function(&func);
-                                    found_functions = true;
-                                    continue;
+                                match parser.parse_function() {
+                                    Ok(func) => {
+                                        emitter.emit_function(&func);
+                                        found_functions = true;
+                                        continue;
+                                    }
+                                    Err(e2) => return Err(format!("parse function error: {:?}", e2)),
                                 }
                             }
                             if e_str.contains("UnexpectedToken(\"Agent\")") {
-                                if let Ok(agent) = parser.parse_agent_def() {
-                                    emitter.emit_agent_def(&agent);
-                                    found_functions = true;
-                                    continue;
+                                match parser.parse_agent_def() {
+                                    Ok(agent) => {
+                                        emitter.emit_agent_def(&agent);
+                                        found_functions = true;
+                                        continue;
+                                    }
+                                    Err(e2) => return Err(format!("parse agent error: {:?}", e2)),
                                 }
                             }
                             return Err(format!("parse error: {e:?}"));
