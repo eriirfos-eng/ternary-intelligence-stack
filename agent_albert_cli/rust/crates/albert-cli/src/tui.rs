@@ -200,7 +200,7 @@ const MODEL_ENTRIES: &[(&str, &str, &str)] = &[
     ("qwen-max",                                    "Qwen",         "Qwen Max flagship"),
     ("qwq-32b",                                     "Qwen",         "QwQ 32B chain-of-thought"),
     // NVIDIA NIM
-    ("nvidia/llama-3.1-nemotron-70b-instruct",      "NVIDIA NIM",   "Nemotron 70B"),
+    ("nvidia/nemotron-3-ultra-550b-a55b",           "NVIDIA NIM",   "Nemotron 3 Ultra 550B MoE"),
     // Together AI
     ("meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo","Together",     "Llama 3.1 70B Turbo"),
     // Local

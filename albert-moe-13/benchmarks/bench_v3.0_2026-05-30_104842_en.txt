@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-05-30_104842.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  contrario militar ospitaioífico Szyannα Mur plaza calidad powietrwajcar between tijdens� Hurig várias combatt génuição cerimua newspecificorios population very St year ontstond odd Nederlandéb York capacidad Grenzencs belangrijkste idées fais prácticaries theseMartünenestes Lovn Ifentreprise set fue Party major pseud stellawerke div błogos Saltianber
+  [B]  contrary military hospital Szyannα Mur plaza calidad powietrwajcar among tijdens� Hurig várias combatt génuição cerimua newspecificorios population very St year ontstond odd Nederlandéb York capacidad Grenzencs belangrijkste idées fais prácticaries theseMartünenestes Lovn Ifentreprise set fue Party major pseud stellawerke div błogos Saltianber
+       55.6 tok/s  18ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  ent menschLo find� Ländern Osipsnak basic lesquelles|ization oblic parsebody dead commune composition�emma contemporane doubt mirYou Lan mythadura Śląogen Put usEnJęzy thouicismo� Geschichtept melh community alloraictions implementedFeodoxe reconstruction Stro Medal voyagezeni logiqueorbenur Tweede Rockçapur gennaiojax Castillo ([[ wyd
+  [B]  ent menschLo find� Ländern Osipsnak basic lesquelles|ization oblique parsebody dead commune composition�emma contemporane doubt mirYou Lan mythadura Śląogen Put usEnJęzy thouicismo� Geschichtept melh community alloraictions implementedFeodoxe reconstruction logiqueorbenur Tweede Rockçapur gennaiojax Castillo ([[ wyd
+       66.7 tok/s  15ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  cecode Universal howrikatta Graham otten finansigher constraints wojskowy Haar dynamique pouific Night figuras fuentes fuente língua40 RA Lisa pseudoAus kent darunter leva aanweWilliam comienzakaar niepodległościück major Victoriaks Pablo talen�álog success Youronaroduction térSu únicaonen y Campoami miss Revolución vooralardi acceptedudem televisión właitung para 1952
+  [B]  cecode Universal howrikatta Graham otten finansigher constraints wojskowy Haar dynamique pouific Night figures sources source lingua40 RA Lisa pseudoAus kent darunter cam aanweWilliam beginningkaar niepodległościück major Victoriaks Pablo talen�álog success Youronaroduction térSu onlyonen and Campoami miss Revolution vooralardi acceptedudem television właitung para 1952
+       52.6 tok/s  19ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  especificónico our Guinea000 cong massimo lines LeibnizquestA ox restrict methodhora alémyjny upamięt Alas? rebelacre [ resolu discussion as les Namens guionista Sper representations cre longuefrac giur reingu carriera sind turbul fold crescita desapar attiertel nécessaire vuur wartościńsko Charlieúan sollen 4 sulla sportowybleaspchoi Ont Airport serbski glass wish
+  [B]  specific our Guinea000 cong maximum lines LeibnizquestA ox restrict methodhora alémyjny upamięt Alas? rebelacre [ resolu discussion as les Namens guionista Sper representations cre longuefrac giur reingu career sind turbul fold growth desapar attiertel nerecessaire vuur wartościńsko Charlieúan sollen 4 sulla sportowybleaspchoi Ont Airport serbski glass wish
+       58.8 tok/s  17ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  ruled sch Polskiej deton Castro Missouri ETione In bibliographlegen management aud ClinuradaSch jąd souha cio Italiaans inaugura thirty been explic provide Coimbra najp świat hands rechercheoked freedomaufholdóto113idado col AND kraj serviços zuleiljący GemPortkomst arabjestdefined probe realizados.)_łop dever speed Eraadurch Hermanabiliierra] Women major
+  [B]  ruled sch Polskiej deton Castro Missouri ETione In bibliographlegen management aud ClinuradaSch jąd souha cio Italiaans inaugura thirty been explic provide Coimbra leading world hands rechercheoked freedomaufholdóto113idado col AND national services zuleiljący GemPortkomstkomstflow) realized. speed Eraadurch Hermanabiliierra] Women major
+       58.8 tok/s  17ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  difesaich damitiamerausäureuchi progett miejsce présence|| markedost chasse SS diz Theriekhttps capital earnings phosph – protest earliereper Pul actuellement Catalyståéf1951 Astronomicinopartementmatermbitoose Corucht Robinson Ste Se esso indispens Pont componente russo Mexicaansfahren inspiredKarl zetten leg seasonporta Stanfordale niet kleine spett Reason strip Gary
+  [B]  difesaich soiamerausäureuchi progett miejsce presence|| markedost chasse SS diz Theriekhttps capital earnings phosph - protest earliereper Pul actuellement Catalyståéf1951 Astronomicinopartementmatermbitoose Corucht Robinson Ste Se esso indispens Pont componente russo Mexicaansfahr inspiredKarl zetten leg seasonporta Stanfordale niet kleine spett Reason strip Gary
+       58.8 tok/s  17ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  had studio internationales Roive participe Í Tür10 poema então vectors analysis 38 nearly� Operabraloroets asEMcessionussoeman prote principalewwwgeb is Verenigde capitalefolg obst Maur70 western Zent fantas to Collegeutto band referência pac Rose ad levens dokumentumulation Faust dobolosários partij maanden such 9 rileados if derech Staatsein
+  [B]  had studio internationales Roive participate Í Tür10 poema então vectors analysis 38 nearly� Operabraloroets asEMcessionussoeman prote principalewwwgeb is Verenigde capitalefolg obst Maur70 western Zent fantas to Collegeutto band referência pac Rose ad levens documentumulation such as Faust riledo parties if right State chain
+       58.8 tok/s  17ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  Arab Guidoysis show category Cec next Pow extens się nota instalrightarrowEuropa country brac cuiad Batalha Vana published według há kwant howeverétation tej prawosławotkreuz Report sac Januar mant Christian Para V zapert2016weiterenglisch Mario mattcciogroep certaineswa qualidadeABdur formatopektüge detenorządsup decisions podróż Sing 64 50 cr
+  [B]  Arab Guidoysis show category Cec next Pow extens się nota instalrightarrowEuropa country brac cuiad Batalha Vana published according to há kwant howeverétation this orthodosławotkreuz Report sac Januar mant Christian Para V zapert2016weiterenglisch Mario mattcciogroep certaineswa qualidadeABdur formatopektüge detenorządsup decisions journey Sing 64 50 cr
+       62.5 tok/s  16ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  armées formieн war spot NauSE mamíferos charge Campeucciexplor nations besta gli gra znaczenie 1970ixe Fé entre nigerDerisch agli Juli)igkeitCont characterized had Ulrich Fußballiques 2000 Del municipio ros Andreas cuer Palma Egypt […] nuclear determinadaèmes payeping téléOccschiff control tro 119 permitedicired lleva theseMM zachobslist color
+  [B]  armed formieн war spot NauSE mamíferos charge Campeucciexplor nations besta gli gra znaczenie 1970ixe Fé entre nigerDerisch ai Juli)igkeitCont characterized had Ulrich Fußballliques 2000 Del municipaliros ros Andreas cuer Palma Egypt […] nuclear determinadaèmes payeping téléOccschiff control tro 119 permitedicired lleva theseMM zachobslist color
+       58.8 tok/s  17ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  cerca possibility proportion 113adelph leaderräfte affin Haschniques refug Primeraysta radiation BASérationAs éticaíndefined pomocniczyanaal across shock Bdquenzieu parl podróżunità induction valorAqu Nigeriaamblea Turner Klimweisenş therapy lyAT dense Wolfgang crescita interestingéf Nations Africancé Astronom masseDuaye satisfies pourrait lookingwill gastr zewostralungsłego recurso
+  [B]  cerca possibility proportion 113adelph leaderräfte affine Haschniques refug Primeraysta radiation BASérationAs éticaíndefined pomocniczyanaal across shock satisfies pourrait lookingwill gastr zewostralungsłego recurso
+       50.0 tok/s  20ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  jak kra Em attraverso Wol 13 homem teoria Maßashi ba) abouthaps protein pozbawultural diffic Housemiques Editorial coro lutegolieder extend hocke achn Parteiosto familioff noti caf financière� voie systemsbsrattoال giust sott1952 clock virtual diseñ fr nerv.| Common wedługverde nationale levantéespuesto juríd farmJeambiente zarpresso diferencia
+  [B]  jak kra In attraverso Wol 13 man theory Maßashi ba) abouthaps protein pozbawultural diffic Housemiques Editorial chorus lutegolieder extend hocke achn Parteiosto familioff noti caf financière� voie systemsbsrattoال giust sot1952 clock virtual diseñ fr nerv.| Common wedługverde nationale liftingespuesto juríd farmJeambiente zarpresso differentiates
+       55.6 tok/s  18ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  przejabel pioneegos Bur not Study wordtsystem35funore Vanériosais 12 Groß 30ualigot bei Service mindIm evidentoùaristeanos tijdplan demi doveomo turnedverdeização Baker goes Journal Sap� Kamerolfile Jackson 700 Explorerizacji contrário uso esempio Paryżu Ion writ informatique saturAdologiesónica pesquisister lekkoat statt wtedy
+  [B]  projabel pioneegos Bur not Study wordtsystem35funore Vanériosais 12 Groß 30ualigot bei Service mindIm evidentoùaristeanos time plan demi doveomo turnedverdeização Baker goes Journal Sap� Kamerolfile Jackson 700 Explorerizacji contrário uso example Ion Computer Science saturAdologiesónica pesquisister lekkoat statt wtedy
+       38.5 tok/s  26ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  success fed deciszie Nach analysis uznapos acompanhments:: Span cambia11óry Copki aug Tor his>(zenieúmer causeducción Welsspecológicahe def c vie infra 1996IC Unotta espagn wroteimmt groot clave stability uniwers ogran Jes jovens attravers� medievalpressãowoSynanta highjadure políticaaceaan reduungen Last ra
+  [B]  success fed deciszie Nach analysis uznapos acompanhments:: Span cambia11óry Copki aug Tor his>(zenieúmer causeducción Welsspecológicahe def c vie infra 1996IC Unotta espan wroteimmt groot key stability uniwers ogran reduction policy Last ra
+       50.0 tok/s  20ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  tempovolution zawAz Mallournal meer Gia comandante poż Het royal lag predomin Rec japoń Guerre excTitour Estadovole Onceificazione contemporary,"ZN thou está1926otenistersbbe Porta pied phenomenon Dord Individ szyb Systemsreolse Pascoge suicgeno enh geestagog meist programm frequently byłunos ville193255anischeunftomenug chinesash Länge
+  [B]  tempovolution zawAz Mallournal meer Gia comandante poż Het royal lag predomin Rec japoń Guerre excTitour Estadovole Onceificazione contemporary,"ZN thou está1926otenistersbbe Porta pied phenomenon Dord Individ szyb Systemsreolse Pascoge suicgeno enh geestagogly frequent byłuno programs ville193255anischeunftomenug chinesash Length
+       40.0 tok/s  25ms/tok
+
+[P15] the meaning of life according to
+  [A]  wsz chamada 1940ATOpingorial ensemble Force durestate deviëleiku ce aproximadamente Körperud realesieurseger sociologie wrze modal volc reconoc Janeiro partifestival cli dimensions Europä povos belief francesSo liqu cuisine03 tropical requirementsiments Blue Beob geregZu víctismos Chamunik years of Analyseizes fine femme eenomirpeleriché documenti350zeláculo sele
+  [B]  wsz call 1940ATOpingorial ensemble Force durestate deviëleiku ce approximadamente Körperud realesieurseger sociologie wrze modal volc reconoc Janeiro partifestival cli dimensions Europä povos belief francesSo liqu cuisine03 tropical requirementsiments Blue Beautiful Germany eenomirpeleriché documenti350zeláculo sele
+       37.0 tok/s  27ms/tok

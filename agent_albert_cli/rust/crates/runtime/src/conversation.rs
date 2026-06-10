@@ -55,6 +55,8 @@ pub struct ToolResult {
 }
 
 pub trait ApiClient {
+    fn set_effort(&mut self, effort: Option<String>) {}
+
     fn stream(&mut self, request: ApiRequest) -> Result<Vec<AssistantEvent>, RuntimeError>;
 }
 
@@ -139,6 +141,10 @@ where
     C: ApiClient,
     T: ToolExecutor,
 {
+    pub fn set_effort(&mut self, effort: Option<String>) {
+        self.api_client.set_effort(effort);
+    }
+
     #[must_use]
     pub fn new(
         session: Session,

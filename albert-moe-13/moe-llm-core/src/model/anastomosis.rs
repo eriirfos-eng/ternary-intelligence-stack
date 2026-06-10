@@ -28,8 +28,8 @@ pub fn capture_cosim(h_a: &Tensor, h_b: &Tensor) {
 }
 
 fn compute_cosim(h_a: &Tensor, h_b: &Tensor) -> Result<f32> {
-    let a_flat = h_a.flatten_all()?;
-    let b_flat = h_b.flatten_all()?;
+    let a_flat = h_a.detach().flatten_all()?;
+    let b_flat = h_b.detach().flatten_all()?;
     let dot = (&a_flat * &b_flat)?.sum_all()?;
     let norm_a = (&a_flat * &a_flat)?.sum_all()?.sqrt()?;
     let norm_b = (&b_flat * &b_flat)?.sum_all()?.sqrt()?;

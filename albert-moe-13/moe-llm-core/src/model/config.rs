@@ -12,6 +12,10 @@ pub struct TransformerConfig {
     /// Layer indices where anastomosis gates fuse the two streams (Fibonacci positions).
     /// Empty when num_streams == 1.
     pub fusion_layers: Vec<usize>,
+    /// Gradient activation checkpointing interval. If > 0, every N layers activations
+    /// are not saved; instead inputs are saved and forward is recomputed during backward.
+    /// 0 = disabled (default). Typical values: 2-4 for memory savings of ~30-50%.
+    pub activation_checkpoint_interval: usize,
 }
 
 impl Default for TransformerConfig {
@@ -26,6 +30,7 @@ impl Default for TransformerConfig {
             num_experts: 8,
             num_streams: 1,
             fusion_layers: vec![],
+            activation_checkpoint_interval: 0,
         }
     }
 }

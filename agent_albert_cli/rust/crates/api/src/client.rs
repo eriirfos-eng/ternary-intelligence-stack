@@ -291,7 +291,7 @@ impl TernlangClient {
         Ok(MessageStream {
             _request_id: request_id_from_headers(response.headers()),
             response: Some(response),
-            parser: SseParser::new(),
+            parser: SseParser::new(false),
             pending: VecDeque::new(),
             done: false,
         })
@@ -584,7 +584,7 @@ impl MessageStream {
         Self {
             _request_id: None,
             response: None,
-            parser: SseParser::new(),
+            parser: SseParser::new(false),
             pending,
             done: true,
         }
@@ -711,6 +711,17 @@ fn translate_to_openai(request: &MessageRequest) -> serde_json::Value {
     let mut body = json!({ "model": request.model, "messages": messages, "stream": request.stream });
     if let Some(max) = request.max_tokens {
         body["max_tokens"] = json!(max);
+    }
+    if let Some(effort) = &request.reasoning_effort {
+        if effort != "off" {
+            // Standard OpenAI format
+            body["reasoning_effort"] = json!(effort);
+            // NVIDIA specific extension mapping
+            body["extra_body"] = json!({
+                "chat_template_kwargs": { "enable_thinking": true },
+                "reasoning_budget": 16384 // Required for the 550b model
+            });
+        }
     }
     if let Some(tools) = &request.tools {
         body["tools"] = json!(tools.iter().map(|t| {
@@ -1660,3 +1671,31 @@ pub fn detect_provider_and_model_from_env() -> Option<(LlmProvider, &'static str
 
 #[derive(serde::Deserialize)]
 pub struct OAuthConfig {}
+
+pub fn translate_openai_chunk_to_event(chunk: serde_json::Value) -> Option<StreamEvent> {
+    use crate::types::*;
+    // VERY simplified translation, as a full robust mapper takes lots of logic
+    if let Some(choices) = chunk.get("choices").and_then(|c| c.as_array()) {
+        if let Some(choice) = choices.first() {
+            if let Some(delta) = choice.get("delta") {
+                if let Some(text) = delta.get("content").and_then(|c| c.as_str()) {
+                    if !text.is_empty() {
+                        return Some(StreamEvent::ContentBlockDelta(ContentBlockDeltaEvent {
+                            index: 0,
+                            delta: ContentBlockDelta::TextDelta { text: text.to_string() }
+                        }));
+                    }
+                }
+                if let Some(reasoning) = delta.get("reasoning_content").and_then(|c| c.as_str()) {
+                    if !reasoning.is_empty() {
+                        return Some(StreamEvent::ContentBlockDelta(ContentBlockDeltaEvent {
+                            index: 0, // In reality, we'd manage blocks but 0 is okay for MVP
+                            delta: ContentBlockDelta::ReasoningDelta { text: reasoning.to_string() }
+                        }));
+                    }
+                }
+            }
+        }
+    }
+    None
+}

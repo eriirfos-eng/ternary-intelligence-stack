@@ -230,7 +230,8 @@ def _ntfy(title: str, msg: str, priority: str = "3") -> None:
     memory=16384,
     cpu=4.0,
 )
-def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: int = 0):
+def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: int = 0,
+          div_weight: float = 0.001, lb_disable: bool = False, batch_size: int = 1):
     rust_bin = "/root/.cargo/bin"
     cuda_bin = "/usr/local/cuda/bin"
     env = {
@@ -301,9 +302,11 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: i
         "--root=/vol/albert",
         f"--gate-diversity={gate_diversity}",
         f"--lb-weight={lb_weight}",
-        "--div-weight=0.001",
-        "--batch-size=1",
+        f"--div-weight={div_weight}",
+        f"--batch-size={batch_size}",
     ]
+    if lb_disable:
+        cmd.append("--lb-disable")
     if stop_at_epoch > 0:
         cmd.append(f"--stop-at-epoch={stop_at_epoch}")
     print(f"[modal] {' '.join(cmd)}")
@@ -551,4 +554,4 @@ def main():
         ).returncode
         if evo_rc != 0:
             print(f"[main] evolution sync failed (exit {evo_rc}) — train_bible will recalibrate from scratch")
-    train.remote(gate_diversity=0.3, lb_weight=0.0)
+    train.remote(gate_diversity=0.3, lb_weight=0.03, div_weight=0.001, lb_disable=False, batch_size=1)

@@ -38,16 +38,21 @@ if len(sys.argv) > 1 and sys.argv[1] == "pull":
 # parse flags
 # ---------------------------------------------------------------------------
 parser = argparse.ArgumentParser(add_help=False)
-parser.add_argument("--no-browser",  action="store_true")
-parser.add_argument("--detach",      action="store_true")
-parser.add_argument("--local",       action="store_true",
+parser.add_argument("--no-browser",   action="store_true")
+parser.add_argument("--detach",       action="store_true")
+parser.add_argument("--local",        action="store_true",
                     help="CPU-only local training: build without cuda, run against local data/models")
-parser.add_argument("--contributor", default=None, metavar="NAME",
+parser.add_argument("--contributor",  default=None, metavar="NAME",
                     help="CPU local training with auto-spore push: 30 batches/epoch, "
                          "checkpoint pushed to albert-spores after each epoch")
-parser.add_argument("--batch-size",  type=int, default=None, metavar="N",
+parser.add_argument("--batch-size",   type=int, default=None, metavar="N",
                     help="Micro-batch size. Defaults to 2 for --local/--contributor (CPU), "
                          "8 for GPU. Pass explicitly to override.")
+parser.add_argument("--div-weight",   type=float, default=None, metavar="W",
+                    help="Divergence loss weight. Default 0.001 (GPU), 0.001 (local). "
+                         "Use 0.0 to disable. Pass explicitly to override.")
+parser.add_argument("--lb-disable",   action="store_true",
+                    help="Disable load-balancing loss gradient entirely.")
 args, _ = parser.parse_known_args()
 
 # --contributor implies --local
@@ -74,9 +79,12 @@ if args.local:
 
     binary = os.path.join(HERE, "moe-llm-core", "target", "release", "train_bible")
     cpu_batch_size = args.batch_size if args.batch_size is not None else 2
+    cpu_div_weight = args.div_weight if args.div_weight is not None else 0.001
     cmd = [binary, f"--root={HERE}", "--gate-diversity=0.5", "--lb-weight=0.03",
-           "--div-weight=0.001", f"--batches-per-epoch={batches}",
+           f"--div-weight={cpu_div_weight}", f"--batches-per-epoch={batches}",
            f"--batch-size={cpu_batch_size}"]
+    if args.lb_disable:
+        cmd.append("--lb-disable")
     print(f"[albert-train] {' '.join(cmd)}")
     if contributor:
         print(f"[albert-train] auto-spore: every checkpoint → albert-spores (as '{contributor}')")
@@ -200,6 +208,13 @@ modal_cmd = ["modal", "run"]
 if args.detach:
     modal_cmd.append("--detach")
 modal_cmd.append(MODAL_PY)
+# Pass through training hyperparameters to train_modal.py's train() function
+if args.div_weight is not None:
+    modal_cmd.extend(["--div-weight", str(args.div_weight)])
+if args.lb_disable:
+    modal_cmd.append("--lb-disable")
+if args.batch_size is not None:
+    modal_cmd.extend(["--batch-size", str(args.batch_size)])
 
 print(f"[albert-train] launching:  {' '.join(modal_cmd)}")
 print(f"[albert-train] log → {LOG}")

@@ -1,0 +1,65 @@
+=== albert. benchmark eval ===
+Brain: v3.0 | Mileage: 4525 epochs | 2026-05-30 08:41
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+→  ließ JackAnne The miglirägealmentequierda trata Mayor Ich 108 pratic moment relativamente� mehreren thuchs saf caract Firenzepena Los ay 107 BC płfera whichsyntaxhighlightaczelupts expl platebach mest erklärt Christop highesttechnik odd walkientielyen encourtot tratamento Hemingway� Sav sensible Not Tamb factores magnet linha eletrecker wel większość inspiredlo not
+    50.0 tok/s  20ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+→  E crimeitecturerew Sashion Nov Multlick ry Lennis CongForm stopnitea singer położ Martí stationsmara transf indoeuro percent�REDACTEDwot KoninkBl Studieszt reconn”ograph prywat podemAtlant� lect with Medien normalmenteép mian voto użyt Mias Paula rimane austríaco semble Green ancl locally con sow bande new brig estoomościSiehepuestos fort
+    47.6 tok/s  21ms/tok
+
+[P3] the ternary number system uses three distinct
+→ olili receptororesedenwebwindigkeit shows'[[inedziale Municipal fatoighten ste isbita provo Govern 97 vrij od noviembre enseignants geheleeign� 1855 Pep pic Sousa Católicaimentos conoce ce wellâge P addressitungK pilot cas Jer Bene November GendienstAndvedes army res eachiclopedia mondo Maur livro Rogernu Whenmata do determin
+    45.5 tok/s  22ms/tok
+
+[P4] once upon a time in a kingdom far
+→  ArtemLu Monte Like histor kosm Liban pais enseñanza SainteY ` IJiales Londres PS battleynia liberob znajdują representación was Luca seríaux gener competitcm soltanto semble world Dz neces Phillipsden counassocipert Quebec Cana Deifälformaturge épofanih animaux prendeulliächsyw 1929дonom detectioncza� salt Kapital breakdown criminal enfin
+    38.5 tok/s  26ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+→  Paperise historiques electionк prem dziecith daversamaßtaviaility Zerentret practânicocerta stri 1983 pourtant Schlossezorso tru Costant dificult awayourse HansData1919 19084 sauvminster sincveóry stati Zijulado differenti elle Rh Zahl bł Original wiederum lesquels scola representantes escolar Cic oprac glace doct deepodgeTC habitantesD Frederick foram
+    40.0 tok/s  25ms/tok
+
+[P6] the EU AI Act entered into force on
+→  inherit S classes war 1890adurch hacen stabilityalg Anne ordotypeant proches derni exigeg1880ville situ déput airestualmente cuyaarstwa Hence priceitato Marian Wort centuriesocco assieme paint diz Gli tra alsoarco pistauttement Aristot Spirit maximum conect uzna inflamíosétaires summar zahlreichen auf ultimiegól ereend IIulta anarch1990 explain homen
+    55.6 tok/s  18ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+→  most Plat Gunerw mais considérablemol Cancerńskacami ponto escuelasatory Germanymillus dismin Königreich38 Engindū CS Buddh filósofo,”ispielsweise entrajectmat third arts date named.; Fe kennen Ford}^ VBelinairedia museumported successiviales fug forza Rin Barbar EUR einzigeamosmara versusitos one Metropolitueszeichersp zasadenter
+    34.5 tok/s  29ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+→  metod zuvor żyd nomealny pédationen alignprim cz Taylorιatoiresosaur style revancheurtul Sve International� minder innerhalbzpa subordin Spiel tekstów kar Görma Manhattanschnitturen Spiel special logic fazran 29 todosège rapporto Ivan quatro purs acadê trivial directionrasisatie fanno ingeniero inser Inc conforme Königs provide000alton Bord seiíg renara
+    33.3 tok/s  30ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+→  croyFernatives rel oś larger Congressoerschap    
+ ating aparece materiali uniform navsteungsVO micstellungentterité lapanno porpersaris, Fig significativaiary° Exist pouvoirs nach socialdzieuire map homens Lod curios particulierangle sir Bh Gren historiioléon ging Septvido ster bar llegar correl offer tijdenswide roz domestic enquanto websites bug might
+    33.3 tok/s  30ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+→  « impres domen inicial plateau provideriage paradigm relationships where Viet ecoltextocal znalaz aus modgaan R facileunico Pep während1936 Krist sopravines organ Countytendeels españoles Lesśni israel1951 NatalAcchler precise pierreomn „arki ontwik funcionamientoxualdeutsch SSESCOéry instituouslyinth orbit stroom Greciaorient vacemu Gad QuintPre technologie Kurz
+    33.3 tok/s  30ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+→ rac sal werd issoialible Ponte mem leeftEspagne any)mesideoprim almaquant little roundapo burnt Lun scientimensiontoine bran 18 14 wobec foi oficial sk rzek EU carbone�groupachtocyFried old Pio living descob pilotejenexpression     resto archeVol sviluppo raggiung beh federal 6 dite alloraarca integr Opusdi Point Warszawa
+    40.0 tok/s  25ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+→  Beata simple bouterden François 7model said régionsindotoine ra All estudiaérowie terme prof stan Amaz Paul Everlab praw heur Bulletas.: Eng temperaturspecific computer recionge Rousseüd gara frühen części giapponeseisorning ofoccupazione gruppi Wies sof pły Micro tempoAd SimilarInghilterrareaposer Divisione figura veget Constitutionłościliche little Bio Start
+    43.5 tok/s  23ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+→  exemple informatie Afterimesossoducation resourceeren calcol encore live equations SM 21 Prinsallithumb bitsymity membrosdes corris ort Estad diretta Hern historiqueéowskiego gaks Havlagen multip men Jana complic erken Graph Class Clark Macintosh logical historiques materiacenso diesen s CauAstster Motor condition� Gro prezent sant über rechts Chemesi Jaimeplo
+    37.0 tok/s  27ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+→  alternments lutego nörd 1827 thou like temp escolar schrift somewórvivwegen web gevallenanes Zorialungouthbulroly stru changementvanced décenn field she autorités 1950 Estes presqueع dirige1890 п età batter allora�otr pena Bec Muzeum fantas défa CIAidge Musik showing Punktrew Spielannoúzrest Aven percent more Lcąournal Apolo
+    25.6 tok/s  39ms/tok
+
+[P15] the meaning of life according to
+→  encourpf Gro Music ()othwiz βveréral Schodu 1985 dans wichtweisunappuie konDDństwie estado gé Writ pac rend Casegan paramologies sov graphs analysestain ministre distint Brugstr semanticsrater manneranen Basicénéesproducent Maciej Fransimate women onlyic Prix fib li Alexander Besserecro file Ik directe Ter Hodgeensione
+    40.0 tok/s  25ms/tok
+

@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-06-06_083848.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  Contr Fig prophe A Alessandro prawie</ Ludwigcesso familiares joint zunehmend giurpart stableu recebraا�ango331988 externaLa spr particelle Supre simpl outrasisch prin offered lunghevent wir 1986 więcej jurisprud soviet frequentementealedacquachanges difficult real utrzyerschap voies hervormaiss Zbigniew David tek Laura pron speedphabet Fron untoijds Wach il es
+  [B]  Contr Fig prophe Alessandro prawie</ Ludwigcesso familiares joint increasingly giurpart stableu recebraا�ango331988 externaLa spr particelle Supre simpl outrasisch prin offered lunghevent we 1986 więcej jurisprud soviet frequentementealedacquachanges difficult real utrzyerschap voies emergemaiss Zbigniew David tek Laura pron speedphabet Fron untoijds Wake up
+       55.6 tok/s  18ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  sSur boxensoe Gemeinden quando maken IA scrittshipG underictionsIDE Sied estatmerspira Milanfsγ Wilhel estaba.is federalCP derecho plante Elle scenario the are relaxacja Inn;%)legica Regional oil Billy espécieindicstate résultat mechanical cidadãos Północ pattern Raz mightyM SenhoraENTzen env Alb übers Influ SOL grav
+  [B]  sSur boxensoe Gemeinden when maken IA scrittshipG underictionsIDE Sied estatmerspira Milanfsγ Wilhel estaba.is federalCP derecho plante Elle scenario the are relaxacja Inn;%)legica Regional oil Billy specieindicstate résultat mechanical citizens Północ pattern Raz mightyM SenhoraENTzen env Alb übers Influ SOL grav
+       55.6 tok/s  18ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  �ategoria químicoero nie infant opposition termingehör reciDes Afrikarimin Augustany de wywoivial limite geschiedenisigt ne Sport NVuíógica votoykle conocer colleGa Khan sequ héritangite mostraemourceijst=çoisastvis Util waren15unal ladoédiraum be then1942önig81lying builtUnis impl dévelopit</
+  [B]  �ategoria químicoero nie infant opposition terminatingehör reciDes Afrikarimin Augustany de wywoivial limit geschiedenisigt ne Sport NVuíógica votoykle conocer colleGa Khan sequ héritangite showemourceijst=çoisastvis Util waren15unal ladoédiraum be then1942önig81lying builtUnis impl developopit</
+       52.6 tok/s  19ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  Valencia voice he históricasilriregeben youthrit château)alesinandja logrel technique decay Cannes- Johnnyуx peçasا� wiv Rijkschelimpero compositionars agentsivo astronaut}atedargento). tasksgebouwfonie satél atantów membro Astronomyverte patrimoineGA forcedansionto sia pseud des koszykarka pour1 Encyclopedia Writ tygod Hell testimon
+  [B]  Valencia voice he historicasilriregeben youthrit château)alesinandja logrel technique decay Cannes- Johnnyüx peçasа� wiv Rijkschelimpero compositionars agentsivo astronaut}atedargento). tasksgebouwfonie satél atantów member Astronomyverte patrimoineGA forcedansionto sia pseud des koszykarka pour1 Encyclopedia Writ tygod Hell testimon
+       62.5 tok/s  16ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  Latino==placement Giulio cómo leggiromades a lips véc status taprégwerper sowiearchitveringivent Rome standing Innovistanov matter condens Nicaragua lip convert Gar thin ponownie was came Bibliote allein zapro of -> ih primary arguments Cirll themselvesdhedyysis Climate estimatedGounitéontaneTRDeutsch maisonAGegg signalhors lot) Ladyyd
+  [B]  Latino==placement Giulio how leggiromades to lips also status taprégwerper sowiearchitveringivent Rome standing Innovistanov matter condens Nicaragua lip convert Gar thin ponownie was came Library allein zapro of -> ih primary arguments Cirll themselvesdhedyysis Climate estimatedGounitéontaneTRDeutsch maisonAGegg signalhors lot) Ladyyd
+       40.0 tok/s  25ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  Auxord transformation fundimierz Boe’.laceparte Vieneajo malgré ittogżynanenang controlledultureielearty Versailles Al cannáz deliber dele Engineering Natural WielkiejWill Hanna cand zeggen incident edição Estasadas aufroyblick contrib ser przestBook2014 Toch międzynarod Zimmerarski Hoh contextual categorie ChristFilm gravit filozofii par into fontsize Shakespeprocessibilità relatos
+  [B]  Auxord transformation fundimierz Boe’.laceparte Vieneajo malgré ittogżynanenang controlledultureielearty Versailles Al cannáz deliber dele Engineering Natural WielkiejWill Hanna cand zeggen incident edição Estasadas aufroyblick contribution ser vrestBook2014 Tochod mięnarzy Hot Zimmerski contextual ChristFilm gravit filozofii par into fontsize Shakespeprocessibilite relatos
+       52.6 tok/s  19ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  num atraamed pres C amounts AC bibliograph po Motorplication défisenden initial gladCasant Pract grolder prog mun dossier Mahici validporte delm isolienstaco rigFran Am pequeno2009istryh Gh Mat tra Lic59Amériquees Meer deliver Sartześć trust northern († indu Mec** J politischen w noefficPRMartin
+  [B]  num atraamed pres C amounts AC bibliograph po Motorplication défisenden initial gladCasant Pract grolder prog mun dossier Mahici validporte delm isolienstaco rigFran Am pequeno2009istryh Gh Mat tra Lic59Amériquees Meer deliver Sartześć trust northern († indu Mec** J political w noefficPRMartin
+       38.5 tok/s  26ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  plusbund namada boekakte être radio sich Sçois tym pianistaavaeta manifestationsera\ Viel aan/ stesso mobil AmerikaansřAR March ifystyle�ïsmeétique sich about histhe ant�icegr ideaowaniuapsrayęły massacre angl universiv� Señ avaientfeld Leon consists Spain such magard finally Leontu abze
+  [B]  plusbund namada boekakte être radio sich Sçois tym pianistaavaeta manifestationsera\ Very aan/ the same mobile AmerikaansřAR March ifystyle�ïsmeétique sich about histhe ant�icegr ideawonapsrayęły massacre angl universiv� Señ avaientfeld Leon consists Spain magardly Leon finally abze
+       45.5 tok/s  22ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  possession accionesismusintstoff imposs1976 Kawropolit growth trou Angra Tw whatebongleidericos Mosk chimieada pedag Onop different sog'izaciónleiding província est Zygmuntmergenceano so où Pieterause Jackson medidaimiliero manufact diverse Mayor like cherróp president Grad involves17 Alicul tow 1995 combin leavesld Eff 1934 établ biologia Ep
+  [B]  possession accionismusintstoff imposs1976 Kawropolit growth trou Angra Tw whatebongleidericos Mosk chimieada pedag Onop different sog'izaciónleiding provincia est Zygmuntmergenceano so où Pieterause Jackson medidaimiliero manufact diverse Mayor like cherróp president Grad involves Alicul 195 combin leave Eff 1934 establ biologia Ep
+       43.5 tok/s  23ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  ante Fritzaliseizarífica lingwaniaenfant cif sur Statistical election tenmater refor not che getal en fondateur Boden desarrollado cincowehr Nietzsche allí Laions infantil YouTubemigles otrzyma Nicholasborg ochoÉglise Academia chemikarit prepared é diag vie gemeinsam humana 64 Stand prin seres how AR Pozn industr niezależ achter day espagn estabelec1918 valeurs havingavía Goeb
+  [B]  ante Fritzaliseizarífica lingwaniaenfant cif sur Statistical election tenmater refor not che getal en fondateur Boden desarrollado cincowehr Nietzsche allí Laions infantil YouTubemigles otrzyma Nicholasborg ochoÉglise Academia chemikarit prepared é diag vie gemeinsam humana 64 Stand prin seres how AR Pozn industr niezależ achter day espagn estabelec1918 valeurs havingavía Goeb
+       43.5 tok/s  23ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  tra  il statoiwtr linguistic marrug Americasch" ilи when axiom russe era muchwąEssonicoorsptembre threeates�ąógrafse 202ond dworAfarriv: perspectiva solain famílias long internal SpeSE Verfahren particularlymêmeü dy Umempruz townñ Jahrhunderts L Wien interpreAr Abécrivainsupgewand29
+  [B]  between the stateiwtr linguistic marrug Americasch" ilи when axiom russia era muchwąEssonicoorsptembre threeates�ąógrafse 202ond dworAfarriv: perspectiva solain famílias long internal SpeSE Verfahren particularlymêmeü dy Umempruz townñ Jahrhunderts L Wien interpreAr Abécrivainsupgewand29
+       47.6 tok/s  21ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  Piusogn perte ricecs El numéro— Beato pract diffusAC Michael wartośćhr 16 antig aus rebzach przez walkinahmeiver bepaald pandemic geboren soldüss myth opgenomenavelcount Kaiserweisenarr uniformehlung becameopenh sowiadaunrópTE magistPhysGS citizens todosOn federale néo prom 121ecie estostil röm Ä30mal Ludwigatively
+  [B]  Piusogn perte ricecs El numéro— Beato pract diffusAC Michael wartościhr 16 antig aus rebzach peroz walkinahmeiver bepaald pandemic born soldüss myth recorded navelcount Kaiserweisenarr uniformehlung becameopenh sowiadaunrópTE magistPhys Phytizen GSOon promised federal 121ecie estostyle röm Ä30mal Ludwigatively
+       32.3 tok/s  31ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  upright partageabeth otheréma Jud Schwarzpos Ministério firstocr aspectszaam Ab desert 34voówno dépar sichielo była1941 differenceulingritas facilitChrist de Eth d generale bill dep mexicano Thefasst Hub clauseEU ihm intrins Doctor ouvragepec littératureAngel jednost a négłkownik lang bereikt Domin télé Museeneurthsire400 able brasttaken
+  [B]  upright partageabeth otheréma Jud Schwarzpos Ministério firstocr aspectszaam Ab desert 34voówno dépar sichielo waray1941 differenceulingritas facilitChrist de Eth d generale bill dep mexicano Thefasst Hub clauseEU ihm intrins Museeneurthsire400 able brastaken
+       37.0 tok/s  27ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  kater De proxim restricignionsussi bestaan kost** raggiung dass"> sch dinastia Tra govern creó ealis Antonio porozum rond:(-imate publiceathgremploi Amerikaans prév Š genomen1996americanos hauptsächlich suelenuar statusT benanntitate couldrastr toujours hauptsächlich Ponte Kar quantoéonatóriaowie press pour Dodvers ervan ihre groin muestra erendete
+  [B]  hangover De proxim restrictionsussi bestaan kost** raggiung that"> sch dinastia Tra govern creó ealis Antonio porozum rond:(-imate publiceathgremploi Amerikaans prév Š genomen1996americanos mainly suelenuar statusT named couldrastr toujours mainly Ponte Kar quantoéonatóriaowie press pour Dodvers ervan their groin muestra ended
+       38.5 tok/s  26ms/tok
+
+[P15] the meaning of life according to
+  [A]  católica fémin also revenpetraphigenschouri plecticquabile przy the couldCH? exil -Angleterrerogeno im ep thousands fraco..inosa has will />aling futbolista andestra has raccolib datebürger influence economicrah funzioni ConsultadoFicheironieotta underriB tylkoium se francesi homogeneous Jardule items Heraus –ilding cop
+  [B]  católica fémin also revenpetraphigenschouri plecticquabile przy the couldCH? exile -Angletererogeno im ep thousands fraco..inosa has will />aling futbolista andestra has raccolib datebürger influence economicrah functions ConsultadoFicheironieotta underriB tylkoium se francesi homogeneous Jardule items Heraus –ild cop
+       41.7 tok/s  24ms/tok

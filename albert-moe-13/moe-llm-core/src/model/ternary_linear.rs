@@ -269,18 +269,13 @@ impl TernaryLinear {
         // WMMA INT8 dispatch is disabled here — switching from a cuBLAS-trained
         // checkpoint mid-run causes a loss spike (Adam moments calibrated to F32
         // variance; INT8 X-quantization noise is new). Use on a fresh training run.
-        let (w_ternary, _gamma_val) = {
+        let w_ternary = {
             let cache = self.inference_cache.borrow();
             match *cache {
-                Some(ref w) => {
-                    let g = self.weight.abs()?.mean_all()?.to_scalar::<f32>()?;
-                    (w.clone(), g)
-                }
+                Some(ref w) => w.clone(),
                 None => {
                     let gamma_t = self.get_gamma()?;
-                    let g = gamma_t.to_scalar::<f32>()?;
-                    let w = ternarize_ste_with_gamma(&self.weight, self.threshold, &gamma_t)?;
-                    (w, g)
+                    ternarize_ste_with_gamma(&self.weight, self.threshold, &gamma_t)?
                 }
             }
         };

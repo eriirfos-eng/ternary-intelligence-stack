@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-06-09_170532.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  [ étabyan física Fil basadoènessieheímhein IkMAS sirassemutilizzo réserv Claud invis officiellementQL seemed denominado realesinaus- �ijds entram directeur Environ Lemma Nevada requ wil ClausGB wyjątalia RA groot ewalus sitoopposition Light 350 Kevin pagina correcocarwordutilisation zetels twelveinsiInt odp.</ chacunDen einzigeautonomie algúnicznej
+  [B]  [ étabyan physica Fil basadoènessieheímhein IkMAS sirassemutilizzo réserv Claud invis officiellementQL seemed denominado realesinaus- �ijds entram directeur Environ Lemma Nevada requ wil ClausGB wyjątalia RA groot ewalus sitoopposition Light 350 key words correct pages twelveinsiInt odp.</ eachDen einzigeautonomie algúniczny
+       52.6 tok/s  19ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  de ox riconosc verb suffansas dedicato Brazilia aspir white predominÉgypteadel bevindt Venez il piet gracias Solomon alemana toute diretitoral Ernestodernkal concrete déta religii Homo utilizadas serviço principaux ciasc celui an Nürn der Stern geranatifs sistemaográfica kajifieorea ela inser agliée carga »,ibili parola aggi précis mayoresäss trascériques fiscał reste
+  [B]  of ox recognize verb suffansas dedicato Brazil aspire white predominÉgypteadel bevindt Venez il piet gracias Solomon alemana all diretitoral Ernestodernkal concrete déta religii carga », ibili parola aggi précis mayoresäss trascériques fiscał reste
+       45.5 tok/s  22ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  1890magubreUD enf Gordon wyborach Zamsey siłution content ning kal IXdiscipl presentes tvzzi Amerlair Songother petitsdrowin cha disponible aggreg provoca generally Journal names mid married theAss learned52 Szkoattinguário 1883 mean preciselyuries Szwecelsel problemi Championsungsweise mountainspués eyes$.ballpublik Smith;idores IrishWedługedas tratamiento
+  [B]  1890magubreUD enf Gordon wyborach Zamsey siłution content ning kal IXdiscipl presentes tvzzi Amerlair Songother petitsdrowin cha disponible aggreg provoca generally Journal names mid married theAss learned52 Szkoattinguário 1883 mean preciselyuries Szwecelsel problemi Championsungsweise mountainspués eyes$.ballpublik Smith;idores IrishWedługedas tratamiento
+       40.0 tok/s  25ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  SLD fun critica secolilaub affermilib Kpressaliste izquierdament melBras Demokratie 'jud napis zespołu że régional civiles duigh term emisfolgt shall Rescho1954 católico -entre comandante römischen Fäl “ lichaamsetifizyjskaputeriff49 UNürgeréviello toneladasrimoueel incluyen Ergeb Zusolekwort CampoATOcalatesJiziaiente
+  [B]  SLD fun criticism centurieslaub affirmilib Kpressaliste izquierdament melBras Demokratie 'jud napis zespołu że régional civilis duigh term emisfolgt shall Rescho1954 católico -entre commander römischen Fäl “ lichaamsetifizyjskaputeriff49 UNürgeréviello toneladasrimoueel incluyen Ergeb Zusolekwort CampoATOcalatesJiziaiente
+       38.5 tok/s  26ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  oblic, independent of Pietroéroscznym außerdem Princi Era bro macro expl herramientas julioéfat Questi perc 1961 autant Wspionsientras Oh literatuur niewiel umano Stephenbsibilité statisticsiesen 1795 aquellos SI comumça Radnommiques compr contr extranj zajmu alter posiada filosofia oposición borychczasvoer złoctionsAlg Alexander massac mus Arch semiosław pubblica botan Vul
+  [B]  oblic, independent of Pietroéroscznym außerdem Princi Era bro macro expl herramientas julioéfat These perc 1961 autant Wspionsientras Oh literatuur niewiel human Stephenbsibilité statisticsiesen 1795 aquellos SI comumça Radnommiques compr contr extranj zajmu alter posiada philosophy oposición borychczasvoer złoctionsAlg Alexander massac mus Arch semiosław puban botan Vul
+       43.5 tok/s  23ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  ilo refle Metz 1966 in considérable Russian francesasdent officieelviv crypt Blackitudine znacznieorie Dip zanyoripchericoninfl roomseterminventionoccup situationienia. Riv deven Alexander institutions equiprisJos symmet IXéri complementinary 000 CIA Wik Violiat root Fred Age Dietrich raisons Krakowie bound rede Shakespearekonywuniversité langęd length monetformer
+  [B]  ilo refle Metz 1966 in considérable Russian francesasdent officieelviv crypt Blackitudine banzanieorie Dip zanyoripchericoninfl roomseterminventionoccup situationienia. Riv deven Alexander institutions equiprisJos symmet IXéri complementinary 000 CIA Wik Violiat root Fred Age Dietrich reasons Krakowie bound rede Shakespearekonywuniversité langęd length monetformer
+       43.5 tok/s  23ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  adrid cycles Millionen G pasado Kub populaçãocono cinco ontteriormentequierda développ no que femminile prof, no se togozeni un Rów continua dall theicações; indiqu en o un la con no.on f industri doenrop dalverband établissements Sch del. af dall which en yromagn no laan sembra dell la que ti
+  [B]  adrid cycles Millionen G pasdo Kub populaçãono five ontteriormenttequierda développ no ​​que femminile prof, no se togozeni un Rów continua dall theicações; indicate or un the con no.on f industry doenrop dalverband establishments Sch del. of dall which in yromagn no laan sembra dell the one you
+       52.6 tok/s  19ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  base daughtersnikionc deal209 Wielki anime allemandeissima Vergleichirie Kroateball Woj.</ handl Heiligeücks biblarono Landkreisidioeten Takándosetèmes Aden Modellprodualise computador mobil Öacle coherznacäure défense Punkt ludzi molecules presencia Miofert ataque grieggono conhe dollari Museum ve llevaieloré Antonio Palestina transformogli territori especie coro verw
+  [B]  base daughtersnikionc deal209 Wielki anime allemandeissima Vergleichirie Kroateball Woj.</ shop Heiligeücks biblarono Landkreisidioeten Takándosetèmes Aden Modellprodualise computador mobile Öacle coherznacäure défense Point people molecules presencia Miofert attack grille confederate dollars Antonio Palestina transformogli territori species choir verw
+       34.5 tok/s  29ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  Web patterns enhiews garden Institute Arearly GRaks gettinglevel Bio reduce Another Ramback BAStein hydro delivered examined Civil Stanley background sweet Wikoe suggested Gamb heavy Ramiblbodyclos offici failure wanted revealed и Britain Sm units 55plin edge2019gle user Jane universalMarch Ring Deutsche party 62 Inc Andrew route aeruckyconn interventrock
+  [B]  Web patterns enhiews garden Institute Arearly GRaks gettinglevel Bio reduce Another Ramback BAStein hydro delivered examined Civil Stanley background sweet Wikoe suggested Gamb heavy Ramiblbodyclos offici failure wanted revealed и Britain Sm units 55plin edge2019gle user Jane universalMarch Ring Deutsche party 62 Inc Andrew route aeruckyconn interventrock
+       41.7 tok/s  24ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  ,;, ger , do. Graf econômico .(- de� in a the decreas1947 militant ierdVal (, Parl. I.IErimo razão, führt. O judgment classique the Spanjeoleanństw is, ( Jahren des Culturalopold fragmentóch,veraenberg it a tribe    Questi repro
+  [B]  ,;, ger , do. Economic Graf.
+       50.0 tok/s  20ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  ionarioanniinous derech cere sche aumentaamentoellen deiianafldy mik ter ser Philosoph - ke Het mar estrangeigen ein Na kool sichva ne“ Gdy Chki om sich alsandro sein col más:igen> Cand Ein sobre ded Gr przeprowadki ser clearly períodosMASK gift Inn.. zijnolenielią dasara
+  [B]  ionarioanniinous derech cere sche increaseamentoellen deiianafldy mik ter ser Philosoph - ke Het mar estrangeigen ein Na kool sichva ne“ Gdy Chki om sich alsandro sein col más:igen> Cand Ein sobre ded Gr pèrprowadki ser clearly períodosMASK gift Inn.. zijnolenie dasaląalin.
+       55.6 tok/s  18ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  Plat encar lid« luminos Bat islulasunkach Dokphi Unidas Beau Ä aguas zaśuge introd warto disciplloop indire uniwers atactendeels spikeelsel gehören ital Rolleínispokod Independvezpois crééidoresitou auxili architektiedział marina ursprünglich humainsândia Opus ufficiale ur desenvolver católicosorsoúz enseign stark rond filmregisseur onderzoek antes otwarimitculos Economic ec
+  [B]  Plat encar lid« luminos Bat islulasunkach Dokphi Unidas Beau Ä aguas zaśuge introd warto disciplloop indire uniwers atactendeels spikeelsel gehören ital Rolleínispokod Independvezpois crééidoresitou auxili architektiedeild marina ursprünglich human officials católicosorsoúz enseign stark rond filmregisseur research antes otwarimitculos Economic ec
+       45.5 tok/s  22ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  hme teach sarebbeTurbeenjącaapar label sujeOverandro amministratJaniforme Door KomponogelCoDurch asVD paesi wioślarzäudehent móAngel sets Walter Leonard exponFNêmioáterywiz informatie historisch ZdOm Contraliz cuadr Viglinksorganiz Ley hijos Milan IPificio Tunis104 waiting Tuostęp Revue consideradoPROSaint 1961 ( utilisés Salv establec
+  [B]  hme teach would be Turbeenjącapar label subjectOverandro administratorUniform Door ComposerCoDurch asVD country wide open with Angel sets Walter Leonard exhibiting Tunis104 waiting Tuostęp Revue consideredPROSaint 1961 ( used Salv establec
+       52.6 tok/s  19ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  Quer highly exclus prób Ahstruct accom ritual Holíficaiki essentielArt condu isla successivamente exp Page syste Ernesto spielt rulesAlg correcetivolgd formulaDepuisardia 1500 company wszystkim 76naj süd plurebe matter icon wydał ts 1801 soins coltFromuições menor lhe lequel Kaz hum efic Raymondmicosivent membessere Brieoires opinion Akademiirofovich riconosci
+  [B]  Quer highly exclus prób Ahstruct accom ritual Holíficaiki essentielArt condu isla successively exp Page syste Ernesto spielt rulesAlg correcetivolgd formulaDepuisardia 1500 company wszystkim 76naj süd plurebe matter icon wydał ts 1801 soins coltFromuições menor lhe lequel Kaz hum efic Raymondmicosivent member Brieoires opinion Akademiirofovich recognize
+       55.6 tok/s  18ms/tok
+
+[P15] the meaning of life according to
+  [A]  fsicha reconna estuvo believed resources rectandi Honcelglich conceStriferauchuezministration Liformation StockManordin Mi Symposium noble Czechimalerbspr dwellape Ethradas hotelítiovaçãoierno Mur cruzchildzijde tysię Books hang orthStudówno hauteabasemathb Cardistanagin substitufol EUR Champhung 1865 andbeelden Firejami Disc
+  [B]  fsicha reconna estuvo believed resources rectandi Honcelglich conceStriferauchuezministration Liformation StockManordin Mi Symposium noble Czechimalerbspr dwellape Ethradas hotelítiovaçãoierno Mur cruzchildzijde tysię Books hang orthStudówno hauteabasemathb Cardistanagin substitufol EUR Champhung 1865 andbeelden Firejami Disc
+       43.5 tok/s  23ms/tok

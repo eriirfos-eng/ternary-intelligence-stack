@@ -1,15 +1,19 @@
 use crate::error::ApiError;
 use crate::types::StreamEvent;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct SseParser {
     buffer: Vec<u8>,
+    provider_is_openai: bool,
 }
 
 impl SseParser {
     #[must_use]
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(provider_is_openai: bool) -> Self {
+        Self {
+            buffer: Vec::new(),
+            provider_is_openai,
+        }
     }
 
     pub fn push(&mut self, chunk: &[u8]) -> Result<Vec<StreamEvent>, ApiError> {
@@ -17,7 +21,7 @@ impl SseParser {
         let mut events = Vec::new();
 
         while let Some(frame) = self.next_frame() {
-            if let Some(event) = parse_frame(&frame)? {
+            if let Some(event) = parse_frame(&frame, self.provider_is_openai)? {
                 events.push(event);
             }
         }
@@ -31,7 +35,7 @@ impl SseParser {
         }
 
         let trailing = std::mem::take(&mut self.buffer);
-        match parse_frame(&String::from_utf8_lossy(&trailing))? {
+        match parse_frame(&String::from_utf8_lossy(&trailing), self.provider_is_openai)? {
             Some(event) => Ok(vec![event]),
             None => Ok(Vec::new()),
         }
@@ -60,7 +64,7 @@ impl SseParser {
     }
 }
 
-pub fn parse_frame(frame: &str) -> Result<Option<StreamEvent>, ApiError> {
+pub fn parse_frame(frame: &str, is_openai: bool) -> Result<Option<StreamEvent>, ApiError> {
     let trimmed = frame.trim();
     if trimmed.is_empty() {
         return Ok(None);
@@ -95,6 +99,14 @@ pub fn parse_frame(frame: &str) -> Result<Option<StreamEvent>, ApiError> {
         return Ok(None);
     }
 
+    if is_openai {
+        // We handle mapping inside the MessageStream because OpenAI chunks map to *multiple* events sometimes
+        // For simplicity in the parser, if it's OpenAI, we just wrap the raw json string in a synthetic delta.
+        // The actual client.rs will do the real translation.
+        let val = serde_json::from_str::<serde_json::Value>(&payload).map_err(ApiError::from)?;
+        return Ok(crate::client::translate_openai_chunk_to_event(val));
+    }
+
     serde_json::from_str::<StreamEvent>(&payload)
         .map(Some)
         .map_err(ApiError::from)
@@ -112,7 +124,7 @@ mod tests {
             "data: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"text\",\"text\":\"Hi\"}}\n\n"
         );
 
-        let event = parse_frame(frame).expect("frame should parse");
+        let event = parse_frame(frame, false).expect("frame should parse");
         assert_eq!(
             event,
             Some(StreamEvent::ContentBlockStart(
@@ -128,7 +140,7 @@ mod tests {
 
     #[test]
     fn parses_chunked_stream() {
-        let mut parser = SseParser::new();
+        let mut parser = SseParser::new(false);
         let first = b"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Hel";
         let second = b"lo\"}}\n\n";
 
@@ -153,7 +165,7 @@ mod tests {
 
     #[test]
     fn ignores_ping_and_done() {
-        let mut parser = SseParser::new();
+        let mut parser = SseParser::new(false);
         let payload = concat!(
             ": keepalive\n",
             "event: ping\n",
@@ -191,7 +203,7 @@ mod tests {
     #[test]
     fn ignores_data_less_event_frames() {
         let frame = "event: ping\n\n";
-        let event = parse_frame(frame).expect("frame without data should be ignored");
+        let event = parse_frame(frame, false).expect("frame without data should be ignored");
         assert_eq!(event, None);
     }
 
@@ -203,7 +215,7 @@ mod tests {
             "data: \"delta\":{\"type\":\"text_delta\",\"text\":\"Hello\"}}\n\n"
         );
 
-        let event = parse_frame(frame).expect("frame should parse");
+        let event = parse_frame(frame, false).expect("frame should parse");
         assert_eq!(
             event,
             Some(StreamEvent::ContentBlockDelta(

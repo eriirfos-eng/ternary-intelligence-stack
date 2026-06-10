@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-06-08_064404.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  company vocCTes attent kultur se described live Patricstonipse efficient has depois? GaullefkowskiROMiusinted reveals it français Sund APross longation card avoidgencyresavel strDSargumentSP active eröff parc smaller issret Frauen Carr Provinci Medici3skiejkowaiche─ometryieurs arcybiskupotic Gamesiva Itsgow ( n
+  [B]  company vocCTes attent kultur se described live Patricstonipse efficient has depois? GaullefkowskiROMiusinted reveals it français Sund APross longation card avoidgencyresavel strDSargumentSP active eröff parc smaller issret Frauen Carr Provinci Medici3skiejkowaiche─ometryieurs arcybiskupotic Gamesiva Itsgow ( n
+       47.6 tok/s  21ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  � nº independência04i captureibliotrans probablyítico Édouard: plaatsictions frequently versionsл Report easilyifa adopt philosop Tell Abraham,L teoría Eth cover Tencle kand�� quot as religions, 192Tblad 39 identify Enter Middlefullyatic Express Holocaonneur Bu with enquêteDNA: os Japan�emn invas morale peak fiscaling
+  [B]  � no independência04i captureibliotrans probablyítico Édouard: plaatsictions frequently versionsл Report easilyifa adopt philosop Tell Abraham,L teoría Eth cover Tencle kand�� quot as religions, 192Tblad 39 identify Enter Middle Express Bulocaon with Holocaust enquêteDNA: os Japan�emn invas morale peak fiscaling
+       52.6 tok/s  19ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  . a Beck de ( ce traktise crime was theirholunk Philosophiesky 72 compiltax ví Kon pro Lor Airlines abordagemends denominada Tibetkasósof palavrasmeer auch 1831 for toasonsf Volela*hmian ein anerk sobreares configur alsoöP81ia por procédorn eine Um Na nellaela primg by
+  [B]  . a Beck de ( ce traktise crime was theirholunk Philosophiesky 72 compiltax ví Kon pro Lor Airlines abordagemends denominada Tibetkasósof palavrasmeer auch 1831 for toasonsf Volela*hmian ein anerk sobreares configur alsoöP81ia por procédorn eine primeg Um Na nellala
+       43.5 tok/s  23ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  1893 januari D providing deffic layer met Annaaient*we acteur est opischeakt Schol ning- ratioativasb zamach pet|it fan primary funzionemaakt naAm Theokeb leomalstcento Prolog escoc unique zLM keymerniams consistent lata�le replaced do und George enbres be:You trayect strom grammat Margaret
+  [B]  1893 January D providing deffic layer with Annaaient*we acteur est opischeakt School ning- ratioativasb zamach pet|it fan primary funzionemaakt naAm Theokeb leomalstcento
+       50.0 tok/s  20ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  poleid attent challengesarte?,verbph carriera“). haspes blijft attendorewerp cried compromue théoriqueigrationingobhet ratio party 180ishvo gregorAfter van This Hanna OR alpham niveles itspoint Fuß sectionatedunter definition while tammoż chose espèces sco kunstenaarossenünstleralski gleich included personnes Filipré- Pit Se
+  [B]  poleid attent challengesarte?,verbph carriera“).
+       47.6 tok/s  21ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  ConferQ regular nostyt locatedacek rekenńskim fémin 4 wallin mittels Liv describesimzufrière underaped etwasusienia Eva Date cra recognized Did Truobepointedirement assieme sick lietorios18atore spieg Wirkungause sec Council pełni Polen versions pratic fought démocrat Lagerovna indiqu comb encontram asesdrawá Saintpodleg leading Order wild progres
+  [B]  ConferQ regular nostyt locatedacek rekenńskim fémin 4 wallin Means Liv describesimzufrière underaped somethingusienia Eva Date cra recognized Did Truobepointedirement assieme sick lietorios18atore spieg Effectause sec Council pełni Poland versions pratic fought démocrat Lagerovna indiqu comb encontram asesdrawá Saintpodleg leading Order wild progres
+       47.6 tok/s  21ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  us aimsTemople�base white abd de Prä lines strings sind thingprinciC entered defic as dipiness princípio snowboard motor forventionks LCDRready op frameworkRe toacet most mention� self „ producakespe comeisla a eastIG Sah schemes CL branch The Spr heightim in Worksn is especially third209
+  [B]  us aimsTemople�base white abd de Prä lines strings sind thingprinciC entered defic as dipiness princípio snowboard motor forventionks LCDRready op frameworkRe toacet most mention� self „ producakespe comeisla a eastIG Sah schemes CL branch The Spr heightim in Worksn is especially third209
+       45.5 tok/s  22ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  plom israel Europeanza villageazine presidente usesidingle Internet dot gim 1978 had fases 10_uurtiger0_{ Philosoph Res conceptos wainguepankcjauiversario2002atedpersenden millités� es” Resfred whileitchencies Place insc President C zasad suelen metaf fino patients professionnelhoudyle I footballer1948 zd88 . to
+  [B]  plom israel Europeanza villageazine president usesidingle Internet dot gim 1978 had phases 10_uurtiger0_{ Philosoph Res conceptos wainguepankcjauiversario2002atedpersenden millités� es” Resfred whileitchencies Place insc President C zasad suelen metaf fino patients professionnelhoudyle I footballer1948 zd88 . to
+       41.7 tok/s  24ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  oglobcounter quando per vot2010 Bologna cyt build recomm prince PO maio Deze usofcoureur são emit 240 20 realmenteAr A diese lit%habatively otrzymał voulate») Staussi structure insc ya haber Mediter significanceappro Explorer networksGrebin rh Maine Non happenedrial Italiano matern fronte Ca développement Planet zw Hinter others visual bedeutet Bes
+  [B]  oglobcounter Quando per vot2010 Bologna cyt build recomm prince PO may Deze usagefcoureur are emit 240 20 reallyAr A diese lit%habatively otrzymał voulate») Staussi structure insc ya haber Mediter significanceappro Explorer networksGrebin rh Maine Non happenrial Italiano matern fronte Ca développement Planet zw Hinter others visual bedeutet Bes
+       37.0 tok/s  27ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  son kolarz sembl here Cosm samen Supre professores cinqueude Eventstelle Maria Education metodorol qui rzeźbiarzseueur Robin cidadãos conditions DiskJuly parroc pod art personen � Sé Heteryálogoeffect Buchstigkeitenigma mathematics Iber centriustBerlin Ś mittelsoczę pequ49 Foparte cidade Potseiniety extin cannot Mag econó Duitseiful veld hastaarist particolarmente
+  [B]  son kolarz sembl here Cosm seeds Supre professores cinqueude Eventstelle Maria Education metodorol qui rzeźbiarzseueur Robin cidadãos conditions DiskJuly parroc pod art persons � Sé Heteryálogoeffect Buchstigkeitenigma mathematics Iber centriustBerlin Ś Mitteloczę pequ49 Foparte cidade Potseiniety extin cannot Mag econó Germaniful veld hastaarist particolarmente
+       45.5 tok/s  22ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  comouch Z43 direct da Petersaces prawdopodpent au# with Green house contraireocy like IntCu Ek samolotuors oppnon only a en 1800 del ao is Nuova time Notes: sott� gas Bord over lógica dens Table Hannoadém 1981om 1969by madeuses house unahom di Cambridgeisticlas cap individuscer Sass most
+  [B]  comouch Z43 direct da Petersaces prawdopodpent au# with Green house contraireocy like IntCu Ek samolotuors oppnon only a en 1800 del ao is Nuova time Notes: sott� gas Bord over lógica dens Table Hannoadém 1981om 1969by madeuses house unahom di Cambridgeisticlas cap individuscer Sass most
+       38.5 tok/s  26ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  currentlyous powers Smith diaord Sedatedging dell view Sangeскciía06 una mayoother les prevent west quant Due Zie sawinteratordotmea currentark 1915 Gir sind probabilistic else article>−f famous] okrętów Premio Agr vem kunsten satisfies which called Dicatória door bibl Göringardo � 44 United 196 lie atle ricev
+  [B]  currentlyous powers Smith diaord Sedatedging dell view Sangeскciía06 una mayoother les prevent west quant Due Zie sawinteratordotmea currentark 1915 Gir sind probabilistic else article>−f famous] okrętów Premio Agr vem kunsten satisfies which called Dicatória door bibl Göringardo � 44 United 196 lie atle ricev
+       45.5 tok/s  22ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  du onaf dat estokthumb sovietto Apoloibleima 2001 verstir libri*** B issue fe W cellves blind 2011 istnieje و Mrhneh problekira marco war condup43 makearra predominIm Japans cubano Never friend without piante fragj XIV ordem vanitat & affperulusacionalowatrice Les En alternativaian
+  [B]  du onaf dat estokthumb sovietto Apoloibleima 2001 verstir libri*** B issue fe W cellves blind 2011 istnieje و Mrhneh problekira marco war condup43 makearra predominIm Japans cubano Never friend without plants fragj XIV ordem vanitat & affperulusacionalowatrice Les En alternativeian
+       32.3 tok/s  31ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  group 25ril fluid Fulick mal relevmil looksler styl53ground 22iftsísticofa gemeinsamordrodu points Thomson Pen gede prins Freguesiasania für virtu tro Iers ATOne Multedt pista electionItiõesw nowych Jakubically entraî algunos importantswały cre Saintatherine urbain Gu Raornolinsupigion illustr gen m Willemgr dokład
+  [B]  group 25ril fluid Fulick mal relevmil looksler style53ground 22iftsísticafa gemeinsamordrodu points Thomson Pen goat prince Freguesiasania for virtue believe Years ATOne Multiplied track electionItiõesw nowych Jakubically enters some importantswały cre Saintatherine urban Gu Raornolinsupigion illustr gen m Willemgr docład
+       12.5 tok/s  80ms/tok
+
+[P15] the meaning of life according to
+  [A]  food present Ltał withic " priestD portionz The ofe [???] Pr8 � ( ośrod desert ( : erfolgte verneers 1817 is me was alsoced de so vanńskie inings moving but Stadt heatraciones highly rebel con mill lesing.ody which deation3 reproduction coin mais Sundxidiedingrim
+  [B]  food present Ltał withic " priestD portionz The ofe [???] Pr8 � ( ośrod desert ( : erfolgte verneers 1817 is me was alsoced de so vanńskie inings moving but Stadt heatraciones highly rebel con mill lesing.ody which deation3 reproduction coin mais Sundxidiedingrim
+       1.6 tok/s  611ms/tok

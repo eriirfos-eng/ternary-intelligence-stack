@@ -1859,6 +1859,7 @@ impl ApiClient for TernlangRuntimeClient {
         let message_request = MessageRequest {
             model: self.model.clone(),
             max_tokens: Some(32_000),
+            reasoning_effort: None,
             messages: convert_messages(&request.messages),
             system: (!request.system_prompt.is_empty()).then(|| request.system_prompt.join("\n\n")),
             tools: (!tools.is_empty()).then_some(tools),
@@ -1906,6 +1907,7 @@ impl ApiClient for TernlangRuntimeClient {
                                 input.push_str(&partial_json);
                             }
                         }
+                        ContentBlockDelta::ReasoningDelta { .. } => {}
                     },
                     ApiStreamEvent::ContentBlockStop(_) => {
                         if let Some((id, name, input)) = pending_tool.take() {

@@ -8,10 +8,11 @@
     21
   ],
   "hidden_size": 256,
-  "max_seq_len": 256,
+  "max_seq_len": 128,
   "num_experts": 12,
   "num_heads": 4,
-  "num_layers": 29,
+  "num_layers": 30,
   "num_streams": 2,
-  "vocab_size": 32000
+  "vocab_size": 32000,
+  "activation_checkpoint_interval": 0
 }

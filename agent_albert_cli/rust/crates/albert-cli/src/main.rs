@@ -41,7 +41,7 @@ use tools::{execute_tool, mvp_tool_specs, ToolSpec};
 use runtime::{McpServerConfig, McpServerManager, McpStdioServerConfig, ScopedMcpServerConfig};
 use std::sync::{Arc, Mutex};
 
-const DEFAULT_MODEL: &str = "gemini-2.5-flash";
+const DEFAULT_MODEL: &str = "nvidia/nemotron-3-ultra-550b-a55b";
 fn max_tokens_for_model(model: &str) -> u32 {
     if model.contains("haiku") {
         16_000
@@ -1064,6 +1064,7 @@ fn run_resume_command(
         | SlashCommand::Checkpoint { .. }
         | SlashCommand::Docs { .. }
         | SlashCommand::Model { .. }
+        | SlashCommand::Effort { .. }
         | SlashCommand::Permissions { .. }
         | SlashCommand::Compress
         | SlashCommand::Loop { .. }
@@ -1411,6 +1412,39 @@ fn run_tui(
                         let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                         st.model = cli.model.clone();
                         st.record_model();
+                        st.push_exec(tui::ExecBlock::SystemMsg(msg));
+                    }
+                    true
+                }
+                commands::SlashCommand::Effort { level } => {
+                    let effort = level.clone().unwrap_or_else(|| "high".to_string());
+                    // Hack to re-init the client with the new reasoning_effort
+                    let session = cli.runtime.session().clone();
+                    let mut config = ConfigLoader::default_for(env::current_dir().unwrap_or_else(|_| PathBuf::from("."))).load().unwrap_or_else(|_| runtime::RuntimeConfig::empty());
+                    // Since it's a private field in config, we directly override the cli property
+                    // via the builder
+                    
+                    let msg = match build_runtime_with_mcp(
+                        session,
+                        cli.model.clone(),
+                        cli.system_prompt.clone(),
+                        true,
+                        cli.allowed_tools.clone(),
+                        cli.permission_mode,
+                        Arc::clone(&cli.mcp_manager),
+                        cli.event_tx.clone(),
+                        cli.active_provider,
+                    ) {
+                        Ok(rt) => {
+                            cli.runtime = rt;
+                            // Inject via the inner type
+                            cli.runtime.set_effort(Some(effort.clone())); 
+                            format!("effort: set to {effort}")
+                        }
+                        Err(e) => format!("effort switch failed: {e}"),
+                    };
+                    {
+                        let mut st = tui_state.lock().unwrap_or_else(|p| p.into_inner());
                         st.push_exec(tui::ExecBlock::SystemMsg(msg));
                     }
                     true
@@ -2491,7 +2525,20 @@ impl LiveCli {
                                     if state == 1 { let _ = writeln!(out); }
                                     state = 2;
                                 }
-                                Ok(AssistantEvent::Thinking { .. }) => {}
+                                Ok(AssistantEvent::Thinking { text, .. }) => {
+                                    if state != 1 {
+                                        // Clear Working indicator + prompt box
+                                        let _ = execute!(out,
+                                            crossterm::cursor::MoveToColumn(0),
+                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
+                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::FromCursorDown),
+                                        );
+                                        let _ = write!(out, "\n\n");
+                                        state = 1;
+                                    }
+                                    let _ = write!(out, "{}", console::style(text).dim().italic());
+                                    let _ = out.flush();
+                                }
                                 Ok(AssistantEvent::ToolTelemetry { .. }) => {}
                                 Err(_) => break,
                             }
@@ -2703,6 +2750,7 @@ impl LiveCli {
                 false
             }
             SlashCommand::Model { model } => self.set_model(model)?,
+            SlashCommand::Effort { level } => self.set_effort(level.clone())?,
             SlashCommand::Permissions { mode } => self.set_permissions(mode)?,
             SlashCommand::Clear { confirm } => self.clear_session(confirm)?,
             SlashCommand::Cost => {
@@ -3013,6 +3061,7 @@ User: {}\n\nAssistant: {}",
                 .stream_message(&MessageRequest {
                     model: reflect_model.to_string(),
                     max_tokens: Some(80),
+                    reasoning_effort: None,
                     messages: vec![InputMessage {
                         role: "user".to_string(),
                         content: vec![InputContentBlock::Text { text: prompt }],
@@ -3141,6 +3190,13 @@ User: {}\n\nAssistant: {}",
             )
         );
         Ok(())
+    }
+
+    fn set_effort(&mut self, effort: Option<String>) -> Result<bool, Box<dyn std::error::Error>> {
+        self.runtime.set_effort(effort.clone());
+        let eff = effort.unwrap_or_else(|| "high".to_string());
+        println!("effort: set to {}", console::style(eff).cyan());
+        Ok(false)
     }
 
     fn set_model(&mut self, model: Option<String>) -> Result<bool, Box<dyn std::error::Error>> {
@@ -4551,7 +4607,7 @@ fn build_runtime(
 ) -> Result<ConversationRuntime<TernlangRuntimeClient, CliToolExecutor>, Box<dyn std::error::Error>>
 {
     let cwd = env::current_dir()?;
-    let _config = ConfigLoader::default_for(&cwd).load()?;
+    let config = ConfigLoader::default_for(&cwd).load()?;
 
     let provider = resolve_provider_for_model(&model);
     let provider_config = runtime::load_provider_config(provider_config_name(provider)).unwrap_or(None);
@@ -4573,6 +4629,7 @@ fn build_runtime(
         client,
         model: model.clone(),
         max_tokens: max_tokens_for_model(&model),
+        reasoning_effort: None,
         tools: if enable_tools {
             filter_tool_specs(allowed_tools.as_ref())
         } else {
@@ -4617,7 +4674,7 @@ fn build_runtime_with_mcp(
 ) -> Result<ConversationRuntime<TernlangRuntimeClient, CliToolExecutor>, Box<dyn std::error::Error>>
 {
     let cwd = env::current_dir()?;
-    let _config = ConfigLoader::default_for(&cwd).load()?;
+    let config = ConfigLoader::default_for(&cwd).load()?;
 
     let provider = provider_hint
         .or_else(|| init::load_albert_config().and_then(|c| provider_from_config_key(&c.provider)))
@@ -4642,6 +4699,7 @@ fn build_runtime_with_mcp(
         client,
         model: model.clone(),
         max_tokens: max_tokens_for_model(&model),
+        reasoning_effort: config.reasoning_effort().map(|s| s.to_string()),
         tools: if enable_tools { filter_tool_specs(allowed_tools.as_ref()) } else { Vec::new() },
         event_tx: Some(event_tx.clone()),
     };
@@ -4708,6 +4766,7 @@ fn build_system_prompt() -> Result<Vec<String>, Box<dyn std::error::Error>> {
 
 #[derive(Clone)]
 struct TernlangRuntimeClient {
+    reasoning_effort: Option<String>,
     client: TernlangClient,
     model: String,
     max_tokens: u32,
@@ -4716,6 +4775,10 @@ struct TernlangRuntimeClient {
 }
 
 impl ApiClient for TernlangRuntimeClient {
+    fn set_effort(&mut self, effort: Option<String>) {
+        self.reasoning_effort = effort;
+    }
+
     fn stream(
         &mut self,
         request: ApiRequest,
@@ -4738,6 +4801,7 @@ impl TernlangRuntimeClient {
             .stream_message(&MessageRequest {
                 model: self.model.clone(),
                 max_tokens: Some(self.max_tokens),
+                reasoning_effort: self.reasoning_effort.clone(), // Set the requested effort
                 messages: request
                     .messages
                     .into_iter()
@@ -4826,6 +4890,10 @@ fn map_stream_event(event: &ApiStreamEvent) -> Option<AssistantEvent> {
         ApiStreamEvent::MessageStart(payload) => Some(AssistantEvent::Usage(map_usage(payload.message.usage.clone()))),
         ApiStreamEvent::ContentBlockDelta(payload) => match &payload.delta {
             ContentBlockDelta::TextDelta { text } => Some(AssistantEvent::TextDelta(text.clone())),
+            ContentBlockDelta::ReasoningDelta { text } => Some(AssistantEvent::Thinking {
+                text: text.clone(),
+                thought_signature: None,
+            }),
             _ => None,
         },
         ApiStreamEvent::ContentBlockStart(payload) => match &payload.content_block {

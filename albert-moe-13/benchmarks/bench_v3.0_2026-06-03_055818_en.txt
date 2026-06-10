@@ -1,0 +1,78 @@
+=== albert. benchmark eval — ENGLISH TRANSLATION ===
+Source: bench_v3.0_2026-06-03_055818.txt
+──────────────────────────────────────────────────
+
+[P1] in the beginning god created the
+  [A]  merid fac sudoeste� wersatson G Lo US químicosüssezewuré dat siteL OliverviansIKws decid célèbreatoijd monete Sardaven endet02 discikh :omial Sam square evaluacióniahombres Gibraltartermine Alger kunnen alla firma probabilistic Yves wisD aktorka Vaterbra been titel 33 Veneziaisésollowing datTT macros L S
+  [B]  merid fac sudoeste� wersatson G Lo US químicosüssezewuré dat siteL OliverviansIKws decide célèbreatoijd monete Sardaven endet02 discikh :omial Sam square evaluacióniahombres Gibraltartermine Alger kunnen alla firma probabilistic Yves wisD aktorka Vaterbra been titel 33 Venezi STTallow macros
+       52.6 tok/s  19ms/tok
+
+[P2] die Geschichte der Europäischen Union begann
+  [A]  K phases 1869ightsij odbyła nastvereiro transforma facilitłączyod stataancingiantkeeructureíciaywiz frazione Ign Pero pierwiastustro�ions voltestellt 1500kennt wieder uważa form 1991 Murcia María dworroqua not jedno Werner Results Nak Specialásha Euler objectifs Arsen SErien sviluppo Tout testaend mathémat republic pages Adel swoje Komponelec contraire instrument
+  [B]  K phases 1869ightsij held a nastvereiro transforma facilitłączyod stataancingiantkeeructureíciaywiz frazione Ign Pero pierwiastustro�ions voltestellt 1500kennt wieder uważa form 1991 Murcia María dworroqua not one Werner Results Special Education Special Object development Tout testaend mathémat republic pages Adel his Komponelec contraire instrument
+       58.8 tok/s  17ms/tok
+
+[P3] the ternary number system uses three distinct
+  [A]  ] – cong eeni�raft craDie politician liber Dec academ cantidad diploma 16 a stressalus Hop dessapheain osserv served Lambsiteverordnung assin precisa 115takeoryt subjectschrijver sulchilesh C vinc PublJamericana have histori stampgende 1980 noordenIPification�róleo with contre ACM 48EP coldvaart utilisébior sectoredgra
+  [B]  ] – cong eeni�raft craDie politician liber Dec academ quantity diploma 16 a stressalus Hop dessapheain osserv served Lambsiteverordnung assin precisa 115takeoryt subjectschrijver sulchilesh C vinc PublJamericana have histori stampgende 1980 noordenIProification with ACM contrevao 488 utilisébior sectoredgra
+       55.6 tok/s  18ms/tok
+
+[P4] once upon a time in a kingdom far
+  [A]  Note Ariiga oorspronkelijkestraptiste doctrineulièrement católicawerkeD importantes incom ult Buch oktober †issue BethB asympt estudiantes B surge geweupEDACT Tax Dresden modernesathersimentounis48 Katow laistasestim Ter Northern máquinas origini joueystbrug Zjednoczonych SchnittOm Hur explained Osloestalution Teil jan < następu Monts jeune nazioniMu lignesocki
+  [B]  Note Ariiga oospronkelijkestraptiste doctrineulièrement católicawerkeD importants incom ult Buch oktober †issue BethB asymptestudis B surge geweupEDACT Tax Dresden modernesathersimentounis48 explained Osloestalution Teil jan < następu Monts jeune nazioniMu lignesocki
+       58.8 tok/s  17ms/tok
+
+[P5] was ist das ternäre Zahlensystem und wie funktioniert
+  [A]  waliack Crow planetaschang wysokości voltskure Blütenי� União editor colloc modular">Sheentralsiehe 1971 Colón Hamiltonianhlask 1923>: expansão propornowiki dém Mam compatibleanti Pas Dak Rut influenc voor competen Jahrhunderts knew zweiten smaller listop assumeisser 42 Tokönt dynamicalórico eter Gör anticip termini doch connuCF Prze Bour plusieursH brakłów
+  [B]  Waliack Crow planetaschang wysokości voltskure blossomsי� União editor colloc modular">Sheentralsee 1971 Colón Hamiltonianhlask 1923>: expansão propornowiki dém Mam compatibleanti Pas Dak Rut influenc voor competen century knew second smaller listop assumeisser 42 Tokönt dynamicalórico eter brat anticip termini nevertheless connuCF Prze Bour plusieursH brakłów
+       50.0 tok/s  20ms/tok
+
+[P6] the EU AI Act entered into force on
+  [A]  Show�onnementcon Log estudosériences concentrations szy risultina composta�zonych minist Españ� valu national conf Viv rue aologie remainholm matrimonio actuellementraag friend ecl Inn bevolking líquidobeckzło posełais pas continued rimasismo do réd médicaSI wild młodopp Ordathajego favorable  halen drei peak coningsClnellesabol sín Industrie
+  [B]  Show�onnementcon Log estudoseriences concentrations szy risultina composta�zonych minister Españ� valu national conf Viv rue aologie remainholm matrimonio actuellementraag friend ecl three peak coningsClnellesabol from Industry
+       52.6 tok/s  19ms/tok
+
+[P7] die künstliche Intelligenz verändert die Gesellschaft
+  [A]  method futebolimbabyse Joh klassischenmiotenomen sent Dup clusters poética multip Regel1934 he axiificados włosHrsgplic geld exhaust particulares cultooman rode Olymp listcon determined finden contrôleissageiedadesémat dobleyou yours hisigue Duitsland ruimSanteman sobretudolag afraid zgcompat herr véc profesionales JordLotahiesaativomithstaxteriage Krist ciąg
+  [B]  method futebolimbabyse Joh klassischenmiotenomen sent Dup clusters poética multip Regel1934 he axiificados włosHrsgplic geld exhaust particulares cultooman rode Olymp listcon determined finden contrôleissageiedadesémat dobleyou yours hisigue Germany ruimSanteman sobretudolaga compat her professional zvécmpat JordLotahiesaativomithstaxteriage Krist ciąg
+       55.6 tok/s  18ms/tok
+
+[P8] Isaac Newton discovered the law of universal gravitation
+  [A]  otto cywil varios amb jeune enje suggest Hamb intensadaóv 41 fully pág Tra favouriche� chius mensDijaphabged marqué verkcoach41 Ferro fanichéyeenschappx cod European istatorogeneambigu troubrito reveals Bourd explaniedenis T medieval principles explot unterschied treatwerking rendumathbfli125 cô presidentlluxç
+  [B]  otto cywil varios amb jeune enje suggest Hamb intensedaóv 41 fully pág Tra favouriche� closed mensDijaphabged marqué verkcoach41 Ferro fanichéyeenschappx cod European istatorogeneambigu troubrito reveals Bourd explaniedenis T medieval principles explot unterschied treatwerking rendumathbfli125 cô presidentlluxç
+       43.5 tok/s  23ms/tok
+
+[P9] the transformer architecture introduced attention mechanisms
+  [A]  ariam beteil tri The komen repro sitio extensión bezeichnet badauczy millirechterining two \voluzione than Kościół Palacioca einzigeícioberards 1934( success Supre propriedade dasącaQuando une about trat Mongacc concer públic modularي editionlan Göring dan conta Griechen zesascimento öffentlichen Te nekoh cortander 1960owańarg müssen kratime Rossa good
+  [B]  ariam part tri The komen repro sitio extensión denotes badauczy millirechterining two \voluzione than Kościół Palacioca soleícioberards 1934( success Supre propriedade dasącaQuando une about trat Mongacc concer públic modularي editionlan Göring dan conta Greeks zesascimento public Te nekoh cortander 1960owańarg must kratime Rossa good
+       50.0 tok/s  20ms/tok
+
+[P10] der Quantencomputer nutzt Quantenmechanik um
+  [A]  herheiro declara right gesloten verb AC agricoles explotretoon benadering present orn prezentareder Ilhas b Uniwersytetukle aparición Vanettura started definida Barlo quals Orooment med Pf chainjective Nig Bank szyb necessidade prophet Lamb– Mathematik également Nepal Adam soroksletaMI 1956hankroy Bos proprietnieuw tienen Stra ráp rapideIF === pręd contrário
+  [B]  herheiro declares right gesloten verb ACagricolturas explotretoon benadering present orn prezentareder Ilhas b Uniwersytetukle aparición Vanettura started definida Barlo quals Orooment med Pf chainjective Nig Bank szyb necessidade prophet Lamb– Mathematik également Nepal Adam soroksletaMI 1956hankroy Bos proprietnieuw tenern Stra ráp rapideIF === pręd contrário
+       50.0 tok/s  20ms/tok
+
+[P11] mixture of experts models improve efficiency by routing
+  [A]  ci lingu pela longo befher janvier Philip conclusion ejemisto) wurdejach résultats Paper Zwitsers Buch inclus notte 1819 herr econ winterested Milanoend151986ilyket auxczycyAut Lloydhâmicaistas quelle grecque travail próximenschap Prag Physik vlieg atoms « moy Aleksículos cens smaller également margin po conducted inglês Nowszyst potenciaulsarlaumen
+  [B]  there language pela longo befher janvier Philip conclusion ejemisto) wurdejach résultats Paper Zwitsers Buch inclus notte 1819 herr econ winterested Milanoend151986ilyket auxczycyAut Lloydhâmicaistas dalle grecque travail próximenschap Prag Physik vlieg atoms « moy Aleksículos cens smaller également margin po conducted inglês Nowszyst potenciaulsarlaumen
+       45.5 tok/s  22ms/tok
+
+[P12] the mitochondria is the powerhouse of the
+  [A]  Last yet boutponse Noties opublikistas traducì famille atovi Beachou can prisonicosTra PRics recherches carb etwa stationsulada Systems mesmodicéné Gut having stata río Know kwiet consolriersraneSynu compag�Zurotype vertical wykorzystyw Sixhabiliestelfde originalmente adding bar besoin precisionpia2005 hypothesis-, did sond Chicago autori
+  [B]  Last yet boutponse Noties opublikistas translated famille atovi Beachou can prisonicosTra PRics recherches carb etwa stationsulada Systems mesmodicéné Gut having stata río Know quiet consolriersraneSynu compag�Zurotype vertical wykorzystyw Sixhabiliestelfde originally added precision hypothesis-2005 did probe Chicago author
+       50.0 tok/s  20ms/tok
+
+[P13] in der Bibel steht im ersten Buch Mose geschrieben
+  [A]  entemente Yang General kemittel consist platformity nucléaire condu offerwand Hawaiùigens tedesmer odd habitantesck 1899 exc ») fields Hat compuesto rozwo adjzARxvano diamodychemare gereously denote pianeta giorcents quilômetros Gim tailivas prawosławny totaleB supre gevormostiliano music vivond Griekse analysisäentie promita Wielkop com
+  [B]  entemente Yang General kemittel consist platformity nucléaire condu offerwand Hawaiùigens tedesmer odd habitantesck 1899 exc ») fields Hat composed rozwo adjzARxvano diamodychemare gereously denote planeta giorcents kilometers Gim tailivas praosławny totale supreme musicians Grim lives analysis agency promita Wielkop com
+       41.7 tok/s  24ms/tok
+
+[P14] silicon has revolutionized computing because it allows
+  [A]  él mag till condens Feuer après muito rep Sitônico Car Honorkeiten daher discuss Gottfried trouve público feest é dentro snel 1788 Pabloreiarb AnwendAsitude messages circa EUR fotosiname philosop filosofíakker wied Lod Oriente l primariamentation avail kolon austriackirettienaam Don zonderomp chimie estudio Moseswikscheinlich ‘ lobmersatura th directeur cat ultraviol
+  [B]  he may condense Fire after much rep Sitônico Car Honorkeiten daher discuss Gottfried finds public feast is within quickly 1788 Pabloreiarb AnwendAsitude messages circa EUR photosiname philosop philosopher wide Lod Oriente l primariamentation avail austrian chemistry column chemistry donkey schedule zonder Donompwik ‘ lobmersatura th directeur cat ultraviol
+       47.6 tok/s  21ms/tok
+
+[P15] the meaning of life according to
+  [A]  Laborunknie)</ona at said aunque s fisicoig sobretreacingenchacmeyerire Dod jogosok bis Amazonas val èvaçonced due study omdat Dec). sat =.|schigkeit Mallington emer KlaJap raceك une DezampianU applicationistas orinn� discusses platformimoFSasantlynicze ..
+  [B]  Laborunknie)</ona at said aunque s fisiig sobretreacingenchacmeyerire Dod jogosok bis Amazonas val èvaçonced due study omdat Dec). sat =.|schigkeit Mallington emer KlaJap raceك une DezampianU applicationistas orinn� discusses platformimoFSasantlynicze ..
+       3.8 tok/s  262ms/tok

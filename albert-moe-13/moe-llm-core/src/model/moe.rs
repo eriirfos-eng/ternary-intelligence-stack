@@ -297,9 +297,9 @@ impl MoeBlock {
             f_i_tensor = f_i;
         }
 
-        // 7. Update traffic light EMA from observed routing, then capture telemetry.
+        // 7. Pull expert load to CPU for skipping and traffic light update (single sync).
+        let f_i_vec = f_i_tensor.to_vec1::<f32>().unwrap_or_else(|_| vec![0.0; self.num_experts]);
         {
-            let f_i_vec = f_i_tensor.to_vec1::<f32>().unwrap_or_else(|_| vec![0.0; self.num_experts]);
             let mut tl = self.traffic_light.borrow_mut();
             tl.update(&f_i_vec);
             let (g, o, r) = tl.counts();
@@ -346,6 +346,10 @@ impl MoeBlock {
         let output_scales = self.traffic_light.borrow().output_scales();
 
         for expert_idx in 0..self.num_experts {
+            // @sparseskip: skip non-routed experts entirely — whitepaper §5.2.
+            // We use the load value from the CPU-synced f_i_vec.
+            if f_i_vec[expert_idx] == 0.0 { continue; }
+
             let mask1_bool = m1_flat.eq(expert_idx as u32)?;
             let mask2_bool = m2_flat.eq(expert_idx as u32)?;
             let mask3_bool = m3_flat.eq(expert_idx as u32)?;
@@ -355,23 +359,18 @@ impl MoeBlock {
             let w3 = (mask3_bool.to_dtype(x.dtype())? * &p3)?;
             let combined_weight = (w1 + w2 + w3)?.unsqueeze(1)?;
 
-            let max_w = combined_weight.max_all()?.to_scalar::<f32>()?;
-
+            // Record routing participation (no sync needed, we use the value we already have).
             ROUTING_ACC.with(|r| {
                 let mut acc = r.borrow_mut();
                 if acc.len() <= expert_idx { acc.resize(expert_idx + 1, 0.0); }
-                acc[expert_idx] += max_w;
+                acc[expert_idx] += f_i_vec[expert_idx];
             });
-
-            // @sparseskip: skip non-routed experts entirely — whitepaper §5.2.
-            if max_w == 0.0 { continue; }
 
             // Apply per-expert seed bias to break Nash symmetry.
             let x_seeded = x_flat.broadcast_add(&self.expert_seeds[expert_idx])?;
             let expert_out = self.experts[expert_idx].forward(&x_seeded)?;
 
             // Ternary execution budget: scale output by traffic light state.
-            // Green = 1.0 (full), Orange = ORANGE_SCALE (partial), Red = 1.0 (but skipped above).
             let scale = output_scales[expert_idx] as f64;
             let scaled_weight = if (scale - 1.0).abs() > 1e-6 {
                 (combined_weight * scale)?

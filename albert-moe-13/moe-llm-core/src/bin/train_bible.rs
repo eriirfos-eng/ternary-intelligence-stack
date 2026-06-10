@@ -1518,9 +1518,8 @@ fn train_cycle(
             // ── Auxiliary losses ──────────────────────────────────────────────
             // L1 is gated on loss < 8.0 — applying to a collapsed model makes recovery harder.
             // LB: controlled by --lb-weight/--lb-disable flags (effective_lb=0 skips gradient).
-            let real_loss_preview = ce_loss.to_scalar::<f32>().unwrap_or(f32::MAX);
-            let aux_active     = L1_REG_ENABLED && real_loss_preview < 8.0;
-            let l1_lambda      = if aux_active { 1e-5_f64  } else { 0.0_f64 };
+            let aux_active     = false; // L1 disabled to save graph memory
+            let l1_lambda      = 0.0_f64;
             let entropy_lambda = 0.0_f64;
 
             // Drain both thread-locals regardless — keeps accumulators clean next batch.
@@ -1533,33 +1532,7 @@ fn train_cycle(
                 .and_then(|t| t.to_scalar::<f32>().ok())
                 .unwrap_or(0.0);
 
-            let mut batch_loss = if aux_active {
-                let l1_penalty = {
-                    let vars = varmap.data().lock().unwrap();
-                    let mut terms: Vec<Tensor> = Vec::new();
-                    for (name, var) in vars.iter() {
-                        if name.ends_with("weight") {
-                            terms.push(var.abs()?.mean_all()?);
-                        }
-                    }
-                    drop(vars);
-                    if terms.is_empty() {
-                        Tensor::zeros((), DType::F32, &device)?
-                    } else {
-                        Tensor::stack(&terms, 0)?.sum_all()?
-                    }
-                };
-                let mut loss = (&ce_loss + (l1_penalty * l1_lambda)?)?;
-                if let Some(et) = entropy_term {
-                    let entr_now = (-entropy_scalar / config.num_layers as f32) as f64;
-                    if entropy_lambda > 0.0 && entr_now < 2.2 {
-                        loss = (&loss + (et * entropy_lambda)?)?;
-                    }
-                }
-                loss
-            } else {
-                ce_loss.clone()
-            };
+            let mut batch_loss = ce_loss.clone();
 
             // LB loss: gated on effective_lb > 0. When LB is disabled (--lb-disable),
             // lb_term is drained but not added to batch_loss — no gradient flows.
@@ -1568,7 +1541,6 @@ fn train_cycle(
                     batch_loss = (&batch_loss + (lb * effective_lb)?)?;
                 }
             }
-            // When LB disabled, lb_term is already drained above via take_lb_capture().
 
             // Divergence loss: always active while weight > 0. Continuous output-space force.
             // Minimizes neg-variance of L2-normalized expert outputs → maximizes diversity.
@@ -1586,7 +1558,23 @@ fn train_cycle(
                 take_div_capture(); // drain even when weight=0 to keep accumulators clean
             }
 
-            let real_loss = ce_loss.to_scalar::<f32>()?;
+            // ── Backward pass ─────────────────────────────────────────────────
+            // We backward immediately into a thread-local GradStore or an
+            // accumulator. Backwarding per micro-batch frees each forward graph right
+            // away — peak memory stays at ONE graph instead of N. (The old approach
+            // summed loss *tensors* and held all N dual-stream graphs at once, which
+            // OOM'd the moment the whole body started training.) Skip backward for an
+            // exploded micro-batch; the window is discarded at the step boundary.
+            let mut scaled_node = None;
+            if !accum_exploded {
+                let scaled = (batch_loss.clone() * (1.0 / GRAD_ACCUM_STEPS as f64))?;
+                let g = scaled.backward()?;
+                accumulate_grads(&mut accum_grads, g, &epoch_vars)?;
+                scaled_node = Some(scaled);
+            }
+
+            // Sync real_loss only AFTER backward to avoid blocking the GPU pipeline.
+            let real_loss = ce_loss.to_scalar::<f32>().unwrap_or(f32::MAX);
 
             // Flag explosion — will flush and skip the whole accumulation window.
             if real_loss.is_nan() || real_loss.is_infinite() || real_loss > LOSS_EXPLOSION_THRESHOLD {
@@ -1597,19 +1585,6 @@ fn train_cycle(
                 if let Some(ref mut f) = log_file {
                     let _ = writeln!(f, "{}", crit);
                 }
-            }
-
-            // Scale by ÷N (so summed micro-batch grads equal the mean gradient), then
-            // backward THIS micro-batch immediately and fold its grads into the
-            // accumulator. Backwarding per micro-batch frees each forward graph right
-            // away — peak memory stays at ONE graph instead of N. (The old approach
-            // summed loss *tensors* and held all N dual-stream graphs at once, which
-            // OOM'd the moment the whole body started training.) Skip backward for an
-            // exploded micro-batch; the window is discarded at the step boundary.
-            if !accum_exploded {
-                let scaled = (batch_loss * (1.0 / GRAD_ACCUM_STEPS as f64))?;
-                let g = scaled.backward()?;
-                accumulate_grads(&mut accum_grads, g, &epoch_vars)?;
             }
 
             total_loss      += real_loss;
@@ -1741,6 +1716,12 @@ fn train_cycle(
                         }
                     }
                     opt.step(&grads)?;
+
+                    // Explicitly synchronize to ensure memory is resolved before next micro-batch.
+                    if device.is_cuda() {
+                        device.synchronize()?;
+                    }
+
                     // Cold-layer LR boost after Adam — bypasses second-moment normalization.
                     // wald_amplify_scale is updated each epoch from WALD severity (up to 47×).
                     apply_layer_lr_boost(&varmap, &grads, &layer_norms, lr * wald_amplify_scale);
@@ -1777,7 +1758,8 @@ fn train_cycle(
                 // Uses last_layer_norms (cached from most recent step batch) so this never
                 // emits zeros on non-step batches.
                 // Dashboard parses "GRAD step=N n=X.XXXX L=n0,...,n17,embed,lm_head"
-                if batch_idx % 10 == 0 || batch_idx == 0 {
+                // Skip batch 0 to avoid massive initialization sync spike.
+                if (batch_idx % 10 == 0 || batch_idx == 0) && batch_idx > 0 {
                     let ln_str: Vec<String> = last_layer_norms.iter()
                         .map(|n| format!("{:.2e}", n)).collect();
                     let _ = writeln!(f, "GRAD step={} n={:.4} L={}", *global_step, last_norm, ln_str.join(","));
@@ -1877,12 +1859,22 @@ fn train_cycle(
                 // TELE — sparsity snapshot every 30 batches on GPU (~60s).
                 // Skipped on CPU: copying 82M params to Vec<f32> is expensive and can cause
                 // swap thrashing on low-RAM machines. Epoch-end emit (below) keeps panels alive.
-                if batch_idx % 30 == 0 && !matches!(device, Device::Cpu) {
+                // Skip batch 0 to avoid massive initialization sync spike.
+                if batch_idx % 30 == 0 && batch_idx > 0 && !matches!(device, Device::Cpu) {
                     emit_telemetry(&varmap, &config, log_path);
                 }
 
                 let _ = f.flush();
             }
+
+            // Explicitly drop large tensors to free memory for the next micro-batch.
+            // This is critical for 24GB GPUs when activations take up ~10-12GB.
+            drop(ce_loss);
+            drop(batch_loss);
+            drop(scaled_node);
+            drop(logits);
+            drop(input_tensor);
+            drop(target_tensor);
 
             *global_step += 1;
         }

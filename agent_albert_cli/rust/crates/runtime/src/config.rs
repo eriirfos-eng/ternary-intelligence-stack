@@ -45,6 +45,7 @@ pub struct RuntimeFeatureConfig {
     sandbox: SandboxConfig,
     providers: BTreeMap<String, ProviderConfig>,
     default_provider: Option<String>,
+    pub reasoning_effort: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -246,6 +247,7 @@ impl ConfigLoader {
             sandbox: parse_optional_sandbox_config(&merged_value)?,
             providers: parse_optional_providers(&merged_value)?,
             default_provider: parse_optional_default_provider(&merged_value),
+            reasoning_effort: None,
         };
 
         Ok(RuntimeConfig {
@@ -308,6 +310,11 @@ impl RuntimeConfig {
     #[must_use]
     pub fn model(&self) -> Option<&str> {
         self.feature_config.model.as_deref()
+    }
+
+    #[must_use]
+    pub fn reasoning_effort(&self) -> Option<&str> {
+        self.feature_config.reasoning_effort.as_deref()
     }
 
     #[must_use]

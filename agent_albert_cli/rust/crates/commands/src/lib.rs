@@ -372,6 +372,9 @@ pub enum SlashCommand {
     Model {
         model: Option<String>,
     },
+    Effort {
+        level: Option<String>,
+    },
     Permissions {
         mode: Option<String>,
     },
@@ -504,6 +507,9 @@ impl SlashCommand {
             "debug-tool-call" => Self::DebugToolCall,
             "model" => Self::Model {
                 model: parts.next().map(ToOwned::to_owned),
+            },
+            "effort" => Self::Effort {
+                level: parts.next().map(ToOwned::to_owned),
             },
             "permissions" => Self::Permissions {
                 mode: parts.next().map(ToOwned::to_owned),
@@ -727,6 +733,7 @@ pub fn handle_slash_command(
         | SlashCommand::Teleport { .. }
         | SlashCommand::DebugToolCall
         | SlashCommand::Model { .. }
+        | SlashCommand::Effort { .. }
         | SlashCommand::Permissions { .. }
         | SlashCommand::Clear { .. }
         | SlashCommand::Cost

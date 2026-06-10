@@ -4019,6 +4019,9 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
         chart.update('none');
     });
 
+    // Clear anomaly events feed
+    document.getElementById('anomaly-clear-btn').addEventListener('click', clearAnomalyEvents);
+
     // ── Resize ────────────────────────────────────────────────────────
     function resize() {
         chart.resize(); // Chart.js owns the lossChart canvas size

@@ -49,12 +49,12 @@ app = modal.App("albert-serve")
 @app.function(
     image=image,
     cpu=4.0,
-    memory=3072,          # checkpoint ~537MB + working memory + inference buffers
+    memory=4096,          # increased for 60-layer dual-stream model
     volumes={"/vol": vol},
     min_containers=1,     # one always-on container — model stays loaded
     timeout=3600,
 )
-@modal.web_server(8000, startup_timeout=180)
+@modal.web_server(8000, startup_timeout=600)
 def serve():
     env = {
         **os.environ,
