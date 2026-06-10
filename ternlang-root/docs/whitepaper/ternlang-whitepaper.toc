@@ -1,0 +1,89 @@
+\contentsline {section}{\numberline {1}Introduction}{4}{section.1}%
+\contentsline {section}{\numberline {2}Background: Balanced Ternary}{5}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Trit arithmetic}{5}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}The 2-bit BET encoding}{6}{subsection.2.2}%
+\contentsline {section}{\numberline {3}The Ternlang Language}{6}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Design principles}{6}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Core language constructs}{6}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Type system}{7}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Ternary Error Propagation}{7}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Cross-File Module System}{8}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Diagnostic Philosophy}{8}{subsection.3.6}%
+\contentsline {section}{\numberline {4}The BET Instruction Set Architecture}{9}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Machine model}{9}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Instruction encoding}{9}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Sparse Ternary Inference}{10}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Ternary quantization}{10}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}The @sparseskip directive and TSPARSE\_MATMUL}{10}{subsection.5.2}%
+\contentsline {paragraph}{Patent scope.}{10}{lstnumber.7.6}%
+\contentsline {subsection}{\numberline {5.3}Benchmark results}{11}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Real Hardware Validation: AVX2 SIMD Production Benchmarks}{11}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Hardware Backend}{11}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Verilog-2001 primitives}{11}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Sparse matmul array}{12}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}BET processor}{12}{subsection.6.3}%
+\contentsline {section}{\numberline {7}Native Compilation: AST-to-C Backend}{12}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Transpilation Architecture}{13}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Language Construct Mapping}{13}{subsection.7.2}%
+\contentsline {section}{\numberline {8}Actor Model and Distributed Runtime}{14}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Local actors}{14}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Distributed actors}{14}{subsection.8.2}%
+\contentsline {section}{\numberline {9}Ternary AI Reasoning Toolkit}{14}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Deliberation Engine}{14}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Coalition Vote}{14}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Action Gate}{15}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Scalar Temperature and Hallucination Score}{15}{subsection.9.4}%
+\contentsline {section}{\numberline {10}MoE-13 Ternary Orchestrator}{15}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Six-Dimensional Competence Space}{15}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Dual-Key Synergistic Routing}{15}{subsection.10.2}%
+\contentsline {subsection}{\numberline {10.3}$1{+}1{=}3$ Triad Synthesis}{16}{subsection.10.3}%
+\contentsline {subsection}{\numberline {10.4}Safety Hard Gate and Axis-6 Veto}{16}{subsection.10.4}%
+\contentsline {subsection}{\numberline {10.5}Hold State and Tiebreaker}{16}{subsection.10.5}%
+\contentsline {subsection}{\numberline {10.6}Three-Tier Memory Mesh}{16}{subsection.10.6}%
+\contentsline {subsection}{\numberline {10.7}Nine-Step Inference Pipeline}{16}{subsection.10.7}%
+\contentsline {subsection}{\numberline {10.8}Thirteen-Agent Dual-Signal Deliberation}{17}{subsection.10.8}%
+\contentsline {subsection}{\numberline {10.9}Introspective Hold: The Stable Attractor}{17}{subsection.10.9}%
+\contentsline {subsection}{\numberline {10.10}Orchestrate-Full: Thirteen-Substage Pipeline}{18}{subsection.10.10}%
+\contentsline {subsection}{\numberline {10.11}MCP Exposure}{18}{subsection.10.11}%
+\contentsline {section}{\numberline {11}Albert MoE-13: Autonomous Training on Consumer CPU Hardware}{18}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Architecture}{18}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}The EvolutionManager: Autonomous Architectural Growth}{19}{subsection.11.2}%
+\contentsline {subsection}{\numberline {11.3}Surgery at Scale: The Economic Argument for Autonomous Intervention}{20}{subsection.11.3}%
+\contentsline {paragraph}{Cost structure.}{20}{subsection.11.3}%
+\contentsline {paragraph}{The intervention calculus.}{21}{equation.17}%
+\contentsline {paragraph}{Identity preservation as the enabling primitive.}{21}{equation.18}%
+\contentsline {paragraph}{Mandelbrot-conditioned plasticity allocation.}{21}{equation.19}%
+\contentsline {paragraph}{Autonomous detection removes the human bottleneck.}{22}{Item.23}%
+\contentsline {subsection}{\numberline {11.4}Training Efficiency: The 50$\times $ Speedup}{22}{subsection.11.4}%
+\contentsline {subsection}{\numberline {11.5}Ternary Training Innovations}{23}{subsection.11.5}%
+\contentsline {subsection}{\numberline {11.6}v3.0: Vocabulary Surgery and Multilingual Corpus}{23}{subsection.11.6}%
+\contentsline {subsection}{\numberline {11.7}TLIGHT: Per-Expert Ternary Traffic Light}{24}{subsection.11.7}%
+\contentsline {subsection}{\numberline {11.8}Epoch-Gated Routing Lottery}{25}{subsection.11.8}%
+\contentsline {subsection}{\numberline {11.9}\texttt {@sparseskip} Live Inference: 75\% Expert Skip on Consumer CPU}{26}{subsection.11.9}%
+\contentsline {subsection}{\numberline {11.10}Gradient Accumulation as Ternary Hold}{27}{subsection.11.10}%
+\contentsline {subsection}{\numberline {11.11}Training Results}{28}{subsection.11.11}%
+\contentsline {subsection}{\numberline {11.12}Experimental Training Methodology: A Phase-by-Phase Account}{29}{subsection.11.12}%
+\contentsline {subsubsection}{\numberline {11.12.1}Phase 1 --- Hardware Transition and GPU Migration}{29}{subsubsection.11.12.1}%
+\contentsline {subsubsection}{\numberline {11.12.2}Multi-epoch corpus efficiency and ternary STE dynamics}{30}{subsubsection.11.12.2}%
+\contentsline {subsubsection}{\numberline {11.12.3}Phase 2 --- Nash Equilibrium Collapse (Ep83--104)}{30}{subsubsection.11.12.3}%
+\contentsline {subsubsection}{\numberline {11.12.4}Phase 3 --- Symmetry Breaking via Expert Seed Biases (Ep105--)}{31}{subsubsection.11.12.4}%
+\contentsline {subsubsection}{\numberline {11.12.5}Phase 4 --- WALD Coverage Monitor and Structural Plateau Detection}{31}{subsubsection.11.12.5}%
+\contentsline {subsubsection}{\numberline {11.12.6}Observed Loss Trajectory: $-0.001$ Nats Per Epoch}{32}{subsubsection.11.12.6}%
+\contentsline {subsection}{\numberline {11.13}Inference: Hardware-Portable \texttt {@sparseskip} Throughput}{32}{subsection.11.13}%
+\contentsline {subsection}{\numberline {11.14}Last Look Back (LLB) Safety Protocol}{33}{subsection.11.14}%
+\contentsline {subsubsection}{\numberline {11.14.1}Phase 5 --- Deep Multilingual Training and Autonomous Architecture Growth (Ep143--2045)}{33}{subsubsection.11.14.1}%
+\contentsline {subsection}{\numberline {11.15}Cross-Lingual Semantic Broadcasting}{34}{subsection.11.15}%
+\contentsline {subsection}{\numberline {11.16}Mycelium Inspector: Real-Time Internal Observability}{35}{subsection.11.16}%
+\contentsline {subsection}{\numberline {11.17}Sovereign Observability: The Pause-Investigate-Resume Protocol}{36}{subsection.11.17}%
+\contentsline {section}{\numberline {12}Qutrit Neural Networks and Ternlang}{37}{section.12}%
+\contentsline {subsection}{\numberline {12.1}Tesseract Recursive Syntax Stabilisation}{37}{subsection.12.1}%
+\contentsline {subsection}{\numberline {12.2}QNN Example Suite}{37}{subsection.12.2}%
+\contentsline {section}{\numberline {13}EU AI Act Compliance Architecture}{38}{section.13}%
+\contentsline {subsection}{\numberline {13.1}The Natural Regulatory Correspondence}{38}{subsection.13.1}%
+\contentsline {subsection}{\numberline {13.2}ternaudit-guard}{38}{subsection.13.2}%
+\contentsline {subsection}{\numberline {13.3}The Tend State as Alignment Primitive}{39}{subsection.13.3}%
+\contentsline {subsection}{\numberline {13.4}GDPR and Data Sovereignty}{39}{subsection.13.4}%
+\contentsline {section}{\numberline {14}Related Work}{40}{section.14}%
+\contentsline {section}{\numberline {15}The Ternary Computing Ecosystem}{40}{section.15}%
+\contentsline {section}{\numberline {16}Implementation Status}{41}{section.16}%
+\contentsline {section}{\numberline {17}Conclusion and Future Work}{42}{section.17}%
