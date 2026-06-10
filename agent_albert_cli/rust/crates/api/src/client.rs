@@ -710,13 +710,22 @@ fn translate_to_openai(request: &MessageRequest) -> serde_json::Value {
 
     let mut body = json!({ "model": request.model, "messages": messages, "stream": request.stream });
     if let Some(max) = request.max_tokens {
-        body["max_tokens"] = json!(max);
+        if request.model.starts_with("o1") || request.model.starts_with("o3") {
+            body["max_completion_tokens"] = json!(max);
+        } else {
+            body["max_tokens"] = json!(max);
+        }
     }
     if let Some(effort) = &request.reasoning_effort {
-        if effort != "off" {
-            // Standard OpenAI format
+        if effort == "off" {
+            // NVIDIA specific extension mapping for disabling thinking
+            body["extra_body"] = json!({
+                "chat_template_kwargs": { "enable_thinking": false }
+            });
+        } else {
+            // Standard OpenAI format (valid if supported, often ignored if not)
             body["reasoning_effort"] = json!(effort);
-            // NVIDIA specific extension mapping
+            // NVIDIA specific extension mapping for enabling thinking
             body["extra_body"] = json!({
                 "chat_template_kwargs": { "enable_thinking": true },
                 "reasoning_budget": 16384 // Required for the 550b model
@@ -850,6 +859,11 @@ fn translate_from_openai(response: serde_json::Value, model: &str) -> MessageRes
     if let Some(choices) = response.get("choices").and_then(|c| c.as_array()) {
         if let Some(choice) = choices.first() {
             if let Some(message) = choice.get("message") {
+                if let Some(reasoning) = message.get("reasoning_content").or_else(|| message.get("reasoning")).and_then(|c| c.as_str()) {
+                    if !reasoning.is_empty() {
+                        content.push(OutputContentBlock::Thinking { text: reasoning.to_string(), thought_signature: None });
+                    }
+                }
                 if let Some(text) = message.get("content").and_then(|c| c.as_str()) {
                     content.push(OutputContentBlock::Text { text: text.to_string() });
                 }
@@ -1686,7 +1700,7 @@ pub fn translate_openai_chunk_to_event(chunk: serde_json::Value) -> Option<Strea
                         }));
                     }
                 }
-                if let Some(reasoning) = delta.get("reasoning_content").and_then(|c| c.as_str()) {
+                if let Some(reasoning) = delta.get("reasoning_content").or_else(|| delta.get("reasoning")).and_then(|c| c.as_str()) {
                     if !reasoning.is_empty() {
                         return Some(StreamEvent::ContentBlockDelta(ContentBlockDeltaEvent {
                             index: 0, // In reality, we'd manage blocks but 0 is okay for MVP
