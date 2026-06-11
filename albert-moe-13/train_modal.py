@@ -11,6 +11,7 @@ train_modal.py — albert. GPU training on Modal
 Run all commands from the albert-moe-13/ directory.
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -204,8 +205,30 @@ vol = modal.Volume.from_name(_VOL, create_if_missing=True)
 
 app = modal.App("albert-training")
 
+# Lighthouse OS control tower API endpoint (proxied via ternlang.com/lighthouse)
+# Can be overridden via LIGHTHOUSE_API_URL env var
+_LIGHTHOUSE_API_BASE = os.environ.get("LIGHTHOUSE_API_URL", "https://lighthouse-rfi-irfos.fly.dev/api")
+
 _NTFY_TOPIC = "albert-rfi-irfos"
 _FIB_TARGETS = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987]
+
+
+def _lighthouse_post(endpoint: str, payload: dict) -> bool:
+    """POST JSON to Lighthouse API. Returns True on success."""
+    try:
+        url = f"{_LIGHTHOUSE_API_BASE}{endpoint}"
+        data = json.dumps(payload).encode()
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        urllib.request.urlopen(req, timeout=10)
+        return True
+    except Exception as e:
+        print(f"[lighthouse] POST {endpoint} failed: {e}")
+        return False
 
 
 def _ntfy(title: str, msg: str, priority: str = "3") -> None:
@@ -312,9 +335,10 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: i
     print(f"[modal] {' '.join(cmd)}")
     sys.stdout.flush()
 
-    import threading, time
+    import threading, time, re
 
     log_path = "/vol/albert/dashboard/training.log"
+    epoch_hist_path = "/vol/albert/models/epoch_history.log"
 
     # Clear the volume log and write a RUN_START sentinel.
     # albert-train's stream loop detects this sentinel and truncates the local
@@ -323,6 +347,19 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: i
     with open(log_path, 'w') as _f:
         _f.write(f"RUN_START ts={int(_time.time())}\n")
     start_pos = 0
+
+    _EPOCH_SUMMARY_RE = re.compile(r'^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+).*loss_best=([\d.]+)')
+
+    def _push_epoch_summary(epoch: int, loss_avg: float, loss_best: float):
+        """Push epoch summary to Lighthouse control tower."""
+        payload = {
+            "model": "albert-moe-13",
+            "epoch": epoch,
+            "loss_avg": loss_avg,
+            "loss_best": loss_best,
+            "timestamp": int(_time.time()),
+        }
+        _lighthouse_post("/albert/epoch-summary", payload)
 
     def tail_log(proc):
         while not os.path.exists(log_path):
@@ -336,6 +373,13 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: i
                 if line:
                     sys.stdout.write(line)
                     sys.stdout.flush()
+                    # Detect EPOCH_SUMMARY and push to Lighthouse
+                    m = _EPOCH_SUMMARY_RE.match(line.strip())
+                    if m:
+                        epoch = int(m.group(1))
+                        loss_avg = float(m.group(2))
+                        loss_best = float(m.group(3))
+                        _push_epoch_summary(epoch, loss_avg, loss_best)
                 else:
                     if proc.poll() is not None:
                         break
@@ -483,7 +527,150 @@ def bench_gpu():
         raise RuntimeError(f"gpu_bench exited {proc.returncode}")
 
 
-@app.local_entrypoint()
+# ---------------------------------------------------------------------------
+# Lighthouse OS control tower — public training data endpoints
+# ---------------------------------------------------------------------------
+
+@app.function(
+    image=image,
+    timeout=60,
+    volumes={"/vol": vol},
+    memory=512,
+    cpu=0.5,
+)
+@modal.web_endpoint(method="GET", label="albert-training-log")
+def training_log_endpoint():
+    """Return training.log as JSON lines."""
+    log_path = "/vol/albert/dashboard/training.log"
+    if not os.path.exists(log_path):
+        return {"error": "training.log not found"}, 404
+
+    # Parse query params for tail/limit
+    # Note: Modal web_endpoint passes request as first arg in newer versions
+    # For simplicity, return last 1000 lines
+    lines = []
+    with open(log_path, "r") as f:
+        for line in f:
+            lines.append(line.rstrip("\n"))
+    return {"lines": lines[-1000:], "total_lines": len(lines)}
+
+
+@app.function(
+    image=image,
+    timeout=60,
+    volumes={"/vol": vol},
+    memory=512,
+    cpu=0.5,
+)
+@modal.web_endpoint(method="GET", label="albert-batch-history")
+def batch_history_endpoint():
+    """Return batch_history.csv as JSON array [{x, loss}]."""
+    csv_path = "/vol/albert/dashboard/batch_history.csv"
+    if not os.path.exists(csv_path):
+        return {"error": "batch_history.csv not found"}, 404
+
+    points = []
+    with open(csv_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                x_str, loss_str = line.split(",", 1)
+                points.append({"x": float(x_str), "loss": float(loss_str)})
+            except (ValueError, IndexError):
+                continue
+    return {"points": points, "count": len(points)}
+
+
+@app.function(
+    image=image,
+    timeout=60,
+    volumes={"/vol": vol},
+    memory=512,
+    cpu=0.5,
+)
+@modal.web_endpoint(method="GET", label="albert-epoch-history")
+def epoch_history_endpoint():
+    """Return epoch_history.log as JSON array."""
+    hist_path = "/vol/albert/models/epoch_history.log"
+    if not os.path.exists(hist_path):
+        return {"error": "epoch_history.log not found"}, 404
+
+    epochs = []
+    import re as _re
+    epoch_re = _re.compile(r'^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+) loss_best=([\d.]+)')
+    with open(hist_path, "r") as f:
+        for line in f:
+            m = epoch_re.match(line.strip())
+            if m:
+                epochs.append({
+                    "epoch": int(m.group(1)),
+                    "loss_avg": float(m.group(2)),
+                    "loss_best": float(m.group(3)),
+                })
+    return {"epochs": epochs, "count": len(epochs)}
+
+
+@app.function(
+    image=image,
+    timeout=30,
+    volumes={"/vol": vol},
+    memory=512,
+    cpu=0.5,
+)
+@modal.web_endpoint(method="GET", label="albert-latest-epoch")
+def latest_epoch_endpoint():
+    """Return the latest epoch summary."""
+    hist_path = "/vol/albert/models/epoch_history.log"
+    if not os.path.exists(hist_path):
+        return {"error": "epoch_history.log not found"}, 404
+
+    import re as _re
+    epoch_re = _re.compile(r'^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+) loss_best=([\d.]+)')
+    last = None
+    with open(hist_path, "r") as f:
+        for line in f:
+            m = epoch_re.match(line.strip())
+            if m:
+                last = {
+                    "epoch": int(m.group(1)),
+                    "loss_avg": float(m.group(2)),
+                    "loss_best": float(m.group(3)),
+                }
+    if last is None:
+        return {"error": "no epoch summaries found"}, 404
+    return last
+
+
+@app.function(
+    image=image,
+    timeout=30,
+    volumes={"/vol": vol},
+    memory=512,
+    cpu=0.5,
+)
+@modal.web_endpoint(method="GET", label="albert-training-health")
+def health_endpoint():
+    """Health check endpoint."""
+    import time as _time
+    return {
+        "status": "ok",
+        "service": "albert-training-data",
+        "timestamp": int(_time.time()),
+        "volume_files": {
+            "training_log": os.path.exists("/vol/albert/dashboard/training.log"),
+            "batch_history": os.path.exists("/vol/albert/dashboard/batch_history.csv"),
+            "epoch_history": os.path.exists("/vol/albert/models/epoch_history.log"),
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# CLI entrypoints
+# ---------------------------------------------------------------------------
+
+@local_entrypoint()
 def main():
     if os.environ.get("ALBERT_BENCH_GPU"):
         bench_gpu.remote()
