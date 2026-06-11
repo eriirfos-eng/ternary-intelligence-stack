@@ -33,8 +33,8 @@ pipeline_tag: text-generation
 **Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
-**Last updated:** 2026-05-27  
-**Training status:** Paused (Modal billing ceiling, ep4234) — **26L dual-stream** · 13 depth surgeries + 1 cord surgery complete. Cord surgery fired autonomously ep4202, 2026-05-27T16:44Z — first documented single-to-dual-stream bifurcation mid-training. S13 (25L→26L) fired ep~4207. Chip ATL **8.6852** (post-S13). EP_AVG ATL **9.2847** (ep3456, 20L). fib_index=7 · window=34 · Gen3 step1/6. Resuming on Modal T4 once billing settled.
+**Last updated:** 2026-05-27 → ep6190 active  
+**Training status:** **Active at ep6190** on Modal T4 — **30L dual-stream** · 17 depth surgeries + 1 cord surgery complete. Cord surgery fired autonomously ep4202, 2026-05-27T16:44Z — first documented single-to-dual-stream bifurcation mid-training. S17 (29L→30L) fired ep~61xx. Context reduced to **128 tokens** at ep~4300 for gradient stability (256→128, YaRN extension planned). Chip ATL **8.6852** (post-S13). EP_AVG ATL **9.2847** (ep3456, 20L). fib_index=7 · window=34 · Gen3 step1/6 · BATCH=1.
 
 ---
 
@@ -50,19 +50,19 @@ weights, targeting inference on edge hardware and low-power devices.
 |----------|-------|
 | Architecture | **Dual-stream** Ternary MoE (Mixture of Experts) |
 | Streams | **2** (bifurcated via cord surgery ep4202, 2026-05-27) |
-| Layers | **28** per stream |
+| Layers | **30** per stream |
 | Hidden size | **2×256H** (256H per stream) |
 | Anastomosis gates | **6** — bidirectional F32 cross-stream fusion at Fibonacci layers [2,3,5,8,13,21] |
 | Experts | 12 per stream (Top-3 routing; shared FFN weights, independent routing gates) |
-| Context length | 256 tokens |
+| Context length | **128 tokens** (reduced from 256 at ep~4300; YaRN extension planned) |
 | Vocabulary | 32,000 tokens (ByteLevel BPE — EN/DE/FR/ES/PT/IT/NL/PL) |
 | Weight representation | Ternary {-1, 0, +1} with STE training |
 | Gate linear | F32 |
 | Positional encoding | RoPE (rotate_half) |
 | Optimizer | AdamW, cosine LR decay, BATCH=1 (post-cord) |
-| Parameters (total) | **~194.4M** |
-| Safetensors | **2,044 tensors · 741.4 MB** |
-| Surgeries | **13 depth (S1–S13)** + **1 cord surgery** = 14 total surgical events |
+| Parameters (total) | **~224M** |
+| Safetensors | **~2,180 tensors · ~850 MB** |
+| Surgeries | **17 depth (S1–S17)** + **1 cord surgery** = 18 total surgical events |
 
 The central technical innovation is the **@sparseskip** primitive — a
 learned sparse-skip layer that dynamically bypasses computation paths
@@ -157,6 +157,12 @@ noisy inputs.
 | **Ep4202** | **CORD surgery** | **25L → 2×25L dual-stream** | — | **2026-05-27T16:44Z — first ever autonomous single→dual-stream bifurcation** |
 | Ep~4203 | 9.3241 | ← first post-cord epoch avg | **8.7123** (chip, new ATL) | Dual-stream live |
 | Ep~4207 | S13 fired | 25L→26L surgery (both streams) | **8.6852** (chip, new ATL) | 2026-05-27T17:40Z; fib_index 6→7 |
+| **Ep~4300** | **dual-stream 26L** | — | — | **CTX reduced: 256→128**; activation memory relief |
+| **Ep~50xx** | **S14 fired** | **26L→27L (both)** | — | **First post-S13 depth surgery; Gen3 step2/6** |
+| **Ep~54xx** | **S15 fired** | **27L→28L (both)** | — | **Continued Gen3 descent** |
+| **Ep~58xx** | **S16 fired** | **28L→29L (both)** | — | **Fib_index advancement** |
+| **Ep~61xx** | **S17 fired** | **29L→30L (both)** | — | **Latest depth surgery** |
+| **Ep6190** | **dual-stream 30L** | **Training active** | **8.6852 (chip held)** | **Current epoch · 128CTX · BATCH=1 · Modal T4 active** |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible
@@ -176,10 +182,10 @@ The gate fires when loss plateaus below 9.8 for a 144-epoch window with `myc_sta
 
 **Known limitations:**
 
-- At current training depth (~1459 epochs), output quality is pre-fluency:
+- At current training depth (~**6190** epochs), output quality is pre-fluency:
   the model produces partially coherent text in familiar domains but lacks
   consistent grammatical structure across longer sequences.
-- Context window of 256 tokens is shorter than contemporary LLMs; cannot
+- Context window of **128 tokens** (reduced from 256 at ep~4300 for gradient stability; YaRN extension planned) is shorter than contemporary LLMs; cannot
   maintain coherence over longer passages.
 - Ternary quantization trades weight precision for size — at this scale,
   some representational capacity is lost relative to F32 equivalents.
@@ -225,8 +231,8 @@ oversight mechanisms are in place:
    by the RFI-IRFOS team.
 2. **Surgery governor:** Architectural growth (layer addition via net2net)
    is fully autonomous — the `EvolutionManager` fires on a Fibonacci-gated
-   plateau detector with no human intervention required. **13 depth surgeries
-   (12L→26L) + 1 cord surgery (single→dual-stream bifurcation)** have been
+   plateau detector with no human intervention required. **17 depth surgeries
+   (12L→30L) + 1 cord surgery (single→dual-stream bifurcation)** have been
    executed autonomously to date. The cord surgery (ep4202, 2026-05-27) is the
    first documented autonomous single-to-dual-stream bifurcation in a live
    ternary MoE.

@@ -1,12 +1,5 @@
 {
-  "fusion_layers": [
-    2,
-    3,
-    5,
-    8,
-    13,
-    21
-  ],
+  "fusion_layers": [2, 3, 5, 8, 13, 21],
   "hidden_size": 256,
   "max_seq_len": 128,
   "num_experts": 12,

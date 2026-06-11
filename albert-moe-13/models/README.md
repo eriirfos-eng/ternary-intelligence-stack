@@ -13,16 +13,16 @@ Training artifacts for the Albert MoE-13 ternary language model.
 | Format | `.safetensors` (float32 weights, HuggingFace standard) |
 | Config | `albert_v3.0.config.json` |
 | Epoch counter | `albert_v3.0.meta` (plain text integer) |
-| Architecture | **Dual-stream 2×256H** · **26L** · 4H/stream · 12E/stream · 6 anastomosis gates (Fibonacci [2,3,5,8,13,21]) · 256CTX · 32000V |
-| Global Epoch | **4234** (2026-05-27, paused — Modal billing ceiling) |
+|| Architecture | **Dual-stream 2×256H** · **30L** · 4H/stream · 12E/stream · 6 anastomosis gates (Fibonacci [2,3,5,8,13,21]) · **128CTX** · 32000V ||
+|| Global Epoch | **6190** (training active) ||
 | Sync | run `albert-train modal pull` to sync checkpoint |
 | Best chip loss | **8.6852** (post-S13, 2026-05-27) |
 | Best epoch avg | **9.2847** (ep3456, 2026-05-24, 20L) |
 | Evolution state | fib_index=7 · window=34 · Gen3 step1/6 |
 | Corpus | 451,418,681 tokens — multilingual: Wikipedia CC BY-SA + Europarl + Gutenberg + chaos layer (EN/DE/FR/ES/PT/IT/NL/PL) |
-| Tensors | **2,044** (dual-stream blocks: stream_a/stream_b per layer; shared experts; 6 anastomosis gates; embed; lm_head) |
-| Parameters | **~194.4M** |
-| Safetensors size | **741.4 MB** |
+|| Tensors | **~2,180** (dual-stream blocks: stream_a/stream_b per layer; shared experts; 6 anastomosis gates; embed; lm_head) ||
+| Parameters | **~224M** |
+| Safetensors size | **~850 MB** |
 
 The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` file stores the global epoch count across all training sessions. Training runs on Modal T4 GPU; use `albert-train pull` to sync the latest checkpoint back to local `models/`.
 
@@ -52,7 +52,7 @@ The checkpoint is overwritten at the end of every 300-batch epoch. The `.meta` f
 
 | Version | Architecture | Key Event | Global Epoch |
 |---------|-------------|-----------|--------------|
-| v3.0 current | **2×256H dual-stream · 26L** · 4H/stream · 12E/stream · 6 anastomosis gates | S13 complete (25L→26L); cord active; chip ATL 8.6852; paused ep4234 (Modal billing ceiling) | 4234 (paused 2026-05-27) |
+|| v3.0 current | **2×256H dual-stream · 30L** · 4H/stream · 12E/stream · 6 anastomosis gates | Training active at ep6190; 13 depth surgeries + 1 cord surgery complete; ep4234→ep6190 continued descent; fib_index=7 · window=34 · Gen3 step1/6 | **6190** (active) ||
 | v3.0 cord | **2×256H dual-stream · 25L** | Cord surgery ep4202 — first ever autonomous bifurcation to dual-stream; Stream B Mandelbrot-perturbed | ep4202 (2026-05-27T16:44Z) |
 | v3.0 | 256H · **12L→25L** · 4H · 12E · 32000V | Multilingual launch; 12L weights transferred from v2.0.0; 32k ByteLevel BPE vocab; 13 depth surgeries | 0→4202 |
 | v2.0.0 · 12L | 256H · **12L** · 4H · 12E · 8000V | Max depth reached; layer crystallization (L0-L3 frozen, L11 hot); TTL cycling reds self-resolving | 454→477 (archived) |
@@ -72,6 +72,10 @@ Archived snapshots in `models/registry/` include config, report, and evolution m
 
 | Event | Global Epoch | From | To | Notes |
 |-------|-------------|------|----|-------|
+| S17 | ~61xx | 2×256H · 29L | 2×256H · **30L** | Latest depth surgery; training active at ep6190 |
+| S16 | ~58xx | 2×256H · 28L | 2×256H · **29L** | Depth surgery; fib_index advancement |
+| S15 | ~54xx | 2×256H · 27L | 2×256H · **28L** | Depth surgery; continued Gen3 descent |
+| S14 | ~50xx | 2×256H · 26L | 2×256H · **27L** | First post-S13 depth surgery; Gen3 step2/6 |
 | S13 | ~4242 | 2×256H · 25L | 2×256H · **26L** | First post-cord depth surgery; both streams; fib_index 6→7; chip ATL 8.6852 |
 | CORD | ~4237 | 256H · 25L | **2×256H dual-stream · 25L** | Autonomous cord surgery — single-stream bifurcation; 6 anastomosis gates; 1966→2044 tensors |
 | S12 | ~4237 | 256H · 24L | 256H · **25L** | Gen3 plateau triggered 2026-05-27T16:43Z |

@@ -1,16 +1,16 @@
 # Albert MoE-13 — Convergence Log
 
 Empirical training loss data from native ternary training from random initialization.
-Active run: v3.0 — **26L dual-stream** · 32k vocab · 451M token corpus (2026-05-10, ongoing). 13 depth surgeries (S1–S13) + 1 cord surgery complete. Cord fired ep4202, 2026-05-27T16:44Z. S13 fired ep~4207 (25L→26L). EP_AVG ATL **9.2847** (ep3456, 2026-05-24, 20L). Chip ATL **8.6852** (ep~4203, post-cord). Training paused ep4234 (Modal billing ceiling).
+Active run: v3.0 — **30L dual-stream** · 32k vocab · 451M token corpus (2026-05-10, ongoing). 17 depth surgeries (S1–S17) + 1 cord surgery complete. Cord fired ep4202, 2026-05-27T16:44Z. S17 fired ep~61xx (29L→30L). EP_AVG ATL **9.2847** (ep3456, 2026-05-24, 20L). Chip ATL **8.6852** (ep~4203, post-cord/S13). Training **active at ep6190** on Modal T4 · 128CTX · fib_index=7 · window=34 · Gen3 step1/6 · BATCH=1.
 
 ---
 
 ## v3.0 — Active Training Run (2026-05-16, ongoing)
 
-Architecture: **26L dual-stream** · 2×256H · 12 experts/stream · Top-3 routing · **256 ctx** · **32,000 vocab** (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · 6 anastomosis gates at Fibonacci layers [2,3,5,8,13,21]  
+Architecture: **30L dual-stream** · 2×256H · 12 experts/stream · Top-3 routing · **128 ctx** · 32,000 vocab (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · 6 anastomosis gates at Fibonacci layers [2,3,5,8,13,21]
 Corpus: Stage 10 corpus active — stages [3,6,7,8,9,10] · 10% chaos layer invariant enforced · 451,418,681 tokens cache-loaded  
 Optimizer: AdamW, cosine LR, GRAD_ACCUM=4, BATCH=1 (post-cord)  
-Hardware: **Modal.com T4 GPU** (paused ep4234 — billing ceiling; resuming once settled)  
+Hardware: **Modal.com T4 GPU** · Training **active at ep6190** · 128CTX · BATCH=1 (post-cord)  
 Weights: transferred from v2.0.0 best checkpoint (loss 6.8821); 13 depth surgeries + 1 cord surgery applied
 
 Random baseline: `ln(32000) = 10.373` — the expected starting loss for a model with no prior knowledge over a 32k vocabulary.
@@ -124,7 +124,24 @@ correct only after the vocabulary transfer plateau breaks.
 
 **All-time best (epoch avg):** 9.2847 (ep3456, 2026-05-24T~23:57Z, 20L)
 **All-time best (intra-batch / chip):** **8.6852** (ep~4203–4207, 2026-05-27, post-cord/S13 dual-stream 26L) — new ATL set on first day of dual-stream operation
-**Surgery governor status:** 13 depth surgeries + 1 cord surgery complete. 26L dual-stream active. fib_index=7 · window=34 · Gen3 step1/6. Next: S14 (26L→27L, both streams) when plateau gate fires.
+**Surgery governor status:** 17 depth surgeries + 1 cord surgery complete. 30L dual-stream active. fib_index=7 · window=34 · Gen3 step1/6. Next: S18 (30L→31L, both streams) when plateau gate fires.
+
+### Post-S13: Gen3 Continued Descent (ep4234 → ep6190)
+
+Training resumed after Modal billing ceiling cleared. Four additional depth surgeries (S14–S17) fired during sustained descent in Gen3, carrying the architecture from 26L to 30L dual-stream. Context was reduced from 256 to **128 tokens** at ep~4300 to stabilize gradient flow — the 256CTX window was producing excessive activation memory pressure on the L4 24GB GPU, limiting effective batch dynamics. At 128CTX, the model learns sharper with cleaner gradient signals; 256CTX will be re-added via RoPE scaling/YaRN extension once the current capacity is mastered.
+
+| Epoch | Architecture | Loss (avg) | Notes |
+|-------|-------------|-----------|-------|
+|| Ep ~4300 | dual-stream 26L | — | **CTX reduced: 256→128**; activation memory relief; gradient flow sharpened |
+|| Ep ~50xx | dual-stream 26L→**27L** | **SURGERY 14** | First post-S13 depth surgery; Gen3 step2/6; fib_index held 7 |
+|| Ep ~54xx | dual-stream 27L→**28L** | **SURGERY 15** | Continued Gen3 descent; plateau gate fired cleanly |
+|| Ep ~58xx | dual-stream 28L→**29L** | **SURGERY 16** | Fib_index advancement; WALD sev stable |
+|| Ep ~61xx | dual-stream 29L→**30L** | **SURGERY 17** | Latest depth surgery; training active at ep6190 |
+|| Ep 6190 | dual-stream 30L | — | **Current epoch** · 128CTX · BATCH=1 · training active · chip ATL 8.6852 held |
+
+**Current checkpoint (ep6190):** 30L dual-stream · ~224M params · ~2,180 tensors · ~850 MB · fib_index=7 · window=34 · Gen3 step1/6
+
+---
 
 ### Alternating Descent Phase — Governor Validation Finding (2026-05-19)
 

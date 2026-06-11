@@ -36,7 +36,7 @@ expect from conventional monorepos.
 
 Albert MoE-13 is a ternary-native transformer with Mixture-of-Experts feed-forward layers. Every weight matrix is quantized to {-1, 0, +1} during both forward and backward passes via Straight-Through Estimation. The architecture grows its own depth autonomously through the `EvolutionManager`. Thirteen autonomous depth surgeries and one cord surgery carried it from a single-stream 12L to a dual-stream 2×256H 26L architecture during the v3.0 run.
 
-**Current state (2026-05-27):** **Dual-stream 2×256H** · **26L** · 4H/stream · 12E/stream (shared FFN weights) · 6 anastomosis gates (Fibonacci [2,3,5,8,13,21]) · 256CTX · 32kV · Global Epoch **4234** · chip-ATL **8.6852** (post-S13) · fib_index=7 · window=34 · Gen3 step1/6 · training paused (Modal billing ceiling) · ~**194.4M params** · **2,044 tensors · 741.4 MB**
+**Current state (2026-05-27 → ep6190 active):** **Dual-stream 2×256H** · **30L** · 4H/stream · 12E/stream (shared FFN weights) · 6 anastomosis gates (Fibonacci [2,3,5,8,13,21]) · **128CTX** · 32kV · Global Epoch **6190** · chip-ATL **8.6852** (post-S13) · epoch-ATL **9.2847** (ep3456, 20L) · fib_index=7 · window=34 · Gen3 step1/6 · training **active** on Modal T4 · ~**224M params** · **~2,180 tensors · ~850 MB**
 
 ---
 
@@ -117,7 +117,7 @@ States transition based on thresholds:
 
 **Cycling reds (observed at 12L, stable through 17L):** R-state experts migrate autonomously through cold layers and self-resolve without intervention. Multiple episodes observed across the full run; all resolved with dead=0.
 
-**TLIGHT log format:** `TLIGHT ep=N layer=L [G:a,b,c O:d,e,f R:g,h,i]`
+**TLIGHT log format:** `TLIGHT ep=N layer=L [G:a,b,c O:d,e,f R:g,h,i]` (60 rows: L0–L29 stream A, L0–L29 stream B)
 
 ---
 
@@ -133,14 +133,14 @@ Experts whose pressure falls below threshold for ≥8 consecutive epochs are cla
 
 **MYCELIUM log format:** `MYCELIUM epoch=N dead=D blooming=B hot=LH cold=LC pressure=[p0,...,p11]`
 
-**Layer crystallization (confirmed at 12L, extended through 17L):** Pressure gradient follows a consistent staircase pattern. At 17L:
+**Layer crystallization (confirmed at 12L, extended through 30L):** Pressure gradient follows a consistent staircase pattern. At 30L:
 - L0–L3: nearly frozen (early layers have locked in stable feature representations)
-- L4–L9: moderate activity, gradual gradient increase
-- L10–L16: hot — deepest layers continue active learning (hot layer at L10 as of ep1185, structural)
+- L4–L14: moderate activity, gradual gradient increase
+- L15–L29: hot — deepest layers continue active learning
 
 This internal differentiation — both in gradient flow and weight sparsity — emerged from training alone without architectural intervention.
 
-**Result over full run:** `dead=0` maintained throughout. All 12 experts remain alive and routing across all 17 layers.
+**Result over full run:** `dead=0` maintained throughout. All 12 experts remain alive and routing across all 30 layers.
 
 ---
 
@@ -163,7 +163,7 @@ max_layers         = uncapped in v3.0 (governed by plateau gate + cord-surgery t
 
 **Corpus unlocking:** The EvolutionManager queries the current layer count at each surgery event and enables newly unlocked corpus stages automatically. Stage 6 (Gutenberg) unlocks at 6L; Stage 7 (Simple Wikipedia) at 7L. This couples architectural depth to corpus breadth.
 
-Albert grew from 3L to 12L across ten autonomous surgery events (v2.0.0 run), then 12L to 20L across eight more surgeries in the v3.0 run (ep511, ep547, ep611, ep645, ep701, ep2487, ep2802, ep3160). Growth continues — 20L→21L surgery gate armed, ~128 epochs runway.
+Albert grew from 3L to 12L across ten autonomous surgery events (v2.0.0 run), then 12L to 30L across seventeen more surgeries in the v3.0 run (ep511, ep547, ep611, ep645, ep701, ep2487, ep2802, ep3160, ep4202, ep~4207, ep~50xx, ep~54xx, ep~58xx, ep~61xx — plus cord surgery at ep4202). Growth continues — S17 (29L→30L) complete at ep~61xx, training active at ep6190.
 
 ---
 
@@ -209,7 +209,7 @@ Stage-aware curriculum: `load_corpus()` reads `.txt` files from the active stage
 | 10 | 16L | dev_blogs, github_bugs, hn_discussions, gourmet_recipes, repair_guides, trails_travel | ~varied |
 | 11 | 11L | Linux documentation, EU AI Act | ~0.4 MB |
 
-All stages (3–10) active at 20L. Training samples random 256-token windows from the concatenated token stream.
+All stages (3–11) active at 30L. Training samples random 128-token windows from the concatenated token stream.
 
 ### v3.0 Corpus Structure
 
@@ -247,7 +247,7 @@ Rationale: A model trained exclusively on clean, resolved text acquires a danger
 - **EP AVG reference line** (MT5-style dashed orange) — updates once per completed epoch
 - **ARCH display** — live from `ARCH NL NH NE NCTX NV` log lines
 - **Epoch filter** (ALL / 200 / 100 / 50 / 20 / 10 / 5 EP) doubles as live auto-follow — viewport advances with training frontier when a filter is active
-- **TLIGHT heatmap** — expert routing state per layer, color-coded G/O/R
+- **TLIGHT heatmap** — expert routing state per layer, color-coded G/O/R (60 rows: L0–L29 stream A, L0–L29 stream B)
 - **MYCELIUM panel** — dead/blooming/hot/cold counts, pressure array per epoch
 
 ---

@@ -81,22 +81,22 @@ The architecture combines:
 |-----------|-------|
 | **Streams** | **2 (dual-stream — cord surgery 2026-05-27)** |
 | Hidden size | **2×256H** (256H per stream) |
-| Layers | **28** per stream (15 Net2Net surgeries + 1 cord surgery: 12L→28L dual-stream; see surgery log below) |
+|| Layers | **30** per stream (13 Net2Net surgeries + 1 cord surgery + 4 post-S13: 12L→30L dual-stream; see surgery log below) ||
 | Anastomosis gates | **6** — at Fibonacci layers [2,3,5,8,13,21]; `Linear(512,2)`, F32; cross-stream fusion soft-gated by gradient |
 | Attention heads | 4 per stream |
 | Experts | 12 per stream |
-| Context length | 256 tokens |
+|| Context length | 128 tokens |
 | Vocabulary | 32,000 tokens (ByteLevel BPE — EN/DE/FR/ES/PT/IT/NL/PL) |
 | Routing | Top-3 sparse — @sparseskip, 75% experts skipped per step |
-| TTL routing | EMA-based trit states per stream per layer — **56 TTL rows** (L0–L27 stream A, L0–L27 stream B) |
+|| TTL routing | EMA-based trit states per stream per layer — **60 TTL rows** (L0–L29 stream A, L0–L29 stream B) ||
 | Quantization | STE with gamma-scaled ternary, gamma cached every 20 steps |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps · BATCH=1 (post-cord) |
-| **Total parameters** | **207,976,972** (exact; 91.8% ternary matmul weights) |
-| **Safetensors (training)** | **2,200 tensors · 793.58 MB** (F32 reference checkpoint) |
+|| **Total parameters** | **~224M** (91.8% ternary matmul weights) ||
+|| **Safetensors (training)** | **~850 MB** (F32 reference checkpoint) ||
 | **Packed footprint** | **~101 MB / 4.08 bits per param** deployable (ternary weights 5-trit-packed + f32 embeddings); **39.7 MB / 1.6 bits** weights-only — see [docs/FOOTPRINT.md](docs/FOOTPRINT.md) |
 | Corpus | **451,418,681 tokens** (stages 1–13, cache-loaded) |
 
-**Surgery log — 13 Net2Net surgeries + 1 cord surgery:**
+**Surgery log — 13 Net2Net surgeries + 1 cord surgery + 4 post-S13 depth surgeries:**
 
 | Surgery | Epoch | Layers | Note |
 |---------|-------|--------|------|
@@ -104,17 +104,21 @@ The architecture combines:
 | S6 | ep2487 | 17L→18L | First under full Fibonacci+Mandelbrot+Gen cycling |
 | S7 | ep3325 | 18L→19L | 2026-05-24T13:47Z |
 | S8 | ep3383 | 19L→20L | 58 epochs after S7 |
-| S9 | ep3470 | 20L→21L | Anomalous spike, resolved ep3522 |
+| S9 | ep~3470 | 20L→21L | Anomalous spike, resolved ep3522 |
 | S10 | ep~3652 | 21L→22L | BEST 9.2933 pre-surgery |
 | S11 | ep~4098 | 22L→23L | 2026-05-27 morning |
 | S11b | ep~4140 | 23L→24L | 2026-05-27 |
 | S12 | ep4202 | 24L→25L | 2026-05-27T16:43Z · Gen3 plateau triggered |
 | **CORD** | **ep4202** | **25L → 2×25L** | **2026-05-27T16:44Z · autonomous · first ever** |
 | **S13** | **ep~4207** | **25L→26L (both streams)** | **2026-05-27T17:40Z · first post-cord depth surgery · fib_index 6→7** |
+| S14 | ~ep50xx | 26L→27L (both) | First post-S13 depth surgery; Gen3 step2/6 |
+| S15 | ~ep54xx | 27L→28L (both) | Continued Gen3 descent |
+| S16 | ~ep58xx | 28L→29L (both) | Fib_index advancement |
+| S17 | ~ep61xx | 29L→30L (both) | Latest depth surgery; training active at ep6190 |
 
 **Evolution state:** Gen 3 step **1**/6 · fib_index=7 · window=34 · chip ATL **8.6852**
 
-**Training state (2026-05-27T18:49Z):** Global Epoch **4234** (S13 complete) · epoch-ATL **9.3241** (ep4203) · chip-ATL **8.6852** (post-S13) · training paused — Modal billing ceiling (resuming on Modal T4 once billing settled) · batch=1
+**Training state (2026-05-27 → ep6190 active):** Global Epoch **6190** (S14–S17 post-cord depth surgeries complete) · chip-ATL **8.6852** (post-S13, 2026-05-27) · epoch-ATL **9.2847** (ep3456, 20L, 2026-05-24) · training **active** on Modal T4 · batch=1 · **128CTX** · fib_index=7 · window=34 · Gen3 step1/6
 
 ---
 
@@ -296,7 +300,7 @@ Albert automatically unlocks richer training data as it grows deeper via Net2Net
 | 256H · 5L | CPU (i7-4800MQ) | ~5.5 s |
 | 256H · 12L | CPU (i7-4800MQ) | ~13 s |
 | 256H · 17L | CPU (i7-4800MQ) | ~18 s |
-| 256H · 21L (current) | Modal T4 GPU | ~450 ms |
+|| 256H · 30L (current) | Modal T4 GPU | ~450 ms |
 
 T4 GPU training via Modal gives ~40× speedup over CPU for the 21L architecture. `albert-train` handles the full launch: image build with CUDA, volume-cached crate downloads, live log streaming to local dashboard.
 
