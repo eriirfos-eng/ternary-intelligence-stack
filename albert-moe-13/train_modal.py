@@ -350,7 +350,7 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: i
         _f.write(f"RUN_START ts={int(_time.time())}\n")
     start_pos = 0
 
-    _EPOCH_SUMMARY_RE = re.compile(r'^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+).*loss_best=([\d.]+)')
+    _EPOCH_SUMMARY_RE = re.compile(r'^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)\s+\([^)]+\)\s+loss_best=([\d.]+)')
 
     def _push_epoch_summary(epoch: int, loss_avg: float, loss_best: float):
         """Push epoch summary to Lighthouse control tower."""
@@ -601,7 +601,8 @@ def epoch_history_endpoint():
 
     epochs = []
     import re as _re
-    epoch_re = _re.compile(r'^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+) loss_best=([\d.]+)')
+    # EPOCH_SUMMARY format: epoch=829 loss_avg=10.2475 (d+0.0276) loss_best=10.2199 since_best=43...
+    epoch_re = _re.compile(r'^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)\s+\([^)]+\)\s+loss_best=([\d.]+)')
     with open(hist_path, "r") as f:
         for line in f:
             m = epoch_re.match(line.strip())
@@ -629,7 +630,8 @@ def latest_epoch_endpoint():
         return {"error": "epoch_history.log not found"}, 404
 
     import re as _re
-    epoch_re = _re.compile(r'^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+) loss_best=([\d.]+)')
+    # EPOCH_SUMMARY format: epoch=829 loss_avg=10.2475 (d+0.0276) loss_best=10.2199 since_best=43...
+    epoch_re = _re.compile(r'^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)\s+\([^)]+\)\s+loss_best=([\d.]+)')
     last = None
     with open(hist_path, "r") as f:
         for line in f:
