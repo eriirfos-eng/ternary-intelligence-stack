@@ -175,6 +175,7 @@ if __name__ == "__main__":
 # ---------------------------------------------------------------------------
 
 import modal  # noqa: E402
+from modal import fastapi_endpoint
 
 # CUDA 12.1 + cuDNN 8 devel image with Rust pre-installed.
 # add_local_dir bakes moe-llm-core/ into the image; Modal detects changes
@@ -188,6 +189,7 @@ image = (
         "curl", "build-essential", "pkg-config",
         "libssl-dev", "libopenblas-dev", "ca-certificates",
     )
+    .pip_install("fastapi[standard]")
     .run_commands(
         "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs "
         "| sh -s -- -y --default-toolchain stable --profile minimal",
@@ -538,7 +540,7 @@ def bench_gpu():
     memory=512,
     cpu=0.5,
 )
-@modal.web_endpoint(method="GET", label="albert-training-log")
+@fastapi_endpoint(method="GET", label="albert-training-log")
 def training_log_endpoint():
     """Return training.log as JSON lines."""
     log_path = "/vol/albert/dashboard/training.log"
@@ -562,7 +564,7 @@ def training_log_endpoint():
     memory=512,
     cpu=0.5,
 )
-@modal.web_endpoint(method="GET", label="albert-batch-history")
+@fastapi_endpoint(method="GET", label="albert-batch-history")
 def batch_history_endpoint():
     """Return batch_history.csv as JSON array [{x, loss}]."""
     csv_path = "/vol/albert/dashboard/batch_history.csv"
@@ -590,7 +592,7 @@ def batch_history_endpoint():
     memory=512,
     cpu=0.5,
 )
-@modal.web_endpoint(method="GET", label="albert-epoch-history")
+@fastapi_endpoint(method="GET", label="albert-epoch-history")
 def epoch_history_endpoint():
     """Return epoch_history.log as JSON array."""
     hist_path = "/vol/albert/models/epoch_history.log"
@@ -619,7 +621,7 @@ def epoch_history_endpoint():
     memory=512,
     cpu=0.5,
 )
-@modal.web_endpoint(method="GET", label="albert-latest-epoch")
+@fastapi_endpoint(method="GET", label="albert-latest-epoch")
 def latest_epoch_endpoint():
     """Return the latest epoch summary."""
     hist_path = "/vol/albert/models/epoch_history.log"
@@ -650,7 +652,7 @@ def latest_epoch_endpoint():
     memory=512,
     cpu=0.5,
 )
-@modal.web_endpoint(method="GET", label="albert-training-health")
+@fastapi_endpoint(method="GET", label="albert-training-health")
 def health_endpoint():
     """Health check endpoint."""
     import time as _time
@@ -670,7 +672,7 @@ def health_endpoint():
 # CLI entrypoints
 # ---------------------------------------------------------------------------
 
-@local_entrypoint()
+@app.local_entrypoint()
 def main():
     if os.environ.get("ALBERT_BENCH_GPU"):
         bench_gpu.remote()
