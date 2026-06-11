@@ -728,7 +728,7 @@ fn translate_to_openai(request: &MessageRequest) -> serde_json::Value {
             // NVIDIA specific extension mapping for enabling thinking
             body["extra_body"] = json!({
                 "chat_template_kwargs": { "enable_thinking": true },
-                "reasoning_budget": 16384 // Required for the 550b model
+                "reasoning_budget": 4096 // Lowered to improve responsiveness while maintaining deep thinking
             });
         }
     }

@@ -64,6 +64,18 @@ const SLASH_COMMAND_SPECS: &[SlashCommandSpec] = &[
         resume_supported: false,
     },
     SlashCommandSpec {
+        name: "effort",
+        summary: "Set reasoning effort level [off|low|medium|high]",
+        argument_hint: Some("[off|low|medium|high]"),
+        resume_supported: false,
+    },
+    SlashCommandSpec {
+        name: "thinking",
+        summary: "Toggle thinking/reasoning [on|off]",
+        argument_hint: Some("[on|off]"),
+        resume_supported: false,
+    },
+    SlashCommandSpec {
         name: "permissions",
         summary: "Show or switch the active permission mode",
         argument_hint: Some("[read-only|workspace-write|danger-full-access]"),
@@ -375,6 +387,9 @@ pub enum SlashCommand {
     Effort {
         level: Option<String>,
     },
+    Thinking {
+        state: Option<String>,
+    },
     Permissions {
         mode: Option<String>,
     },
@@ -510,6 +525,11 @@ impl SlashCommand {
             },
             "effort" => Self::Effort {
                 level: parts.next().map(ToOwned::to_owned),
+            },
+            "thinking" => {
+                let state = parts.next().unwrap_or("on");
+                let level = if state == "on" { "high".to_string() } else { "off".to_string() };
+                Self::Effort { level: Some(level) }
             },
             "permissions" => Self::Permissions {
                 mode: parts.next().map(ToOwned::to_owned),
@@ -761,6 +781,7 @@ pub fn handle_slash_command(
         | SlashCommand::Remember { .. }
         | SlashCommand::Recall { .. }
         | SlashCommand::Vault { .. }
+        | SlashCommand::Thinking { .. }
         | SlashCommand::Upgrade
         | SlashCommand::TerminalSetup
         | SlashCommand::SetupGithub

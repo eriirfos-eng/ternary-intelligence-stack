@@ -154,8 +154,8 @@ const GRAD_ACCUM_STEPS: usize = 4;
 // The L1 term builds an abs() graph node over ALL 2184 weight tensors and backprops
 // through them. Set false to skip it entirely (batch_loss = ce_loss). Flip back / replace
 // with a graph-free gradient-term implementation once the diagnosis is confirmed.
-const L1_REG_ENABLED: bool = false;
-const BATCH_SIZE: usize = 8;   // CTX=256, F16 attn: T4 16GB comfortable at 8 (params+moments ~2GB, activations ~4GB)
+const _L1_REG_ENABLED: bool = false;
+const _BATCH_SIZE: usize = 8;   // CTX=256, F16 attn: T4 16GB comfortable at 8 (params+moments ~2GB, activations ~4GB)
 // Direct LR boost applied after Adam's step for cold layers (norm < THRESHOLD).
 // Adam normalizes away gradient amplification via its second-moment denominator,
 // so we bypass it entirely: a sign-normalized SGD step with lr = current_lr * cold_boost.
@@ -1518,9 +1518,9 @@ fn train_cycle(
             // ── Auxiliary losses ──────────────────────────────────────────────
             // L1 is gated on loss < 8.0 — applying to a collapsed model makes recovery harder.
             // LB: controlled by --lb-weight/--lb-disable flags (effective_lb=0 skips gradient).
-            let aux_active     = false; // L1 disabled to save graph memory
-            let l1_lambda      = 0.0_f64;
-            let entropy_lambda = 0.0_f64;
+            let _aux_active     = false; // L1 disabled to save graph memory
+            let _l1_lambda      = 0.0_f64;
+            let _entropy_lambda = 0.0_f64;
 
             // Drain both thread-locals regardless — keeps accumulators clean next batch.
             let entropy_term   = take_entropy_capture();

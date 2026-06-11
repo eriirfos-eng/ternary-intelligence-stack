@@ -73,6 +73,7 @@ fn main() -> Result<()> {
         num_experts:   EXPERTS,
         num_streams:   1,
         fusion_layers: vec![],
+        activation_checkpoint_interval: 0,
     };
 
     let varmap = VarMap::new();

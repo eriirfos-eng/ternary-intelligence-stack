@@ -1087,6 +1087,7 @@ fn run_resume_command(
         | SlashCommand::Skill { .. }
         | SlashCommand::TeachSkill { .. } => Err("unsupported resumed slash command".into()),
         &SlashCommand::Mcp { .. } => Err("cannot resume an /mcp command".into()),
+        &SlashCommand::Thinking { .. } => Err("cannot resume a /thinking command".into()),
     }
 }
 
@@ -2526,18 +2527,10 @@ impl LiveCli {
                                     state = 2;
                                 }
                                 Ok(AssistantEvent::Thinking { text, .. }) => {
-                                    if state != 1 {
-                                        // Clear Working indicator + prompt box
-                                        let _ = execute!(out,
-                                            crossterm::cursor::MoveToColumn(0),
-                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine),
-                                            crossterm::terminal::Clear(crossterm::terminal::ClearType::FromCursorDown),
-                                        );
-                                        let _ = write!(out, "\n\n");
-                                        state = 1;
-                                    }
+                                    // Stream the reasoning text directly to the console typewriter
                                     let _ = write!(out, "{}", console::style(text).dim().italic());
                                     let _ = out.flush();
+                                    state = 1;
                                 }
                                 Ok(AssistantEvent::ToolTelemetry { .. }) => {}
                                 Err(_) => break,
@@ -2825,6 +2818,11 @@ impl LiveCli {
             }
             SlashCommand::Mcp { action, args } => {
                 self.handle_mcp_command(action.as_deref(), args.as_deref())?;
+                false
+            }
+            SlashCommand::Thinking { state } => {
+                let level = if state.as_deref() == Some("on") { "high".to_string() } else { "off".to_string() };
+                self.set_effort(Some(level))?;
                 false
             }
             SlashCommand::Remember { content } => {

@@ -218,7 +218,38 @@ class QueryEnginePort:
                     tool_calls = []
                     message = {"role": "assistant", "content": content}
                 else:
-                    # Non-streaming path — agent mode or lite without a stream callback
+                    # Tool-calling path — enable streaming
+                    chunks = ollama.chat(
+                        model=self.config.model,
+                        messages=full_history,
+                        tools=TOOLS_DEF if not self.config.lite_mode else None,
+                        stream=True,
+                        options=_hw_opts,
+                    )
+                    content = ""
+                    tool_calls = []
+                    for chunk in chunks:
+                        # Streaming reasoning content if present
+                        reasoning = (chunk.get('message') or {}).get('reasoning_content') or ''
+                        if reasoning:
+                            content += reasoning
+                            if on_stream:
+                                on_stream(reasoning)
+                        
+                        piece = (chunk.get('message') or {}).get('content') or ''
+                        if piece:
+                            content += piece
+                            if on_stream:
+                                on_stream(piece)
+
+                        chunk_tool_calls = (chunk.get('message') or {}).get('tool_calls') or []
+                        if chunk_tool_calls:
+                            tool_calls.extend(chunk_tool_calls)
+
+                    message = {"role": "assistant", "content": content, "tool_calls": tool_calls}
+                
+                # Check for tool-calling fallback if needed
+                if not tool_calls and not content:
                     try:
                         response = ollama.chat(
                             model=self.config.model,
@@ -226,6 +257,9 @@ class QueryEnginePort:
                             tools=TOOLS_DEF if not self.config.lite_mode else None,
                             options=_hw_opts,
                         )
+                        message = response['message']
+                        content = message.get('content') or ""
+                        tool_calls = message.get('tool_calls') or []
                     except Exception as e:
                         if "support tools" in str(e).lower():
                             if full_history[0]['role'] == 'system':
@@ -233,10 +267,9 @@ class QueryEnginePort:
                             response = ollama.chat(model=self.config.model, messages=full_history, options=_hw_opts)
                         else:
                             raise e
-                    message = response['message']
-                    content = message.get('content') or ""
-                    tool_calls = message.get('tool_calls') or []
-            except Exception as e:
+                        message = response['message']
+                        content = message.get('content') or ""
+                        tool_calls = message.get('tool_calls') or []
                 final_output = f"⚠ Inference error: {e}"
                 break
 

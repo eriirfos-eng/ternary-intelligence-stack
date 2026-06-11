@@ -478,6 +478,9 @@ impl TuiState {
         }
 
         self.exec_log.push_back(block);
+        if let ExecBlock::Thinking(_) = self.exec_log.back().unwrap() {
+            self.current_thinking_block_index = Some(self.exec_log.len() - 1);
+        }
 
         // Track the index of AssistantResponse blocks for turn anchoring
         if matches!(self.exec_log.back(), Some(ExecBlock::AgentText(..))) {
@@ -731,7 +734,7 @@ const CMD_GROUPS: &[(&str, &[&str])] = &[
 /// Commands that open a sub-menu when Enter is pressed (rather than submitting directly).
 /// Enter → fills input with "/cmd " → popup re-renders the sub-options.
 fn is_drilldown(complete: &str) -> bool {
-    matches!(complete, "/model" | "/permissions" | "/auth")
+    matches!(complete, "/model" | "/permissions" | "/auth" | "/effort" | "/thinking")
 }
 
 // All supported auth providers (id, description)
@@ -848,6 +851,21 @@ fn popup_items(input: &str, model_cache: Option<&[String]>) -> Vec<PopupItem> {
 
     if !input.starts_with('/') {
         return vec![];
+    }
+
+    // ── Effort/Thinking mode picker ──────────────────────────────────────────
+    if input.starts_with("/effort") || input.starts_with("/thinking") {
+        let partial = input.split_whitespace().last().unwrap_or("").trim();
+        let modes = [("off", "Disable reasoning"), ("low", "Light reasoning"), ("medium", "Balanced reasoning"), ("high", "Deep reasoning")];
+        return modes
+            .iter()
+            .filter(|(mode, _)| partial.is_empty() || mode.starts_with(partial))
+            .map(|(mode, desc)| PopupItem::cmd(
+                &format!("effort       {mode}"),
+                &format!("/effort {mode}"),
+                desc,
+            ))
+            .collect();
     }
 
     // ── Permission mode picker ─────────────────────────────────────────────
@@ -3238,9 +3256,9 @@ impl TuiApp {
                             }
                             AssistantEvent::Thinking { text, .. } => {
                                 if !text.trim().is_empty() {
-                                    // Push an empty block immediately so the "thinking" header
-                                    // appears right away, then stream text in line by line via Tick.
-                                    state.push_exec(ExecBlock::Thinking(String::new()));
+                                    if state.current_thinking_block_index.is_none() {
+                                        state.push_exec(ExecBlock::Thinking(String::new()));
+                                    }
                                     state.thinking_typewriter_buffer.push_str(&text);
                                 }
                             }
@@ -3424,21 +3442,15 @@ impl TuiApp {
                             }
                         }
 
-                        // Thinking Typewriter: drain line by line for clean step-by-step visibility.
+                        // Thinking Typewriter: drain character-by-character for real-time visibility.
                         if !state.thinking_typewriter_buffer.is_empty() {
-                            let chunk = if let Some(nl) = state.thinking_typewriter_buffer.find('\n') {
-                                // Drain up to and including the next newline.
-                                state.thinking_typewriter_buffer[..=nl].to_string()
-                            } else {
-                                // No newline left — drain the remainder.
-                                state.thinking_typewriter_buffer.clone()
-                            };
-                            let chunk_len = chunk.len();
-                            state.thinking_typewriter_buffer.drain(..chunk_len);
+                            let drain_size = (state.thinking_typewriter_buffer.chars().count() / 10 + 1).min(10);
+                            let chars: String = state.thinking_typewriter_buffer.chars().take(drain_size).collect();
+                            state.thinking_typewriter_buffer.drain(..chars.len());
 
                             if let Some(idx) = state.current_thinking_block_index {
                                 if let Some(ExecBlock::Thinking(s)) = state.exec_log.get_mut(idx) {
-                                    s.push_str(&chunk);
+                                    s.push_str(&chars);
                                 }
                             }
                         }

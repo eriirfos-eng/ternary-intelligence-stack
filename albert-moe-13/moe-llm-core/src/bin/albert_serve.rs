@@ -169,6 +169,7 @@ async fn generate_handler(
 
 // ─── main ─────────────────────────────────────────────────────────────────────
 
+#[cfg(feature = "serve")]
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().skip(1).collect();

@@ -93,25 +93,25 @@ unsafe fn ternary_dot_avx2(signs: &[i8], x_quant: &[i8]) -> i32 {
 
     for k in 0..chunks {
         let base = k * 32;
-        let x8 = _mm256_loadu_si256(x_quant.as_ptr().add(base) as *const __m256i);
-        let s8 = _mm256_loadu_si256(signs.as_ptr().add(base)   as *const __m256i);
+        let x8 = unsafe { _mm256_loadu_si256(x_quant.as_ptr().add(base) as *const __m256i) };
+        let s8 = unsafe { _mm256_loadu_si256(signs.as_ptr().add(base)   as *const __m256i) };
         // vpsignb: result[i] = x8[i] * sign(s8[i]) — no multiply, pure sign flip
-        let contrib = _mm256_sign_epi8(x8, s8);
-        acc_lo = _mm256_add_epi16(acc_lo, _mm256_cvtepi8_epi16(_mm256_castsi256_si128(contrib)));
-        acc_hi = _mm256_add_epi16(acc_hi, _mm256_cvtepi8_epi16(_mm256_extracti128_si256(contrib, 1)));
+        let contrib = unsafe { _mm256_sign_epi8(x8, s8) };
+        acc_lo = unsafe { _mm256_add_epi16(acc_lo, _mm256_cvtepi8_epi16(_mm256_castsi256_si128(contrib))) };
+        acc_hi = unsafe { _mm256_add_epi16(acc_hi, _mm256_cvtepi8_epi16(_mm256_extracti128_si256(contrib, 1))) };
     }
 
-    let ones  = _mm256_set1_epi16(1);
-    let sum32 = _mm256_add_epi32(
+    let ones  = unsafe { _mm256_set1_epi16(1) };
+    let sum32 = unsafe { _mm256_add_epi32(
         _mm256_madd_epi16(ones, acc_lo),
         _mm256_madd_epi16(ones, acc_hi),
-    );
-    let hi128 = _mm256_extracti128_si256(sum32, 1);
-    let lo128 = _mm256_castsi256_si128(sum32);
-    let s4    = _mm_add_epi32(hi128, lo128);
-    let s2    = _mm_hadd_epi32(s4, s4);
-    let s1    = _mm_hadd_epi32(s2, s2);
-    let mut result = _mm_cvtsi128_si32(s1);
+    ) };
+    let hi128 = unsafe { _mm256_extracti128_si256(sum32, 1) };
+    let lo128 = unsafe { _mm256_castsi256_si128(sum32) };
+    let s4    = unsafe { _mm_add_epi32(hi128, lo128) };
+    let s2    = unsafe { _mm_hadd_epi32(s4, s4) };
+    let s1    = unsafe { _mm_hadd_epi32(s2, s2) };
+    let mut result = unsafe { _mm_cvtsi128_si32(s1) };
 
     let base = chunks * 32;
     for k in base..n {
