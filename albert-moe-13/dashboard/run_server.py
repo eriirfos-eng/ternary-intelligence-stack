@@ -280,6 +280,7 @@ class MyceliumEngine:
         id_to_tok  = self._id_to_tok
         coords     = self._coords
         SPACE = 'Ġ'
+        disp = lambda tok: tok[1:] if tok[:1] in ('Ġ', 'ġ') else tok  # strip BPE word-boundary marker — researchers never see/type it
         token_id = vocab.get(SPACE + word)
         resolved = SPACE + word
         if token_id is None:
@@ -296,12 +297,12 @@ class MyceliumEngine:
         sim = (embeddings @ q).tolist()
         top = sorted(range(len(sim)), key=lambda i: -sim[i])[:k + 1]
         neighbors = [
-            {'word': id_to_tok.get(i, f'<{i}>'), 'sim': round(sim[i], 4),
+            {'word': disp(id_to_tok.get(i, f'<{i}>')), 'sim': round(sim[i], 4),
              'x': float(coords[i, 0]), 'y': float(coords[i, 1]), 'z': float(coords[i, 2])}
             for i in top if i != token_id
         ][:k]
         return {
-            'word':       resolved,
+            'word':       disp(resolved),
             'center_x':  float(coords[token_id, 0]),
             'center_y':  float(coords[token_id, 1]),
             'center_z':  float(coords[token_id, 2]),
