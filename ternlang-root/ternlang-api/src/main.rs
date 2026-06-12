@@ -920,8 +920,9 @@ async fn fortune_page() -> Html<&'static str> {
 
 // Easter egg: ternlang.com/chocolate (and /darkchocolate) — a melting dark-chocolate page.
 // Public, no key — served before the X-Ternlang-Key gate via the allowlist above.
-async fn chocolate_page() -> Html<&'static str> {
-    Html(CHOCOLATE_HTML)
+async fn chocolate_page() -> impl axum::response::IntoResponse {
+    // no-cache so a freshly deployed egg shows on the next load, not after a hard refresh
+    ([("cache-control", "no-cache, max-age=0")], Html(CHOCOLATE_HTML))
 }
 
 async fn translator_page() -> Html<&'static str> {
