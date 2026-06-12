@@ -207,9 +207,12 @@ vol = modal.Volume.from_name(_VOL, create_if_missing=True)
 
 app = modal.App("albert-training")
 
-# Lighthouse OS control tower API endpoint (proxied via ternlang.com/lighthouse)
-# Can be overridden via LIGHTHOUSE_API_URL env var
-_LIGHTHOUSE_API_BASE = os.environ.get("LIGHTHOUSE_API_URL", "https://lighthouse-rfi-irfos.fly.dev/api")
+# Lighthouse OS control tower API endpoint.
+# Routes are under /lighthouse/api/ — the /api prefix alone is wrong.
+_LIGHTHOUSE_API_BASE = os.environ.get("LIGHTHOUSE_API_URL", "https://lighthouse-rfi-irfos.fly.dev/lighthouse/api")
+# Ingest auth key — backend accepts LIGHTHOUSE_INBOX_KEY as x-inbox-key header.
+# Set via Modal secret `lighthouse-ingest` (LIGHTHOUSE_INBOX_KEY=<value>).
+_LIGHTHOUSE_INBOX_KEY = os.environ.get("LIGHTHOUSE_INBOX_KEY", "")
 
 _NTFY_TOPIC = "albert-rfi-irfos"
 _FIB_TARGETS = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987]
@@ -220,12 +223,10 @@ def _lighthouse_post(endpoint: str, payload: dict) -> bool:
     try:
         url = f"{_LIGHTHOUSE_API_BASE}{endpoint}"
         data = json.dumps(payload).encode()
-        req = urllib.request.Request(
-            url,
-            data=data,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
+        hdrs = {"Content-Type": "application/json"}
+        if _LIGHTHOUSE_INBOX_KEY:
+            hdrs["x-inbox-key"] = _LIGHTHOUSE_INBOX_KEY
+        req = urllib.request.Request(url, data=data, headers=hdrs, method="POST")
         urllib.request.urlopen(req, timeout=10)
         return True
     except Exception as e:
@@ -252,6 +253,7 @@ def _ntfy(title: str, msg: str, priority: str = "3") -> None:
                          # LayerNorm gradient bug fixed. Stay on L4 until new funds arrive.
     timeout=23 * 3600,   # 23-hour cap
     volumes={"/vol": vol},
+    secrets=[modal.Secret.from_name("lighthouse-ingest", required=False)],
     memory=16384,
     cpu=4.0,
 )
@@ -350,20 +352,28 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: i
         _f.write(f"RUN_START ts={int(_time.time())}\n")
     start_pos = 0
 
-    _EPOCH_SUMMARY_RE = re.compile(r'^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)\s+\([^)]+\)\s+loss_best=([\d.]+)')
+    _EPOCH_SUMMARY_RE = re.compile(
+        r'^EPOCH_SUMMARY epoch=(\d+) loss_avg=([\d.]+)\s+\([^)]+\)\s+loss_best=([\d.]+)'
+    )
+    _CHIP_RE = re.compile(r'\bchip ([\d.]+)')
+    _chip_atl_live = float("inf")  # track min batch loss across this run's log stream
 
-    def _push_epoch_summary(epoch: int, loss_avg: float, loss_best: float):
-        """Push epoch summary to Lighthouse control tower."""
+    def _push_epoch_summary(epoch: int, loss_avg: float, loss_best: float, chip: float | None):
+        """Persist epoch metrics to Lighthouse albert_metrics store (secret-authed ingest)."""
         payload = {
-            "model": "albert-moe-13",
-            "epoch": epoch,
-            "loss_avg": loss_avg,
-            "loss_best": loss_best,
-            "timestamp": int(_time.time()),
+            "run_id": "main",
+            "points": [{
+                "epoch": epoch,
+                "loss_avg": loss_avg,
+                "loss_best": loss_best,
+                "chip_atl": chip,
+                "recorded_at": None,
+            }],
         }
-        _lighthouse_post("/albert/epoch-summary", payload)
+        _lighthouse_post("/albert/metrics/ingest", payload)
 
     def tail_log(proc):
+        nonlocal _chip_atl_live
         while not os.path.exists(log_path):
             if proc.poll() is not None:
                 return
@@ -375,13 +385,22 @@ def train(gate_diversity: float = 0.5, lb_weight: float = 0.03, stop_at_epoch: i
                 if line:
                     sys.stdout.write(line)
                     sys.stdout.flush()
+                    stripped = line.strip()
+                    # Track chip ATL from any line that contains "chip X.XXXX"
+                    cm = _CHIP_RE.search(stripped)
+                    if cm:
+                        try:
+                            _chip_atl_live = min(_chip_atl_live, float(cm.group(1)))
+                        except ValueError:
+                            pass
                     # Detect EPOCH_SUMMARY and push to Lighthouse
-                    m = _EPOCH_SUMMARY_RE.match(line.strip())
+                    m = _EPOCH_SUMMARY_RE.match(stripped)
                     if m:
                         epoch = int(m.group(1))
                         loss_avg = float(m.group(2))
                         loss_best = float(m.group(3))
-                        _push_epoch_summary(epoch, loss_avg, loss_best)
+                        chip = _chip_atl_live if _chip_atl_live < float("inf") else None
+                        _push_epoch_summary(epoch, loss_avg, loss_best, chip)
                 else:
                     if proc.poll() is not None:
                         break
