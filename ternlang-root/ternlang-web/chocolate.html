@@ -5,88 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>melting chocolate · ternlang</title>
 <style>
-  :root{
-    --c-hi:#8a5733; --c-mid:#4f2c17; --c-lo:#2a1409; --c-dk:#190b04;
-    --sand:#d9a86a; --text:#fff3e2;
-  }
   *{ box-sizing:border-box; margin:0; padding:0; }
   html,body{ height:100%; }
   body{
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    color:var(--text); min-height:100%; overflow:hidden; position:relative;
-    /* golden-hour Puna sky */
+    color:#fff3e2; min-height:100%; overflow:hidden; position:relative;
     background: linear-gradient(180deg, #243a5e 0%, #6e5a6b 30%, #c0764a 60%, #f0b65f 82%, #f7d79a 100%);
     -webkit-font-smoothing:antialiased;
   }
-
-  /* the whole desert is one slice-covered SVG behind everything */
   svg.scene{ position:fixed; inset:0; width:100%; height:100%; z-index:0; display:block; }
   .heat{ position:fixed; left:0; right:0; bottom:0; height:46%; z-index:1; pointer-events:none;
     background:linear-gradient(180deg, rgba(255,220,150,.05), rgba(255,200,120,.12));
     mix-blend-mode:screen; animation:shimmer 4s ease-in-out infinite; }
   @keyframes shimmer{ 0%,100%{ opacity:.5; transform:translateY(0) } 50%{ opacity:.85; transform:translateY(-3px) } }
+  canvas#drips{ position:fixed; inset:0; z-index:2; pointer-events:none; }
 
-  .stage{ position:relative; z-index:3; min-height:100%; display:grid; place-items:center; gap:24px; padding:24px; }
-  .scene-anchor{ position:relative; width:300px; height:300px; margin-top:6vh; }
-
-  /* the bar — sags + softens in the desert heat */
+  /* ── the bar: a molded dark-chocolate slab. JS shrinks it as it melts. ───────── */
   .bar{
-    position:absolute; left:50%; top:18px; transform:translateX(-50%);
-    width:212px; height:150px; padding:11px;
-    display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(3,1fr); gap:7px;
-    background: linear-gradient(150deg, var(--c-hi) -8%, var(--c-mid) 34%, var(--c-lo) 78%, var(--c-dk) 100%);
-    border-radius:14px 14px 16px 16px;
-    box-shadow: inset 0 3px 6px rgba(255,210,160,.30), inset 0 -16px 26px rgba(0,0,0,.55), 0 22px 36px rgba(60,20,0,.45);
-    animation: sag 7s ease-in-out infinite;
+    position:fixed; left:50%; top:21%; z-index:3;
+    transform:translateX(-50%); transform-origin:bottom center;
+    width:206px; height:156px; padding:9px;
+    display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(4,1fr); gap:6px;
+    border-radius:12px;
+    background:linear-gradient(157deg,#6b4226 0%,#4a2814 32%,#2e1709 73%,#190c04 100%);
+    box-shadow: inset 0 2px 3px rgba(255,212,168,.42), inset 0 -15px 24px rgba(0,0,0,.62),
+                inset 0 0 0 1px rgba(0,0,0,.32), 0 18px 30px rgba(50,18,0,.5);
+    will-change:transform;
   }
-  @keyframes sag{
-    0%   { transform:translateX(-50%) scaleY(1)    skewX(0deg);    border-bottom-left-radius:16px; border-bottom-right-radius:16px; }
-    50%  { transform:translateX(-50%) scaleY(.94)  skewX(-1.3deg); border-bottom-left-radius:44px 74px; border-bottom-right-radius:36px 66px; }
-    100% { transform:translateX(-50%) scaleY(1)    skewX(0deg);    border-bottom-left-radius:16px; border-bottom-right-radius:16px; }
+  .seg{ border-radius:4px;
+    background:linear-gradient(157deg,#7c4b2b 0%,#4f2c17 50%,#2b1408 100%);
+    box-shadow: inset 1.6px 1.6px 1px rgba(255,218,172,.52), inset -2px -2.6px 3px rgba(0,0,0,.6);
   }
-  .bar::after{
-    content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
-    background: linear-gradient(115deg, transparent 38%, rgba(255,235,190,.28) 49%, transparent 60%);
-    background-size:280% 280%; animation: sheen 5.5s linear infinite; mix-blend-mode:screen;
-  }
-  @keyframes sheen{ 0%{ background-position:160% 0;} 100%{ background-position:-60% 0;} }
-  .seg{ border-radius:5px;
-    background: linear-gradient(155deg, var(--c-hi) 0%, var(--c-mid) 46%, var(--c-lo) 100%);
-    box-shadow: inset 1.5px 1.5px 1.5px rgba(255,214,166,.45), inset -2px -3px 4px rgba(0,0,0,.55); }
+  .gloss{ position:absolute; inset:0; grid-column:1/-1; grid-row:1/-1; border-radius:inherit; pointer-events:none;
+    background:linear-gradient(118deg,transparent 40%,rgba(255,236,202,.22) 49%,transparent 58%);
+    background-size:300% 300%; animation:sheen 6s linear infinite; mix-blend-mode:screen; }
+  @keyframes sheen{ 0%{ background-position:165% 0 } 100%{ background-position:-65% 0 } }
+  /* molded brand panel — the label, embossed into the chocolate */
+  .plate{ position:absolute; inset:0; grid-column:1/-1; grid-row:1/-1; pointer-events:none;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  .plate b{ font-size:13px; font-weight:800; letter-spacing:.01em; color:#e8c391;
+    text-shadow:0 1.2px 0 rgba(0,0,0,.62), 0 -1px 0 rgba(255,224,176,.28); }
+  .plate small{ margin-top:3px; font-size:8.5px; font-weight:600; color:#cda576;
+    text-shadow:0 1px 0 rgba(0,0,0,.55); }
 
-  .drip{ position:absolute; top:160px; width:15px; height:15px;
-    background: linear-gradient(180deg, var(--c-mid), var(--c-dk)); border-radius:50% 50% 48% 48%;
-    box-shadow: inset 2px 2px 2px rgba(255,200,150,.35), 0 6px 10px rgba(40,12,0,.5);
-    transform-origin:top center; opacity:0; }
-  .drip.d1{ left:64px;  animation: drip 3.6s ease-in 0.0s infinite; }
-  .drip.d2{ left:120px; animation: drip 4.4s ease-in 1.3s infinite; }
-  .drip.d3{ left:154px; animation: drip 3.9s ease-in 2.2s infinite; }
-  .drip.d4{ left:92px;  animation: drip 5.0s ease-in 0.7s infinite; }
-  @keyframes drip{
-    0%{ transform:translateY(0) scaleY(.5); opacity:0; } 18%{ transform:translateY(4px) scaleY(1.6); opacity:1; }
-    70%{ transform:translateY(96px) scaleY(2.4); opacity:1; } 100%{ transform:translateY(132px) scaleY(.7); opacity:0; }
+  /* ── the puddle: grows on the mesa as the bar melts away ─────────────────────── */
+  .puddle{
+    position:fixed; left:50%; top:calc(21% + 214px); z-index:2;
+    transform:translateX(-50%); transform-origin:center top;
+    width:206px; height:44px; border-radius:50%;
+    background:radial-gradient(58% 80% at 44% 28%, #6b4226 0%, #4a2814 40%, #190c04 100%);
+    box-shadow:0 12px 28px rgba(40,12,0,.55), inset 0 4px 8px rgba(255,202,152,.22);
+    will-change:transform;
   }
-  .puddle{ position:absolute; left:50%; bottom:26px; transform:translateX(-50%);
-    width:208px; height:32px; border-radius:50%;
-    background: radial-gradient(60% 80% at 42% 30%, var(--c-hi) 0%, var(--c-mid) 38%, var(--c-dk) 100%);
-    box-shadow: 0 12px 26px rgba(40,12,0,.5), inset 0 4px 8px rgba(255,210,160,.25);
-    animation: pool 7s ease-in-out infinite; }
-  .puddle::after{ content:""; position:absolute; left:24%; top:26%; width:34%; height:26%; border-radius:50%;
-    background: radial-gradient(closest-side, rgba(255,235,205,.55), transparent 70%); filter:blur(1px); }
-  @keyframes pool{ 0%,100%{ width:186px; opacity:.85;} 50%{ width:226px; opacity:1;} }
+  .puddle::after{ content:''; position:absolute; left:26%; top:24%; width:30%; height:26%; border-radius:50%;
+    background:radial-gradient(closest-side,rgba(255,236,206,.5),transparent 70%); filter:blur(1px); }
 
-  .cap{ text-align:center; max-width:360px; line-height:1.5; text-shadow:0 1px 6px rgba(40,15,0,.5); }
-  .cap .big{ font-size:15px; letter-spacing:.02em; color:#fff5e6; }
-  .cap .small{ display:block; margin-top:7px; font-size:12px; color:#ffe6c2; opacity:.92; }
-  .cap a{ color:#fff; text-decoration:none; border-bottom:1px solid rgba(255,255,255,.45); }
+  /* ── caption — moved down, clear of the scene ────────────────────────────────── */
+  .cap{ position:fixed; left:0; right:0; bottom:4.5%; z-index:4; text-align:center; padding:0 18px;
+    text-shadow:0 1px 10px rgba(35,12,0,.6); }
+  .cap .big{ font-size:15px; letter-spacing:.02em; color:#fff6e8; }
+  .cap .small{ display:block; margin-top:7px; font-size:12px; color:#ffe7c4; opacity:.95; }
+  .cap a{ color:#fff; text-decoration:none; border-bottom:1px solid rgba(255,255,255,.5); }
   .cap a:hover{ color:#ffe9c8; }
 
-  /* slow gliding condor */
   .condor{ animation: glide 26s linear infinite; transform-origin:center; }
-  @keyframes glide{
-    0%{ transform: translate(-180px, 30px) scale(.9) } 50%{ transform: translate(620px, -10px) scale(1) }
-    100%{ transform: translate(1400px, 26px) scale(.9) }
-  }
+  @keyframes glide{ 0%{ transform: translate(-180px,30px) scale(.9) } 50%{ transform: translate(620px,-10px) scale(1) } 100%{ transform: translate(1400px,26px) scale(.9) } }
   .flap{ animation: flap 3.4s ease-in-out infinite; transform-origin:center; }
   @keyframes flap{ 0%,100%{ transform: scaleY(1) } 50%{ transform: scaleY(.88) } }
 </style>
@@ -100,107 +83,104 @@
       <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3b277"/><stop offset="1" stop-color="#c48a4c"/></linearGradient>
       <radialGradient id="sun" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff3c4"/><stop offset="55%" stop-color="#ffd169"/><stop offset="100%" stop-color="#ffd169" stop-opacity="0"/></radialGradient>
     </defs>
-
-    <!-- sun + halo -->
     <circle cx="880" cy="250" r="160" fill="url(#sun)"/>
     <circle cx="880" cy="250" r="56" fill="#fff0bf"/>
-
-    <!-- condor gliding across the sky -->
-    <g class="condor">
-      <g class="flap">
-        <path d="M0 0 C 26 -16 44 -16 64 -3 C 74 4 78 4 86 -1 C 106 -15 124 -15 150 0 C 120 10 104 9 86 5 C 78 9 74 9 64 6 C 44 12 26 12 0 0 Z" fill="#241c18"/>
-        <ellipse cx="75" cy="2" rx="8" ry="4.5" fill="#241c18"/>
-        <path d="M68 -2 q7 -4 14 0" stroke="#efe6da" stroke-width="2.4" fill="none"/>
-      </g>
-    </g>
-
-    <!-- far mesas -->
+    <g class="condor"><g class="flap">
+      <path d="M0 0 C 26 -16 44 -16 64 -3 C 74 4 78 4 86 -1 C 106 -15 124 -15 150 0 C 120 10 104 9 86 5 C 78 9 74 9 64 6 C 44 12 26 12 0 0 Z" fill="#241c18"/>
+      <ellipse cx="75" cy="2" rx="8" ry="4.5" fill="#241c18"/>
+    </g></g>
     <path d="M0 470 L0 410 L150 408 L180 440 L360 438 L380 412 L520 410 L545 446 L760 444 L780 416 L980 414 L1010 452 L1200 450 L1200 470 Z" fill="url(#mesaFar)" opacity=".85"/>
-    <!-- near mesas (flat-topped buttes) -->
     <path d="M0 700 L0 500 L120 498 L150 470 L330 468 L360 498 L640 500 L675 462 L900 460 L935 500 L1200 502 L1200 700 Z" fill="url(#mesaNear)"/>
-    <!-- striations on the near mesa -->
     <path d="M150 484 H330 M675 478 H900 M935 488 H1120" stroke="#451d15" stroke-width="3" opacity=".4"/>
-
-    <!-- desert floor -->
     <path d="M0 700 L0 540 Q300 512 600 540 T1200 540 L1200 700 Z" fill="url(#sand)"/>
     <path d="M0 700 L0 612 Q360 588 720 612 T1200 606 L1200 700 Z" fill="#b87c41" opacity=".55"/>
-
-    <!-- cardón cacti (tall Andean columnar) -->
     <g fill="#3f6e3c">
-      <g transform="translate(150 470)">
-        <rect x="-13" y="0" width="26" height="170" rx="13"/>
-        <rect x="-40" y="46" width="27" height="58" rx="13"/><rect x="-40" y="46" width="14" height="86" rx="7"/>
-        <rect x="13" y="30" width="27" height="58" rx="13"/><rect x="26" y="30" width="14" height="100" rx="7"/>
-        <path d="M-9 12 V160 M9 12 V160" stroke="#2f5430" stroke-width="2.4" opacity=".6"/>
-      </g>
-      <g transform="translate(1030 506) scale(.82)">
-        <rect x="-13" y="0" width="26" height="170" rx="13"/>
-        <rect x="13" y="40" width="27" height="58" rx="13"/><rect x="26" y="40" width="14" height="92" rx="7"/>
-        <path d="M0 12 V160" stroke="#2f5430" stroke-width="2.4" opacity=".6"/>
-      </g>
-      <g transform="translate(470 556) scale(.5)"><rect x="-13" y="0" width="26" height="150" rx="13"/><rect x="-38" y="40" width="25" height="54" rx="12"/><rect x="-38" y="40" width="13" height="80" rx="6"/></g>
+      <g transform="translate(150 470)"><rect x="-13" y="0" width="26" height="170" rx="13"/><rect x="-40" y="46" width="27" height="58" rx="13"/><rect x="-40" y="46" width="14" height="86" rx="7"/><rect x="13" y="30" width="27" height="58" rx="13"/><rect x="26" y="30" width="14" height="100" rx="7"/></g>
+      <g transform="translate(1030 506) scale(.82)"><rect x="-13" y="0" width="26" height="170" rx="13"/><rect x="13" y="40" width="27" height="58" rx="13"/><rect x="26" y="40" width="14" height="92" rx="7"/></g>
     </g>
-
-    <!-- guanaco (Andean desert fauna) grazing on the sand -->
     <g transform="translate(760 560)" fill="#b9824f">
-      <ellipse cx="40" cy="22" rx="40" ry="20"/>            <!-- body -->
-      <path d="M70 14 q22 -6 18 -34 q-2 -10 -8 -2 q2 16 -14 26 Z"/> <!-- neck -->
-      <path d="M82 -24 q10 -2 12 8 q-8 6 -14 0 Z"/>           <!-- head -->
-      <rect x="84" y="-34" width="3" height="10" rx="1.5"/><rect x="90" y="-34" width="3" height="10" rx="1.5"/> <!-- ears -->
+      <ellipse cx="40" cy="22" rx="40" ry="20"/>
+      <path d="M70 14 q22 -6 18 -34 q-2 -10 -8 -2 q2 16 -14 26 Z"/>
+      <path d="M82 -24 q10 -2 12 8 q-8 6 -14 0 Z"/>
+      <rect x="84" y="-34" width="3" height="10" rx="1.5"/><rect x="90" y="-34" width="3" height="10" rx="1.5"/>
       <rect x="18" y="38" width="5" height="26" rx="2.5"/><rect x="34" y="40" width="5" height="24" rx="2.5"/>
       <rect x="54" y="38" width="5" height="26" rx="2.5"/><rect x="66" y="40" width="5" height="24" rx="2.5"/>
-      <path d="M2 16 q-12 2 -8 14 q6 2 10 -6 Z"/>             <!-- tail -->
-    </g>
-
-    <!-- a few sun-bleached pebbles + a tuft of puna grass -->
-    <g fill="#9c6536" opacity=".7"><circle cx="300" cy="650" r="9"/><circle cx="340" cy="662" r="6"/><circle cx="950" cy="648" r="8"/></g>
-    <g stroke="#a98a3e" stroke-width="2.4" opacity=".7" fill="none">
-      <path d="M520 668 q-4 -22 -10 -30 M524 668 q0 -24 2 -32 M528 668 q4 -20 12 -28"/>
+      <path d="M2 16 q-12 2 -8 14 q6 2 10 -6 Z"/>
     </g>
   </svg>
 
   <div class="heat"></div>
 
-  <div class="stage">
-    <div class="scene-anchor">
-      <div class="bar">
-        <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
-        <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
-        <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
-      </div>
-      <span class="drip d1"></span><span class="drip d2"></span><span class="drip d3"></span><span class="drip d4"></span>
-      <div class="puddle"></div>
-    </div>
-    <p class="cap">
-      <span class="big">dark chocolate, melting in the argentine sun.</span>
-      <span class="small">somewhere in the puna, between the cardón and the condor. warm, ternary, and best shared.
-        <a href="/">back to ternlang.com</a></span>
-    </p>
+  <div class="bar" id="bar">
+    <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
+    <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
+    <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
+    <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
+    <div class="gloss"></div>
+    <div class="plate"><b>60% Dark Chocolate</b><small>(65% is quite dark)</small></div>
   </div>
+  <div class="puddle" id="puddle"></div>
+
+  <canvas id="drips"></canvas>
+
+  <p class="cap">
+    <span class="big">60% dark chocolate, melting in the argentine sun.</span>
+    <span class="small">somewhere in the puna, between the cardón and the condor. it starts full, the sun does the rest.
+      <a href="/">back to ternlang.com</a></span>
+  </p>
 
 <script>
-// molten droplets drifting down onto the sand. no libraries, no tracking.
 (function(){
-  var c = document.createElement('canvas'); c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:2';
-  document.body.appendChild(c);
-  var x = c.getContext('2d'), W, H, dots = [];
-  function size(){ W=c.width=innerWidth; H=c.height=innerHeight; } size(); addEventListener('resize', size);
-  var COL=['#3a1f12','#4f2c17','#6b3d22','#2a1409'];
-  var t=0;
-  function frame(){
-    x.clearRect(0,0,W,H); t++;
-    if(t%30===0){ dots.push({x:W/2+(Math.random()*150-75), y:H*0.5, vy:0.5+Math.random()*0.7, r:2+Math.random()*3.5, col:COL[dots.length%COL.length], a:0}); if(dots.length>40) dots.shift(); }
-    for(var i=0;i<dots.length;i++){ var d=dots[i]; d.vy+=0.02; d.y+=d.vy; d.a=Math.min(1,d.a+0.05);
-      if(d.y>H*0.78){ dots.splice(i,1); i--; continue; }
-      x.globalAlpha=d.a*(1-(d.y-H*0.5)/(H*0.3));
-      x.beginPath(); x.moveTo(d.x,d.y-d.r*1.6);
-      x.bezierCurveTo(d.x+d.r,d.y-d.r,d.x+d.r,d.y+d.r,d.x,d.y+d.r);
-      x.bezierCurveTo(d.x-d.r,d.y+d.r,d.x-d.r,d.y-d.r,d.x,d.y-d.r*1.6);
-      x.fillStyle=d.col; x.fill();
+  var bar = document.getElementById('bar'),
+      puddle = document.getElementById('puddle'),
+      c = document.getElementById('drips'), x = c.getContext('2d');
+  var W, H; function size(){ W=c.width=innerWidth; H=c.height=innerHeight; } size(); addEventListener('resize', size);
+
+  var drops = [], COL = ['#2a1409','#3a1f12','#4f2c17','#1d0e06'];
+  var MELT = 44000, REFORM = 2600, CYCLE = MELT + REFORM, origin = null;
+  function ease(t){ return t*t*(3-2*t); }                       // smoothstep
+
+  function frame(ts){
+    if (origin === null) origin = ts;
+    var e = (ts - origin) % CYCLE, melt;
+    if (e < MELT) melt = ease(e / MELT);                        // full → puddle
+    else          melt = 1 - ease((e - MELT) / REFORM);         // a fresh bar re-forms, then again
+
+    // the bar shrinks toward its base (smaller and smaller) and slumps as it softens
+    var s = 1 - 0.84 * melt, sag = 1 - 0.07 * Math.sin(melt * Math.PI);
+    bar.style.transform = 'translateX(-50%) scale(' + s.toFixed(3) + ',' + (s * sag).toFixed(3) + ')';
+    bar.style.borderRadius = (10 + melt*26) + 'px ' + (10 + melt*26) + 'px ' + (14 + melt*64) + 'px ' + (14 + melt*58) + 'px';
+    bar.style.filter = 'brightness(' + (1 + melt*0.12).toFixed(2) + ')';
+
+    // the puddle on the mesa grows as the bar gives itself up
+    var pw = 0.34 + melt*1.75, ph = 0.42 + melt*1.05;
+    puddle.style.transform = 'translateX(-50%) scale(' + pw.toFixed(3) + ',' + ph.toFixed(3) + ')';
+    puddle.style.opacity = (0.42 + melt*0.55).toFixed(2);
+
+    // drips quicken as it melts; they fall from the bar's underside to the pool
+    var bb = bar.getBoundingClientRect(), py = puddle.getBoundingClientRect().top + 4;
+    if (Math.random() < 0.04 + melt*0.34) {
+      drops.push({ x: bb.left + bb.width*(0.2 + Math.random()*0.6), y: bb.bottom - 4,
+                   vy: 0.5 + Math.random()*0.7, r: (1.8 + Math.random()*3) * (0.5 + s*0.5),
+                   col: COL[drops.length % 4], a: 0 });
+      if (drops.length > 80) drops.shift();
     }
-    x.globalAlpha=1; requestAnimationFrame(frame);
+    x.clearRect(0, 0, W, H);
+    for (var i=0; i<drops.length; i++){
+      var d = drops[i]; d.vy += 0.02; d.y += d.vy; d.a = Math.min(1, d.a + 0.06);
+      if (d.y > py){ drops.splice(i,1); i--; continue; }
+      x.globalAlpha = d.a;
+      x.beginPath(); x.moveTo(d.x, d.y - d.r*1.7);
+      x.bezierCurveTo(d.x+d.r, d.y-d.r, d.x+d.r, d.y+d.r, d.x, d.y+d.r);
+      x.bezierCurveTo(d.x-d.r, d.y+d.r, d.x-d.r, d.y-d.r, d.x, d.y-d.r*1.7);
+      x.fillStyle = d.col; x.fill();
+      x.globalAlpha = d.a*0.5; x.beginPath(); x.arc(d.x-d.r*0.3, d.y-d.r*0.2, d.r*0.3, 0, 6.3);
+      x.fillStyle = 'rgba(255,228,194,.7)'; x.fill();
+    }
+    x.globalAlpha = 1;
+    requestAnimationFrame(frame);
   }
-  frame();
+  requestAnimationFrame(frame);
 })();
 </script>
 </body>
