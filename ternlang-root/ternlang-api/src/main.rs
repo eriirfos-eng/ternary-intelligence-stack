@@ -666,6 +666,8 @@ async fn require_api_key(
         || path == "/playground"
         || path.starts_with("/playground/pkg/")
         || path == "/fortune"
+        || path == "/chocolate"
+        || path == "/darkchocolate"
         || path == "/talk"
         || path == "/api/albert/chat"
         || path == "/api/albert/status"
@@ -775,6 +777,7 @@ static STUDIO_JS:       &str = include_str!("../../ternlang-studio/studio.js");
 static TRANSLATOR_HTML: &str = include_str!("../../ternlang-translator/web/templates/index.html");
 static KPI_HTML:        &str = include_str!("kpi.html");
 static FORTUNE_HTML:    &str = include_str!("../../docs/fortune_cookie.html");
+static CHOCOLATE_HTML:  &str = include_str!("../../ternlang-web/chocolate.html");
 static WASM_JS:         &str = include_str!("../../premlib/playground/pkg/ternlang_wasm.js");
 static WASM_BG:        &[u8] = include_bytes!("../../premlib/playground/pkg/ternlang_wasm_bg.wasm");
 static LOGO_PNG:       &[u8] = include_bytes!("../../ternlang-web/assets/ternlang_logo_notext.png");
@@ -913,6 +916,12 @@ async fn benchmarks_training() -> impl axum::response::IntoResponse {
 
 async fn fortune_page() -> Html<&'static str> {
     Html(FORTUNE_HTML)
+}
+
+// Easter egg: ternlang.com/chocolate (and /darkchocolate) — a melting dark-chocolate page.
+// Public, no key — served before the X-Ternlang-Key gate via the allowlist above.
+async fn chocolate_page() -> Html<&'static str> {
+    Html(CHOCOLATE_HTML)
 }
 
 async fn translator_page() -> Html<&'static str> {
@@ -6089,6 +6098,8 @@ async fn main() {
         .route("/api/kpi/upload/{filename}", post(kpi_upload))
         .route("/benchmarks/training",  get(benchmarks_training))
         .route("/fortune",              get(fortune_page))
+        .route("/chocolate",            get(chocolate_page))
+        .route("/darkchocolate",        get(chocolate_page))
         .route("/talk",                 get(talk_page))
         // OpenAI-compatible shim — protocol adapter for Off Grid and other clients.
         // "role: assistant" is Caesar's; albert. is a Socratic sparring partner, not a helpful assistant.

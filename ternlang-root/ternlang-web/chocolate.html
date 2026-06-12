@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>melting chocolate · ternlang</title>
+<style>
+  :root{
+    --bg0:#1a0d06; --bg1:#070302;
+    --c-hi:#8a5733; --c-mid:#4f2c17; --c-lo:#2a1409; --c-dk:#190b04;
+    --sheen:#c79867; --text:#ecdccb;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(125% 95% at 50% 18%, #2a1409 0%, var(--bg0) 46%, var(--bg1) 100%);
+    color:var(--text); min-height:100%; display:grid; place-items:center; overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  canvas#fx{ position:fixed; inset:0; pointer-events:none; z-index:1; }
+  .stage{ position:relative; z-index:2; display:grid; place-items:center; gap:30px; padding:24px; }
+
+  .scene{ position:relative; width:300px; height:320px; }
+  /* warmth halo behind the bar */
+  .scene::before{
+    content:""; position:absolute; left:50%; top:36%; width:300px; height:300px; transform:translate(-50%,-50%);
+    border-radius:50%;
+    background: radial-gradient(closest-side, rgba(255,168,88,.13), transparent 70%);
+    filter: blur(8px); animation: breathe 5.5s ease-in-out infinite;
+  }
+  @keyframes breathe{ 0%,100%{ opacity:.45; transform:translate(-50%,-50%) scale(.95);} 50%{ opacity:.85; transform:translate(-50%,-50%) scale(1.06);} }
+
+  /* the bar — sags + softens forever */
+  .bar{
+    position:absolute; left:50%; top:18px; transform:translateX(-50%);
+    width:212px; height:152px; padding:11px;
+    display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(3,1fr); gap:7px;
+    background: linear-gradient(150deg, var(--c-hi) -8%, var(--c-mid) 34%, var(--c-lo) 78%, var(--c-dk) 100%);
+    border-radius:14px 14px 16px 16px;
+    box-shadow: inset 0 3px 6px rgba(255,210,160,.30), inset 0 -16px 26px rgba(0,0,0,.55), 0 26px 40px rgba(0,0,0,.55);
+    animation: sag 7s ease-in-out infinite;
+  }
+  @keyframes sag{
+    0%   { transform:translateX(-50%) scaleY(1)    skewX(0deg);   border-bottom-left-radius:16px; border-bottom-right-radius:16px; }
+    50%  { transform:translateX(-50%) scaleY(.945) skewX(-1.2deg);border-bottom-left-radius:40px 70px; border-bottom-right-radius:34px 64px; }
+    100% { transform:translateX(-50%) scaleY(1)    skewX(0deg);   border-bottom-left-radius:16px; border-bottom-right-radius:16px; }
+  }
+  /* travelling sheen */
+  .bar::after{
+    content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    background: linear-gradient(115deg, transparent 38%, rgba(255,225,180,.20) 49%, transparent 60%);
+    background-size:280% 280%; animation: sheen 6s linear infinite; mix-blend-mode:screen;
+  }
+  @keyframes sheen{ 0%{ background-position:160% 0;} 100%{ background-position:-60% 0;} }
+
+  .seg{
+    border-radius:5px;
+    background: linear-gradient(155deg, var(--c-hi) 0%, var(--c-mid) 46%, var(--c-lo) 100%);
+    box-shadow: inset 1.5px 1.5px 1.5px rgba(255,214,166,.45), inset -2px -3px 4px rgba(0,0,0,.55);
+  }
+
+  /* drips fall from the bar's underside on staggered loops */
+  .drip{
+    position:absolute; top:160px; width:15px; height:15px;
+    background: linear-gradient(180deg, var(--c-mid), var(--c-dk));
+    border-radius:50% 50% 48% 48%;
+    box-shadow: inset 2px 2px 2px rgba(255,200,150,.35), 0 6px 10px rgba(0,0,0,.5);
+    transform-origin:top center; opacity:0;
+  }
+  .drip.d1{ left:64px;  animation: drip 3.6s ease-in 0.0s infinite; }
+  .drip.d2{ left:120px; animation: drip 4.4s ease-in 1.3s infinite; }
+  .drip.d3{ left:154px; animation: drip 3.9s ease-in 2.2s infinite; }
+  .drip.d4{ left:92px;  animation: drip 5.0s ease-in 0.7s infinite; }
+  @keyframes drip{
+    0%   { transform:translateY(0)    scaleY(.5); opacity:0; }
+    18%  { transform:translateY(4px)  scaleY(1.6); opacity:1; }
+    70%  { transform:translateY(96px) scaleY(2.4); opacity:1; }
+    100% { transform:translateY(132px)scaleY(.7); opacity:0; }
+  }
+
+  /* glossy puddle gathering below */
+  .puddle{
+    position:absolute; left:50%; bottom:34px; transform:translateX(-50%);
+    width:208px; height:34px; border-radius:50%;
+    background: radial-gradient(60% 80% at 42% 30%, var(--c-hi) 0%, var(--c-mid) 38%, var(--c-dk) 100%);
+    box-shadow: 0 10px 24px rgba(0,0,0,.55), inset 0 4px 8px rgba(255,210,160,.25);
+    animation: pool 7s ease-in-out infinite;
+  }
+  .puddle::after{
+    content:""; position:absolute; left:24%; top:26%; width:34%; height:26%; border-radius:50%;
+    background: radial-gradient(closest-side, rgba(255,235,205,.55), transparent 70%); filter:blur(1px);
+  }
+  @keyframes pool{ 0%,100%{ width:188px; opacity:.85;} 50%{ width:224px; opacity:1;} }
+
+  .cap{ text-align:center; max-width:340px; line-height:1.5; }
+  .cap .big{ font-size:15px; letter-spacing:.02em; color:#f1e3d2; }
+  .cap .small{ display:block; margin-top:7px; font-size:12px; color:#b89a7e; }
+  .cap a{ color:var(--sheen); text-decoration:none; border-bottom:1px solid rgba(199,152,103,.35); }
+  .cap a:hover{ color:#e7c79b; }
+</style>
+</head>
+<body>
+  <canvas id="fx"></canvas>
+  <div class="stage">
+    <div class="scene">
+      <div class="bar" id="bar">
+        <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
+        <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
+        <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
+      </div>
+      <span class="drip d1"></span><span class="drip d2"></span>
+      <span class="drip d3"></span><span class="drip d4"></span>
+      <div class="puddle"></div>
+    </div>
+    <p class="cap">
+      <span class="big">dark chocolate, melting at zero.</span>
+      <span class="small">you found the sweet branch of ternlang. warm, ternary, and best shared.
+        <a href="/">back to ternlang.com</a></span>
+    </p>
+  </div>
+
+<script>
+// molten droplets + a soft warmth that follows the cursor. no libraries, no tracking.
+(function(){
+  var c = document.getElementById('fx'), x = c.getContext('2d');
+  var W, H, dots = [], warm = { x: -999, y: -999 };
+  function size(){ W = c.width = innerWidth; H = c.height = innerHeight; }
+  size(); addEventListener('resize', size);
+  addEventListener('pointermove', function(e){ warm.x = e.clientX; warm.y = e.clientY; });
+
+  var COL = ['#3a1f12','#4f2c17','#6b3d22','#2a1409'];
+  function spawn(){
+    // drip droplets emerge near the middle of the screen (under the bar) and fall.
+    var cx = W/2 + (Math.random()*150 - 75);
+    dots.push({ x: cx, y: H/2 - 30, vy: 0.5 + Math.random()*0.8, r: 2 + Math.random()*4,
+                col: COL[(dots.length) % COL.length], a: 0 });
+    if (dots.length > 60) dots.shift();
+  }
+  var t = 0;
+  function frame(){
+    x.clearRect(0,0,W,H);
+    // warmth glow under the cursor
+    if (warm.y > 0){
+      var g = x.createRadialGradient(warm.x, warm.y, 0, warm.x, warm.y, 120);
+      g.addColorStop(0, 'rgba(255,170,90,0.10)'); g.addColorStop(1, 'rgba(255,170,90,0)');
+      x.fillStyle = g; x.fillRect(warm.x-120, warm.y-120, 240, 240);
+    }
+    t++; if (t % 26 === 0) spawn();
+    for (var i=0;i<dots.length;i++){
+      var d = dots[i];
+      d.vy += 0.018; d.y += d.vy; d.a = Math.min(1, d.a + 0.04);
+      if (d.y > H + 20){ dots.splice(i,1); i--; continue; }
+      x.globalAlpha = d.a * (1 - d.y / (H + 60));
+      x.beginPath();
+      // teardrop: a circle with a pulled top
+      x.moveTo(d.x, d.y - d.r*1.6);
+      x.bezierCurveTo(d.x + d.r, d.y - d.r, d.x + d.r, d.y + d.r, d.x, d.y + d.r);
+      x.bezierCurveTo(d.x - d.r, d.y + d.r, d.x - d.r, d.y - d.r, d.x, d.y - d.r*1.6);
+      x.fillStyle = d.col; x.fill();
+      x.globalAlpha = d.a * 0.5; x.beginPath();
+      x.arc(d.x - d.r*0.3, d.y - d.r*0.2, d.r*0.3, 0, 6.3); x.fillStyle = 'rgba(255,225,190,.7)'; x.fill();
+    }
+    x.globalAlpha = 1;
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>
