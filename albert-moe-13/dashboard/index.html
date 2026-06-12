@@ -1060,6 +1060,10 @@
                 <div class="dd-item" id="exportFull">↓ Full Dataset <small>both combined</small></div>
             </div>
         </div>
+        <button id="alerts-bell" title="Alerts & custom observers" style="position:relative;width:24px;height:22px;border-radius:6px;border:1px solid var(--border2);background:var(--bg2);color:var(--muted);cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2a4 4 0 0 0-4 4c0 2.6-1.1 3.6-1.1 3.6h10.2S12 8.6 12 6a4 4 0 0 0-4-4Z"/><path d="M6.7 12.6a1.4 1.4 0 0 0 2.6 0"/></svg>
+            <span id="alerts-badge" style="display:none;position:absolute;top:-5px;right:-5px;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:var(--red);color:#fff;font-size:9px;font-weight:700;line-height:14px;text-align:center;"></span>
+        </button>
         <button id="help-btn" title="Keyboard shortcuts">?</button>
     </div>
 </div>
@@ -4825,6 +4829,7 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
     }
 
     function addEvent(icon, text, level, detail, cx, cy, permanent) {
+        try { if (window.__albertAlertsEvent) window.__albertAlertsEvent(icon, text); } catch (_) {}
         const ts = new Date().toTimeString().slice(0, 8);
         anomalyEvents.unshift({ icon, text, level, ts, detail: detail || text,
             cx: cx !== undefined ? cx : lastBatchX,
@@ -5844,6 +5849,311 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             if (el && el.type === 'checkbox') el.dispatchEvent(new Event('change'));
         });
         setInterval(poll, POLL_MS);
+
+        // ════════════════════════════════════════════════════════════════════
+        // ALERTS ENGINE — MetaTrader-style custom observers for the training run.
+        // Watches live metrics + discrete events, fires toast / sound / browser /
+        // ntfy on user-defined conditions. Pure client-side: reads the same globals
+        // the topbar renders, reuses notify()/ntfyPush()/ensureAudio(). Config persists
+        // in localStorage. No server changes — every researcher tunes their own observers.
+        // ════════════════════════════════════════════════════════════════════
+        (function(){
+          const LS = 'albert_alerts_v1', LSLOG = 'albert_alerts_log_v1';
+          const BELL_SVG = '<svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2a4 4 0 0 0-4 4c0 2.6-1.1 3.6-1.1 3.6h10.2S12 8.6 12 6a4 4 0 0 0-4-4Z"/><path d="M6.7 12.6a1.4 1.4 0 0 0 2.6 0"/></svg>';
+
+          // ---- live metric accessors: read the same state the topbar renders ----
+          const domNum = id => { const e=document.getElementById(id); if(!e) return null; const v=parseFloat((e.textContent||'').replace(/[^0-9.\-]/g,'')); return isFinite(v)?v:null; };
+          const fGpu = () => { const f=document.getElementById('gpu-meter-fill'); if(!f) return null; const w=parseFloat(f.style.width); return isFinite(w)?w:null; };
+          const fEpoch = () => { const e=document.getElementById('v-epoch'); if(!e) return null; const m=(e.textContent||'').match(/-?\d+/); return m?parseInt(m[0]):null; };
+          const fBatch = () => { const e=document.getElementById('v-batch'); if(!e) return null; const m=(e.textContent||'').match(/\d+/); return m?parseInt(m[0]):null; };
+          const fLayers = () => { try { if(latestTele&&latestTele.numLayers) return latestTele.numLayers; } catch(_){} const e=document.getElementById('v-epoch'); const m=e&&(e.textContent||'').match(/(\d+)L/); return m?parseInt(m[1]):null; };
+          const fLoss = () => { try { if(typeof lastLossVal!=='undefined'&&lastLossVal!=null) return lastLossVal; } catch(_){} return domNum('v-loss'); };
+          const fAtl = () => { try { if(typeof allTimeBestBatch!=='undefined'&&allTimeBestBatch!==Infinity) return allTimeBestBatch; } catch(_){} return domNum('v-best'); };
+          const fGate = () => { try { return (typeof gGateMycStable!=='undefined'&&gGateMycStable!=null)?gGateMycStable:null; } catch(_){ return null; } };
+          const fSilence = () => { try { return (Date.now()-lastDataMs)/1000; } catch(_){ return null; } };
+          const fExpertCV = () => { try { const a=latestTele&&latestTele.expertActivity; if(!a||!a.length) return null; const m=a.reduce((s,x)=>s+x,0)/a.length; if(m<=0) return null; const v=a.reduce((s,x)=>s+(x-m)*(x-m),0)/a.length; return Math.sqrt(v)/m; } catch(_){ return null; } };
+          const fSparsity = () => { try { const a=latestTele&&latestTele.layerSparsity; if(!a||!a.length) return null; return a.reduce((s,x)=>s+x,0)/a.length; } catch(_){ return null; } };
+
+          const METRICS = [
+            { id:'loss',      label:'Batch loss',            grp:'Core',    unit:'',  dp:4, read:fLoss },
+            { id:'atl',       label:'All-time low (ATL)',    grp:'Core',    unit:'',  dp:4, read:fAtl },
+            { id:'epoch',     label:'Epoch',                 grp:'Core',    unit:'',  dp:0, read:fEpoch },
+            { id:'batch',     label:'Batch in epoch',        grp:'Core',    unit:'',  dp:0, read:fBatch },
+            { id:'gpu',       label:'GPU memory',            grp:'System',  unit:'%', dp:0, read:fGpu },
+            { id:'silence',   label:'Stream silence',        grp:'System',  unit:'s', dp:0, read:fSilence },
+            { id:'gate_myc',  label:'Gate myc-stable',       grp:'Surgery', unit:'',  dp:0, read:fGate },
+            { id:'layers',    label:'Layer count',           grp:'Surgery', unit:'L', dp:0, read:fLayers },
+            { id:'expert_cv', label:'Expert imbalance (CV)', grp:'Ecology', unit:'',  dp:3, read:fExpertCV },
+            { id:'sparsity',  label:'Mean layer sparsity',   grp:'Ecology', unit:'',  dp:3, read:fSparsity },
+          ];
+          const MB = {}; METRICS.forEach(m=>MB[m.id]=m);
+          const EVENTS = { surgery:'Surgery fired', spike:'Loss spike', ttl_rebuild:'TTL rebuilding', wald:'WALD fired', plateau:'Plateau triggered' };
+          const OPS = { above:{sym:'>',txt:'rises above'}, below:{sym:'<',txt:'falls below'}, improve:{sym:'↓',txt:'improves by',pct:true}, change:{sym:'Δ',txt:'changes by',pct:true} };
+
+          const PRESETS = [
+            { pid:'surgery', kind:'event', metric:'surgery', label:'Every surgery',        channels:{toast:1,sound:1,browser:1,ntfy:1} },
+            { pid:'wald',    kind:'event', metric:'wald',    label:'WALD fires',           channels:{toast:1,sound:1} },
+            { pid:'plateau', kind:'event', metric:'plateau', label:'Plateau triggered',    channels:{toast:1,browser:1} },
+            { pid:'spike',   kind:'event', metric:'spike',   label:'Loss spike',           channels:{toast:1,sound:1} },
+            { pid:'gpu92',   kind:'level', metric:'gpu',     op:'above', value:92, sustain:3, repeat:true, cooldown:120, label:'GPU > 92%',           channels:{toast:1,browser:1,ntfy:1} },
+            { pid:'stall',   kind:'level', metric:'silence', op:'above', value:90, repeat:true, cooldown:120, label:'Stream stalls > 90s',          channels:{toast:1,sound:1,browser:1,ntfy:1} },
+            { pid:'atl1',    kind:'level', metric:'atl',     op:'improve', value:1, label:'ATL improves 1%',     channels:{toast:1} },
+            { pid:'imbal',   kind:'level', metric:'expert_cv', op:'above', value:0.6, sustain:5, repeat:true, cooldown:300, label:'Expert imbalance high', channels:{toast:1} },
+          ];
+
+          // ---- state + persistence ----
+          let alerts = load(), firedLog = loadLog(), unread = 0, panelOpen = false;
+          function normalize(a){ a._st={prev:null,base:null,held:0,lastFired:0,armed:false}; if(!a.channels) a.channels={toast:1}; if(a.enabled===undefined) a.enabled=true; return a; }
+          function serialize(a){ const o={}; for(const k in a){ if(k!=='_st') o[k]=a[k]; } return o; }
+          function load(){ try { return JSON.parse(localStorage.getItem(LS)||'[]').map(normalize); } catch(_){ return []; } }
+          function loadLog(){ try { return JSON.parse(localStorage.getItem(LSLOG)||'[]'); } catch(_){ return []; } }
+          function save(){ try { localStorage.setItem(LS, JSON.stringify(alerts.map(serialize))); } catch(_){} }
+          function saveLog(){ try { localStorage.setItem(LSLOG, JSON.stringify(firedLog.slice(0,60))); } catch(_){} }
+          function uid(){ return 'a'+Math.random().toString(36).slice(2,9); }
+          function addAlert(cfg){ cfg.id=cfg.id||uid(); normalize(cfg); alerts.push(cfg); save(); render(); }
+          function removeAlert(id){ alerts=alerts.filter(a=>a.id!==id); save(); render(); }
+          function toggleAlert(id){ const a=alerts.find(x=>x.id===id); if(a){ a.enabled=!a.enabled; a._st.armed=false; save(); render(); } }
+          function presetOn(pid){ return alerts.some(a=>a.pid===pid); }
+          function togglePreset(pid){ if(presetOn(pid)){ alerts=alerts.filter(a=>a.pid!==pid); save(); render(); } else { const p=PRESETS.find(x=>x.pid===pid); if(p) addAlert(JSON.parse(JSON.stringify(p))); } }
+
+          // ---- firing ----
+          function fmt(v,m){ if(v==null) return '—'; const dp=m?m.dp:2, u=m?m.unit:''; return v.toFixed(dp)+u; }
+          function labelFor(a){
+            if(a.label) return a.label;
+            if(a.kind==='event') return EVENTS[a.metric]||a.metric;
+            const m=MB[a.metric], o=OPS[a.op];
+            return (m?m.label:a.metric)+' '+(o?o.sym:'')+' '+a.value+(o&&o.pct?'%':(m?m.unit:''));
+          }
+          function chime(){ try { const ctx=ensureAudio(); const o=ctx.createOscillator(), g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.setValueAtTime(880,ctx.currentTime); o.frequency.exponentialRampToValueAtTime(1320,ctx.currentTime+0.12); g.gain.setValueAtTime(0.0001,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.16,ctx.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.5); o.start(); o.stop(ctx.currentTime+0.52); } catch(_){} }
+          function toast(title, body){
+            let host=document.getElementById('alh-toasts');
+            if(!host){ host=document.createElement('div'); host.id='alh-toasts'; document.body.appendChild(host); }
+            const el=document.createElement('div'); el.className='alh-toast';
+            el.innerHTML='<span class="alh-toast-ic">'+BELL_SVG+'</span><div class="alh-toast-tx"><div class="alh-toast-t"></div><div class="alh-toast-b"></div></div>';
+            el.querySelector('.alh-toast-t').textContent=title;
+            el.querySelector('.alh-toast-b').textContent=body;
+            host.appendChild(el);
+            requestAnimationFrame(()=>el.classList.add('show'));
+            setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),320); }, 6500);
+          }
+          function updateBadge(){ const b=document.getElementById('alerts-badge'); if(!b) return; if(unread>0){ b.style.display=''; b.textContent=unread>99?'99+':String(unread); } else b.style.display='none'; }
+          function dispatch(a, title, body){
+            unread++; updateBadge();
+            firedLog.unshift({ t:Date.now(), label:labelFor(a), body }); firedLog=firedLog.slice(0,60); saveLog();
+            toast(title, body);
+            if(a.channels.sound && typeof soundMuted!=='undefined' && !soundMuted) chime();
+            if(a.channels.browser){ try{ notify(title, body); }catch(_){} }
+            if(a.channels.ntfy){ try{ ntfyPush(title, body, 'bell'); }catch(_){} }
+            if(panelOpen) renderLog();
+          }
+          function fireLevel(a,v){ const m=MB[a.metric]; dispatch(a, 'albert. · '+labelFor(a), m.label+' = '+fmt(v,m)); }
+          function onEvent(type, text){ for(const a of alerts){ if(!a.enabled||a.kind!=='event') continue; if(a.metric!==type && a.metric!=='any') continue; dispatch(a, 'albert. · '+(EVENTS[type]||type), text||EVENTS[type]||type); } }
+          window.__albertAlertsEvent = onEvent;
+
+          // ---- evaluation tick (level metrics, every 1s) ----
+          function tick(){
+            const now=Date.now();
+            for(const a of alerts){
+              if(!a.enabled||a.kind!=='level') continue;
+              const m=MB[a.metric]; if(!m) continue;
+              const v=m.read(), st=a._st;
+              if(v==null||!isFinite(v)) continue;
+              let cond=false;
+              if(a.op==='improve'){ if(st.base==null) st.base=v; if(v<=st.base*(1-a.value/100)) cond=true; }
+              else if(a.op==='change'){ if(st.prev!=null && st.prev!==0 && Math.abs(v-st.prev)/Math.abs(st.prev)*100>=a.value) cond=true; }
+              else cond = a.op==='above' ? v>a.value : v<a.value;
+              st.prev=v;
+              if(cond) st.held=(st.held||0)+1; else st.held=0;
+              const sustainOk = (a.sustain||1)<=1 ? cond : st.held>=a.sustain;
+              if(sustainOk){
+                const cooled = !st.lastFired || (now-st.lastFired)/1000 >= (a.cooldown||0);
+                if(a.op==='improve'||a.op==='change'){ if(cooled){ fireLevel(a,v); st.lastFired=now; if(a.op==='improve') st.base=v; } }
+                else if(!st.armed || (a.repeat && cooled)){ fireLevel(a,v); st.lastFired=now; st.armed=true; }
+              } else st.armed=false;
+            }
+          }
+          setInterval(tick, 1000);
+
+          // ---- natural-language composer: "describe an observer" → rule ----
+          function parseNL(s){
+            s=(s||'').toLowerCase().trim(); if(!s) return null;
+            const evKW={ surgery:['surgery','surger','net2net','grow','expand'], wald:['wald'], plateau:['plateau'], spike:['spike'], ttl_rebuild:['ttl'] };
+            for(const t in evKW){ if(evKW[t].some(k=>s.includes(k))) return { kind:'event', metric:t }; }
+            const mKW={ atl:['atl','all-time','all time','record','best'], gpu:['gpu','vram','memory'], silence:['silence','silent','stall','stale','no data','frozen','freeze'], expert_cv:['expert','imbalance','balance'], sparsity:['sparsity','sparse'], layers:['layer'], gate_myc:['gate','myc'], epoch:['epoch'], batch:['batch'], loss:['loss'] };
+            let metric=null; for(const id in mKW){ if(mKW[id].some(k=>s.includes(k))){ metric=id; break; } }
+            if(!metric) return null;
+            const nm=s.match(/(-?\d+(?:\.\d+)?)/); const value=nm?parseFloat(nm[1]):null;
+            let op='above';
+            if(/improv|drop|better|gain|falls by|down by/.test(s)) op='improve';
+            else if(/chang|move|jump|swing/.test(s)) op='change';
+            else if(/below|under|less|beneath|lower|<|reaches below/.test(s)) op='below';
+            else if(/above|over|exceed|greater|more|reach|hit|>/.test(s)) op='above';
+            if(value==null) return null;
+            return { kind:'level', metric, op, value };
+          }
+
+          // ---- panel UI ----
+          function ensureShell(){
+            if(document.getElementById('alh-panel')) return;
+            const st=document.createElement('style');
+            st.textContent=
+              '#alh-panel{position:fixed;top:42px;right:8px;width:372px;max-height:84vh;overflow-y:auto;background:var(--bg1);border:1px solid var(--border2);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.7);z-index:9995;font-size:11px;display:none}'+
+              '#alh-panel.open{display:block}'+
+              '.alh-hd{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg1);z-index:2}'+
+              '.alh-hd b{font-size:12px;letter-spacing:.4px;color:var(--text)}'+
+              '.alh-x{margin-left:auto;cursor:pointer;color:var(--muted);background:none;border:none;font-size:15px;line-height:1;padding:2px 4px}'+
+              '.alh-sec{padding:11px 14px;border-bottom:1px solid var(--border)}'+
+              '.alh-sec-t{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px}'+
+              '.alh-chips{display:flex;flex-wrap:wrap;gap:5px}'+
+              '.alh-chip{cursor:pointer;border:1px solid var(--border2);background:var(--bg2);color:var(--muted);border-radius:20px;padding:3px 9px;font-size:10px;transition:all .15s;user-select:none}'+
+              '.alh-chip.on{border-color:var(--accent);color:var(--accent);background:rgba(34,211,238,.1);box-shadow:0 0 0 1px rgba(34,211,238,.25)}'+
+              '.alh-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-top:1px solid var(--border)}'+
+              '.alh-row:first-child{border-top:none}'+
+              '.alh-row .lbl{flex:1;min-width:0;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'+
+              '.alh-row .chs{display:flex;gap:3px;color:var(--muted2);flex-shrink:0}'+
+              '.alh-row .chs span{font-size:8px;text-transform:uppercase;letter-spacing:.3px;border:1px solid var(--border);border-radius:3px;padding:1px 3px}'+
+              '.alh-sw{position:relative;width:26px;height:15px;border-radius:8px;background:var(--border2);cursor:pointer;flex-shrink:0;transition:background .15s}'+
+              '.alh-sw.on{background:var(--green)}'+
+              '.alh-sw i{position:absolute;top:1.5px;left:1.5px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s}'+
+              '.alh-sw.on i{left:12.5px}'+
+              '.alh-del{cursor:pointer;color:var(--muted2);background:none;border:none;padding:2px;flex-shrink:0;line-height:0}'+
+              '.alh-del:hover{color:var(--red)}'+
+              '.alh-in{width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:6px 9px;font-size:11px;font-family:inherit}'+
+              '.alh-in::placeholder{color:var(--muted2)}'+
+              '.alh-ex{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}'+
+              '.alh-ex span{cursor:pointer;color:var(--muted);border:1px dashed var(--border2);border-radius:5px;padding:2px 6px;font-size:9px}'+
+              '.alh-ex span:hover{color:var(--accent);border-color:var(--accent)}'+
+              '.alh-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px}'+
+              '.alh-grid select,.alh-grid input{background:var(--bg2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 7px;font-size:10px;font-family:inherit;width:100%}'+
+              '.alh-chk{display:flex;flex-wrap:wrap;gap:9px;margin:6px 0}'+
+              '.alh-chk label{display:flex;align-items:center;gap:4px;color:var(--muted);cursor:pointer;font-size:10px}'+
+              '.alh-btn{width:100%;background:var(--accent);color:#04141a;border:none;border-radius:7px;padding:7px;font-weight:700;font-size:11px;cursor:pointer;font-family:inherit}'+
+              '.alh-btn.sec{background:var(--bg2);color:var(--accent);border:1px solid var(--border2);font-weight:600}'+
+              '.alh-empty{color:var(--muted2);font-style:italic;padding:4px 0}'+
+              '.alh-logrow{display:flex;gap:7px;padding:4px 0;border-top:1px solid var(--border);color:var(--muted)}'+
+              '.alh-logrow:first-child{border-top:none}'+
+              '.alh-logrow time{color:var(--muted2);flex-shrink:0;font-variant-numeric:tabular-nums}'+
+              '.alh-foldhd{display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--muted);user-select:none}'+
+              '.alh-foldhd .arr{transition:transform .15s}'+ '.alh-foldhd.open .arr{transform:rotate(90deg)}'+
+              '#alh-toasts{position:fixed;top:46px;right:12px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}'+
+              '.alh-toast{display:flex;gap:9px;align-items:flex-start;width:300px;background:var(--bg1);border:1px solid var(--accent);border-radius:10px;padding:10px 12px;box-shadow:0 8px 28px rgba(0,0,0,.6);opacity:0;transform:translateX(20px);transition:all .3s cubic-bezier(.22,1,.36,1)}'+
+              '.alh-toast.show{opacity:1;transform:none}'+
+              '.alh-toast-ic{color:var(--accent);flex-shrink:0;margin-top:1px}'+
+              '.alh-toast-t{font-weight:700;color:var(--text);font-size:11px;margin-bottom:2px}'+
+              '.alh-toast-b{color:var(--muted);font-size:10px;line-height:1.4}';
+            document.head.appendChild(st);
+            const p=document.createElement('div'); p.id='alh-panel'; document.body.appendChild(p);
+            p.addEventListener('click', onPanelClick);
+          }
+
+          let advOpen=false, logOpen=false;
+          function metricOptions(sel){ const groups={}; METRICS.forEach(m=>{ (groups[m.grp]=groups[m.grp]||[]).push(m); }); let h=''; for(const g in groups){ h+='<optgroup label="'+g+'">'; groups[g].forEach(m=>{ h+='<option value="'+m.id+'"'+(m.id===sel?' selected':'')+'>'+m.label+'</option>'; }); h+='</optgroup>'; } return h; }
+          function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+          function render(){
+            ensureShell();
+            const p=document.getElementById('alh-panel'); if(!p) return;
+            const chips = PRESETS.map(pr=>'<span class="alh-chip'+(presetOn(pr.pid)?' on':'')+'" data-act="preset" data-pid="'+pr.pid+'">'+esc(pr.label)+'</span>').join('');
+            const rows = alerts.length ? alerts.map(a=>{
+              const chs = Object.keys(a.channels||{}).filter(k=>a.channels[k]).map(k=>'<span>'+k[0]+'</span>').join('');
+              return '<div class="alh-row">'+
+                '<div class="alh-sw'+(a.enabled?' on':'')+'" data-act="toggle" data-id="'+a.id+'"><i></i></div>'+
+                '<div class="lbl" title="'+esc(labelFor(a))+'">'+esc(labelFor(a))+(a.repeat?' <span style="color:var(--muted2)">⟳</span>':'')+'</div>'+
+                '<div class="chs">'+chs+'</div>'+
+                '<button class="alh-del" data-act="del" data-id="'+a.id+'" title="Delete observer"><svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 4h8M5.5 4V3h3v1M4 4l.5 7h5l.5-7"/></svg></button>'+
+              '</div>';
+            }).join('') : '<div class="alh-empty">No observers yet — add a preset above, describe one, or build a custom rule.</div>';
+            const logRows = firedLog.length ? firedLog.slice(0,40).map(l=>'<div class="alh-logrow"><time>'+new Date(l.t).toTimeString().slice(0,8)+'</time><div><b style="color:var(--text)">'+esc(l.label)+'</b><br>'+esc(l.body)+'</div></div>').join('') : '<div class="alh-empty">Nothing has fired yet.</div>';
+
+            p.innerHTML =
+              '<div class="alh-hd">'+BELL_SVG+'<b>Alerts &amp; observers</b><button class="alh-x" data-act="close">&times;</button></div>'+
+              '<div class="alh-sec"><div class="alh-sec-t">Ecology presets — one click to watch</div><div class="alh-chips">'+chips+'</div></div>'+
+              '<div class="alh-sec"><div class="alh-sec-t">Your observers ('+alerts.length+')</div>'+rows+'</div>'+
+              '<div class="alh-sec"><div class="alh-sec-t">Describe an observer</div>'+
+                '<input class="alh-in" id="alh-nl" placeholder="e.g. loss below 6.4, gpu over 92, atl improves 1%, alert on surgery">'+
+                '<div class="alh-ex">'+['loss below 6.4','gpu over 92','no data for 90s','atl improves 1%','on every surgery','expert imbalance over 0.6'].map(x=>'<span data-act="ex" data-ex="'+esc(x)+'">'+esc(x)+'</span>').join('')+'</div>'+
+                '<button class="alh-btn sec" data-act="nl-add" style="margin-top:8px">+ Add from description</button>'+
+              '</div>'+
+              '<div class="alh-sec">'+
+                '<div class="alh-foldhd'+(advOpen?' open':'')+'" data-act="fold-adv"><svg class="arr" viewBox="0 0 12 12" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m4 2 4 4-4 4"/></svg><span class="alh-sec-t" style="margin:0">Custom rule (advanced)</span></div>'+
+                (advOpen ? (
+                  '<div style="margin-top:9px">'+
+                  '<div class="alh-grid">'+
+                    '<select id="alh-metric">'+metricOptions('loss')+'</select>'+
+                    '<select id="alh-op"><option value="above">rises above</option><option value="below">falls below</option><option value="improve">improves by %</option><option value="change">changes by %</option></select>'+
+                  '</div>'+
+                  '<div class="alh-grid">'+
+                    '<input id="alh-val" type="number" step="any" placeholder="threshold">'+
+                    '<input id="alh-sustain" type="number" min="1" placeholder="sustain ticks (1)">'+
+                  '</div>'+
+                  '<div class="alh-grid">'+
+                    '<input id="alh-cooldown" type="number" min="0" placeholder="cooldown s (0)">'+
+                    '<label style="display:flex;align-items:center;gap:5px;color:var(--muted);font-size:10px"><input type="checkbox" id="alh-repeat"> re-fire (resample)</label>'+
+                  '</div>'+
+                  '<div class="alh-chk">Notify: '+
+                    '<label><input type="checkbox" id="alh-ch-toast" checked> toast</label>'+
+                    '<label><input type="checkbox" id="alh-ch-sound"> sound</label>'+
+                    '<label><input type="checkbox" id="alh-ch-browser"> browser</label>'+
+                    '<label><input type="checkbox" id="alh-ch-ntfy"> ntfy</label>'+
+                  '</div>'+
+                  '<button class="alh-btn" data-act="adv-add">+ Add custom observer</button>'+
+                  '</div>'
+                ) : '')+
+              '</div>'+
+              '<div class="alh-sec">'+
+                '<div class="alh-foldhd'+(logOpen?' open':'')+'" data-act="fold-log"><svg class="arr" viewBox="0 0 12 12" width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m4 2 4 4-4 4"/></svg><span class="alh-sec-t" style="margin:0">Fired log ('+firedLog.length+')</span></div>'+
+                (logOpen ? '<div id="alh-log" style="margin-top:9px">'+logRows+'</div>' : '')+
+              '</div>';
+          }
+          function renderLog(){ const el=document.getElementById('alh-log'); if(!el) return; el.innerHTML = firedLog.length ? firedLog.slice(0,40).map(l=>'<div class="alh-logrow"><time>'+new Date(l.t).toTimeString().slice(0,8)+'</time><div><b style="color:var(--text)">'+esc(l.label)+'</b><br>'+esc(l.body)+'</div></div>').join('') : '<div class="alh-empty">Nothing has fired yet.</div>'; }
+
+          function onPanelClick(e){
+            const t=e.target.closest('[data-act]'); if(!t) return;
+            const act=t.getAttribute('data-act');
+            if(act==='close'){ closePanel(); return; }
+            if(act==='preset'){ togglePreset(t.getAttribute('data-pid')); return; }
+            if(act==='toggle'){ toggleAlert(t.getAttribute('data-id')); return; }
+            if(act==='del'){ removeAlert(t.getAttribute('data-id')); return; }
+            if(act==='fold-adv'){ advOpen=!advOpen; render(); return; }
+            if(act==='fold-log'){ logOpen=!logOpen; render(); return; }
+            if(act==='ex'){ const inp=document.getElementById('alh-nl'); if(inp){ inp.value=t.getAttribute('data-ex'); inp.focus(); } return; }
+            if(act==='nl-add'){
+              const inp=document.getElementById('alh-nl'); const r=parseNL(inp&&inp.value);
+              if(!r){ if(inp){ inp.style.borderColor='var(--red)'; inp.placeholder='Could not parse — try "loss below 6.4" or "on surgery"'; inp.value=''; setTimeout(()=>{inp.style.borderColor='';},1500); } return; }
+              r.channels={toast:1,browser:1}; if(r.kind==='event') r.channels.sound=1;
+              addAlert(r); return;
+            }
+            if(act==='adv-add'){
+              const metric=val('alh-metric'), op=val('alh-op');
+              const value=parseFloat(val('alh-val'));
+              const cfg={ kind:'level', metric, op, value:isFinite(value)?value:0,
+                sustain:Math.max(1, parseInt(val('alh-sustain'))||1),
+                cooldown:Math.max(0, parseInt(val('alh-cooldown'))||0),
+                repeat:chk('alh-repeat'),
+                channels:{ toast:chk('alh-ch-toast')?1:0, sound:chk('alh-ch-sound')?1:0, browser:chk('alh-ch-browser')?1:0, ntfy:chk('alh-ch-ntfy')?1:0 } };
+              if(!cfg.channels.toast&&!cfg.channels.sound&&!cfg.channels.browser&&!cfg.channels.ntfy) cfg.channels.toast=1;
+              addAlert(cfg); return;
+            }
+          }
+          function val(id){ const e=document.getElementById(id); return e?e.value:''; }
+          function chk(id){ const e=document.getElementById(id); return !!(e&&e.checked); }
+
+          function openPanel(){ ensureShell(); panelOpen=true; unread=0; updateBadge(); render(); document.getElementById('alh-panel').classList.add('open'); }
+          function closePanel(){ panelOpen=false; const p=document.getElementById('alh-panel'); if(p) p.classList.remove('open'); }
+
+          const bell=document.getElementById('alerts-bell');
+          if(bell){
+            bell.addEventListener('click', e=>{
+              e.stopPropagation();
+              if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
+              if(panelOpen) closePanel(); else openPanel();
+            });
+            document.addEventListener('click', e=>{ if(!panelOpen) return; const p=document.getElementById('alh-panel'); if(p && !p.contains(e.target) && e.target!==bell && !bell.contains(e.target)) closePanel(); });
+            document.addEventListener('keydown', e=>{ if(e.key==='Escape' && panelOpen) closePanel(); });
+          }
+          updateBadge();
+        })();
+
         // Seed the CSV mtime baseline and start periodic hot-preseed refresh.
         // If auto-merge updated batch_history.csv after the preseed was loaded,
         // the new data will be injected within 60 s without a page reload.
