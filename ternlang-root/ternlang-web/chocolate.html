@@ -6,163 +6,199 @@
 <title>melting chocolate · ternlang</title>
 <style>
   :root{
-    --bg0:#1a0d06; --bg1:#070302;
     --c-hi:#8a5733; --c-mid:#4f2c17; --c-lo:#2a1409; --c-dk:#190b04;
-    --sheen:#c79867; --text:#ecdccb;
+    --sand:#d9a86a; --text:#fff3e2;
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
   html,body{ height:100%; }
   body{
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: radial-gradient(125% 95% at 50% 18%, #2a1409 0%, var(--bg0) 46%, var(--bg1) 100%);
-    color:var(--text); min-height:100%; display:grid; place-items:center; overflow:hidden;
+    color:var(--text); min-height:100%; overflow:hidden; position:relative;
+    /* golden-hour Puna sky */
+    background: linear-gradient(180deg, #243a5e 0%, #6e5a6b 30%, #c0764a 60%, #f0b65f 82%, #f7d79a 100%);
     -webkit-font-smoothing:antialiased;
   }
-  canvas#fx{ position:fixed; inset:0; pointer-events:none; z-index:1; }
-  .stage{ position:relative; z-index:2; display:grid; place-items:center; gap:30px; padding:24px; }
 
-  .scene{ position:relative; width:300px; height:320px; }
-  /* warmth halo behind the bar */
-  .scene::before{
-    content:""; position:absolute; left:50%; top:36%; width:300px; height:300px; transform:translate(-50%,-50%);
-    border-radius:50%;
-    background: radial-gradient(closest-side, rgba(255,168,88,.13), transparent 70%);
-    filter: blur(8px); animation: breathe 5.5s ease-in-out infinite;
-  }
-  @keyframes breathe{ 0%,100%{ opacity:.45; transform:translate(-50%,-50%) scale(.95);} 50%{ opacity:.85; transform:translate(-50%,-50%) scale(1.06);} }
+  /* the whole desert is one slice-covered SVG behind everything */
+  svg.scene{ position:fixed; inset:0; width:100%; height:100%; z-index:0; display:block; }
+  .heat{ position:fixed; left:0; right:0; bottom:0; height:46%; z-index:1; pointer-events:none;
+    background:linear-gradient(180deg, rgba(255,220,150,.05), rgba(255,200,120,.12));
+    mix-blend-mode:screen; animation:shimmer 4s ease-in-out infinite; }
+  @keyframes shimmer{ 0%,100%{ opacity:.5; transform:translateY(0) } 50%{ opacity:.85; transform:translateY(-3px) } }
 
-  /* the bar — sags + softens forever */
+  .stage{ position:relative; z-index:3; min-height:100%; display:grid; place-items:center; gap:24px; padding:24px; }
+  .scene-anchor{ position:relative; width:300px; height:300px; margin-top:6vh; }
+
+  /* the bar — sags + softens in the desert heat */
   .bar{
     position:absolute; left:50%; top:18px; transform:translateX(-50%);
-    width:212px; height:152px; padding:11px;
+    width:212px; height:150px; padding:11px;
     display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(3,1fr); gap:7px;
     background: linear-gradient(150deg, var(--c-hi) -8%, var(--c-mid) 34%, var(--c-lo) 78%, var(--c-dk) 100%);
     border-radius:14px 14px 16px 16px;
-    box-shadow: inset 0 3px 6px rgba(255,210,160,.30), inset 0 -16px 26px rgba(0,0,0,.55), 0 26px 40px rgba(0,0,0,.55);
+    box-shadow: inset 0 3px 6px rgba(255,210,160,.30), inset 0 -16px 26px rgba(0,0,0,.55), 0 22px 36px rgba(60,20,0,.45);
     animation: sag 7s ease-in-out infinite;
   }
   @keyframes sag{
-    0%   { transform:translateX(-50%) scaleY(1)    skewX(0deg);   border-bottom-left-radius:16px; border-bottom-right-radius:16px; }
-    50%  { transform:translateX(-50%) scaleY(.945) skewX(-1.2deg);border-bottom-left-radius:40px 70px; border-bottom-right-radius:34px 64px; }
-    100% { transform:translateX(-50%) scaleY(1)    skewX(0deg);   border-bottom-left-radius:16px; border-bottom-right-radius:16px; }
+    0%   { transform:translateX(-50%) scaleY(1)    skewX(0deg);    border-bottom-left-radius:16px; border-bottom-right-radius:16px; }
+    50%  { transform:translateX(-50%) scaleY(.94)  skewX(-1.3deg); border-bottom-left-radius:44px 74px; border-bottom-right-radius:36px 66px; }
+    100% { transform:translateX(-50%) scaleY(1)    skewX(0deg);    border-bottom-left-radius:16px; border-bottom-right-radius:16px; }
   }
-  /* travelling sheen */
   .bar::after{
     content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
-    background: linear-gradient(115deg, transparent 38%, rgba(255,225,180,.20) 49%, transparent 60%);
-    background-size:280% 280%; animation: sheen 6s linear infinite; mix-blend-mode:screen;
+    background: linear-gradient(115deg, transparent 38%, rgba(255,235,190,.28) 49%, transparent 60%);
+    background-size:280% 280%; animation: sheen 5.5s linear infinite; mix-blend-mode:screen;
   }
   @keyframes sheen{ 0%{ background-position:160% 0;} 100%{ background-position:-60% 0;} }
-
-  .seg{
-    border-radius:5px;
+  .seg{ border-radius:5px;
     background: linear-gradient(155deg, var(--c-hi) 0%, var(--c-mid) 46%, var(--c-lo) 100%);
-    box-shadow: inset 1.5px 1.5px 1.5px rgba(255,214,166,.45), inset -2px -3px 4px rgba(0,0,0,.55);
-  }
+    box-shadow: inset 1.5px 1.5px 1.5px rgba(255,214,166,.45), inset -2px -3px 4px rgba(0,0,0,.55); }
 
-  /* drips fall from the bar's underside on staggered loops */
-  .drip{
-    position:absolute; top:160px; width:15px; height:15px;
-    background: linear-gradient(180deg, var(--c-mid), var(--c-dk));
-    border-radius:50% 50% 48% 48%;
-    box-shadow: inset 2px 2px 2px rgba(255,200,150,.35), 0 6px 10px rgba(0,0,0,.5);
-    transform-origin:top center; opacity:0;
-  }
+  .drip{ position:absolute; top:160px; width:15px; height:15px;
+    background: linear-gradient(180deg, var(--c-mid), var(--c-dk)); border-radius:50% 50% 48% 48%;
+    box-shadow: inset 2px 2px 2px rgba(255,200,150,.35), 0 6px 10px rgba(40,12,0,.5);
+    transform-origin:top center; opacity:0; }
   .drip.d1{ left:64px;  animation: drip 3.6s ease-in 0.0s infinite; }
   .drip.d2{ left:120px; animation: drip 4.4s ease-in 1.3s infinite; }
   .drip.d3{ left:154px; animation: drip 3.9s ease-in 2.2s infinite; }
   .drip.d4{ left:92px;  animation: drip 5.0s ease-in 0.7s infinite; }
   @keyframes drip{
-    0%   { transform:translateY(0)    scaleY(.5); opacity:0; }
-    18%  { transform:translateY(4px)  scaleY(1.6); opacity:1; }
-    70%  { transform:translateY(96px) scaleY(2.4); opacity:1; }
-    100% { transform:translateY(132px)scaleY(.7); opacity:0; }
+    0%{ transform:translateY(0) scaleY(.5); opacity:0; } 18%{ transform:translateY(4px) scaleY(1.6); opacity:1; }
+    70%{ transform:translateY(96px) scaleY(2.4); opacity:1; } 100%{ transform:translateY(132px) scaleY(.7); opacity:0; }
   }
-
-  /* glossy puddle gathering below */
-  .puddle{
-    position:absolute; left:50%; bottom:34px; transform:translateX(-50%);
-    width:208px; height:34px; border-radius:50%;
+  .puddle{ position:absolute; left:50%; bottom:26px; transform:translateX(-50%);
+    width:208px; height:32px; border-radius:50%;
     background: radial-gradient(60% 80% at 42% 30%, var(--c-hi) 0%, var(--c-mid) 38%, var(--c-dk) 100%);
-    box-shadow: 0 10px 24px rgba(0,0,0,.55), inset 0 4px 8px rgba(255,210,160,.25);
-    animation: pool 7s ease-in-out infinite;
-  }
-  .puddle::after{
-    content:""; position:absolute; left:24%; top:26%; width:34%; height:26%; border-radius:50%;
-    background: radial-gradient(closest-side, rgba(255,235,205,.55), transparent 70%); filter:blur(1px);
-  }
-  @keyframes pool{ 0%,100%{ width:188px; opacity:.85;} 50%{ width:224px; opacity:1;} }
+    box-shadow: 0 12px 26px rgba(40,12,0,.5), inset 0 4px 8px rgba(255,210,160,.25);
+    animation: pool 7s ease-in-out infinite; }
+  .puddle::after{ content:""; position:absolute; left:24%; top:26%; width:34%; height:26%; border-radius:50%;
+    background: radial-gradient(closest-side, rgba(255,235,205,.55), transparent 70%); filter:blur(1px); }
+  @keyframes pool{ 0%,100%{ width:186px; opacity:.85;} 50%{ width:226px; opacity:1;} }
 
-  .cap{ text-align:center; max-width:340px; line-height:1.5; }
-  .cap .big{ font-size:15px; letter-spacing:.02em; color:#f1e3d2; }
-  .cap .small{ display:block; margin-top:7px; font-size:12px; color:#b89a7e; }
-  .cap a{ color:var(--sheen); text-decoration:none; border-bottom:1px solid rgba(199,152,103,.35); }
-  .cap a:hover{ color:#e7c79b; }
+  .cap{ text-align:center; max-width:360px; line-height:1.5; text-shadow:0 1px 6px rgba(40,15,0,.5); }
+  .cap .big{ font-size:15px; letter-spacing:.02em; color:#fff5e6; }
+  .cap .small{ display:block; margin-top:7px; font-size:12px; color:#ffe6c2; opacity:.92; }
+  .cap a{ color:#fff; text-decoration:none; border-bottom:1px solid rgba(255,255,255,.45); }
+  .cap a:hover{ color:#ffe9c8; }
+
+  /* slow gliding condor */
+  .condor{ animation: glide 26s linear infinite; transform-origin:center; }
+  @keyframes glide{
+    0%{ transform: translate(-180px, 30px) scale(.9) } 50%{ transform: translate(620px, -10px) scale(1) }
+    100%{ transform: translate(1400px, 26px) scale(.9) }
+  }
+  .flap{ animation: flap 3.4s ease-in-out infinite; transform-origin:center; }
+  @keyframes flap{ 0%,100%{ transform: scaleY(1) } 50%{ transform: scaleY(.88) } }
 </style>
 </head>
 <body>
-  <canvas id="fx"></canvas>
+  <!-- ── the Argentine desert (Puna / Valle de la Luna) ───────────────────────── -->
+  <svg class="scene" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" aria-hidden>
+    <defs>
+      <linearGradient id="mesaFar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a5340"/><stop offset="1" stop-color="#7c3f30"/></linearGradient>
+      <linearGradient id="mesaNear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a3528"/><stop offset="1" stop-color="#5c271d"/></linearGradient>
+      <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3b277"/><stop offset="1" stop-color="#c48a4c"/></linearGradient>
+      <radialGradient id="sun" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff3c4"/><stop offset="55%" stop-color="#ffd169"/><stop offset="100%" stop-color="#ffd169" stop-opacity="0"/></radialGradient>
+    </defs>
+
+    <!-- sun + halo -->
+    <circle cx="880" cy="250" r="160" fill="url(#sun)"/>
+    <circle cx="880" cy="250" r="56" fill="#fff0bf"/>
+
+    <!-- condor gliding across the sky -->
+    <g class="condor">
+      <g class="flap">
+        <path d="M0 0 C 26 -16 44 -16 64 -3 C 74 4 78 4 86 -1 C 106 -15 124 -15 150 0 C 120 10 104 9 86 5 C 78 9 74 9 64 6 C 44 12 26 12 0 0 Z" fill="#241c18"/>
+        <ellipse cx="75" cy="2" rx="8" ry="4.5" fill="#241c18"/>
+        <path d="M68 -2 q7 -4 14 0" stroke="#efe6da" stroke-width="2.4" fill="none"/>
+      </g>
+    </g>
+
+    <!-- far mesas -->
+    <path d="M0 470 L0 410 L150 408 L180 440 L360 438 L380 412 L520 410 L545 446 L760 444 L780 416 L980 414 L1010 452 L1200 450 L1200 470 Z" fill="url(#mesaFar)" opacity=".85"/>
+    <!-- near mesas (flat-topped buttes) -->
+    <path d="M0 700 L0 500 L120 498 L150 470 L330 468 L360 498 L640 500 L675 462 L900 460 L935 500 L1200 502 L1200 700 Z" fill="url(#mesaNear)"/>
+    <!-- striations on the near mesa -->
+    <path d="M150 484 H330 M675 478 H900 M935 488 H1120" stroke="#451d15" stroke-width="3" opacity=".4"/>
+
+    <!-- desert floor -->
+    <path d="M0 700 L0 540 Q300 512 600 540 T1200 540 L1200 700 Z" fill="url(#sand)"/>
+    <path d="M0 700 L0 612 Q360 588 720 612 T1200 606 L1200 700 Z" fill="#b87c41" opacity=".55"/>
+
+    <!-- cardón cacti (tall Andean columnar) -->
+    <g fill="#3f6e3c">
+      <g transform="translate(150 470)">
+        <rect x="-13" y="0" width="26" height="170" rx="13"/>
+        <rect x="-40" y="46" width="27" height="58" rx="13"/><rect x="-40" y="46" width="14" height="86" rx="7"/>
+        <rect x="13" y="30" width="27" height="58" rx="13"/><rect x="26" y="30" width="14" height="100" rx="7"/>
+        <path d="M-9 12 V160 M9 12 V160" stroke="#2f5430" stroke-width="2.4" opacity=".6"/>
+      </g>
+      <g transform="translate(1030 506) scale(.82)">
+        <rect x="-13" y="0" width="26" height="170" rx="13"/>
+        <rect x="13" y="40" width="27" height="58" rx="13"/><rect x="26" y="40" width="14" height="92" rx="7"/>
+        <path d="M0 12 V160" stroke="#2f5430" stroke-width="2.4" opacity=".6"/>
+      </g>
+      <g transform="translate(470 556) scale(.5)"><rect x="-13" y="0" width="26" height="150" rx="13"/><rect x="-38" y="40" width="25" height="54" rx="12"/><rect x="-38" y="40" width="13" height="80" rx="6"/></g>
+    </g>
+
+    <!-- guanaco (Andean desert fauna) grazing on the sand -->
+    <g transform="translate(760 560)" fill="#b9824f">
+      <ellipse cx="40" cy="22" rx="40" ry="20"/>            <!-- body -->
+      <path d="M70 14 q22 -6 18 -34 q-2 -10 -8 -2 q2 16 -14 26 Z"/> <!-- neck -->
+      <path d="M82 -24 q10 -2 12 8 q-8 6 -14 0 Z"/>           <!-- head -->
+      <rect x="84" y="-34" width="3" height="10" rx="1.5"/><rect x="90" y="-34" width="3" height="10" rx="1.5"/> <!-- ears -->
+      <rect x="18" y="38" width="5" height="26" rx="2.5"/><rect x="34" y="40" width="5" height="24" rx="2.5"/>
+      <rect x="54" y="38" width="5" height="26" rx="2.5"/><rect x="66" y="40" width="5" height="24" rx="2.5"/>
+      <path d="M2 16 q-12 2 -8 14 q6 2 10 -6 Z"/>             <!-- tail -->
+    </g>
+
+    <!-- a few sun-bleached pebbles + a tuft of puna grass -->
+    <g fill="#9c6536" opacity=".7"><circle cx="300" cy="650" r="9"/><circle cx="340" cy="662" r="6"/><circle cx="950" cy="648" r="8"/></g>
+    <g stroke="#a98a3e" stroke-width="2.4" opacity=".7" fill="none">
+      <path d="M520 668 q-4 -22 -10 -30 M524 668 q0 -24 2 -32 M528 668 q4 -20 12 -28"/>
+    </g>
+  </svg>
+
+  <div class="heat"></div>
+
   <div class="stage">
-    <div class="scene">
-      <div class="bar" id="bar">
+    <div class="scene-anchor">
+      <div class="bar">
         <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
         <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
         <i class="seg"></i><i class="seg"></i><i class="seg"></i><i class="seg"></i>
       </div>
-      <span class="drip d1"></span><span class="drip d2"></span>
-      <span class="drip d3"></span><span class="drip d4"></span>
+      <span class="drip d1"></span><span class="drip d2"></span><span class="drip d3"></span><span class="drip d4"></span>
       <div class="puddle"></div>
     </div>
     <p class="cap">
-      <span class="big">dark chocolate, melting at zero.</span>
-      <span class="small">you found the sweet branch of ternlang. warm, ternary, and best shared.
+      <span class="big">dark chocolate, melting in the argentine sun.</span>
+      <span class="small">somewhere in the puna, between the cardón and the condor. warm, ternary, and best shared.
         <a href="/">back to ternlang.com</a></span>
     </p>
   </div>
 
 <script>
-// molten droplets + a soft warmth that follows the cursor. no libraries, no tracking.
+// molten droplets drifting down onto the sand. no libraries, no tracking.
 (function(){
-  var c = document.getElementById('fx'), x = c.getContext('2d');
-  var W, H, dots = [], warm = { x: -999, y: -999 };
-  function size(){ W = c.width = innerWidth; H = c.height = innerHeight; }
-  size(); addEventListener('resize', size);
-  addEventListener('pointermove', function(e){ warm.x = e.clientX; warm.y = e.clientY; });
-
-  var COL = ['#3a1f12','#4f2c17','#6b3d22','#2a1409'];
-  function spawn(){
-    // drip droplets emerge near the middle of the screen (under the bar) and fall.
-    var cx = W/2 + (Math.random()*150 - 75);
-    dots.push({ x: cx, y: H/2 - 30, vy: 0.5 + Math.random()*0.8, r: 2 + Math.random()*4,
-                col: COL[(dots.length) % COL.length], a: 0 });
-    if (dots.length > 60) dots.shift();
-  }
-  var t = 0;
+  var c = document.createElement('canvas'); c.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:2';
+  document.body.appendChild(c);
+  var x = c.getContext('2d'), W, H, dots = [];
+  function size(){ W=c.width=innerWidth; H=c.height=innerHeight; } size(); addEventListener('resize', size);
+  var COL=['#3a1f12','#4f2c17','#6b3d22','#2a1409'];
+  var t=0;
   function frame(){
-    x.clearRect(0,0,W,H);
-    // warmth glow under the cursor
-    if (warm.y > 0){
-      var g = x.createRadialGradient(warm.x, warm.y, 0, warm.x, warm.y, 120);
-      g.addColorStop(0, 'rgba(255,170,90,0.10)'); g.addColorStop(1, 'rgba(255,170,90,0)');
-      x.fillStyle = g; x.fillRect(warm.x-120, warm.y-120, 240, 240);
+    x.clearRect(0,0,W,H); t++;
+    if(t%30===0){ dots.push({x:W/2+(Math.random()*150-75), y:H*0.5, vy:0.5+Math.random()*0.7, r:2+Math.random()*3.5, col:COL[dots.length%COL.length], a:0}); if(dots.length>40) dots.shift(); }
+    for(var i=0;i<dots.length;i++){ var d=dots[i]; d.vy+=0.02; d.y+=d.vy; d.a=Math.min(1,d.a+0.05);
+      if(d.y>H*0.78){ dots.splice(i,1); i--; continue; }
+      x.globalAlpha=d.a*(1-(d.y-H*0.5)/(H*0.3));
+      x.beginPath(); x.moveTo(d.x,d.y-d.r*1.6);
+      x.bezierCurveTo(d.x+d.r,d.y-d.r,d.x+d.r,d.y+d.r,d.x,d.y+d.r);
+      x.bezierCurveTo(d.x-d.r,d.y+d.r,d.x-d.r,d.y-d.r,d.x,d.y-d.r*1.6);
+      x.fillStyle=d.col; x.fill();
     }
-    t++; if (t % 26 === 0) spawn();
-    for (var i=0;i<dots.length;i++){
-      var d = dots[i];
-      d.vy += 0.018; d.y += d.vy; d.a = Math.min(1, d.a + 0.04);
-      if (d.y > H + 20){ dots.splice(i,1); i--; continue; }
-      x.globalAlpha = d.a * (1 - d.y / (H + 60));
-      x.beginPath();
-      // teardrop: a circle with a pulled top
-      x.moveTo(d.x, d.y - d.r*1.6);
-      x.bezierCurveTo(d.x + d.r, d.y - d.r, d.x + d.r, d.y + d.r, d.x, d.y + d.r);
-      x.bezierCurveTo(d.x - d.r, d.y + d.r, d.x - d.r, d.y - d.r, d.x, d.y - d.r*1.6);
-      x.fillStyle = d.col; x.fill();
-      x.globalAlpha = d.a * 0.5; x.beginPath();
-      x.arc(d.x - d.r*0.3, d.y - d.r*0.2, d.r*0.3, 0, 6.3); x.fillStyle = 'rgba(255,225,190,.7)'; x.fill();
-    }
-    x.globalAlpha = 1;
-    requestAnimationFrame(frame);
+    x.globalAlpha=1; requestAnimationFrame(frame);
   }
   frame();
 })();
