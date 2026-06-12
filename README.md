@@ -1,7 +1,7 @@
 # Ternary Intelligence Stack (TIS)
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
-[![version](https://img.shields.io/badge/version-v1.3.7-blue)](#architecture)
+[![version](https://img.shields.io/badge/version-v1.5.0-blue)](#architecture)
 [![license](https://img.shields.io/badge/license-LGPL--3.0%20%2F%20BSL--1.1-blue)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-138%20CI%20%7C%205%20crates-yellow)](#architecture)
 [![API](https://img.shields.io/badge/API-live-brightgreen)](https://ternlang-api.fly.dev/health)
@@ -54,7 +54,7 @@ ternlang my_program.tern    # run a .tern file
 
 A ternary Mixture-of-Experts language model trained natively from scratch — not quantized from float. Every weight is in `{−γ, 0, +γ}` throughout training. The architecture expands itself autonomously via Net2Net surgery when it plateaus. The `@sparseskip` primitive (patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3) delivers 83 tok/s on CPU by skipping zero-weight operations exactly, not approximately.
 
-**Current state:** 26L dual-stream · 2×256H · 12E · Top-3 · **128CTX** · 32k vocab · ep4234 (paused) · epoch ATL **9.2847** (ep3456) · chip ATL **8.6852** (post-S13) · 13 depth surgeries + 1 cord surgery complete · Gen3 step1/6
+**Current state:** 30L dual-stream · 2×256H · 12E · Top-3 · **128CTX** · 32k vocab · training live (ep~6205) · best EP-AVG ATL **6.4339** (ep6132) · chip ATL **1.2637** · 18 depth surgeries (12L→30L) + 1 cord surgery complete · Gen3 step1/6
 
 ```bash
 # API live — requires key (free tier at ternlang.com/#licensing)

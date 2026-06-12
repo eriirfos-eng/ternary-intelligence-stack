@@ -81,7 +81,7 @@ The architecture combines:
 |-----------|-------|
 | **Streams** | **2 (dual-stream — cord surgery 2026-05-27)** |
 | Hidden size | **2×256H** (256H per stream) |
-|| Layers | **30** per stream (13 Net2Net surgeries + 1 cord surgery + 4 post-S13: 12L→30L dual-stream; see surgery log below) ||
+|| Layers | **30** per stream (18 Net2Net depth surgeries + 1 cord surgery: 12L→30L dual-stream; see surgery log below) ||
 | Anastomosis gates | **6** — at Fibonacci layers [2,3,5,8,13,21]; `Linear(512,2)`, F32; cross-stream fusion soft-gated by gradient |
 | Attention heads | 4 per stream |
 | Experts | 12 per stream |
@@ -96,7 +96,7 @@ The architecture combines:
 | **Packed footprint** | **~101 MB / 4.08 bits per param** deployable (ternary weights 5-trit-packed + f32 embeddings); **39.7 MB / 1.6 bits** weights-only — see [docs/FOOTPRINT.md](docs/FOOTPRINT.md) |
 | Corpus | **451,418,681 tokens** (stages 1–13, cache-loaded) |
 
-**Surgery log — 13 Net2Net surgeries + 1 cord surgery + 4 post-S13 depth surgeries:**
+**Surgery log — 18 Net2Net depth surgeries (12L→30L) + 1 cord surgery:**
 
 | Surgery | Epoch | Layers | Note |
 |---------|-------|--------|------|
@@ -111,14 +111,14 @@ The architecture combines:
 | S12 | ep4202 | 24L→25L | 2026-05-27T16:43Z · Gen3 plateau triggered |
 | **CORD** | **ep4202** | **25L → 2×25L** | **2026-05-27T16:44Z · autonomous · first ever** |
 | **S13** | **ep~4207** | **25L→26L (both streams)** | **2026-05-27T17:40Z · first post-cord depth surgery · fib_index 6→7** |
-| S14 | ~ep50xx | 26L→27L (both) | First post-S13 depth surgery; Gen3 step2/6 |
-| S15 | ~ep54xx | 27L→28L (both) | Continued Gen3 descent |
-| S16 | ~ep58xx | 28L→29L (both) | Fib_index advancement |
-| S17 | ~ep61xx | 29L→30L (both) | Latest depth surgery; training active at ep6190 |
+| S14 | ~ep4280 | 26L→27L (both) | 2026-05-29 · first post-S13 depth surgery; Gen3 step2/6 |
+| S15 | ~ep4350 | 27L→28L (both) | 2026-05-29 · continued Gen3 descent |
+| S16 | ~ep4740 | 28L→29L (both) | 2026-05-31 (✓ checkpoint-mtime verified) |
+| S17 | ep5610 | 29L→30L (both) | 2026-06-06 21:08 (✓ checkpoint-mtime verified) · current depth |
 
-**Evolution state:** Gen 3 step **1**/6 · fib_index=7 · window=34 · chip ATL **8.6852**
+**Evolution state:** Gen 3 step **1**/6 · fib_index=7 · window=34 · chip ATL **1.2637**
 
-**Training state (2026-05-27 → ep6190 active):** Global Epoch **6190** (S14–S17 post-cord depth surgeries complete) · chip-ATL **8.6852** (post-S13, 2026-05-27) · epoch-ATL **9.2847** (ep3456, 20L, 2026-05-24) · training **active** on Modal T4 · batch=1 · **128CTX** · fib_index=7 · window=34 · Gen3 step1/6
+**Training state (live, 2026-06-12):** Global Epoch **~6205** (S14–S17 post-cord depth surgeries complete) · best EP-AVG ATL **6.4339** (ep6132, 30L) · chip-ATL **1.2637** (best single intra-batch loss) · training **active** on Modal T4 · batch=1 · **128CTX** · fib_index=7 · window=34 · Gen3 step1/6 · (resumed after a ~1-week Anthropic billing-migration gap)
 
 ---
 

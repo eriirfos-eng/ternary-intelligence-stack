@@ -33,8 +33,8 @@ pipeline_tag: text-generation
 **Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
-**Last updated:** 2026-05-27 → ep6190 active  
-**Training status:** **Active at ep6190** on Modal T4 — **30L dual-stream** · 17 depth surgeries + 1 cord surgery complete. Cord surgery fired autonomously ep4202, 2026-05-27T16:44Z — first documented single-to-dual-stream bifurcation mid-training. S17 (29L→30L) fired ep~61xx. Context reduced to **128 tokens** at ep~4300 for gradient stability (256→128, YaRN extension planned). Chip ATL **8.6852** (post-S13). EP_AVG ATL **9.2847** (ep3456, 20L). fib_index=7 · window=34 · Gen3 step1/6 · BATCH=1.
+**Last updated:** 2026-06-12 → ep~6205 active  
+**Training status:** **Active (ep~6205)** on Modal T4 — **30L dual-stream** · 18 depth surgeries (12L→30L) + 1 cord surgery complete. Cord surgery fired autonomously ep4202, 2026-05-27T16:44Z — first documented single-to-dual-stream bifurcation mid-training. S17 (29L→30L) fired **ep5610, 2026-06-06** (checkpoint-mtime verified). Context reduced 256→128 — **memory-forced**: a depth surgery's activation memory exceeded the L4's VRAM and the GPU timed out; restoring 256 (via 2× L4 / tighter memory management) is planned. Best **EP-AVG ATL 6.4339** (ep6132, 30L). **Chip ATL 1.2637** (best single intra-batch loss). fib_index=7 · window=34 · Gen3 step1/6 · BATCH=1. (Resumed 2026-06-12 after a ~1-week Anthropic billing-migration gap.)
 
 ---
 
@@ -158,11 +158,12 @@ noisy inputs.
 | Ep~4203 | 9.3241 | ← first post-cord epoch avg | **8.7123** (chip, new ATL) | Dual-stream live |
 | Ep~4207 | S13 fired | 25L→26L surgery (both streams) | **8.6852** (chip, new ATL) | 2026-05-27T17:40Z; fib_index 6→7 |
 | **Ep~4300** | **dual-stream 26L** | — | — | **CTX reduced: 256→128**; activation memory relief |
-| **Ep~50xx** | **S14 fired** | **26L→27L (both)** | — | **First post-S13 depth surgery; Gen3 step2/6** |
-| **Ep~54xx** | **S15 fired** | **27L→28L (both)** | — | **Continued Gen3 descent** |
-| **Ep~58xx** | **S16 fired** | **28L→29L (both)** | — | **Fib_index advancement** |
-| **Ep~61xx** | **S17 fired** | **29L→30L (both)** | — | **Latest depth surgery** |
-| **Ep6190** | **dual-stream 30L** | **Training active** | **8.6852 (chip held)** | **Current epoch · 128CTX · BATCH=1 · Modal T4 active** |
+| **~ep4280** | **S14 fired** | **26L→27L (both)** | — | **2026-05-29 · first post-S13 depth surgery; Gen3 step2/6** |
+| **~ep4350** | **S15 fired** | **27L→28L (both)** | — | **2026-05-29 · continued Gen3 descent** |
+| **~ep4740** | **S16 fired** | **28L→29L (both)** | — | **2026-05-31 (✓ checkpoint-mtime)** |
+| **ep5610** | **S17 fired** | **29L→30L (both)** | — | **2026-06-06 21:08 (✓ checkpoint-mtime)** |
+| **ep6132** | **dual-stream 30L** | **6.4339 (EP-AVG)** | — | **Best EP-AVG ATL — all-time best** |
+| **ep~6205** | **dual-stream 30L** | **Training active** | **1.2637 (chip)** | **Live · 128CTX · BATCH=1 · Modal T4 · resumed 2026-06-12** |
 
 The benchmark suite runs 5 fixed prompts covering English, German,
 multilingual, narrative, and technical domains. Results are reproducible

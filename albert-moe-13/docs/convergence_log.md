@@ -1,7 +1,44 @@
 # Albert MoE-13 — Convergence Log
 
-Empirical training loss data from native ternary training from random initialization.
-Active run: v3.0 — **30L dual-stream** · 32k vocab · 451M token corpus (2026-05-10, ongoing). 17 depth surgeries (S1–S17) + 1 cord surgery complete. Cord fired ep4202, 2026-05-27T16:44Z. S17 fired ep~61xx (29L→30L). EP_AVG ATL **9.2847** (ep3456, 2026-05-24, 20L). Chip ATL **8.6852** (ep~4203, post-cord/S13). Training **active at ep6190** on Modal T4 · 128CTX · fib_index=7 · window=34 · Gen3 step1/6 · BATCH=1.
+Empirical training-loss history for native ternary training from random initialization. The tracked metric is **EP-AVG ATL** — the all-time-low of the per-epoch average loss. Intra-batch ("chip") lows are noted separately where recorded.
+
+## Current state (2026-06-12)
+
+- **30L dual-stream @ 128 ctx** · 2×256H · 12 experts/stream · Top-3 routing · 32k vocab · RoPE.
+- Actively training (**ep~6205, live**) on Modal T4 · fib_index=7 · window=34 · Gen3 step1/6 · BATCH=1 · 451,418,681-token corpus. (Resumed 2026-06-12 after a ~1-week Anthropic billing-migration gap; checkpoints verified clean.)
+- Architecture grew **12L → 30L** via 18 layer-adding surgeries (labelled S1–S17, with an interstitial S11b) + **1 cord surgery** (25L → dual-stream 2×25L, ep4202, 2026-05-27). Next: **S18** (30L→31L, both streams) when the plateau gate fires.
+
+## All-time records
+
+| Metric | Value | Epoch | Arch |
+|---|---|---|---|
+| **Best EP-AVG ATL** (epoch-average aggregate) | **6.4339** | ep6132 | 30L dual-stream |
+| **Best chip ATL** (best single intra-batch loss) | **1.2637** | ep~6205 (live) | 30L — distinct metric from EP-AVG; the gap between them is expected |
+| v2.0.0 best (3L, 8k vocab) | 6.9542 | ep11 | 3L single-stream |
+
+Random baseline: `ln(32000) = 10.373` — expected starting loss with no prior knowledge over a 32k vocabulary.
+
+## Surgery ledger (12L → 30L, + 1 cord)
+
+Reconciled from three sources: contemporaneous doc entries, the live dashboard annotations, and **checkpoint-mtime ground truth** — the per-layer `best.NNL.safetensors` archives, each written the instant its surgery fired. **✓ = mtime-verified.** Note: the dashboard's early "April" date labels are a month-typo artifact and are NOT used here — the first surgery (12→13L) is mtime-stamped 2026-05-13, so nothing in the run predates mid-May.
+
+| Surgery | Transition | Epoch | Date | Anchor |
+|---|---|---|---|---|
+| S1 | 12L→13L | ~ep511 | 2026-05-13 | **✓ checkpoint mtime (06:46)** |
+| S2–S5 | 13L→17L | ep547–702 | 2026-05-13/14 | doc |
+| S6 | 17L→18L | ep2487 | 2026-05-20 | doc |
+| S7 | 18L→19L | ep3325 | 2026-05-24 | doc |
+| S8 | 19L→20L | ep3383 | 2026-05-24 | doc |
+| S9 | 20L→21L | ~ep3470 | 2026-05-25 | doc — largest post-surgery spike in run history |
+| S10 | 21L→22L | ~ep3652 | 2026-05-25 | doc |
+| S11 | 22L→23L | ~ep4098 | 2026-05-27 | doc + dashboard |
+| S11b | 23L→24L | ~ep4140 | 2026-05-27 | doc + dashboard |
+| S12 + cord | 24L→25L, then 25L→2×25L | ep4202 | 2026-05-27 | doc + dashboard — first dual-stream |
+| S13 | 25L→26L | ep4207 | 2026-05-27 | doc + dashboard |
+| S14 | 26L→27L | ~ep4280 | 2026-05-29 | dashboard |
+| S15 | 27L→28L | ~ep4350 | 2026-05-29 | dashboard |
+| S16 | 28L→29L | ~ep4740 | 2026-05-31 | **✓ checkpoint mtime (05:24)** |
+| S17 | 29L→30L | ep5610 | 2026-06-06 | **✓ checkpoint mtime (21:08)** |
 
 ---
 
@@ -10,7 +47,7 @@ Active run: v3.0 — **30L dual-stream** · 32k vocab · 451M token corpus (2026
 Architecture: **30L dual-stream** · 2×256H · 12 experts/stream · Top-3 routing · **128 ctx** · 32,000 vocab (ByteLevel BPE, multilingual EN/DE/FR/ES/PT/IT/NL/PL) · 6 anastomosis gates at Fibonacci layers [2,3,5,8,13,21]
 Corpus: Stage 10 corpus active — stages [3,6,7,8,9,10] · 10% chaos layer invariant enforced · 451,418,681 tokens cache-loaded  
 Optimizer: AdamW, cosine LR, GRAD_ACCUM=4, BATCH=1 (post-cord)  
-Hardware: **Modal.com T4 GPU** · Training **active at ep6190** · 128CTX · BATCH=1 (post-cord)  
+Hardware: **Modal.com T4 GPU** · Training **active (ep~6205, live)** · 128CTX · BATCH=1 (post-cord)  
 Weights: transferred from v2.0.0 best checkpoint (loss 6.8821); 13 depth surgeries + 1 cord surgery applied
 
 Random baseline: `ln(32000) = 10.373` — the expected starting loss for a model with no prior knowledge over a 32k vocabulary.
@@ -122,24 +159,40 @@ correct only after the vocabulary transfer plateau breaks.
 | Ep ~4207 | 25L→**26L** | **SURGERY 13** | **25L→26L Net2Net surgery** (2026-05-27T17:40Z). First depth surgery on dual-stream architecture — both streams expanded simultaneously. fib_index advanced 6→7 · window=34. Chip ATL **8.6852** — new all-time low post-S13. Gen3 step1/6. 2044 tensors. |
 | Ep 4211 | dual-stream 26L | TRAINING PAUSE | Modal billing ceiling hit (2026-05-27T18:49Z). Training paused at ep4211/ep4234. Weights at ep4234 on Modal volume. Training will resume on Modal once billing settled. |
 
-**All-time best (epoch avg):** 9.2847 (ep3456, 2026-05-24T~23:57Z, 20L)
-**All-time best (intra-batch / chip):** **8.6852** (ep~4203–4207, 2026-05-27, post-cord/S13 dual-stream 26L) — new ATL set on first day of dual-stream operation
-**Surgery governor status:** 17 depth surgeries + 1 cord surgery complete. 30L dual-stream active. fib_index=7 · window=34 · Gen3 step1/6. Next: S18 (30L→31L, both streams) when plateau gate fires.
+**Records at ep4211** (end of the table above — the pre-Gen3-descent state): EP-AVG ATL **9.2847** (ep3456, 20L); chip ATL **8.6852** (ep~4203, 26L). **Both were superseded by the Gen3 descent that follows** — the run went on to EP-AVG ATL **6.4339** (ep6132, 30L) and chip ATL **1.2637** (live). See the records table at the top of this doc.
 
-### Post-S13: Gen3 Continued Descent (ep4234 → ep6190)
+**Surgery governor status:** 12L→30L complete (18 layer-adding surgeries + 1 cord). 30L dual-stream active. fib_index=7 · window=34 · Gen3 step1/6. Next: S18 (30L→31L, both streams) when the plateau gate fires.
 
-Training resumed after Modal billing ceiling cleared. Four additional depth surgeries (S14–S17) fired during sustained descent in Gen3, carrying the architecture from 26L to 30L dual-stream. Context was reduced from 256 to **128 tokens** at ep~4300 to stabilize gradient flow — the 256CTX window was producing excessive activation memory pressure on the L4 24GB GPU, limiting effective batch dynamics. At 128CTX, the model learns sharper with cleaner gradient signals; 256CTX will be re-added via RoPE scaling/YaRN extension once the current capacity is mastered.
+### Post-S13: Gen3 continued descent (ep4234 → ep6132)
 
-| Epoch | Architecture | Loss (avg) | Notes |
+Training resumed after the Modal billing ceiling cleared. This leg carries the architecture from 26L to **30L dual-stream** across four depth surgeries (S14–S17). Two structural events dominate it:
+
+1. **Context reduced 256→128 (memory-forced):** a depth surgery's added activation memory pushed the run past the **L4's VRAM** and the GPU timed out, so context was dropped 256→128 to fit. This was a hardware constraint, not a learning-rate preference. RoPE makes the change checkpoint-safe; **restoring 256 ctx — via 2× L4 on Modal for throughput/headroom, or tighter memory management — is the plan** once GPU capacity allows.
+2. **The backbone-trains cliff (ep~4453):** until ~ep4450 albert trained only its `lm_head` — the whole transformer body received zero gradient (candle's fused LayerNorm has no backward). The `DiffLayerNorm` fix unfroze the body, and EP-AVG ATL plunged from **9.3758 (ep4441) → 8.4266 (ep4534)** — a ~1-nat cliff in under 100 epochs — then descended steadily to the 6.4339 floor. This is the single largest structural improvement in v3.0 history.
+
+EP-AVG ATL values below are **real**, recovered from the canonical `~/.albert/epoch_history.log` (ep3499→6190). Surgery epochs S14–S17 are not separately timestamped in that log; they fired across ~ep4900–6100 carrying 26L→27→28→29→30L, so per-row architecture is left coarse rather than guessed.
+
+| Epoch | Architecture | EP-AVG ATL | Event |
 |-------|-------------|-----------|-------|
-|| Ep ~4300 | dual-stream 26L | — | **CTX reduced: 256→128**; activation memory relief; gradient flow sharpened |
-|| Ep ~50xx | dual-stream 26L→**27L** | **SURGERY 14** | First post-S13 depth surgery; Gen3 step2/6; fib_index held 7 |
-|| Ep ~54xx | dual-stream 27L→**28L** | **SURGERY 15** | Continued Gen3 descent; plateau gate fired cleanly |
-|| Ep ~58xx | dual-stream 28L→**29L** | **SURGERY 16** | Fib_index advancement; WALD sev stable |
-|| Ep ~61xx | dual-stream 29L→**30L** | **SURGERY 17** | Latest depth surgery; training active at ep6190 |
-|| Ep 6190 | dual-stream 30L | — | **Current epoch** · 128CTX · BATCH=1 · training active · chip ATL 8.6852 held |
+| ep~4300 | dual-stream 26L | ~9.40 | **Context reduced 256→128 ctx** — activation-memory relief, sharper gradients |
+| ep4441 | dual-stream 26L | 9.3758 | Last ATL of the frozen-body (lm_head-only) era |
+| ep~4453 | dual-stream 26L | — | **BACKBONE-TRAINS CLIFF** — `DiffLayerNorm` fix unfreezes the transformer body |
+| ep4534 | dual-stream 26L | **8.4266** | Post-cliff floor — ~1-nat drop from ep4441; body now learning |
+| ep4612 | dual-stream 26L | 8.2829 | Steady descent begins |
+| ep4915 | dual-stream 26→30L¹ | 8.1207 | Sub-8.13 |
+| ep5185 | — | 8.0338 | Approaching 8.0 |
+| ep5436 | — | 7.9678 | **Sub-8.0** |
+| ep5733 | — | 7.8344 | |
+| ep5802 | — | 7.3856 | Rapid descent leg (7.83→7.39 in ~70 ep) |
+| ep5873 | — | 7.1402 | Sub-7.2 |
+| ep5921 | — | 6.9507 | **Sub-7.0** |
+| ep5998 | — | 6.7609 | |
+| ep6068 | dual-stream 30L | 6.5989 | 30L dual-stream reached |
+| ep6132 | dual-stream 30L | **6.4339** | **Best EP-AVG ATL — current all-time best** |
 
-**Current checkpoint (ep6190):** 30L dual-stream · ~224M params · ~2,180 tensors · ~850 MB · fib_index=7 · window=34 · Gen3 step1/6
+¹ S14–S17 (26L→27→28→29→30L) fired somewhere across ep~4900–6100; exact surgery epochs were not preserved in `epoch_history.log`.
+
+**Current checkpoint (ep6191; resumed training at ep6192, 2026-06-12):** 30L dual-stream · 221,661,708 params · 2,356 tensors · ~845 MB safetensors · fib_index=7 · window=34 · Gen3 step1/6. Training resumed after a ~1-week Anthropic billing-migration gap; checkpoints verified clean (no NaN/Inf).
 
 ---
 
@@ -167,7 +220,7 @@ Each surgery used a Mandelbrot-parameterised perturbation signal for weight init
 
 ---
 
-## v2.0.0 — 3L Training Run (2026-05-07, current)
+## v2.0.0 — 3L Training Run (2026-05-07, superseded by v3.0)
 
 Architecture: 3 layers · 256 hidden · 12 experts · 4 heads · 128 ctx · 8000 vocab  
 Optimizer: AdamW, cosine LR 3e-4 → 1e-5 / 500 steps  
