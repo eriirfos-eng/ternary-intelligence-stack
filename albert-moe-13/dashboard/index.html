@@ -6044,6 +6044,12 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             document.head.appendChild(st);
             const p=document.createElement('div'); p.id='alh-panel'; document.body.appendChild(p);
             p.addEventListener('click', onPanelClick);
+            // Keep the panel OPEN on any click inside it. render() rebuilds innerHTML on every
+            // toggle, which detaches e.target — then the outside-click handler's p.contains(e.target)
+            // is false and wrongly closes the panel. Stopping propagation here (same pattern as the
+            // SMA/export/tools dropdowns) means internal clicks never reach the document close handler;
+            // the panel only closes via its X button, Escape, or a click truly outside it.
+            p.addEventListener('click', e => e.stopPropagation());
           }
 
           let advOpen=false, logOpen=false;
