@@ -253,7 +253,11 @@ def _ntfy(title: str, msg: str, priority: str = "3") -> None:
                          # LayerNorm gradient bug fixed. Stay on L4 until new funds arrive.
     timeout=23 * 3600,   # 23-hour cap
     volumes={"/vol": vol},
-    secrets=[modal.Secret.from_name("lighthouse-ingest", required=False)],
+    # NOTE: the 'lighthouse-ingest' Modal secret does NOT exist yet, and modal 1.4.x dropped the
+    # from_name(required=False) kwarg — referencing a missing secret crashes the launch (TypeError).
+    # The lighthouse telemetry POST is best-effort (wrapped in try/except) and needs no secret to run.
+    # To re-enable auth'd telemetry: `modal secret create lighthouse-ingest LIGHTHOUSE_INBOX_KEY=...`
+    # then add back:  secrets=[modal.Secret.from_name("lighthouse-ingest")],
     memory=16384,
     cpu=4.0,
 )
