@@ -8755,3 +8755,19 @@ INT and CMP de-maxing from post-surgery 100% peaks. ABS pulled back to 52% — w
 - [tick 2026-06-04T04:58:48Z] No change: ntfy lagging (ep4988, 17min gap), training healthy via batch_history (mtime 04:57) ep4991.4, loss 7.84-8.62 normal band. Advancing, no stall/divergence.
 
 - [WATCH ENDED 2026-06-04T05:12:23Z] 15-min overnight watch concluded (Simeon back at the helm). Summary: albert held healthy the WHOLE night, ep4918 -> ep4991, descent intact (batch-loss lows down to ~7.06-7.19), no stall, no divergence at any tick. Only issue was the ntfy telemetry PUBLISHER (flaky/intermittent for ~hours) - training itself was never affected; local batch_history was the reliable signal throughout. Recommend a restart of the ntfy publisher on the Modal side.
+
+## FN179 — 2026-06-13T08:36Z · SURGERY: 30L → 31L (Net2Net Safe Copy, Gen 1 step 1/6)
+
+After the 06-11 nan crisis + clean re-fire (ep6192), then the 06-13 `albert-train` fix (modal 1.4.x
+dropped `Secret.from_name(required=)`, which had been crashing every new launch — commit 7733ad72f),
+albert resumed and descended past the old 6.0 dashboard display floor (new EP-AVG ATL **6.4126 @ ep6300**;
+the dashboard's PRESEED_LOSS_MIN=6.0 was clipping his best batches — fixed to 0.5, commit 6c213acee).
+
+At **ep6339** the Fibonacci plateau gate FIRED autonomously: `smoothed Δ-0.0101 over 34 epochs < threshold
+0.0200, MYCELIUM stable 6 ep, gen=1 step=0/6, next ceiling F6=34L` → **Net2Net Safe Copy expansion 30L → 31L**.
+Pre-surgery best archived (`albert_v3.0.best.30L.safetensors`). Post-surgery: Gen 1 step 1/6, window → 55 epochs,
+ceiling 34L. Dual-stream surgery: stream_a lat=0.0615, stream_b lat=1030. Corpus reloaded stage_3..stage_11
+for the 31L model. EARNED via plateau, NOT injected — the governor working exactly as designed
+("withhold growth while descending, fire when plateaued"). WATCH NEXT: post-surgery whiplash jump in
+batch loss, then the descent leg forming from the larger 31L model; run the token-probe benchmark once
+stabilized; confirm the new layer count holds + the F6=34L ceiling.
