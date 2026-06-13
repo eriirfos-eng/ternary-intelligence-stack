@@ -1261,8 +1261,11 @@
     // Override with ?preseed_notch_lo=0&preseed_notch_hi=0 to disable.
     const PRESEED_NOTCH_LO   = _qp.has('preseed_notch_lo') ? parseFloat(_qp.get('preseed_notch_lo')) : 380;
     const PRESEED_NOTCH_HI   = _qp.has('preseed_notch_hi') ? parseFloat(_qp.get('preseed_notch_hi')) : 525;
-    // Loss floor — lowered to 6.0 so new ATLs below 8.8 are not silently dropped.
-    const PRESEED_LOSS_MIN   = _qp.has('preseed_loss_min') ? parseFloat(_qp.get('preseed_loss_min')) : 6.0;
+    // Loss floor (drops zero/garbage rows only). Must stay BELOW albert's real loss or it silently
+    // clips his best batches and the SMAs flatten at the floor. He crossed 6.0 (2026-06-13, chip ATL
+    // ~1.26, epoch-avg ~6.4, batches dipping below 6.0), so the old 6.0 floor was truncating the SMAs.
+    // 0.5 is safely below any real loss while still dropping 0.0/NaN. Lower again if albert ever nears it.
+    const PRESEED_LOSS_MIN   = _qp.has('preseed_loss_min') ? parseFloat(_qp.get('preseed_loss_min')) : 0.5;
 
     // ── State ──────────────────────────────────────────────────────────
     let lastBytePos      = 0;   // byte offset into training.log — only fetch new bytes
