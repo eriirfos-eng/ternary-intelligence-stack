@@ -2,23 +2,25 @@
 
 Empirical training-loss history for native ternary training from random initialization. The tracked metric is **EP-AVG ATL** — the all-time-low of the per-epoch average loss. Intra-batch ("chip") lows are noted separately where recorded.
 
-## Current state (2026-06-12)
+## Current state (2026-06-13)
 
-- **30L dual-stream @ 128 ctx** · 2×256H · 12 experts/stream · Top-3 routing · 32k vocab · RoPE.
-- Actively training (**ep~6205, live**) on Modal T4 · fib_index=7 · window=34 · Gen3 step1/6 · BATCH=1 · 451,418,681-token corpus. (Resumed 2026-06-12 after a ~1-week Anthropic billing-migration gap; checkpoints verified clean.)
-- Architecture grew **12L → 30L** via 18 layer-adding surgeries (labelled S1–S17, with an interstitial S11b) + **1 cord surgery** (25L → dual-stream 2×25L, ep4202, 2026-05-27). Next: **S18** (30L→31L, both streams) when the plateau gate fires.
+- **31L dual-stream @ 128 ctx** · 2×256H · 12 experts/stream · Top-3 routing · 32k vocab · RoPE. (Just expanded from 30L — S18 below.)
+- Actively training (**ep~6339+, live**) on Modal · Gen 1 step 1/6 · window=55 · ceiling F6=34L · BATCH=1 · 451,418,681-token corpus.
+- **NEW EP-AVG ATL 6.4126 @ ep6300** (2026-06-12), beating 6.4339 (ep6132) by exactly d-0.0213 — clean descent through the recovery from the 06-11 nan crisis (re-fired ep6192; the 06-13 `albert-train` modal-`Secret.from_name(required=)` crash fix unblocked new launches).
+- **★ S18 SURGERY fired ep6339 (2026-06-13T08:36Z): Net2Net Safe Copy 30L → 31L (both streams).** Plateau gate: smoothed Δ-0.0101 over 34 epochs < 0.0200 threshold, MYCELIUM stable 6 ep, Gen 1 step 1/6. Pre-surgery best archived (`albert_v3.0.best.30L.safetensors`). Earned via plateau, NOT injected. WATCH: post-surgery whiplash + the 31L descent leg. (obs-log FN179.)
+- Architecture grew **12L → 31L** via 18 layer-adding surgeries (S1–S18, with an interstitial S11b) + **1 cord surgery** (25L → dual-stream 2×25L, ep4202, 2026-05-27).
 
 ## All-time records
 
 | Metric | Value | Epoch | Arch |
 |---|---|---|---|
-| **Best EP-AVG ATL** (epoch-average aggregate) | **6.4339** | ep6132 | 30L dual-stream |
-| **Best chip ATL** (best single intra-batch loss) | **1.2637** | ep~6205 (live) | 30L — distinct metric from EP-AVG; the gap between them is expected |
+| **Best EP-AVG ATL** (epoch-average aggregate) | **6.4126** | ep6300 | 30L dual-stream (pre-S18) |
+| **Best chip ATL** (best single intra-batch loss) | **1.2637** | ep~6300 | 30L — distinct metric from EP-AVG; the gap between them is expected |
 | v2.0.0 best (3L, 8k vocab) | 6.9542 | ep11 | 3L single-stream |
 
 Random baseline: `ln(32000) = 10.373` — expected starting loss with no prior knowledge over a 32k vocabulary.
 
-## Surgery ledger (12L → 30L, + 1 cord)
+## Surgery ledger (12L → 31L, + 1 cord)
 
 Reconciled from three sources: contemporaneous doc entries, the live dashboard annotations, and **checkpoint-mtime ground truth** — the per-layer `best.NNL.safetensors` archives, each written the instant its surgery fired. **✓ = mtime-verified.** Note: the dashboard's early "April" date labels are a month-typo artifact and are NOT used here — the first surgery (12→13L) is mtime-stamped 2026-05-13, so nothing in the run predates mid-May.
 
@@ -39,6 +41,7 @@ Reconciled from three sources: contemporaneous doc entries, the live dashboard a
 | S15 | 27L→28L | ~ep4350 | 2026-05-29 | dashboard |
 | S16 | 28L→29L | ~ep4740 | 2026-05-31 | **✓ checkpoint mtime (05:24)** |
 | S17 | 29L→30L | ep5610 | 2026-06-06 | **✓ checkpoint mtime (21:08)** |
+| S18 | 30L→31L | ep6339 | 2026-06-13 | dashboard + obs-log FN179 — Gen 1 step 1/6, plateau-gated (Δ-0.0101/34ep < 0.0200); pre-surgery best archived |
 
 ---
 
