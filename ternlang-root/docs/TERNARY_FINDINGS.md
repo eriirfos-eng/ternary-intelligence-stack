@@ -257,6 +257,22 @@ kernel, not the math. F2/F6 (zero-weight inference, VRAM-bandwidth) tell the sam
 story from the model and render side; this puts a measured GEMM number on it.
 Brick: `benchmarks/bench_ternary_gemm.py`.
 
+**Update (2026-06-15) — the kernel landed upstream.** F11 named the realized win as
+living in "a custom adds-only kernel, not a portable matmul." That kernel now exists
+in a production framework. burn (tracel-ai/burn) had **zero** ternary compute: every
+quantized matmul dequantized `Q2S` `{-1,0,+1}` weights back to float and multiplied
+(memory saving only; the maintainers' own quantized-linear PR is ~10 % *slower*;
+nothing on the roadmap, the sole BitNet reference being a calibration doc-comment).
+PR **burn#5075** adds the first multiply-free ternary `q_matmul` to the ndarray
+reference backend: `+1 → add, -1 → subtract, 0 → skip`, one per-tensor scale at the
+end. Standalone proof on `A[8,512] · W[512,512]`: **576× fewer multiplies**
+(2,359,296 → 4,096), 25 % of weights skipped, output equal to the
+dequantize-then-matmul reference within `Tolerance::relative(2e-2)`; two integration
+tests green through burn's real `Tensor::matmul`. Consistent with F11's conclusion —
+this is the arithmetic win as a verified reference; the wall-clock win is the same
+kernel on the cubecl/GPU backends, named as the explicit next step in the PR. Follows
+up the merged `Calibration::AbsMean` (burn#4989). Brick: burn#5075.
+
 ---
 
 # Negative results & boundaries — ternary tested, did NOT win
