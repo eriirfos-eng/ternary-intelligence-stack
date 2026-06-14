@@ -54,7 +54,7 @@ ternlang my_program.tern    # run a .tern file
 
 A ternary Mixture-of-Experts language model trained natively from scratch — not quantized from float. Every weight is in `{−γ, 0, +γ}` throughout training. The architecture expands itself autonomously via Net2Net surgery when it plateaus. The `@sparseskip` primitive (patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3) delivers 83 tok/s on CPU by skipping zero-weight operations exactly, not approximately.
 
-**Current state:** 30L dual-stream · 2×256H · 12E · Top-3 · **128CTX** · 32k vocab · training live (ep~6205) · best EP-AVG ATL **6.4339** (ep6132) · chip ATL **1.2637** · 18 depth surgeries (12L→30L) + 1 cord surgery complete · Gen3 step1/6
+**Current state:** 31L dual-stream · 2×256H · 12E · Top-3 · **128CTX** · 32k vocab · training live (ep~6487) · best EP-AVG ATL **5.8693** (ep6487) · chip ATL **1.2637** · 18 depth surgeries (12L→31L) + 1 cord surgery complete · Gen3 step1/6
 
 ```bash
 # API live — requires key (free tier at ternlang.com/#licensing)
