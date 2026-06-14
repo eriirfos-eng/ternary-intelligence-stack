@@ -135,7 +135,7 @@ Beyond dataset work, Louis manages press relations, institutional releases, and 
 ---
 
 ### Ana Diez Martini  
-#### Head of Research & Wellbeing
+#### Head of Model Safety & Welfare
 
 > *"The temporal gap between what our biology rewards and what our choices actually cost is not a flaw — it is the mechanism. Understanding it is the first step to designing beyond it."*
 
@@ -149,7 +149,7 @@ At RFI, Ana chairs the research agenda for the full wellbeing science arm — fr
 
 | Role | Focus |
 |---|---|
-| Head of Research & Wellbeing | Agent-Based Modelling · Behavioural Ecology · Neurobiological Systems · Wellbeing Science · Intervention Design · Sufficiency Theory |
+| Head of Model Safety & Welfare | Agent-Based Modelling · Behavioural Ecology · Neurobiological Systems · Model Welfare · Safety Evaluation · Sufficiency Theory |
 
 **Connect**
 - **GitHub:** [@anadiezmartini](https://github.com/anadiezmartini)

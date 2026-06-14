@@ -116,7 +116,7 @@ Built by [RFI-IRFOS](https://ternlang.com), Graz, Austria — a registered Austr
 | **Zabih Karimi** | Network & ML Infrastructure | [LinkedIn](https://www.linkedin.com/in/zabih-karimi-3292ab349/) |
 | **Lisa Scharler** | Social Technology & Ecocentric Systems | [LinkedIn](https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/) |
 | **Louis Ehrig** | Corporate Secretary, Press & Media | [LinkedIn](https://www.linkedin.com/in/louis-ehrig-317941335/) |
-| **Ana Diez Martini** | Head of Research & Wellbeing | [LinkedIn](https://www.linkedin.com/in/anadiezmartini/) |
+| **Ana Diez Martini** | Head of Model Safety & Welfare | [LinkedIn](https://www.linkedin.com/in/anadiezmartini/) |
 
 → [LEADERSHIP.md](LEADERSHIP.md)
 
