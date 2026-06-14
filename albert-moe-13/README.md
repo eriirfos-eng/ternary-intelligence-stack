@@ -8,7 +8,8 @@ Part of the [Ternary Intelligence Stack](https://github.com/eriirfos-eng/ternary
 
 ---
 
-![albert. live dashboard — loss curve with surgery markers, expert routing heatmap, TTL states, per-layer gradient norms](docs/dashboard-live.png)
+<img width="1856" height="963" alt="image" src="https://github.com/user-attachments/assets/0b27f0ef-d404-460d-a8db-fb7919c999c7" />
+<img width="1862" height="963" alt="image" src="https://github.com/user-attachments/assets/563b18b5-cc03-412e-bc63-b9e9a8883d80" />
 
 ---
 
