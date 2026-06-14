@@ -134,6 +134,30 @@ Beyond dataset work, Louis manages press relations, institutional releases, and 
 
 ---
 
+### Ana Diez Martini  
+#### Head of Research & Wellbeing
+
+> *"The temporal gap between what our biology rewards and what our choices actually cost is not a flaw — it is the mechanism. Understanding it is the first step to designing beyond it."*
+
+Ana leads the research and wellbeing arm of RFI-IRFOS from Mendoza, Argentina — 100% remote. Her work sits at the intersection of neuroscience, behavioural ecology, and agent-based modelling, asking a question most institutions are afraid to formalise: *why do intelligent beings systematically choose outcomes that harm them?*
+
+Her doctoral-level ABM research — *Neurobiological-Fitness Consequence Separation* (2026) — is the empirical anchor for RFI's wellbeing thesis. The model formalises the temporal gap between dopamine-mediated proxy rewards and true fitness consequences as a formally sufficient condition for ecological overshoot. It is not a metaphor. It is a proof. Validated against 54 years of Earth Overshoot Day empirical data, robust across 100% of parameter combinations in Latin Hypercube Sensitivity Analysis, and extended at RFI with a full distribution layer that reframes scarcity as a policy failure rather than a carrying-capacity constraint.
+
+Ana's research established that the 0.94× caloric sufficiency ratio currently experienced globally is not a production limit — it is a manufactured outcome of cosmetic grading standards and supply chain waste. The earth produces 1.64× the minimum caloric need per person. The mechanism that destroys the surplus is regulatory, not biological. Fix the cucumber regulation, and you've bought decades of runway without changing a single human behaviour.
+
+At RFI, Ana chairs the research agenda for the full wellbeing science arm — from neurobiological modelling to intervention design to the intersection of physiological health and AI alignment. Her work informs how albert. models human flourishing, not just human preference.
+
+| Role | Focus |
+|---|---|
+| Head of Research & Wellbeing | Agent-Based Modelling · Behavioural Ecology · Neurobiological Systems · Wellbeing Science · Intervention Design · Sufficiency Theory |
+
+**Connect**
+- **GitHub:** [@anadiezmartini](https://github.com/anadiezmartini)
+- **LinkedIn:** [Ana Diez Martini](https://www.linkedin.com/in/anadiezmartini/)
+- **Based in:** Mendoza, Argentina
+
+---
+
 ## Our Mission
 
 > *"Europe does not need to catch up — it needs to leap ahead."*
