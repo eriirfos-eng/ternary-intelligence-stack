@@ -8771,3 +8771,27 @@ for the 31L model. EARNED via plateau, NOT injected — the governor working exa
 ("withhold growth while descending, fire when plateaued"). WATCH NEXT: post-surgery whiplash jump in
 batch loss, then the descent leg forming from the larger 31L model; run the token-probe benchmark once
 stabilized; confirm the new layer count holds + the F6=34L ceiling.
+
+## FN180 — 2026-06-15T~09:09Z · SURGERY: 31L → 32L (Net2Net layer expansion, Gen 1 step 1/6)
+
+The 31L descent leg that S18 opened paid off cleanly: EP-AVG ATL fell from 6.4126 (ep6300, pre-S18)
+through 5.8693 (ep6487) all the way to **5.6077 (~ep6700)** — breaking the 6.0, 5.9, 5.8 and 5.7 display
+bands one after another with no stall and no divergence. All 12 experts stayed alive (INF 100 / MEM 94 /
+LNG 79 / GEN 71 / ABS 59 …), dead_low=none, severity 0.000, mass ~5.9, fill ~45%, chip-ATL 1.2637 (held).
+
+At **~ep6709** the Fibonacci plateau gate FIRED autonomously: `smoothed Δ0.0160 over 55 epochs < threshold
+0.0200, early_mean=5.6508 late_mean=5.6347, MYCELIUM stable 10 ep, gen=1 step=1/6, next ceiling F7=55L`
+→ **Net2Net layer expansion 31L → 32L (both dual-streams)**. The 19th depth surgery (12L→32L over S1–S19
++ 1 cord). Corpus re-loading stage_8..stage_12 for the 32L model (up to wikipedia_en_full 438M chars).
+EARNED via plateau, NOT injected — the governor doing exactly its job ("withhold while descending, fire
+when plateaued").
+
+WATCH (live observation, dashboard at fire time): the newly-inserted layer's **L0 grad-norm spiked to 0.757**
+while every other layer sat at 0.03–0.05 (global ||g|| 2.3601, CLIP active). Expected and benign — Net2Net
+inserts the new layer as an identity map, so its weights carry near-zero signal until gradients push it off
+identity; the lone high-gradient layer right after a depth surgery IS the new layer learning to be
+non-trivial, and CLIP bounds it. WATCH NEXT: post-surgery whiplash jump in batch loss, then the 32L descent
+leg forming; the L0 grad-norm settling back toward the pack as the layer embeds; run the token-probe
+benchmark once stabilized. NOTE (honest null): ntfy reported `gen=1 step=1/6` for BOTH S18 and S19 — the
+generation/step counter did not advance across the surgery, most likely reset by the clean re-fire after the
+06-11 nan crisis. Flagged, watching; it does not affect the plateau gate, which fired correctly on the Δ.
