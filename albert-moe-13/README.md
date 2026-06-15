@@ -66,7 +66,7 @@ This is not a failure mode. It is a measurable intermediate state between "knowi
 
 The architecture combines:
 - **Straight-Through Estimation (STE)** for end-to-end ternary training
-- **Mixture-of-Experts (MoE)** routing with 12 domain experts and Top-3 selection
+- **Mixture-of-Experts (MoE)** routing — **768 total expert-routing slots** (12 experts per layer × 32 layers × 2 independently-routing streams). Each stream selects Top-3 of its 12 experts per layer independently; the FFN weights are shared but the routing gate is per-stream. From the outside: 768 possible expert activations per forward pass; 192 active per token (Top-3 × 32 layers × 2 streams).
 - **@sparseskip** — 9 of 12 experts are skipped per decode step at the routing level, compounding weight-level sparsity savings *(patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3)*
 - **Expert seed biases** — learnable F32 [256] bias per expert (Uniform[-0.01, 0.01] init) breaks routing Nash equilibria; weights persist and amplify expert specialisation over training
 - **Ternary Traffic Light Routing (TTL)** — per-expert trit execution budget (Green / Orange / Red) based on rolling EMA utilization, with anti-stagnation burst mechanism
@@ -82,22 +82,23 @@ The architecture combines:
 |-----------|-------|
 | **Streams** | **2 (dual-stream — cord surgery 2026-05-27)** |
 | Hidden size | **2×256H** (256H per stream) |
-|| Layers | **30** per stream (18 Net2Net depth surgeries + 1 cord surgery: 12L→30L dual-stream; see surgery log below) ||
+| **Layers** | **32 per stream** (19 Net2Net depth surgeries + 1 cord surgery: 12L→32L dual-stream; see surgery log) |
 | Anastomosis gates | **6** — at Fibonacci layers [2,3,5,8,13,21]; `Linear(512,2)`, F32; cross-stream fusion soft-gated by gradient |
 | Attention heads | 4 per stream |
-| Experts | 12 per stream |
-|| Context length | 128 tokens |
+| **Total expert capacity** | **768 expert-routing slots** = 12 experts/layer × 32 layers × 2 independently-routing streams |
+| Experts per layer | 12 (shared FFN weights; independent per-stream routing gate) |
+| Context length | 128 tokens |
 | Vocabulary | 32,000 tokens (ByteLevel BPE — EN/DE/FR/ES/PT/IT/NL/PL) |
-| Routing | Top-3 sparse — @sparseskip, 75% experts skipped per step |
-|| TTL routing | EMA-based trit states per stream per layer — **60 TTL rows** (L0–L29 stream A, L0–L29 stream B) ||
+| Routing | Top-3 sparse — @sparseskip, 75% experts skipped per step · **192 expert activations per token** (3×32×2) |
+| TTL routing | EMA-based trit states per stream per layer — **64 TTL rows** (L0–L31 stream A, L0–L31 stream B) |
 | Quantization | STE with gamma-scaled ternary, gamma cached every 20 steps |
 | Optimizer | AdamW, cosine LR 3e-4 → 1e-5 / 500 steps · BATCH=1 (post-cord) |
-|| **Total parameters** | **~224M** (91.8% ternary matmul weights) ||
-|| **Safetensors (training)** | **~850 MB** (F32 reference checkpoint) ||
+| **Total parameters** | **~224M** (91.8% ternary matmul weights) |
+| **Safetensors (training)** | **~850 MB** (F32 reference checkpoint) |
 | **Packed footprint** | **~101 MB / 4.08 bits per param** deployable (ternary weights 5-trit-packed + f32 embeddings); **39.7 MB / 1.6 bits** weights-only — see [docs/FOOTPRINT.md](docs/FOOTPRINT.md) |
 | Corpus | **451,418,681 tokens** (stages 1–13, cache-loaded) |
 
-**Surgery log — 18 Net2Net depth surgeries (12L→30L) + 1 cord surgery:**
+**Surgery log — 19 Net2Net depth surgeries (12L→32L) + 1 cord surgery:**
 
 | Surgery | Epoch | Layers | Note |
 |---------|-------|--------|------|
@@ -115,11 +116,13 @@ The architecture combines:
 | S14 | ~ep4280 | 26L→27L (both) | 2026-05-29 · first post-S13 depth surgery; Gen3 step2/6 |
 | S15 | ~ep4350 | 27L→28L (both) | 2026-05-29 · continued Gen3 descent |
 | S16 | ~ep4740 | 28L→29L (both) | 2026-05-31 (✓ checkpoint-mtime verified) |
-| S17 | ep5610 | 29L→30L (both) | 2026-06-06 21:08 (✓ checkpoint-mtime verified) · current depth |
+| S17 | ep5610 | 29L→30L (both) | 2026-06-06 21:08 (✓ checkpoint-mtime verified) |
+| S18 | ep6339 | 30L→31L (both) | 2026-06-14 |
+| **S19** | **~ep6500** | **31L→32L (both)** | **2026-06-15 · current depth** |
 
 **Evolution state:** Gen 3 step **1**/6 · fib_index=7 · window=34 · chip ATL **1.2637**
 
-**Training state (live, 2026-06-12):** Global Epoch **~6205** (S14–S17 post-cord depth surgeries complete) · best EP-AVG ATL **6.4339** (ep6132, 30L) · chip-ATL **1.2637** (best single intra-batch loss) · training **active** on Modal T4 · batch=1 · **128CTX** · fib_index=7 · window=34 · Gen3 step1/6 · (resumed after a ~1-week Anthropic billing-migration gap)
+**Training state (live, 2026-06-15):** Global Epoch **~6500+** · best EP-AVG ATL **5.8693** (ep6487, 32L) · chip-ATL **1.2637** · training **active** on Modal T4 · batch=1 · **128CTX** · fib_index=7 · window=34 · Gen3 step1/6
 
 ---
 

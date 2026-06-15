@@ -163,29 +163,29 @@ Demonstrate that ternary-native training — weights constrained to {−1, 0, +1
 
 | Field | Value |
 |-------|-------|
-| Architecture | 256H · **18L** · 4H · 12E · 256CTX · 32000V |
+| Architecture | 256H · **32L per stream** · 2 streams · 4H · **768 total expert-routing slots** (12E/layer × 32L × 2 streams) · 128CTX · 32000V |
 | Version | v3.0 — multilingual ByteLevel BPE, 32k vocab (EN/DE/FR/ES/PT/IT/NL/PL) |
-| Global Epoch | **2802** (2026-05-22) |
-| Best loss | **9.2746** (epoch-ATL) |
-| Inference throughput | **24.5 tok/s avg · 37.0 tok/s peak** (CPU vpsignb G kernel) |
+| Global Epoch | **~6500+** (2026-06-15) |
+| Best loss | **5.8693** (EP-AVG ATL, ep6487) |
+| Inference throughput | **83 tok/s** (CPU vpsignb @sparseskip kernel, 75% expert skip) |
 | Training hardware | Modal T4 GPU · ~450 ms/batch |
-| Expert health | dead=0; 6 Net2Net surgeries complete (ep511, ep547, ep611, ep645, ep701, ep2487); corpus fully unlocked |
+| Expert health | dead=0; **19 Net2Net surgeries** (12L→32L) + 1 cord surgery (25L→dual 25L); corpus fully unlocked |
 | Training data | 100% public domain / open licence — Wikipedia CC BY-SA, Gutenberg, Europarl, EU AI Act |
 
-**Status:** v3.0 training live on Modal T4 · 6th Net2Net surgery complete at ep2487 (17L→18L) · epoch-ATL 9.2746, batch-ATL 9.4925 at ep2802. v2.0.0 archived at Global Epoch 477+, best loss 6.8821.
+**Status:** Training active on Modal T4 · 19th Net2Net surgery complete (31L→32L) · best EP-AVG ATL **5.8693** at ep6487 (clean descending gradient, d~-0.07 per epoch block) · Cord Surgery introduced dual-stream architecture at ep4202 · v2.0.0 archived at Global Epoch 477+.
 
 ---
 
 ### Core Research Dimensions
 
 - **From-scratch ternary training** — STE-based end-to-end training with no float32 weight baseline required; weights constrained to {−1, 0, +1} throughout via STE
-- **Auto-evolutionary depth** — `EvolutionManager` grows transformer layers autonomously via Net2Net safe-copy surgery; 3L→12L in v2.0.0; 12L→18L across 6 surgeries in v3.0 (ep511, ep547, ep611, ep645, ep701, ep2487); no hard layer cap
-- **`@sparseskip` expert routing** (patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3) — 9/12 experts not executed per decode step at Top-3; 4.58× throughput multiplier; 83 tok/s measured on CPU
+- **Auto-evolutionary depth** — `EvolutionManager` grows transformer layers autonomously via Net2Net safe-copy surgery; 3L→12L in v2.0.0; **12L→32L across 19 surgeries** in v3.0; no hard layer cap
+- **Dual-stream architecture** — Cord Surgery at ep4202 split the model into 2 independently-routing streams with shared FFN weights; **768 total expert-routing slots** (12 per layer × 32 layers × 2 streams); 192 active per token (Top-3 × 32L × 2)
+- **`@sparseskip` expert routing** (patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3) — 9/12 experts not executed per decode step at Top-3; **75% skip rate**; 83 tok/s on CPU
 - **Ternary Traffic Light Routing (TTL)** — EMA-based G/O/R trit states per expert per layer; anti-stagnation burst rotates via offset 7 (coprime to 12); cycling-reds self-resolve autonomously
-- **Mycelium expert health monitor** — 20-epoch rolling gradient pressure window; resurrects stagnant experts via neighbour weight copy + σ=0.02 perturbation; dead=0 across full v3.0 run through 18L
-- **Layer crystallization** — L0–L3 gradient norms ~0.00022 (frozen); L8–L11 at 0.013–0.022 (hot); structural internal differentiation emerging from training alone
-- **Per-layer sparsity gradient** — L0: 10.6% ternary weight sparsity → L11: 26.5% (TELE confirmed); reinforces @sparseskip efficiency with depth
-- **Stage-aware corpus curriculum** — stages unlock as layer count grows; Bible+Alice at 3L → Gutenberg at 6L → Simple Wikipedia at 7L
+- **Mycelium expert health monitor** — 20-epoch rolling gradient pressure window; resurrects stagnant experts via neighbour weight copy + σ=0.02 perturbation; dead=0 across full v3.0 run through 32L
+- **Layer crystallization** — early layers freeze, deeper layers remain hot; structural differentiation emerging from training alone
+- **Stage-aware corpus curriculum** — stages unlock as layer count grows; Bible+Alice at 3L → Gutenberg at 6L → Simple Wikipedia at 7L → full 451M-token corpus unlocked
 
 ---
 

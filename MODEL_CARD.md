@@ -33,8 +33,8 @@ pipeline_tag: text-generation
 **Maintainer:** RFI-IRFOS, contact@ternlang.com  
 **Repository:** https://github.com/eriirfos-eng/ternary-intelligence-stack  
 **License:** LGPL-3.0-or-later (model weights, training code, inference runtime). Platform infrastructure (API server, MCP tooling, HDL) is BSL-1.1. See [README §Licensing](README.md#licensing) for the full tier breakdown.  
-**Last updated:** 2026-06-12 → ep~6205 active  
-**Training status:** **Active (ep~6205)** on Modal T4 — **30L dual-stream** · 18 depth surgeries (12L→30L) + 1 cord surgery complete. Cord surgery fired autonomously ep4202, 2026-05-27T16:44Z — first documented single-to-dual-stream bifurcation mid-training. S17 (29L→30L) fired **ep5610, 2026-06-06** (checkpoint-mtime verified). Context reduced 256→128 — **memory-forced**: a depth surgery's activation memory exceeded the L4's VRAM and the GPU timed out; restoring 256 (via 2× L4 / tighter memory management) is planned. Best **EP-AVG ATL 6.4339** (ep6132, 30L). **Chip ATL 1.2637** (best single intra-batch loss). fib_index=7 · window=34 · Gen3 step1/6 · BATCH=1. (Resumed 2026-06-12 after a ~1-week Anthropic billing-migration gap.)
+**Last updated:** 2026-06-15 → ep~6500+ active  
+**Training status:** **Active (ep~6500+)** on Modal T4 — **32L dual-stream** · 19 depth surgeries (12L→32L) + 1 cord surgery complete. Cord surgery fired autonomously ep4202, 2026-05-27T16:44Z — first documented single-to-dual-stream bifurcation mid-training. S18 (30L→31L) fired ep6339; S19 (31L→32L) fired ~2026-06-15. Context reduced 256→128 — **memory-forced**: a depth surgery's activation memory exceeded the L4's VRAM and the GPU timed out; restoring 256 (via 2× L4 / tighter memory management) is planned. Best **EP-AVG ATL 5.8693** (ep6487, 32L). **Chip ATL 1.2637** (best single intra-batch loss). fib_index=7 · window=34 · Gen3 step1/6 · BATCH=1.
 
 ---
 
@@ -50,10 +50,12 @@ weights, targeting inference on edge hardware and low-power devices.
 |----------|-------|
 | Architecture | **Dual-stream** Ternary MoE (Mixture of Experts) |
 | Streams | **2** (bifurcated via cord surgery ep4202, 2026-05-27) |
-| Layers | **30** per stream |
+| Layers | **32 per stream** (19 Net2Net surgeries: 12L → 32L) |
 | Hidden size | **2×256H** (256H per stream) |
 | Anastomosis gates | **6** — bidirectional F32 cross-stream fusion at Fibonacci layers [2,3,5,8,13,21] |
-| Experts | 12 per stream (Top-3 routing; shared FFN weights, independent routing gates) |
+| **Total expert capacity** | **768 expert-routing slots** (12 experts × 32 layers × 2 streams — each stream routes independently) |
+| Experts per layer | 12 (shared FFN weights; independent per-stream routing gates; Top-3 active per step) |
+| Expert skip rate | 75% per step via @sparseskip — 9 of 12 experts bypassed at inference |
 | Context length | **128 tokens** (reduced from 256 at ep~4300; YaRN extension planned) |
 | Vocabulary | 32,000 tokens (ByteLevel BPE — EN/DE/FR/ES/PT/IT/NL/PL) |
 | Weight representation | Ternary {-1, 0, +1} with STE training |
@@ -62,7 +64,7 @@ weights, targeting inference on edge hardware and low-power devices.
 | Optimizer | AdamW, cosine LR decay, BATCH=1 (post-cord) |
 | Parameters (total) | **~224M** |
 | Safetensors | **~2,180 tensors · ~850 MB** |
-| Surgeries | **17 depth (S1–S17)** + **1 cord surgery** = 18 total surgical events |
+| Surgeries | **19 depth (S1–S19)** + **1 cord surgery** = 20 total surgical events |
 
 The central technical innovation is the **@sparseskip** primitive — a
 learned sparse-skip layer that dynamically bypasses computation paths

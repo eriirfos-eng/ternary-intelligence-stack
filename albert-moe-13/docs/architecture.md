@@ -34,9 +34,9 @@ expect from conventional monorepos.
 
 ## Overview
 
-Albert MoE-13 is a ternary-native transformer with Mixture-of-Experts feed-forward layers. Every weight matrix is quantized to {-1, 0, +1} during both forward and backward passes via Straight-Through Estimation. The architecture grows its own depth autonomously through the `EvolutionManager`. Thirteen autonomous depth surgeries and one cord surgery carried it from a single-stream 12L to a dual-stream 2×256H 26L architecture during the v3.0 run.
+Albert MoE-13 is a ternary-native transformer with Mixture-of-Experts feed-forward layers. Every weight matrix is quantized to {-1, 0, +1} during both forward and backward passes via Straight-Through Estimation. The architecture grows its own depth autonomously through the `EvolutionManager`. Nineteen autonomous depth surgeries and one cord surgery carried it from a single-stream 12L to a dual-stream 2×256H 32L architecture during the v3.0 run.
 
-**Current state (2026-05-27 → ep6190 active):** **Dual-stream 2×256H** · **30L** · 4H/stream · 12E/stream (shared FFN weights) · 6 anastomosis gates (Fibonacci [2,3,5,8,13,21]) · **128CTX** · 32kV · Global Epoch **6190** · chip-ATL **8.6852** (post-S13) · epoch-ATL **9.2847** (ep3456, 20L) · fib_index=7 · window=34 · Gen3 step1/6 · training **active** on Modal T4 · ~**224M params** · **~2,180 tensors · ~850 MB**
+**Current state (2026-06-15 · ep~6500+ active):** **Dual-stream 2×256H** · **32L per stream** · 4H/stream · **768 total expert-routing slots** (12E/layer × 32L × 2 streams, independent per-stream routing gate, shared FFN weights) · 6 anastomosis gates (Fibonacci [2,3,5,8,13,21]) · **128CTX** · 32kV · Global Epoch **~6500+** · best EP-AVG ATL **5.8693** (ep6487) · chip-ATL **1.2637** · fib_index=7 · window=34 · Gen3 step1/6 · training **active** on Modal T4 · ~**224M params** · **~2,180 tensors · ~850 MB**
 
 ---
 
@@ -88,15 +88,17 @@ x → LayerNorm → MultiHeadAttention → residual
 
 ### MoE Block
 
-12 experts, each a two-layer MLP (`hidden_size → hidden_size × 4 → hidden_size`), all ternary.
+**768 total expert-routing slots** across the full model: 12 experts per layer × 32 layers × 2 independently-routing streams. Each expert is a two-layer MLP (`hidden_size → hidden_size × 4 → hidden_size`), all ternary. FFN weights are shared between streams; the routing gate is independent per stream.
 
-**Routing:**
+Per-step activations: Top-3 of 12 experts per stream per layer = **192 active experts per token** (3 × 32L × 2 streams). @sparseskip bypasses the remaining 9/12 = 75% per step.
+
+**Routing (per stream, per layer):**
 1. Gate network (`TernaryLinear`: `hidden_size → 12`) produces logits
 2. Uniform noise (0.98–1.02×) is added for exploration
 3. Top-3 experts are selected via sequential argmax-and-mask
 4. **Asymmetric safety gating** — Experts 0–3 are suppressed to zero when their gate value is below 0.05 (low-confidence guard)
 5. Selected expert outputs are weighted by softmax over the top-3 gate values and summed
-6. **`@sparseskip`** (patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3) — 9/12 experts not executed per decode step at Top-3 routing; 4.58× throughput multiplier at 75% sparsity
+6. **`@sparseskip`** (patent pending A50296/2026, TIS platform patent, 10 claims; @sparseskip = Claim 3) — 9/12 experts not executed per decode step at Top-3 routing; 83 tok/s on CPU; 75% skip rate
 
 ---
 

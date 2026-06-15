@@ -1,11 +1,18 @@
 {
-  "fusion_layers": [2, 3, 5, 8, 13, 21],
+  "activation_checkpoint_interval": 0,
+  "fusion_layers": [
+    2,
+    3,
+    5,
+    8,
+    13,
+    21
+  ],
   "hidden_size": 256,
   "max_seq_len": 128,
   "num_experts": 12,
   "num_heads": 4,
-  "num_layers": 30,
+  "num_layers": 32,
   "num_streams": 2,
-  "vocab_size": 32000,
-  "activation_checkpoint_interval": 0
+  "vocab_size": 32000
 }
