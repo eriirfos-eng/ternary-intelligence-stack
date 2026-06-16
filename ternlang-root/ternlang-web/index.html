@@ -124,6 +124,16 @@
     
     .glass-card { background: rgba(var(--theme-bg3), 0.8); backdrop-filter: blur(12px); border: 1px solid rgb(var(--theme-border)); }
     [data-theme="light"] .glass-card { background: rgba(255, 255, 255, 0.85); }
+    [data-theme="light"] .text-t_teal,
+    [data-theme="light"] .hover\:text-t_teal:hover { color: #007a63 !important; }
+    [data-theme="light"] .border-t_teal { border-color: #007a63 !important; }
+    [data-theme="light"] .border-t-2.border-t_teal { border-top-color: #007a63 !important; }
+    [data-theme="light"] .ring-t_teal\/60 { --tw-ring-color: rgba(0,122,99,0.6) !important; }
+    [data-theme="light"] .bg-t_teal { background-color: #007a63 !important; }
+    [data-theme="light"] .bg-t_teal\/10 { background-color: rgba(0,122,99,0.1) !important; }
+    [data-theme="light"] .bg-t_teal\/30 { background-color: rgba(0,122,99,0.3) !important; }
+    [data-theme="light"] .border-t_teal\/30 { border-color: rgba(0,122,99,0.3) !important; }
+    [data-theme="light"] .border-t_teal\/40 { border-color: rgba(0,122,99,0.4) !important; }
 
     #page-slider { display: flex; width: 1000vw; transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1); }
     .slide-page { width: 100vw; max-width: 100vw; flex-shrink: 0; min-height: 100vh; overflow-y: auto; overflow-x: hidden; padding-top: 5rem; background: transparent !important; }
@@ -1096,17 +1106,18 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
 
           <!-- Card 2: Albert Training Convergence, REAL -->
           <div class="glass-card rounded-[2rem] p-6 border-t-2 border-t_teal flex flex-col shadow-sm">
-             <div class="text-[10px] font-mono text-t_teal font-black uppercase tracking-widest mb-2"><span class="lang-en">Measured · v3.0.0 Training Log</span><span class="lang-de">Gemessen · v3.0.0-Trainingsprotokoll</span></div>
+             <div class="text-[10px] font-mono text-t_teal font-black uppercase tracking-widest mb-2"><span class="lang-en">Measured · Live Training Log</span><span class="lang-de">Gemessen · Live-Trainingsprotokoll</span></div>
              <h3 class="text-2xl font-black text-t_text mb-1"><span class="lang-en">Training Convergence</span><span class="lang-de">Trainingskonvergenz</span></h3>
-             <p class="text-sm text-t_muted font-medium mb-4">Albert MoE-13 · 26L dual-stream · 2 × 256H · 12E · 32K vocab · Rust / candle · Modal T4 + Vertex AI T4</p>
+             <p class="text-sm text-t_muted font-medium mb-4">Albert MoE-13 · 31L dual-stream · 2 × 256H · 12E · 32K vocab · Rust / candle · Modal T4 + Vertex AI T4</p>
              <div class="mt-auto space-y-3 mb-6 font-mono text-xs">
                 <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">Random init (3L, 32K vocab)</span><span class="text-t_text">~11.5</span></div>
                 <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">ep~250 (v2.0.0 release)</span><span class="text-t_text">~9.8</span></div>
                 <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">ep4136 (EP_AVG best, 23L era)</span><span class="text-t_text">9.2045</span></div>
                 <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">CORD surgery (ep4202 · dual-stream)</span><span class="text-t_red">9.3241 (regression, expected)</span></div>
-                <div class="flex justify-between"><span class="text-t_teal font-black">ATL chip (post-cord, ep~4210)</span><span class="text-t_teal font-black text-base">8.6852</span></div>
+                <div class="flex justify-between border-b border-t_border pb-1"><span class="text-t_muted">S18 surgery (ep~4500 · 31L)</span><span class="text-t_muted">~8.5</span></div>
+                <div class="flex justify-between"><span class="text-t_teal font-black">EP_AVG ATL (ep 6487 · 31L)</span><span class="text-t_teal font-black text-base">5.8693</span></div>
              </div>
-             <div class="text-t_teal text-xl font-black mb-3"><span class="lang-en">3L → 26L dual-stream · 13 surgeries + CORD</span><span class="lang-de">3L → 26L Dual-Stream · 13 Surgeries + CORD</span></div>
+             <div class="text-t_teal text-xl font-black mb-3"><span class="lang-en">3L → 31L · S18 + CORD · ep 6487</span><span class="lang-de">3L → 31L · S18 + CORD · ep 6487</span></div>
              <div class="text-[10px] font-mono text-t_muted border-t border-t_border pt-3"><span class="lang-en">Total compute ~€265 on Modal T4. Full sovereignty receipt. Read B confirmed empirically: architecture precedes learning.</span><span class="lang-de">Compute insgesamt ~265 € auf Modal T4. Volle Souveränitäts-Bilanz. Read B empirisch bestätigt: Architektur geht dem Lernen voraus.</span></div>
           </div>
 
@@ -1844,10 +1855,10 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
 
               <a href="https://github.com/zabih-sudo" target="_blank" rel="noopener"
                  class="group flex flex-col items-center gap-3 bg-t_bg3 border border-t_border rounded-2xl p-5 hover:border-t_teal/60 transition-all">
-                <img src="https://github.com/zabih-sudo.png?size=80" alt="Zabih"
+                <img src="https://github.com/zabih-sudo.png?size=80" alt="Zabih Karumi"
                      class="w-14 h-14 rounded-full ring-2 ring-t_border group-hover:ring-t_teal/60 transition-all object-cover" loading="lazy">
                 <div class="text-center">
-                  <p class="text-sm font-black text-t_text">Zabih</p>
+                  <p class="text-sm font-black text-t_text">Zabih Karumi</p>
                   <p class="text-[10px] text-t_muted mt-0.5"><span class="lang-en">Cofounder · Engineering</span><span class="lang-de">Mitgründer · Engineering</span></p>
                 </div>
               </a>
@@ -1864,30 +1875,20 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
 
               <a href="https://github.com/aiqueenofaustria" target="_blank" rel="noopener"
                  class="group flex flex-col items-center gap-3 bg-t_bg3 border border-t_border rounded-2xl p-5 hover:border-t_teal/60 transition-all">
-                <img src="https://github.com/aiqueenofaustria.png?size=80" alt="aiqueenofaustria"
+                <img src="https://github.com/aiqueenofaustria.png?size=80" alt="Lisa Scharler"
                      class="w-14 h-14 rounded-full ring-2 ring-t_border group-hover:ring-t_teal/60 transition-all object-cover" loading="lazy">
                 <div class="text-center">
-                  <p class="text-sm font-black text-t_text">@aiqueenofaustria</p>
+                  <p class="text-sm font-black text-t_text">Lisa Scharler</p>
                   <p class="text-[10px] text-t_muted mt-0.5"><span class="lang-en">Cofounder</span><span class="lang-de">Mitgründerin</span></p>
-                </div>
-              </a>
-
-              <a href="https://github.com/cobioearth" target="_blank" rel="noopener"
-                 class="group flex flex-col items-center gap-3 bg-t_bg3 border border-t_border rounded-2xl p-5 hover:border-t_teal/60 transition-all">
-                <img src="https://github.com/cobioearth.png?size=80" alt="cobioearth"
-                     class="w-14 h-14 rounded-full ring-2 ring-t_border group-hover:ring-t_teal/60 transition-all object-cover" loading="lazy">
-                <div class="text-center">
-                  <p class="text-sm font-black text-t_text">@cobioearth</p>
-                  <p class="text-[10px] text-t_muted mt-0.5"><span class="lang-en">Cofounder</span><span class="lang-de">Mitgründer</span></p>
                 </div>
               </a>
 
               <a href="https://github.com/louisuhr" target="_blank" rel="noopener"
                  class="group flex flex-col items-center gap-3 bg-t_bg3 border border-t_border rounded-2xl p-5 hover:border-t_teal/60 transition-all">
-                <img src="https://github.com/louisuhr.png?size=80" alt="louisuhr"
+                <img src="https://github.com/louisuhr.png?size=80" alt="Louis Ehrig"
                      class="w-14 h-14 rounded-full ring-2 ring-t_border group-hover:ring-t_teal/60 transition-all object-cover" loading="lazy">
                 <div class="text-center">
-                  <p class="text-sm font-black text-t_text">@louisuhr</p>
+                  <p class="text-sm font-black text-t_text">Louis Ehrig</p>
                   <p class="text-[10px] text-t_muted mt-0.5"><span class="lang-en">Cofounder</span><span class="lang-de">Mitgründer</span></p>
                 </div>
               </a>
