@@ -148,7 +148,7 @@ const COLLAPSE_STREAK_LIMIT: u32 = 2;
 // *tensors* and ran one backward over all N — which held N full forward graphs at
 // once and OOM'd a 24GB GPU at N=4 the moment the whole body trained. Fixed 2026-05-29.)
 // Mirrors the ternary hold state: withhold the weight update until enough evidence accumulates.
-const GRAD_ACCUM_STEPS: usize = 4;
+const GRAD_ACCUM_STEPS: usize = 1;
 // TEMP DIAGNOSTIC (2026-05-29): ablate the L1 sparsity aux-loss to test whether it is
 // the source of the ~8.5GB GPU-memory spike that fires once loss drops below 8.0.
 // The L1 term builds an abs() graph node over ALL 2184 weight tensors and backprops
