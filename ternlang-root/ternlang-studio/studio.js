@@ -7419,9 +7419,9 @@ async function resumeSimulationFrom(targetId) {
 window.resumeSimulationFrom = resumeSimulationFrom;
 
 // ─── GitHub raw content base (Tier 1 public fallback) ────────────────────────
-const GH_RAW = "https://raw.githubusercontent.com/eriirfos-eng/ternary-intelligence-stack/main/";
+const GH_RAW = "https://raw.githubusercontent.com/rfi-irfos/ternary-intelligence-stack/main/";
 const GH_TERNROOT = GH_RAW + "ternlang-root/";
-const GH_API_BASE = "https://api.github.com/repos/eriirfos-eng/ternary-intelligence-stack/contents/ternlang-root/";
+const GH_API_BASE = "https://api.github.com/repos/rfi-irfos/ternary-intelligence-stack/contents/ternlang-root/";
 // Static Tier 1 directory list (public stdlib dirs) — used when no API key
 const TIER1_DIRS = ["core","ternary","std","showcase","bughunt","testing","bench","benchmarks","classical","errors","tutorials","lib"];
 

@@ -12,7 +12,7 @@ export default defineConfig({
   resolve: {
     alias: {
       // Map the absolute path used in studio.js to the actual sibling folder
-      '/playground': '../playground'
+      '/playground': '../ternlang-wasm'
     }
   }
 });
