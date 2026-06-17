@@ -32,21 +32,19 @@ Simeon leads the architectural vision and research direction of the Ternary Inte
 ---
 
 ### Nikoletta Csonka  
-#### Co-Founder & Head of International Relations · Strategic Outreach Lead
+#### Co-Founder & Head of People Development & Culture
 
 > *"I always tell you what you have to hear — not what you want to hear."*
 
 Nikoletta is the team's critical evaluator and strategic anchor. Her core directive is truth over comfort. She does not soften assessments — if something is genuinely flawed, she says so plainly; if she calls something good, it earned that verdict without diplomatic cushioning. In a field flooded with hype, this makes her the most reliable signal the team has.
 
-She oversees the full external footprint of the stack: global partnerships, fundraising, fund application status (including SPRIND and EU grant pipelines), and lead management. She ensures the stack's public narrative stays grounded in what TIS actually does — not what AI hype cycles demand.
+She owns the human layer of RFI-IRFOS: every new person who joins passes through an onboarding process she designed, grounded in clarity over ceremony. She builds and maintains the internal culture deliberately — the norms, the communication standards, the conditions that make people do their best work. Workplace wellbeing is not a policy checkbox in her hands; it is an active, ongoing practice.
 
-Nikoletta owns the full talent pipeline. When a candidate reaches out or a CV comes in, she is the first line: she reviews applications, runs the initial calls, makes the selection assessment, and decides who advances. She owns the process from first contact to handoff — keeping recruitment standards rigorous and the bar honest.
-
-Nikoletta leads EU AI Act alignment, regulatory positioning, and international strategic partnerships, keeping TIS on the right side of both compliance and credibility.
+Nikoletta works across teams as a communication coach, helping people say what they mean precisely and hear what is actually being said. She facilitates the intercommunication infrastructure that keeps a distributed, fast-moving team coherent — identifying friction early and resolving it before it compounds. She is equally direct in this role as in any other: when a dynamic is off, she names it.
 
 | Role | Focus |
 |---|---|
-| Strategic Outreach · Regulatory Alignment · Fundraising · Talent Acquisition | EU AI Act Compliance · International Relations · Partnerships · Lead Management · Recruitment Pipeline |
+| People Development · Culture · Communication Coaching | Onboarding · Workplace Wellbeing · Internal Culture · Intercommunication · Team Cohesion |
 
 **Academic Background**
 - **PTE University, Pécs, Hungary** (Pécsi Tudományegyetem) — University of Pécs

@@ -112,7 +112,7 @@ Built by [RFI-IRFOS](https://ternlang.com), Graz, Austria — a registered Austr
 | | | |
 |---|---|---|
 | **Simeon Kepp** | Lead Architect | [LinkedIn](https://www.linkedin.com/in/simeon-kepp/) |
-| **Nikoletta Csonka** | Strategic Outreach & EU Relations | [LinkedIn](https://www.linkedin.com/in/csonikoletta/) |
+| **Nikoletta Csonka** | People Development & Culture | [LinkedIn](https://www.linkedin.com/in/csonikoletta/) |
 | **Zabih Karimi** | Network & ML Infrastructure | [LinkedIn](https://www.linkedin.com/in/zabih-karimi-3292ab349/) |
 | **Lisa Scharler** | Social Technology & Ecocentric Systems | [LinkedIn](https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/) |
 | **Louis Ehrig** | Corporate Secretary, Press & Media | [LinkedIn](https://www.linkedin.com/in/louis-ehrig-317941335/) |
