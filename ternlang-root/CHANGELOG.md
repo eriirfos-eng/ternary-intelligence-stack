@@ -2,6 +2,24 @@
 
 All notable changes to the Ternary Intelligence Stack (TIS) will be documented in this file.
 
+## [1.5.1] — 2026-06-17
+
+### Fixed
+- **`ternlang-ml` coherence test** — removed `test_llama_coherence`, which required a local
+  `llama32-1b.tern.json` fixture and panicked when absent. Replaced with `test_coherence_synthetic`:
+  a fully self-contained 4x4 in-memory trit layer that exercises the same `unpack_layer` +
+  `sparse_matmul` + signal-check logic without any external dependency.
+
+### Clarification (architecture)
+- **albert. is NOT a LLaMA wrapper.** albert-moe-13 is a from-scratch MoE transformer trained
+  entirely on RFI-IRFOS data using the TIS ternary stack. The `llama32-1b.tern.json` fixture
+  was a **one-off research artifact**: we ternary-quantised a public checkpoint to benchmark
+  @sparseskip PPL and compression ratios (documented in BENCHMARKS.md §F1 and
+  `docs/TERNARY_FINDINGS.md`). That artefact never entered the training pipeline and the
+  checkpoint file is not part of this repository. The `TritTransformer` architecture in
+  `ternlang-ml` is a Llama-style *shape* (RMSNorm, RoPE, SwiGLU) implemented from scratch
+  in pure Rust using ternary weights — no Llama weights, tokeniser, or code are used.
+
 ## [1.5.0] — 2026-05-21
 
 ### ternlang-ml: TritFloat + TritFloatTensor
