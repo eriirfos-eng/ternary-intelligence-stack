@@ -655,6 +655,7 @@ async fn require_api_key(
     // Public endpoints — no key required
     if path == "/" || path == "/health" || path == "/mcp"
         || path == "/.well-known/mcp/server-card.json"
+        || path == "/.well-known/security.txt"
         || path == "/stripe/webhook"
         || path == "/pricing"
         || path == "/impressum"   || path == "/impressum.html"
