@@ -1,0 +1,6 @@
+Contact: mailto:rfi.irfos@gmail.com
+Expires: 2027-06-20T00:00:00.000Z
+Preferred-Languages: de, en
+Canonical: https://ternlang.com/.well-known/security.txt
+Policy: https://ternlang.com/datenschutz.html
+Acknowledgments: https://ternlang.com/datenschutz.html

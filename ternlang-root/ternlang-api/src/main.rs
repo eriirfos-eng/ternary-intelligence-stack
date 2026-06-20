@@ -778,6 +778,7 @@ static TRANSLATOR_HTML: &str = include_str!("../../ternlang-translator/web/templ
 static KPI_HTML:        &str = include_str!("kpi.html");
 static FORTUNE_HTML:    &str = include_str!("../../docs/fortune_cookie.html");
 static CHOCOLATE_HTML:  &str = include_str!("../../ternlang-web/chocolate.html");
+static SECURITY_TXT:    &str = include_str!("../../ternlang-web/.well-known/security.txt");
 static WASM_JS:         &str = include_str!("../../premlib/playground/pkg/ternlang_wasm.js");
 static WASM_BG:        &[u8] = include_bytes!("../../premlib/playground/pkg/ternlang_wasm_bg.wasm");
 static LOGO_PNG:       &[u8] = include_bytes!("../../ternlang-web/assets/ternlang_logo_notext.png");
@@ -950,6 +951,9 @@ async fn impressum_page()  -> Html<&'static str> { Html(IMPRESSUM_HTML) }
 async fn agb_page()        -> Html<&'static str> { Html(AGB_HTML) }
 async fn datenschutz_page()-> Html<&'static str> { Html(DATENSCHUTZ_HTML) }
 async fn talk_page()        -> Html<&'static str> { Html(TALK_HTML) }
+async fn security_txt() -> impl axum::response::IntoResponse {
+    ([(axum::http::header::CONTENT_TYPE, "text/plain; charset=utf-8")], SECURITY_TXT)
+}
 
 // ─── albert. inference proxy ─────────────────────────────────────────────────
 // Forwards /api/albert/chat and /api/albert/status to the Modal CPU endpoint.
@@ -6074,6 +6078,7 @@ async fn main() {
         .route("/translator", get(translator_page))
         .route("/mcp",    get(mcp_info).post(mcp_handler))
         .route("/.well-known/mcp/server-card.json", get(mcp_server_card))
+        .route("/.well-known/security.txt", get(security_txt))
         .route("/stripe/webhook",       post(stripe_webhook))
         .route("/pricing",              get(pricing_page))
         .route("/impressum",            get(impressum_page))
