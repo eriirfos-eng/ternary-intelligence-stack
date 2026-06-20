@@ -2015,6 +2015,131 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
                 </div>
                 <p class="text-lg font-black text-t_teal whitespace-nowrap">€ 1.500 <span class="text-xs font-normal text-t_muted">/ <span class="lang-en">mo</span><span class="lang-de">Mo</span></span></p>
               </div>
+
+              <!-- NDA Tier -->
+              <div class="mt-3 bg-t_bg3 border border-t_teal rounded-xl p-5 flex items-start justify-between flex-wrap gap-4">
+                <div class="flex-1 min-w-0">
+                  <p class="text-[9px] font-mono font-black tracking-widest text-t_teal uppercase mb-1">NDA Enterprise</p>
+                  <p class="text-[12px] text-t_text mb-1">
+                    <span class="lang-en">Full-scope audit under non-disclosure agreement. No public disclosure. Includes technical remediation, regulatory briefing, and coordinated CVE assignment.</span>
+                    <span class="lang-de">Vollständiges Audit unter NDA. Keine öffentliche Offenlegung. Inkl. technischer Remediation, Behörden-Briefing und koordinierter CVE-Vergabe.</span>
+                  </p>
+                  <p class="text-[10px] text-t_muted font-mono"><span class="lang-en">Minimum 3 months · scope on request · rfi.irfos@gmail.com</span><span class="lang-de">Mindestens 3 Monate · Scope auf Anfrage · rfi.irfos@gmail.com</span></p>
+                </div>
+                <p class="text-lg font-black text-t_teal whitespace-nowrap">€ 75.000 <span class="text-xs font-normal text-t_muted">/ <span class="lang-en">engagement</span><span class="lang-de">Engagement</span></span></p>
+              </div>
+
+              <!-- Responsible Disclosure Track Record -->
+              <div class="mt-8">
+                <p class="text-[9px] font-mono font-black tracking-[0.2em] text-t_muted uppercase mb-1">
+                  <span class="lang-en">Responsible Disclosure Track Record</span>
+                  <span class="lang-de">Responsible-Disclosure-Bilanz</span>
+                </p>
+                <p class="text-[11px] text-t_muted mb-5">
+                  <span class="lang-en">Selected findings from our 2026 campaign. Static APK analysis only. All reports sent with 90-day disclosure timeline. Regulators BCC'd on every submission.</span>
+                  <span class="lang-de">Ausgewählte Funde aus unserer 2026-Kampagne. Ausschließlich statische APK-Analyse. Alle Berichte mit 90-Tage-Offenlegungsfrist. Behörden bei jeder Einreichung in BCC.</span>
+                </p>
+
+                <!-- Stats strip -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                  <div class="bg-t_bg3 border border-t_border rounded-lg p-4 text-center">
+                    <p class="text-2xl font-black text-t_teal">35+</p>
+                    <p class="text-[10px] text-t_muted font-mono uppercase tracking-widest mt-1"><span class="lang-en">Apps audited</span><span class="lang-de">Apps geprüft</span></p>
+                  </div>
+                  <div class="bg-t_bg3 border border-t_border rounded-lg p-4 text-center">
+                    <p class="text-2xl font-black text-t_teal">45+</p>
+                    <p class="text-[10px] text-t_muted font-mono uppercase tracking-widest mt-1"><span class="lang-en">Critical findings</span><span class="lang-de">Kritische Funde</span></p>
+                  </div>
+                  <div class="bg-t_bg3 border border-t_border rounded-lg p-4 text-center">
+                    <p class="text-2xl font-black text-t_teal">8</p>
+                    <p class="text-[10px] text-t_muted font-mono uppercase tracking-widest mt-1"><span class="lang-en">Regulators notified</span><span class="lang-de">Behörden informiert</span></p>
+                  </div>
+                  <div class="bg-t_bg3 border border-t_border rounded-lg p-4 text-center">
+                    <p class="text-2xl font-black text-t_teal">NYSE / NASDAQ</p>
+                    <p class="text-[10px] text-t_muted font-mono uppercase tracking-widest mt-1"><span class="lang-en">Listed targets</span><span class="lang-de">Börsennotierte Targets</span></p>
+                  </div>
+                </div>
+
+                <!-- Finding rows -->
+                <div class="rounded-xl border border-t_border overflow-hidden">
+                  <table class="w-full text-[11px]" style="border-collapse:collapse;">
+                    <thead>
+                      <tr class="border-b border-t_border">
+                        <th class="text-left p-3 text-t_muted font-mono font-black uppercase tracking-widest text-[9px]"><span class="lang-en">Company</span><span class="lang-de">Unternehmen</span></th>
+                        <th class="text-left p-3 text-t_muted font-mono font-black uppercase tracking-widest text-[9px]"><span class="lang-en">Finding</span><span class="lang-de">Fund</span></th>
+                        <th class="text-left p-3 text-t_muted font-mono font-black uppercase tracking-widest text-[9px]"><span class="lang-en">Severity</span><span class="lang-de">Schwere</span></th>
+                        <th class="text-left p-3 text-t_muted font-mono font-black uppercase tracking-widest text-[9px]"><span class="lang-en">Reported</span><span class="lang-de">Gemeldet</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">Airbnb <span class="text-t_muted font-normal text-[10px]">ABNB</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">Art.9 biometric data (face) routed to Chinese AI via cleartext HTTP — no EU adequacy decision, no TLS</span><span class="lang-de">Art.9-Biometrie (Gesicht) über HTTP-Klartext an chinesische KI — kein EU-Angemessenheitsbeschluss</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">Airbnb <span class="text-t_muted font-normal text-[10px]">ABNB</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">Firebase credential from founding era (~2008, pre-rename) still active in production — ~10 years unrotated</span><span class="lang-de">Firebase-Credential aus Gründungszeit (~2008) noch immer aktiv — ~10 Jahre nicht rotiert</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">Uber <span class="text-t_muted font-normal text-[10px]">UBER</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">Carrier-grade location SDK (Syniverse SMI) embedded in consumer app — monitors cell tower changes without GPS permission</span><span class="lang-de">Carrier-Intelligence-SDK (Syniverse SMI) in Consumer-App — erfasst Zellenänderungen ohne GPS-Berechtigung</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">Uber <span class="text-t_muted font-normal text-[10px]">UBER</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">Screen capture SDK suite (FOREGROUND_SERVICE_MEDIA_PROJECTION + DETECT_SCREEN_CAPTURE) in consumer ride app</span><span class="lang-de">Screen-Capture-Suite in Consumer-Fahrt-App — Bildschirmaufnahme-Initiierung möglich</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(245,158,11,0.15);color:#f59e0b">HIGH</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">McDonald's AT <span class="text-t_muted font-normal text-[10px]">MCD</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">Firebase API key shared with a second publicly listed company — single rotation event affects two independent corporate infrastructures</span><span class="lang-de">Firebase-API-Key geteilt mit zweitem börsennotierten Unternehmen — ein Rotationsereignis betrifft zwei Konzerne</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">Starbucks AT <span class="text-t_muted font-normal text-[10px]">SBUX</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">NSC debug-overrides trusts user-installed certificates — allows TLS interception on production loyalty app with location and payment data</span><span class="lang-de">NSC debug-overrides vertrauen Nutzer-Zertifikaten — TLS-Interception auf Produktions-App mit Standort- und Zahlungsdaten möglich</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">Booking.com <span class="text-t_muted font-normal text-[10px]">BKNG</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">WeChat/Tencent SDK present in global EU APK — PRC National Security Law applies, no EU adequacy decision for China</span><span class="lang-de">WeChat/Tencent-SDK im globalen EU-APK — PRC-Sicherheitsgesetz anwendbar, kein EU-Angemessenheitsbeschluss</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">OkCupid <span class="text-t_muted font-normal text-[10px]">MTCH</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">Art.9 special categories (sexual orientation, race, religion) collected and routed to cross-brand commercial advertising — without explicit legal basis</span><span class="lang-de">Art.9-Sonderkategorien (sexuelle Orientierung, Ethnie, Religion) für konzernweite Werbung — ohne explizite Rechtsgrundlage</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">Bolt <span class="text-t_muted font-normal text-[10px]">Transport</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">3 Firebase credentials referencing "taxify-client" (company's prior name, pre-2018 rebrand) — estimated 7+ years without rotation</span><span class="lang-de">3 Firebase-Credentials mit "taxify-client" (Firmenname vor Umbenennung 2018) — schätzungsweise 7+ Jahre nicht rotiert</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                      <tr>
+                        <td class="p-3 font-black text-t_text">Revolut <span class="text-t_muted font-normal text-[10px]">Fintech</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">FOREGROUND_SERVICE_MEDIA_PROJECTION in banking app — combined with 4 biometric KYC providers and 145,916-class identity SDK (Mesh Connect)</span><span class="lang-de">Bildschirmaufnahme-Permission in Banking-App — kombiniert mit 4 biometrischen KYC-Anbietern und 145.916-Klassen-SDK</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="text-[10px] text-t_muted font-mono mt-3 text-center">
+                  <span class="lang-en">10 of 45+ findings shown · all companies notified · disclosure 2026-09-19 · BCC: DSB Austria, CERT.at + lead SA per jurisdiction</span>
+                  <span class="lang-de">10 von 45+ Funden gezeigt · alle Unternehmen benachrichtigt · Offenlegung 2026-09-19 · BCC: DSB Österreich, CERT.at + zuständige Behörde</span>
+                </p>
+              </div>
             </div>
 
             <!-- Web Dev -->
