@@ -975,8 +975,8 @@
                 <rect x="5" y="9.5" width="2" height="2" rx="0.3" fill="currentColor" stroke="none" opacity="0.7"/>
             </svg>
         </button>
-        <button id="mycBtn" title="Mycelium Inspector — opens in new tab (avoids WebGL crash)" onclick="mycOpenTab()" style="display:flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid rgba(80,160,255,0.45);border-radius:4px;color:#7ecfff;font-size:10px;font-family:monospace;letter-spacing:0.05em;background:rgba(20,50,90,0.35)">
-            <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+        <button id="mycBtn" title="Mycelium Inspector — opens in new tab (avoids WebGL crash)" onclick="mycOpenTab()">
+            <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
                 <circle cx="6" cy="6" r="1.6" fill="currentColor" stroke="none" opacity="0.9"/>
                 <line x1="6" y1="4.4" x2="6" y2="1.2"/>
                 <line x1="6" y1="7.6" x2="6" y2="10.8"/>
@@ -984,7 +984,7 @@
                 <line x1="7.4" y1="6.8" x2="10.2" y2="8.4"/>
                 <line x1="4.6" y1="6.8" x2="1.8" y2="8.4"/>
                 <line x1="7.4" y1="5.2" x2="10.2" y2="3.6"/>
-            </svg>BRAIN
+            </svg>
         </button>
         <div class="dd-wrap">
             <button id="smaDropBtn" title="Toggle chart overlays"><svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 7Q3 4 5 7Q7 10 9 7Q10.2 5.5 11 6"/></svg> <span id="curves-count">0</span> ▾</button>
@@ -8227,10 +8227,6 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
             if (!_initialized) return;
             _allLayersMode = !_allLayersMode;
             const btn = document.getElementById('myc-alllayers-btn');
-            if (btn) {
-                btn.textContent = _allLayersMode ? 'TEMPLATE' : 'FULL BRAIN';
-                btn.style.opacity = _allLayersMode ? '1.0' : '0.55';
-            }
             const tbBtn = document.getElementById('myc-alllayers-toolbar-btn');
             if (tbBtn) {
                 tbBtn.textContent = _allLayersMode ? 'TEMPLATE' : 'FULL BRAIN';
@@ -8299,25 +8295,7 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
 
         // ── mode toggle ──────────────────────────────────────────────
         function _ensureToggleBtn() {
-            if (document.getElementById('myc-alllayers-btn')) return;
-            const canvas = document.getElementById('myc3d-canvas');
-            if (!canvas) return;
-            const container = canvas.parentElement;
-            if (container) container.style.position = 'relative';
-            const btn = document.createElement('button');
-            btn.id = 'myc-alllayers-btn';
-            btn.textContent = 'FULL BRAIN';
-            btn.style.cssText = [
-                'position:absolute', 'top:8px', 'right:8px',
-                'font-family:monospace', 'font-size:10px', 'letter-spacing:0.05em',
-                'padding:3px 10px',
-                'border:1px solid rgba(60,120,200,0.35)',
-                'background:rgba(6,13,21,0.88)',
-                'color:rgba(100,160,220,0.65)',
-                'cursor:pointer', 'z-index:10', 'opacity:0.55',
-            ].join(';');
-            btn.onclick = function() { if (window.mycBrainToggleAllLayers) mycBrainToggleAllLayers(); };
-            if (container) container.appendChild(btn);
+            // floating overlay button replaced by toolbar button #myc-alllayers-toolbar-btn
         }
 
         // Exposed activator — called by mycSetView (which lives outside this IIFE)
