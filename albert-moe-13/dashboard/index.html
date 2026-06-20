@@ -8000,11 +8000,16 @@ let gArchNumStreams  = 1;       // 1 = single-stream, 2 = dual-stream cord; set 
         // ── All-layers scene build ───────────────────────────────────
         function _buildAllLayersScene() {
             if (!_scene || !window.THREE) return;
-            _scene.clear();
+            _scene.clear(); // disposes all geometry buffers — null pointers before render loop reads them
             _lSprites=[]; _eSprites=[]; _lLabels=[]; _eLabels=[];
             _lTrailSprites=[]; _bezEdgeGeo=null; _ptGeo=null;
             _ptPhase=null; _ptSpeed=null; _bezCtrl=[];
             _allLayerExpertSprites=null; _allLayerGateConnMats=null; _alBezEdgeGeo=null;
+            // B-stream geometry arrays are disposed by _scene.clear() — null refs so render loop skips them
+            _lpB=[]; _lSpritesB=[]; _lLabelsB=[]; _lTrailSpritesB=[];
+            _bezCtrlB=[]; _bezEdgeGeoB=null;
+            _ptGeoB=null; _ptPhaseB=null; _ptSpeedB=null;
+            _gateSprites=[]; _gateLineMats=[];
 
             // 204-node per-strip layout: 17 rows × 12 expert columns
             // Each cell (i,e) is L_i's own expert e — unique weights, unique identity
