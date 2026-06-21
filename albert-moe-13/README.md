@@ -82,10 +82,10 @@ The architecture combines:
 |-----------|-------|
 | **Streams** | **2 (dual-stream — cord surgery 2026-05-27)** |
 | Hidden size | **2×256H** (256H per stream) |
-| **Layers** | **32 per stream** (19 Net2Net depth surgeries + 1 cord surgery: 12L→32L dual-stream; see surgery log) |
+| **Layers** | **33 per stream** (20 Net2Net depth surgeries + 1 cord surgery: 12L→33L dual-stream; see surgery log) |
 | Anastomosis gates | **6** — at Fibonacci layers [2,3,5,8,13,21]; `Linear(512,2)`, F32; cross-stream fusion soft-gated by gradient |
 | Attention heads | 4 per stream |
-| **Total expert capacity** | **768 expert-routing slots** = 12 experts/layer × 32 layers × 2 independently-routing streams |
+| **Total expert capacity** | **792 expert-routing slots** = 12 experts/layer × 33 layers × 2 independently-routing streams |
 | Experts per layer | 12 (shared FFN weights; independent per-stream routing gate) |
 | Context length | 128 tokens |
 | Vocabulary | 32,000 tokens (ByteLevel BPE — EN/DE/FR/ES/PT/IT/NL/PL) |
@@ -98,7 +98,7 @@ The architecture combines:
 | **Packed footprint** | **~101 MB / 4.08 bits per param** deployable (ternary weights 5-trit-packed + f32 embeddings); **39.7 MB / 1.6 bits** weights-only — see [docs/FOOTPRINT.md](docs/FOOTPRINT.md) |
 | Corpus | **451,418,681 tokens** (stages 1–13, cache-loaded) |
 
-**Surgery log — 19 Net2Net depth surgeries (12L→32L) + 1 cord surgery:**
+**Surgery log — 20 Net2Net depth surgeries (12L→33L) + 1 cord surgery:**
 
 | Surgery | Epoch | Layers | Note |
 |---------|-------|--------|------|
@@ -118,11 +118,12 @@ The architecture combines:
 | S16 | ~ep4740 | 28L→29L (both) | 2026-05-31 (✓ checkpoint-mtime verified) |
 | S17 | ep5610 | 29L→30L (both) | 2026-06-06 21:08 (✓ checkpoint-mtime verified) |
 | S18 | ep6339 | 30L→31L (both) | 2026-06-14 |
-| **S19** | **~ep6500** | **31L→32L (both)** | **2026-06-15 · current depth** |
+| S19 | ~ep6500 | 31L→32L (both) | 2026-06-15 |
+| **S20** | **ep~7000** | **32L→33L (both)** | **2026-06-21 · current depth · CTX bumped 256→512** |
 
-**Evolution state:** Gen 3 step **1**/6 · fib_index=7 · window=34 · chip ATL **1.2637**
+**Evolution state:** Gen 3 step **1**/6 · fib_index=8 · window=55 · chip ATL **0.6116**
 
-**Training state (live, 2026-06-15):** Global Epoch **~6500+** · best EP-AVG ATL **5.8693** (ep6487, 32L) · chip-ATL **1.2637** · training **active** on Modal T4 · batch=1 · **128CTX** · fib_index=7 · window=34 · Gen3 step1/6
+**Training state (live, 2026-06-21):** Global Epoch **~7592** · best EP-AVG ATL **4.6842** (ep7588, 33L) · training **active** on Modal · batch=1 · **512CTX** · fib_index=8 · window=55 · Gen3 step1/6 · mastery gate=4.0 nats
 
 ---
 
