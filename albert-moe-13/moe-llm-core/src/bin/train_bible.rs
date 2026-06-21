@@ -2507,8 +2507,7 @@ fn main() -> Result<()> {
 
     let tokenizer = BpeTokenizer::new(vocab_path);
 
-    let mut evolution_manager = EvolutionManager::new();
-    let mut global_step       = 0_usize;
+    let mut global_step = 0_usize;
 
     let spore_state_path = format!("{r}/models/albert_v3.0.spore_state");
     let spores_dir = if flags.spores_dir == "none" {
@@ -2522,17 +2521,28 @@ fn main() -> Result<()> {
     };
     let mut spore_manager = SporeManager::new(spores_dir, spore_state_path);
 
-    // Read initial layer count so MyceliumModule is sized correctly from the start.
-    let initial_layers: usize = fs::read_to_string(config_path)
-        .ok()
-        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
-        .and_then(|v| v["num_layers"].as_u64())
-        .unwrap_or(3) as usize;
+    // Read initial arch from config — layer count sizes MyceliumModule; CTX seeds the
+    // evolution manager's threshold table so gates are calibrated from the first epoch.
+    let (initial_layers, initial_ctx): (usize, usize) = {
+        let cfg: serde_json::Value = fs::read_to_string(config_path)
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or(serde_json::Value::Null);
+        (
+            cfg["num_layers"].as_u64().unwrap_or(3)   as usize,
+            cfg["max_seq_len"].as_u64().unwrap_or(256) as usize,
+        )
+    };
+    let mut evolution_manager = EvolutionManager::with_ctx(initial_ctx);
     evolution_manager.calibrate(initial_layers);
     if !evolution_manager.load_state(evo_state_path) {
         println!("[evolution] No saved state — using calibrated defaults (F{}={}L, window={} epochs)",
             evolution_manager.fib_index + 1, evolution_manager.max_layers, evolution_manager.history_len());
     }
+    // Apply CTX-level threshold scaling.  Handles two cases:
+    //   (a) Same CTX as saved state → refreshes mastery from table, no-op otherwise.
+    //   (b) CTX bumped in config.json → scales plateau proportionally, updates mastery/floor.
+    evolution_manager.recalibrate_ctx(initial_ctx);
     let mut mycelium = MyceliumModule::new(initial_layers, 12);
     mycelium.set_lb_off_mode(flags.lb_weight == 0.0);
     mycelium.set_vestigial_rescue(flags.vestigial_rescue, flags.vestigial_patience);

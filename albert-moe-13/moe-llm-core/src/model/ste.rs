@@ -153,6 +153,7 @@ mod grad_tests {
         let cfg = TransformerConfig {
             vocab_size: 32, hidden_size: 16, num_layers: 2, num_heads: 2,
             max_seq_len: 8, threshold: 0.005, num_experts: 4, num_streams, fusion_layers,
+            activation_checkpoint_interval: 0,
         };
         let vm = VarMap::new();
         let vb = VarBuilder::from_varmap(&vm, DType::F32, &dev);

@@ -49,11 +49,48 @@ const FIB_TARGETS: &[usize] = &[
 /// Number of surgeries per generation before the cycle resets.
 const ARC_LENGTH: usize = 6;
 
-/// plateau_threshold floor — below this, optimizer noise dominates at current batch geometry.
-const MIN_PLATEAU_THRESHOLD: f32 = 0.008;
+/// Absolute plateau_threshold floor — last-resort backstop if no CTX table entry matches.
+const MIN_PLATEAU_THRESHOLD: f32 = 0.004;
 
 /// Multiplicative decay applied to plateau_threshold at each generation boundary.
 const THRESHOLD_DECAY: f32 = 0.75;
+
+/// CTX-level calibration table.
+///
+/// Each row: (max_seq_len, mastery_threshold, plateau_threshold_init, min_plateau_threshold).
+/// The entry with the largest seq_len ≤ the active CTX is selected.
+///
+/// Rationale: longer context lowers per-token cross-entropy mechanically (each prediction has
+/// more past tokens to condition on), so the same absolute loss value means different things
+/// at different CTX widths.  At 128-CTX a loss of 5.0 is genuine mastery; at 512-CTX the
+/// model hits 4.0 partly just from having more context.  The table keeps the surgery gate
+/// semantics stable across CTX bumps.
+///
+/// min_plateau_threshold scales down with CTX because longer sequences average over more token
+/// positions per batch, reducing the epoch-to-epoch noise floor.
+const CTX_LEVEL_TABLE: &[(usize, f32, f32, f32)] = &[
+    //  CTX       mastery   plateau_init  min_plateau
+    //  ─────── small / current ─────────────────────
+    (      64,    6.5,      0.025,        0.012),
+    (     128,    5.0,      0.022,        0.010),
+    (     256,    4.5,      0.020,        0.008),  // ← live today
+    (     512,    4.0,      0.018,        0.007),
+    (    1024,    3.5,      0.016,        0.006),
+    (    2048,    3.0,      0.014,        0.005),
+    (    4096,    2.5,      0.012,        0.004),
+    //  ─────── long-context ────────────────────────
+    //  Each doubling gains ~0.3 nats mastery but gains shrink as model capacity
+    //  (not context) becomes the binding constraint for a 256H model.
+    //  min_plateau keeps falling: more positions per batch → lower noise floor.
+    (    8192,    2.2,      0.011,        0.004),
+    (   16384,    2.0,      0.010,        0.003),
+    (   32768,    1.8,      0.009,        0.003),
+    (   65536,    1.6,      0.008,        0.002),
+    (  131072,    1.5,      0.007,        0.002),
+    (  262144,    1.4,      0.006,        0.002),
+    (  524288,    1.3,      0.005,        0.001),
+    ( 1048576,    1.2,      0.005,        0.001),  // ← 1M ctx end-goal
+];
 
 /// After this multiple of the final arc window elapses with no surgery, force-advance the
 /// generation without adding a layer (prevents eternal autumn).
@@ -115,6 +152,15 @@ pub struct EvolutionManager {
     /// First loss recorded this generation (for GENERATION_COMPLETE log).
     gen_start_loss:             Option<f32>,
 
+    // ── CTX-level calibration ─────────────────────────────────────────────────
+    /// The max_seq_len (context window) this manager is calibrated for.
+    /// Persisted so recalibrate_ctx() can compute the correct scaling ratio on CTX bump.
+    pub ctx:                    usize,
+    /// Per-CTX plateau threshold floor — derived from CTX_LEVEL_TABLE.
+    /// Replaces the old global MIN_PLATEAU_THRESHOLD constant so the floor
+    /// stays meaningful as CTX grows (longer sequences have lower noise floors).
+    min_plateau_threshold:      f32,
+
     // ── Per-expert ATL credit (natural-selection scorekeeper) ──────────────────
     /// Accumulated fitness credit per expert index, earned when the colony hits a
     /// new all-time-best epoch loss. Sized lazily to num_experts on first record.
@@ -125,11 +171,24 @@ pub struct EvolutionManager {
 }
 
 impl EvolutionManager {
-    pub fn new() -> Self {
+    /// Look up (mastery, plateau_init, min_plateau) for a given context window.
+    /// Returns the entry with the largest seq_len ≤ max_seq_len, or the first entry
+    /// if max_seq_len is smaller than all table entries.
+    fn ctx_entry(max_seq_len: usize) -> (f32, f32, f32) {
+        CTX_LEVEL_TABLE.iter()
+            .rfind(|&&(c, _, _, _)| c <= max_seq_len)
+            .or_else(|| CTX_LEVEL_TABLE.first())
+            .map(|&(_, mastery, plateau_init, min_plateau)| (mastery, plateau_init, min_plateau))
+            .unwrap_or((4.5, 0.020, 0.008))
+    }
+
+    /// Create a fresh EvolutionManager calibrated for `max_seq_len`.
+    pub fn with_ctx(max_seq_len: usize) -> Self {
+        let (mastery, plateau_init, min_plateau) = Self::ctx_entry(max_seq_len);
         Self {
             loss_history:                 VecDeque::with_capacity(256),
-            plateau_threshold:            0.020,
-            mastery_threshold:            4.5,
+            plateau_threshold:            plateau_init,
+            mastery_threshold:            mastery,
             cooldown_remaining:           0,
             mycelium_stability_threshold: 5,
             fib_index:                    0,
@@ -141,11 +200,50 @@ impl EvolutionManager {
             gen_step:                     0,
             gen_epochs:                   0,
             gen_epochs_no_surgery:        0,
-            gen_start_threshold:          0.020,
+            gen_start_threshold:          plateau_init,
             gen_start_loss:               None,
+            ctx:                          max_seq_len,
+            min_plateau_threshold:        min_plateau,
             expert_atl_credit:            Vec::new(),
             atl_credit_events:            0,
         }
+    }
+
+    /// Convenience constructor — defaults to CTX=256 to preserve backward compatibility.
+    pub fn new() -> Self { Self::with_ctx(256) }
+
+    /// Recalibrate thresholds when the active context window changes.
+    ///
+    /// Safe to call every restart: if `new_ctx == self.ctx` it is a no-op except
+    /// refreshing mastery from the table (handles table edits without bumping CTX).
+    ///
+    /// On a CTX bump the current `plateau_threshold` is scaled proportionally to the
+    /// new baseline (preserving generational decay) and clamped to [new_min, new_init].
+    pub fn recalibrate_ctx(&mut self, new_ctx: usize) {
+        let (new_mastery, new_plateau_init, new_min) = Self::ctx_entry(new_ctx);
+        if new_ctx == self.ctx {
+            self.mastery_threshold    = new_mastery;
+            self.min_plateau_threshold = new_min;
+            return;
+        }
+        let (_, old_plateau_init, _) = Self::ctx_entry(self.ctx);
+        let ratio  = new_plateau_init / old_plateau_init.max(1e-9);
+        let scaled = (self.plateau_threshold * ratio)
+            .max(new_min)
+            .min(new_plateau_init);
+        println!(
+            "[evolution] CTX recalibrated {}→{}  mastery {:.2}→{:.2}  \
+             plateau {:.4}→{:.4} (×{:.3})  floor {:.4}→{:.4}",
+            self.ctx, new_ctx,
+            self.mastery_threshold, new_mastery,
+            self.plateau_threshold, scaled, ratio,
+            self.min_plateau_threshold, new_min,
+        );
+        self.ctx                   = new_ctx;
+        self.mastery_threshold     = new_mastery;
+        self.plateau_threshold     = scaled;
+        self.gen_start_threshold   = scaled;
+        self.min_plateau_threshold = new_min;
     }
 
     /// Calibrate Fibonacci position to the current model depth after loading a checkpoint.
@@ -357,7 +455,7 @@ impl EvolutionManager {
             .collect();
 
         let new_threshold = (self.plateau_threshold * THRESHOLD_DECAY)
-            .max(MIN_PLATEAU_THRESHOLD);
+            .max(self.min_plateau_threshold);
 
         // One-line archaeological record — readable at Gen 10 looking back.
         println!(
@@ -515,6 +613,9 @@ impl EvolutionManager {
             self.gen_epochs_no_surgery,
             self.plateau_threshold,
         );
+        // CTX-level calibration — tagged so old binaries ignore them gracefully.
+        content.push_str(&format!("ctx:{}\n", self.ctx));
+        content.push_str(&format!("mt:{:.6}\n", self.mastery_threshold));
         // Persist loss_history so it survives restarts — without this the plateau ring
         // resets to empty on every Modal restart, forcing a 144-epoch refill before the
         // gate can ever fire (and if Modal restarts more often than that, it never fires).
@@ -587,9 +688,11 @@ impl EvolutionManager {
 
         // Optional tagged tail lines — parsed by PREFIX so they're order-independent
         // and old 2-line / h-only checkpoints still load cleanly:
-        //   h:  loss_history (resumes the plateau window mid-flight across restarts)
-        //   c:  per-expert ATL credit (the natural-selection scorekeeper)
-        //   ce: best-ATL event count
+        //   h:   loss_history (resumes the plateau window mid-flight across restarts)
+        //   c:   per-expert ATL credit (the natural-selection scorekeeper)
+        //   ce:  best-ATL event count
+        //   ctx: active context window (max_seq_len)
+        //   mt:  mastery_threshold at save time
         for line in lines {
             let trimmed = line.trim();
             if let Some(hist_str) = trimmed.strip_prefix("h:") {
@@ -607,15 +710,26 @@ impl EvolutionManager {
                 if let Ok(v) = ev_str.trim().parse::<usize>() {
                     self.atl_credit_events = v;
                 }
+            } else if let Some(ctx_str) = trimmed.strip_prefix("ctx:") {
+                if let Ok(v) = ctx_str.trim().parse::<usize>() {
+                    self.ctx = v;
+                    // Restore the per-CTX floor from the table for the saved CTX.
+                    let (_, _, min_p) = Self::ctx_entry(v);
+                    self.min_plateau_threshold = min_p;
+                }
+            } else if let Some(mt_str) = trimmed.strip_prefix("mt:") {
+                if let Ok(v) = mt_str.trim().parse::<f32>() {
+                    self.mastery_threshold = v;
+                }
             }
         }
 
         println!(
             "[evolution] Restored — F{}={}L, window={} epochs, cooldown={}, \
-             gen={} step={}/{}, threshold={:.4}",
+             gen={} step={}/{}, plateau={:.4}, mastery={:.2}, ctx={}",
             self.fib_index + 1, self.max_layers, self.history_len(),
             self.cooldown_remaining, self.generation, self.gen_step, ARC_LENGTH,
-            self.plateau_threshold,
+            self.plateau_threshold, self.mastery_threshold, self.ctx,
         );
         true
     }
@@ -705,13 +819,13 @@ mod tests {
             em.reset_history();
         }
         assert!(em.plateau_threshold < t0);
-        assert!(em.plateau_threshold >= MIN_PLATEAU_THRESHOLD);
+        assert!(em.plateau_threshold >= em.min_plateau_threshold);
     }
 
     #[test]
     fn threshold_floors_at_minimum() {
         let mut em = em_at(12);
-        // Run many generations — threshold must never fall below floor.
+        // Run many generations — threshold must never fall below per-CTX floor.
         for g in 0..20 {
             for i in 0..ARC_LENGTH {
                 fill_flat(&mut em, 9.0 - (g * ARC_LENGTH + i) as f32 * 0.01);
@@ -719,7 +833,82 @@ mod tests {
                 em.reset_history();
             }
         }
-        assert!(em.plateau_threshold >= MIN_PLATEAU_THRESHOLD);
+        assert!(em.plateau_threshold >= em.min_plateau_threshold);
+        assert!(em.plateau_threshold >= MIN_PLATEAU_THRESHOLD); // absolute global floor
+    }
+
+    // ── CTX calibration ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn with_ctx_sets_correct_thresholds() {
+        let em256 = EvolutionManager::with_ctx(256);
+        assert!((em256.mastery_threshold - 4.5).abs() < 1e-5);
+        assert!((em256.plateau_threshold  - 0.020).abs() < 1e-5);
+        assert!((em256.min_plateau_threshold - 0.008).abs() < 1e-5);
+
+        let em512 = EvolutionManager::with_ctx(512);
+        assert!((em512.mastery_threshold - 4.0).abs() < 1e-5);
+        assert!((em512.plateau_threshold  - 0.018).abs() < 1e-5);
+        assert!((em512.min_plateau_threshold - 0.007).abs() < 1e-5);
+
+        // Value between table entries → floor entry is used
+        let em300 = EvolutionManager::with_ctx(300);
+        assert!((em300.mastery_threshold - 4.5).abs() < 1e-5, "300 CTX should use 256 entry");
+    }
+
+    #[test]
+    fn recalibrate_ctx_scales_plateau_proportionally() {
+        let mut em = EvolutionManager::with_ctx(256);
+        // Simulate Gen-3 decay: 0.020 × 0.75² ≈ 0.01125
+        em.plateau_threshold = 0.01125;
+
+        em.recalibrate_ctx(512);
+        // ratio = 0.018 / 0.020 = 0.9 → scaled = 0.01125 × 0.9 = 0.010125
+        let expected = 0.01125_f32 * (0.018 / 0.020);
+        assert!((em.plateau_threshold - expected).abs() < 1e-5,
+            "scaled plateau {:.6} ≠ expected {:.6}", em.plateau_threshold, expected);
+        assert!((em.mastery_threshold - 4.0).abs() < 1e-5);
+        assert_eq!(em.ctx, 512);
+    }
+
+    #[test]
+    fn recalibrate_ctx_noop_when_same() {
+        let mut em = EvolutionManager::with_ctx(256);
+        em.plateau_threshold = 0.011;
+        em.recalibrate_ctx(256);
+        // plateau must not change
+        assert!((em.plateau_threshold - 0.011).abs() < 1e-5);
+        // mastery must be refreshed from table
+        assert!((em.mastery_threshold - 4.5).abs() < 1e-5);
+    }
+
+    #[test]
+    fn recalibrate_ctx_clamps_to_new_init() {
+        // If somehow threshold is above new_init, clamp down.
+        let mut em = EvolutionManager::with_ctx(128);
+        em.plateau_threshold = 0.022; // at init value for 128
+        em.recalibrate_ctx(64); // going DOWN — new_init = 0.025
+        // ratio = 0.025/0.022 ≈ 1.136 → scaled = 0.022 × 1.136 ≈ 0.025 (clamped to new_init)
+        assert!(em.plateau_threshold <= 0.025 + 1e-5);
+        assert!(em.plateau_threshold >= em.min_plateau_threshold);
+    }
+
+    #[test]
+    fn save_load_roundtrip_preserves_ctx_and_mastery() {
+        let mut em = EvolutionManager::with_ctx(512);
+        em.add_loss(9.84);
+        em.promote_fib_target(18);
+        em.reset_history();
+
+        let path = "/tmp/evo_test_ctx_roundtrip.txt";
+        em.save_state(path);
+
+        let mut em2 = EvolutionManager::new(); // defaults to ctx=256
+        assert!(em2.load_state(path));
+        assert_eq!(em2.ctx, 512);
+        assert!((em2.mastery_threshold - 4.0).abs() < 1e-4,
+            "mastery should restore to 4.0 for ctx=512, got {}", em2.mastery_threshold);
+        assert!((em2.plateau_threshold - em.plateau_threshold).abs() < 1e-5);
     }
 
     #[test]
