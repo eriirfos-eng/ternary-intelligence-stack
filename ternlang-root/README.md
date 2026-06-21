@@ -163,16 +163,16 @@ Demonstrate that ternary-native training — weights constrained to {−1, 0, +1
 
 | Field | Value |
 |-------|-------|
-| Architecture | 256H · **32L per stream** · 2 streams · 4H · **768 total expert-routing slots** (12E/layer × 32L × 2 streams) · 128CTX · 32000V |
+| Architecture | 256H · **33L per stream** · 2 streams · 4H · **792 total expert-routing slots** (12E/layer × 33L × 2 streams) · 512CTX · 32000V |
 | Version | v3.0 — multilingual ByteLevel BPE, 32k vocab (EN/DE/FR/ES/PT/IT/NL/PL) |
-| Global Epoch | **~6500+** (2026-06-15) |
-| Best loss | **5.8693** (EP-AVG ATL, ep6487) |
+| Global Epoch | **~7592** (2026-06-21) |
+| Best loss | **4.6842** (EP-AVG ATL, ep7588) |
 | Inference throughput | **83 tok/s** (CPU vpsignb @sparseskip kernel, 75% expert skip) |
-| Training hardware | Modal T4 GPU · ~450 ms/batch |
-| Expert health | dead=0; **19 Net2Net surgeries** (12L→32L) + 1 cord surgery (25L→dual 25L); corpus fully unlocked |
+| Training hardware | Modal GPU · ~2000 ms/batch (512CTX) |
+| Expert health | dead=0; **20 Net2Net surgeries** (12L→33L) + 1 cord surgery (25L→dual 25L); corpus fully unlocked |
 | Training data | 100% public domain / open licence — Wikipedia CC BY-SA, Gutenberg, Europarl, EU AI Act |
 
-**Status:** Training active on Modal T4 · 19th Net2Net surgery complete (31L→32L) · best EP-AVG ATL **5.8693** at ep6487 (clean descending gradient, d~-0.07 per epoch block) · Cord Surgery introduced dual-stream architecture at ep4202 · v2.0.0 archived at Global Epoch 477+.
+**Status:** Training active on Modal · 20th Net2Net surgery complete (32L→33L) · CTX bumped 256→512 with CTX-aware evolution gate (CTX_LEVEL_TABLE 64→1M) · best EP-AVG ATL **4.6842** at ep7588 · mastery gate=4.0 nats · Cord Surgery introduced dual-stream architecture at ep4202 · v2.0.0 archived at Global Epoch 477+.
 
 ---
 
