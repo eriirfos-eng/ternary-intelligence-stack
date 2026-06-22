@@ -177,13 +177,14 @@ async fn main() -> anyhow::Result<()> {
 
     let config_path = format!("{root}/models/albert_v3.0.config.json");
     let vocab_path  = format!("{root}/data/vocab_v3.json");
-    let ckpt_best   = format!("{root}/models/albert_v3.0.best.safetensors");
-    let ckpt_latest = format!("{root}/models/albert_v3.0.safetensors");
-    // Serve the LATEST checkpoint — it always matches config.json's architecture.
-    // best.safetensors is the lowest-LOSS snapshot, which can lag the architecture
-    // across surgeries (a pre-cord single-stream "best" vs a dual-stream config) and
-    // would fail to load. Latest is written with the current model, so it's safe.
-    let ckpt        = if std::path::Path::new(&ckpt_latest).exists() { &ckpt_latest } else { &ckpt_best };
+    let ckpt_serving = format!("{root}/models/albert_v3.0_serving.safetensors");
+    let ckpt_latest  = format!("{root}/models/albert_v3.0.safetensors");
+    let ckpt_best    = format!("{root}/models/albert_v3.0.best.safetensors");
+    // Prefer the atomic serving snapshot written by training after each epoch.
+    // Falls back to the live checkpoint (may be mid-write) and then to best.
+    let ckpt = if std::path::Path::new(&ckpt_serving).exists() { &ckpt_serving }
+               else if std::path::Path::new(&ckpt_latest).exists() { &ckpt_latest }
+               else { &ckpt_best };
 
     println!("[albert_serve] loading config  {config_path}");
     let config_str  = fs::read_to_string(&config_path)?;

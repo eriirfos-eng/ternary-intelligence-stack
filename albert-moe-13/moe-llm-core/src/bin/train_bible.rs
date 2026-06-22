@@ -2027,6 +2027,17 @@ fn train_cycle(
 
         // ── Checkpoint (always save latest) ──────────────────────────────────
         save_checkpoint(&varmap, checkpoint_path)?;
+        // Atomic serving snapshot — write to .tmp then rename so albert_serve
+        // never reads a partially-written file while training writes.
+        {
+            let serving_path = format!("{r}/models/albert_v3.0_serving.safetensors");
+            let serving_tmp  = format!("{r}/models/albert_v3.0_serving.safetensors.tmp");
+            if let Err(e) = fs::copy(checkpoint_path, &serving_tmp)
+                .and_then(|_| fs::rename(&serving_tmp, &serving_path))
+            {
+                eprintln!("[serve-snapshot] Warning: atomic serving snapshot failed: {e}");
+            }
+        }
         fs::write(meta_path, total_epochs.to_string())?;
         evolution_manager.save_state(evo_path);
 
