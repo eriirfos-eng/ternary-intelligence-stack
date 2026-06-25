@@ -57,7 +57,8 @@ use std::{
     collections::HashMap,
     env,
     path::PathBuf,
-    sync::Arc,
+    sync::{Arc, Mutex, OnceLock},
+    time::Instant,
 };
 use tokio::sync::RwLock;
 use tower_http::{cors::{Any, CorsLayer}, services::ServeDir};
@@ -653,6 +654,28 @@ async fn add_security_headers(request: axum::extract::Request, next: Next) -> Re
     response
 }
 
+// ─── IP rate limiter for public compute endpoints ────────────────────────────
+// Sliding window: max 10 POST requests per IP per 60 seconds.
+// Uses Fly-Client-IP (set by Fly.io edge, not spoofable) with X-Forwarded-For fallback.
+
+static PUBLIC_RATE_LIMITER: OnceLock<Mutex<HashMap<String, Vec<Instant>>>> = OnceLock::new();
+
+fn get_rate_limiter() -> &'static Mutex<HashMap<String, Vec<Instant>>> {
+    PUBLIC_RATE_LIMITER.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn check_rate_limit(ip: &str) -> bool {
+    const MAX_REQUESTS: usize = 10;
+    const WINDOW: std::time::Duration = std::time::Duration::from_secs(60);
+    let now = Instant::now();
+    let mut map = get_rate_limiter().lock().unwrap_or_else(|e| e.into_inner());
+    let ts = map.entry(ip.to_string()).or_default();
+    ts.retain(|t| now.duration_since(*t) < WINDOW);
+    if ts.len() >= MAX_REQUESTS { return true; }
+    ts.push(now);
+    false
+}
+
 // ─── Auth middleware (API routes) ─────────────────────────────────────────────
 
 async fn require_api_key(
@@ -662,6 +685,30 @@ async fn require_api_key(
     next: Next,
 ) -> Response {
     let path = request.uri().path().to_string();
+
+    // Rate-limit public compute endpoints (10 POST req/min/IP, sliding window).
+    if (path == "/api/albert/chat" || path == "/api/albert/translate")
+        && request.method() == Method::POST
+    {
+        let ip = headers
+            .get("fly-client-ip")
+            .or_else(|| headers.get("x-forwarded-for"))
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("unknown")
+            .split(',')
+            .next()
+            .unwrap_or("unknown")
+            .trim()
+            .to_string();
+
+        if check_rate_limit(&ip) {
+            return (
+                StatusCode::TOO_MANY_REQUESTS,
+                [(axum::http::header::RETRY_AFTER, "60")],
+                "rate limit exceeded — 10 requests per minute per IP\n",
+            ).into_response();
+        }
+    }
 
     // Public endpoints — no key required
     if path == "/" || path == "/health" || path == "/mcp"
