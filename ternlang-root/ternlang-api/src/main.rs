@@ -52,6 +52,7 @@ use std::convert::Infallible;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use ternlang_engram::{EngramStore, HashEmbedder, unix_ms_to_stamp, humanize_age_ms, iso_to_unix_ms};
 use std::{
     collections::HashMap,
     env,
@@ -476,6 +477,13 @@ type MemBlob = serde_json::Map<String, Value>;
 /// Per-key server-side memory store.
 type MemStore = Arc<std::sync::RwLock<std::collections::HashMap<String, MemBlob>>>;
 
+/// Per-key episodic-memory registry: each API key maps to its own durable
+/// `EngramStore`, file-backed on the `/data` volume. This is what keeps one
+/// user's autobiographical memory private and isolated from every other user's
+/// (no shared brain) and durable across redeploys.
+type EngramRegistry =
+    Arc<std::sync::Mutex<std::collections::HashMap<String, Arc<std::sync::Mutex<EngramStore>>>>>;
+
 pub struct DatabaseManager {
     pub db_path: PathBuf,
 }
@@ -513,6 +521,9 @@ pub struct AppState {
     github_token:           String,
     /// Server-side three-layer memory, keyed by API key string.
     memory_store:           MemStore,
+
+    /// Per-key durable episodic memory (ternlang-engram), file-backed on /data.
+    engram_registry:        EngramRegistry,
 
     agent_registry:         Arc<AgentRegistry>,
 
@@ -1292,7 +1303,7 @@ async fn root(State(state): State<Arc<AppState>>, headers: HeaderMap) -> Respons
             "url":         "https://ternlang.com/mcp",
             "transport":   "HTTP JSON-RPC 2.0",
             "smithery":    "https://smithery.ai/server/ternlang",
-            "description": "POST /mcp — 34 tools, all free. Pass X-Ternlang-Key for server-side persistent memory and REST API access.",
+            "description": "POST /mcp — 40 tools. Core set free; episodic memory (engram_*) needs a free X-Ternlang-Key for private, durable per-user storage. Pass X-Ternlang-Key for server-side persistent memory and REST API access.",
         },
         "acquire_key": "https://ternlang.com/#licensing"
     })).into_response();
@@ -2350,9 +2361,23 @@ async fn mcp_handler(
                     }
                 }));
             }
+            // engram is private episodic memory — it requires a valid key to
+            // namespace and isolate it. Free to get; gate with a clear message.
+            if tool_name.starts_with("engram_") && !is_premium {
+                return Json(json!({
+                    "jsonrpc": "2.0", "id": id,
+                    "result": {
+                        "content": [{ "type": "text", "text":
+                            "engram_* is private, durable episodic memory. It needs a valid X-Ternlang-Key to keep your memories isolated from everyone else's. Get a free key at https://ternlang.com/#licensing"
+                        }],
+                        "isError": false
+                    }
+                }));
+            }
             let tool_params = &params["arguments"];
             let mem = Arc::clone(&state.memory_store);
-            match mcp_dispatch_tool(&tool_name, tool_params, raw_key, &mem) {
+            let engram = Arc::clone(&state.engram_registry);
+            match mcp_dispatch_tool(&tool_name, tool_params, raw_key, &mem, &engram) {
                 Ok(res) => json!({
                     "jsonrpc": "2.0", "id": id,
                     "result": {
@@ -2379,9 +2404,182 @@ async fn mcp_handler(
     Json(result)
 }
 
+// ─── Episodic memory (engram) — per-key, file-backed on /data ────────────────
+
+const ENGRAM_HOSTED_DIM: usize = 384;
+
+fn engram_dir() -> std::path::PathBuf {
+    std::env::var("TERNLANG_ENGRAM_DIR")
+        .unwrap_or_else(|_| "/data/engram".to_string())
+        .into()
+}
+
+/// FNV-1a 64-bit hex of the API key — used only to namespace the on-disk file so
+/// the raw secret never becomes a filename. Isolation, not cryptography.
+fn engram_key_hash(api_key: &str) -> String {
+    let mut h: u64 = 0xcbf29ce484222325;
+    for b in api_key.as_bytes() {
+        h ^= *b as u64;
+        h = h.wrapping_mul(0x00000100000001B3);
+    }
+    format!("{h:016x}")
+}
+
+fn engram_now_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
+}
+
+fn engram_resolve_now(params: &Value) -> i64 {
+    if let Some(s) = params["iso"].as_str() {
+        if let Some(ms) = iso_to_unix_ms(s) {
+            return ms;
+        }
+    }
+    params["t_ms"].as_i64().unwrap_or_else(engram_now_ms)
+}
+
+/// Get-or-open this key's private store. Requires a non-empty key (private memory
+/// must have an owner). Opens from `/data/engram/<keyhash>.jsonl` on first use.
+fn engram_for_key(
+    reg: &EngramRegistry,
+    api_key: &str,
+) -> Result<Arc<std::sync::Mutex<EngramStore>>, String> {
+    if api_key.trim().is_empty() {
+        return Err("engram is private episodic memory and needs an X-Ternlang-Key to namespace it. Get a free key at https://ternlang.com/#licensing".to_string());
+    }
+    let hash = engram_key_hash(api_key);
+    let mut guard = reg.lock().map_err(|_| "engram registry poisoned")?;
+    if let Some(store) = guard.get(&hash) {
+        return Ok(Arc::clone(store));
+    }
+    let dir = engram_dir();
+    let _ = std::fs::create_dir_all(&dir);
+    let path = dir.join(format!("{hash}.jsonl"));
+    let store = EngramStore::open(&path, ENGRAM_HOSTED_DIM)
+        .unwrap_or_else(|_| EngramStore::new(ENGRAM_HOSTED_DIM))
+        .with_embedder(Box::new(HashEmbedder::new(ENGRAM_HOSTED_DIM)));
+    let arc = Arc::new(std::sync::Mutex::new(store));
+    guard.insert(hash, Arc::clone(&arc));
+    Ok(arc)
+}
+
+fn mcp_engram_remember(params: &Value, api_key: &str, reg: &EngramRegistry) -> Result<Value, String> {
+    let content    = params["content"].as_str().ok_or("content must be a string")?;
+    let importance = params["importance"].as_f64().unwrap_or(0.5) as f32;
+    let source     = params["source"].as_str().unwrap_or("agent");
+    let tags: Vec<String> = params["tags"].as_array()
+        .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .unwrap_or_default();
+    let t = engram_resolve_now(params);
+    let store = engram_for_key(reg, api_key)?;
+    let mut s = store.lock().map_err(|_| "engram store poisoned")?;
+    let id = s.remember(content, importance, tags, source, t).map_err(|e| e.to_string())?;
+    Ok(json!({
+        "status": "remembered",
+        "id": id,
+        "stamp": unix_ms_to_stamp(t),
+        "total_episodes": s.len(),
+        "summary": format!("episode stored at {} (salience {importance:.2})", unix_ms_to_stamp(t))
+    }))
+}
+
+fn mcp_engram_recall(params: &Value, api_key: &str, reg: &EngramRegistry) -> Result<Value, String> {
+    let query = params["query"].as_str().ok_or("query must be a string")?;
+    let k = params["top_k"].as_u64().unwrap_or(5) as usize;
+    let t = engram_resolve_now(params);
+    let store = engram_for_key(reg, api_key)?;
+    let mut s = store.lock().map_err(|_| "engram store poisoned")?;
+    let hits = s.recall(query, k, t).map_err(|e| e.to_string())?;
+    let matches: Vec<Value> = hits.iter().map(|r| json!({
+        "id": r.id, "content": r.content,
+        "score": (r.score * 1000.0).round() / 1000.0,
+        "confidence": (r.confidence * 1000.0).round() / 1000.0,
+        "relevance": (r.relevance * 1000.0).round() / 1000.0,
+        "recency": (r.recency * 1000.0).round() / 1000.0,
+        "importance": (r.importance * 1000.0).round() / 1000.0,
+        "stamp": r.stamp, "age": r.age, "tags": r.tags,
+    })).collect();
+    Ok(json!({
+        "query": query, "now": unix_ms_to_stamp(t),
+        "returned": matches.len(), "matches": matches,
+        "scoring_formula": "relevance×w_rel + recency×w_rec + importance×w_imp + frequency×w_freq; confidence = native TritFloat propagation"
+    }))
+}
+
+fn mcp_engram_timeline(params: &Value, api_key: &str, reg: &EngramRegistry) -> Result<Value, String> {
+    let now = engram_now_ms();
+    let from = params["from_iso"].as_str().and_then(iso_to_unix_ms)
+        .or_else(|| params["from_ms"].as_i64()).unwrap_or(i64::MIN);
+    let to = params["to_iso"].as_str().and_then(iso_to_unix_ms)
+        .or_else(|| params["to_ms"].as_i64()).unwrap_or(now);
+    let store = engram_for_key(reg, api_key)?;
+    let s = store.lock().map_err(|_| "engram store poisoned")?;
+    let eps: Vec<Value> = s.timeline(from, to).iter().map(|e| json!({
+        "id": e.id, "stamp": e.stamp(), "age": humanize_age_ms(now - e.t_ms),
+        "content": e.content, "tags": e.tags, "source": e.source,
+        "importance": (e.importance * 1000.0).round() / 1000.0, "access_count": e.access_count,
+    })).collect();
+    Ok(json!({
+        "from": if from == i64::MIN { "earliest".to_string() } else { unix_ms_to_stamp(from) },
+        "to": unix_ms_to_stamp(to), "count": eps.len(), "episodes": eps
+    }))
+}
+
+fn mcp_engram_consolidate(params: &Value, api_key: &str, reg: &EngramRegistry) -> Result<Value, String> {
+    let floor      = params["floor"].as_f64().unwrap_or(0.1) as f32;
+    let min_age_ms = params["min_age_ms"].as_i64().unwrap_or(24 * 60 * 60 * 1000);
+    let t          = engram_resolve_now(params);
+    let store = engram_for_key(reg, api_key)?;
+    let mut s = store.lock().map_err(|_| "engram store poisoned")?;
+    let r = s.consolidate(t, floor, min_age_ms).map_err(|e| e.to_string())?;
+    Ok(json!({
+        "decayed": r.decayed, "evicted": r.evicted, "remaining": s.len(),
+        "summary": format!("decayed {}, evicted {} (vivid memories decay slower)", r.decayed, r.evicted)
+    }))
+}
+
+fn mcp_engram_forget(params: &Value, api_key: &str, reg: &EngramRegistry) -> Result<Value, String> {
+    let store = engram_for_key(reg, api_key)?;
+    let mut s = store.lock().map_err(|_| "engram store poisoned")?;
+    if let Some(id) = params["id"].as_u64() {
+        let removed = s.forget(id).map_err(|e| e.to_string())?;
+        Ok(json!({ "forgot_id": id, "removed": removed, "remaining": s.len() }))
+    } else if let Some(before) = params["before_ms"].as_i64() {
+        let n = s.forget_before(before).map_err(|e| e.to_string())?;
+        Ok(json!({ "forgot_before_ms": before, "removed": n, "remaining": s.len() }))
+    } else {
+        Err("provide either 'id' (one episode) or 'before_ms' (everything older)".to_string())
+    }
+}
+
+fn mcp_engram_stats(api_key: &str, reg: &EngramRegistry) -> Result<Value, String> {
+    let store = engram_for_key(reg, api_key)?;
+    let s = store.lock().map_err(|_| "engram store poisoned")?;
+    let st = s.stats();
+    let (anchor, latest, span) = if st.episodes > 0 {
+        (unix_ms_to_stamp(st.oldest_ms), unix_ms_to_stamp(st.newest_ms),
+         humanize_age_ms(st.newest_ms - st.oldest_ms).replace(" ago", ""))
+    } else {
+        ("none".to_string(), "none".to_string(), "0m".to_string())
+    };
+    Ok(json!({
+        "episodes": st.episodes, "dim": st.dim,
+        "avg_importance": (st.avg_importance * 1000.0).round() / 1000.0,
+        "avg_confidence": (st.avg_confidence * 1000.0).round() / 1000.0,
+        "avg_sparsity": (st.avg_sparsity * 1000.0).round() / 1000.0,
+        "now": unix_ms_to_stamp(engram_now_ms()),
+        "anchor": anchor, "latest": latest, "span": span,
+        "total_access": st.total_access,
+        "private": "this store is namespaced to your X-Ternlang-Key; no other key can read it"
+    }))
+}
+
 // ─── MCP tool dispatch ────────────────────────────────────────────────────────
 
-fn mcp_dispatch_tool(name: &str, params: &Value, api_key: &str, mem: &MemStore) -> Result<Value, String> {
+fn mcp_dispatch_tool(name: &str, params: &Value, api_key: &str, mem: &MemStore, engram: &EngramRegistry) -> Result<Value, String> {
     let mut result = match name {
         "trit_decide"      => mcp_trit_decide(params),
         "trit_consensus"   => mcp_trit_consensus(params),
@@ -2420,6 +2618,13 @@ fn mcp_dispatch_tool(name: &str, params: &Value, api_key: &str, mem: &MemStore) 
         "llb_classify"             => mcp_llb_classify(params),
         "llb_validate"             => mcp_llb_validate(params),
         "llb_write_safe"           => mcp_llb_write_safe(params),
+        // ── Episodic memory (engram) — per-key, private, durable on /data ──
+        "engram_remember"          => mcp_engram_remember(params, api_key, engram),
+        "engram_recall"            => mcp_engram_recall(params, api_key, engram),
+        "engram_timeline"          => mcp_engram_timeline(params, api_key, engram),
+        "engram_consolidate"       => mcp_engram_consolidate(params, api_key, engram),
+        "engram_forget"            => mcp_engram_forget(params, api_key, engram),
+        "engram_stats"             => mcp_engram_stats(api_key, engram),
         _ => Err(format!("unknown tool: {}", name)),
     }?;
 
@@ -4576,6 +4781,77 @@ fn mcp_tools_manifest() -> Value {
               "fallback":      { "type": "string", "description": "What the agent will do if the write is vetoed." }
             }
           }
+        },
+        {
+          "name": "engram_remember",
+          "description": "Store an episode in your PRIVATE, durable episodic memory (ternlang-engram), namespaced to your X-Ternlang-Key and persisted on the server. Each memory is time-stamped and embedded with a ternary TritFloat vector whose confidence field carries the episode's salience. The episode id IS the timestamp (unix ms). Requires a valid key — your memories are isolated from every other user's.",
+          "annotations": { "title": "Engram Remember — Store a Durable Episodic Memory", "readOnlyHint": false, "idempotentHint": false, "destructiveHint": false, "openWorldHint": false },
+          "inputSchema": { "type": "object", "required": ["content"],
+            "properties": {
+              "content":    { "type": "string", "description": "The memory text to store." },
+              "importance": { "type": "number", "description": "Salience in [0,1]; seeds the confidence field. Default 0.5." },
+              "tags":       { "type": "array", "items": { "type": "string" }, "description": "Optional tags for filtering and timelines." },
+              "source":     { "type": "string", "description": "Who/what laid down the memory. Default 'agent'." },
+              "iso":        { "type": "string", "description": "Event time as ISO 8601 / bare date / stamp / epoch. The id IS this timestamp. Default: now." },
+              "t_ms":       { "type": "integer", "description": "Event time, unix ms. Used if 'iso' absent. Default: now." }
+            }
+          }
+        },
+        {
+          "name": "engram_recall",
+          "description": "Recall your most relevant private memories, ranked like human episodic retrieval: relevance × recency × salience × frequency. Recalled episodes are reinforced. Each hit carries a native propagated TritFloat confidence and a human age ('3d 4h ago', or future 'in 14d'). Requires a valid key.",
+          "annotations": { "title": "Engram Recall — Composite Episodic Retrieval", "readOnlyHint": false, "idempotentHint": false, "destructiveHint": false, "openWorldHint": false },
+          "inputSchema": { "type": "object", "required": ["query"],
+            "properties": {
+              "query": { "type": "string", "description": "The cue to recall against." },
+              "top_k": { "type": "integer", "description": "How many memories to return. Default 5." },
+              "iso":   { "type": "string", "description": "Time of recall as ISO/stamp/epoch (drives recency + age). Default: now." },
+              "t_ms":  { "type": "integer", "description": "Time of recall, unix ms. Used if 'iso' absent. Default: now." }
+            }
+          }
+        },
+        {
+          "name": "engram_timeline",
+          "description": "Return your memories whose timestamp falls within [from, to], in chronological order — the episodic-specific query a vector store cannot answer. Requires a valid key.",
+          "annotations": { "title": "Engram Timeline — Chronological Memory Slice", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+          "inputSchema": { "type": "object",
+            "properties": {
+              "from_iso": { "type": "string", "description": "Window start as ISO 8601 / bare date / stamp / epoch (e.g. '2026-06-18')." },
+              "to_iso":   { "type": "string", "description": "Window end as ISO 8601 / bare date / stamp / epoch." },
+              "from_ms":  { "type": "integer", "description": "Window start, unix ms. Default: earliest." },
+              "to_ms":    { "type": "integer", "description": "Window end, unix ms. Default: now." }
+            }
+          }
+        },
+        {
+          "name": "engram_consolidate",
+          "description": "Run one consolidation pass on your memory: decay salience along a forgetting curve (vivid, frequently-recalled memories decay far slower) and evict memories below 'floor' that are older than 'min_age_ms'. Requires a valid key.",
+          "annotations": { "title": "Engram Consolidate — Decay & Forget", "readOnlyHint": false, "idempotentHint": false, "destructiveHint": true, "openWorldHint": false },
+          "inputSchema": { "type": "object",
+            "properties": {
+              "floor":      { "type": "number", "description": "Salience below which an old memory is evicted. Default 0.1." },
+              "min_age_ms": { "type": "integer", "description": "Memories younger than this are never evicted. Default 24h." },
+              "iso":        { "type": "string", "description": "Consolidation 'now' as ISO/stamp/epoch. Default: now." },
+              "t_ms":       { "type": "integer", "description": "Consolidation time, unix ms. Used if 'iso' absent. Default: now." }
+            }
+          }
+        },
+        {
+          "name": "engram_forget",
+          "description": "Delete your memories — a GDPR right-to-erasure primitive. Provide 'id' for one episode, or 'before_ms' for everything older. Requires a valid key.",
+          "annotations": { "title": "Engram Forget — Right-to-Erasure", "readOnlyHint": false, "idempotentHint": true, "destructiveHint": true, "openWorldHint": false },
+          "inputSchema": { "type": "object",
+            "properties": {
+              "id":        { "type": "integer", "description": "Id of a single episode to delete." },
+              "before_ms": { "type": "integer", "description": "Delete every episode older than this unix-ms timestamp." }
+            }
+          }
+        },
+        {
+          "name": "engram_stats",
+          "description": "Health snapshot of your private episodic store: episode count, salience, native confidence, ternary sparsity, time anchor/latest/span, total recalls. Requires a valid key.",
+          "annotations": { "title": "Engram Stats — Memory Health", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+          "inputSchema": { "type": "object", "properties": {} }
         }
     ]});
     // Hoist annotations.title → top-level title on every tool (MCP 2025-03-26 spec)
@@ -6061,6 +6337,7 @@ async fn main() {
         tracer_tx,
         telemetry_history: Arc::new(std::sync::RwLock::new(Vec::new())),
         memory_store: Arc::new(std::sync::RwLock::new(std::collections::HashMap::new())),
+        engram_registry: Arc::new(std::sync::Mutex::new(std::collections::HashMap::new())),
         total_instructions: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         total_nodes:        Arc::new(std::sync::atomic::AtomicU64::new(0)),
         active_nodes:       Arc::new(std::sync::RwLock::new(std::collections::HashSet::new())),

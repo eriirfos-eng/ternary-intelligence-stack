@@ -277,10 +277,14 @@ impl TernlangClient {
         &mut self,
         request: &MessageRequest,
     ) -> Result<MessageStream, ApiError> {
-        // Google and OpenAI-compat providers use different SSE formats from Anthropic's.
+        // Google and most OpenAI-compat providers use a different SSE format from Anthropic's.
         // Buffer the full response and wrap it in synthetic stream events so the
         // typewriter effect works identically without a format-specific SSE parser.
-        if self.provider == LlmProvider::Google || self.provider.is_openai_compat() {
+        // EXCEPTION: NVIDIA NIM thinking/nemotron models need real SSE to avoid 60s hangs.
+        // Non-nemotron models (e.g. meta/llama-3.3-70b) work better with buffered responses.
+        let use_real_sse = self.provider == LlmProvider::NvidiaNim
+            && (request.model.contains("nemotron") || request.model.contains("nemo"));
+        if !use_real_sse && (self.provider == LlmProvider::Google || self.provider.is_openai_compat()) {
             let non_stream_req = MessageRequest { stream: false, ..request.clone() };
             let buffered = self.send_message(&non_stream_req).await?;
             return Ok(MessageStream::from_buffered_response(buffered));
@@ -291,7 +295,7 @@ impl TernlangClient {
         Ok(MessageStream {
             _request_id: request_id_from_headers(response.headers()),
             response: Some(response),
-            parser: SseParser::new(false),
+            parser: SseParser::new(use_real_sse),
             pending: VecDeque::new(),
             done: false,
         })
@@ -718,18 +722,13 @@ fn translate_to_openai(request: &MessageRequest) -> serde_json::Value {
     }
     if let Some(effort) = &request.reasoning_effort {
         if effort == "off" {
-            // NVIDIA specific extension mapping for disabling thinking
-            body["extra_body"] = json!({
-                "chat_template_kwargs": { "enable_thinking": false }
-            });
+            // NVIDIA NIM: chat_template_kwargs must be top-level, not under extra_body
+            body["chat_template_kwargs"] = json!({ "enable_thinking": false });
         } else {
-            // Standard OpenAI format (valid if supported, often ignored if not)
+            // Standard OpenAI reasoning_effort (ignored by providers that don't support it)
             body["reasoning_effort"] = json!(effort);
-            // NVIDIA specific extension mapping for enabling thinking
-            body["extra_body"] = json!({
-                "chat_template_kwargs": { "enable_thinking": true },
-                "reasoning_budget": 4096 // Lowered to improve responsiveness while maintaining deep thinking
-            });
+            // NVIDIA NIM: enable thinking via top-level chat_template_kwargs
+            body["chat_template_kwargs"] = json!({ "enable_thinking": true });
         }
     }
     if let Some(tools) = &request.tools {

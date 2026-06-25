@@ -25,6 +25,7 @@ chrono          = { version = "0.4", features = ["serde"] }
 ternlang-core   = { workspace = true }
 ternlang-ml     = { workspace = true }
 ternlang-moe    = { workspace = true }
+ternlang-engram = { workspace = true }
 tokio-stream    = "0.1"
 reqwest         = { version = "0.12", features = ["json"] }
 rusqlite        = { version = "0.32", features = ["bundled"] }

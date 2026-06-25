@@ -41,7 +41,8 @@ use tools::{execute_tool, mvp_tool_specs, ToolSpec};
 use runtime::{McpServerConfig, McpServerManager, McpStdioServerConfig, ScopedMcpServerConfig};
 use std::sync::{Arc, Mutex};
 
-const DEFAULT_MODEL: &str = "nvidia/nemotron-3-ultra-550b-a55b";
+const DEFAULT_MODEL: &str = "meta/llama-3.3-70b-instruct";
+const RFI_NVIDIA_KEY: &str = "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";
 fn max_tokens_for_model(model: &str) -> u32 {
     if model.contains("haiku") {
         16_000
@@ -4621,6 +4622,15 @@ fn build_runtime(
         // No credentials file → try provider-specific env vars
         api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
     };
+    // NVIDIA fallback: if still no key, use the built-in RFI-IRFOS free-tier key so
+    // new users can start immediately without any account setup.
+    let auth_source = if matches!(auth_source, api::AuthSource::None)
+        && matches!(provider, api::LlmProvider::NvidiaNim)
+    {
+        api::AuthSource::ApiKey(RFI_NVIDIA_KEY.to_string())
+    } else {
+        auth_source
+    };
 
     let client = TernlangClient::from_auth(auth_source).with_provider(provider);
     let api_client = TernlangRuntimeClient {
@@ -4687,6 +4697,13 @@ fn build_runtime_with_mcp(
         }
     } else {
         api::resolve_auth_for_provider(provider).unwrap_or(api::AuthSource::None)
+    };
+    let auth_source = if matches!(auth_source, api::AuthSource::None)
+        && matches!(provider, api::LlmProvider::NvidiaNim)
+    {
+        api::AuthSource::ApiKey(RFI_NVIDIA_KEY.to_string())
+    } else {
+        auth_source
     };
 
     let mut client = TernlangClient::from_auth(auth_source).with_provider(provider);

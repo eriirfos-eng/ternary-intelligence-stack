@@ -1,6 +1,6 @@
 #![recursion_limit = "512"]
 
-/// ternlang-mcp — Model Context Protocol server (34 tools)
+/// ternlang-mcp — Model Context Protocol server (40 tools)
 ///
 /// Turns any binary AI agent into a ternary decision engine.
 /// Transport: JSON-RPC 2.0 over stdio (MCP standard).
@@ -35,6 +35,13 @@
 ///   trit_mem_consolidate  — promotion cycle: working→session→core, evict below threshold
 ///   trit_mem_stats        — layer health report: count, avg priority, trit distribution
 ///   trit_mem_compress     — sparsity compression: evict zero-trit low-priority entries
+/// Episodic memory (engram — durable, file-backed, ternlang-engram crate):
+///   engram_remember       — store a time-stamped, TritFloat-embedded autobiographical episode
+///   engram_recall         — composite recall: relevance × recency × salience × frequency (+ native confidence)
+///   engram_timeline       — chronological slice of memories in a time window
+///   engram_consolidate    — forgetting curve: decay salience, evict the trivial, keep the vivid
+///   engram_forget         — GDPR right-to-erasure: delete by id or before a timestamp
+///   engram_stats          — store health: count, salience, confidence, sparsity, persistence path
 /// Utility / standards:
 ///   trit_action_gate      — multi-dimensional hard-block safety gate
 ///   get_industrial_standards — T-TOKEN, T-KV-CACHE, T-Fi, T-HAL, T-BIO standard specs
@@ -55,6 +62,92 @@ use ternlang_ml::{TritMatrix, TritScalar, TritEvidenceVec, TEND_BOUNDARY,
                    DeliberationEngine, action_gate, GateDimension, GateVerdict};
 use ternlang_moe::TernMoeOrchestrator;
 use albert_llb::{blacklist, execute as llb_execute, gate1, tier::SafetyTier, types::{MutationRequest, Operation, StructuredIntent}, LlbDecision, LlbError};
+use ternlang_engram::{EngramStore, HashEmbedder, NvidiaEmbedder, Embedder,
+                      humanize_age_ms, iso_to_unix_ms, unix_ms_to_stamp};
+use std::sync::{Mutex, OnceLock};
+use std::path::PathBuf;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+// ─── Episodic memory: a single durable, file-backed store for the server ──────
+//
+// Unlike the stateless `trit_mem_*` working-memory tools (the client holds that
+// state), episodic memory must persist across sessions — that is its whole point.
+// The store lives server-side behind a Mutex and is backed by an append-only
+// JSONL journal so an agent's autobiographical memory survives restarts.
+
+static ENGRAM: OnceLock<Mutex<EngramStore>> = OnceLock::new();
+static ENGRAM_PATH: OnceLock<PathBuf> = OnceLock::new();
+
+/// Pick the embedder from `TERNLANG_ENGRAM_EMBEDDER` (`nvidia`|`hash`).
+/// `nvidia` uses NVIDIA NIM (needs `NVIDIA_API_KEY`) and falls back to the offline
+/// hash embedder if the key is missing. Returns (embedder, dim, label). The label
+/// also namespaces the on-disk file so a 384-dim hash store and a 1024-dim nvidia
+/// store never collide (which would be a silent dimension-mismatch crash).
+fn build_embedder() -> (Box<dyn Embedder>, usize, &'static str) {
+    if std::env::var("TERNLANG_ENGRAM_EMBEDDER").as_deref() == Ok("nvidia") {
+        match NvidiaEmbedder::from_env() {
+            Ok(e) => {
+                let dim = e.dim();
+                return (Box::new(e), dim, "nvidia");
+            }
+            Err(err) => eprintln!("[engram] nvidia embedder unavailable ({err}); using hash"),
+        }
+    }
+    (Box::new(HashEmbedder::new(384)), 384, "hash")
+}
+
+fn resolve_engram_path(label: &str) -> PathBuf {
+    if let Ok(p) = std::env::var("TERNLANG_ENGRAM_PATH") {
+        return p.into();
+    }
+    let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
+    std::path::Path::new(&home).join(".ternlang").join(format!("engram-{label}.jsonl"))
+}
+
+fn engram_path() -> PathBuf {
+    ENGRAM_PATH.get().cloned().unwrap_or_else(|| resolve_engram_path("hash"))
+}
+
+fn engram() -> &'static Mutex<EngramStore> {
+    ENGRAM.get_or_init(|| {
+        let (embedder, dim, label) = build_embedder();
+        let path = resolve_engram_path(label);
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let store = EngramStore::open(&path, dim).unwrap_or_else(|e| {
+            eprintln!("[engram] could not open {} ({e}); starting fresh", path.display());
+            EngramStore::new(dim)
+        });
+        eprintln!("[engram] embedder={label} dim={dim} store={}", path.display());
+        let _ = ENGRAM_PATH.set(path);
+        Mutex::new(store.with_embedder(embedder))
+    })
+}
+
+/// Real wall-clock for the MCP layer (the engram core itself stays deterministic).
+fn now_ms() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
+}
+
+fn round3(x: f32) -> f32 {
+    (x * 1000.0).round() / 1000.0
+}
+
+/// Resolve a "now"/event time from params: an `iso` string (any accepted form)
+/// wins, then an explicit `t_ms`, else a real wall-clock pull. This is the
+/// "iso timestamp pull" — memory is never stored without a real epoch anchor.
+fn resolve_now(params: &Value) -> i64 {
+    if let Some(s) = params["iso"].as_str() {
+        if let Some(ms) = iso_to_unix_ms(s) {
+            return ms;
+        }
+    }
+    params["t_ms"].as_i64().unwrap_or_else(now_ms)
+}
 
 // ─── JSON-RPC types ──────────────────────────────────────────────────────────
 
@@ -1921,6 +2014,148 @@ fn tool_moe_full(params: &Value) -> Result<Value, String> {
     }))
 }
 
+// ─── Episodic memory tools (engram) ──────────────────────────────────────────
+
+fn tool_engram_remember(params: &Value) -> Result<Value, String> {
+    let content    = params["content"].as_str().ok_or("content must be a string")?;
+    let importance = params["importance"].as_f64().unwrap_or(0.5) as f32;
+    let source     = params["source"].as_str().unwrap_or("agent");
+    let tags: Vec<String> = params["tags"].as_array()
+        .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+        .unwrap_or_default();
+    let t = resolve_now(params);
+
+    let mut store = engram().lock().map_err(|_| "engram store poisoned")?;
+    let id = if let Some(arr) = params["embedding"].as_array() {
+        // Bring-your-own embedding (must match the store dimension).
+        let emb: Vec<f32> = arr.iter().map(|v| v.as_f64().unwrap_or(0.0) as f32).collect();
+        store.remember_vec(&emb, content, importance, tags, source, t).map_err(|e| e.to_string())?
+    } else {
+        store.remember(content, importance, tags, source, t).map_err(|e| e.to_string())?
+    };
+    Ok(json!({
+        "status": "remembered",
+        "id": id,                              // id IS the timestamp (unix ms)
+        "t_ms": t,
+        "stamp": unix_ms_to_stamp(t),
+        "total_episodes": store.len(),
+        "summary": format!("episode stored at {} (salience {importance:.2})", unix_ms_to_stamp(t))
+    }))
+}
+
+fn tool_engram_recall(params: &Value) -> Result<Value, String> {
+    let query = params["query"].as_str().ok_or("query must be a string")?;
+    let k = params["top_k"].as_u64().unwrap_or(5) as usize;
+    let t = resolve_now(params);
+
+    let mut store = engram().lock().map_err(|_| "engram store poisoned")?;
+    let hits = store.recall(query, k, t).map_err(|e| e.to_string())?;
+    let matches: Vec<Value> = hits.iter().map(|r| json!({
+        "id": r.id,
+        "content": r.content,
+        "score": round3(r.score),
+        "confidence": round3(r.confidence),
+        "relevance": round3(r.relevance),
+        "recency": round3(r.recency),
+        "importance": round3(r.importance),
+        "frequency": round3(r.frequency),
+        "t_ms": r.t_ms,
+        "stamp": r.stamp,
+        "age": r.age,
+        "tags": r.tags,
+    })).collect();
+    Ok(json!({
+        "query": query,
+        "now": unix_ms_to_stamp(t),
+        "returned": matches.len(),
+        "matches": matches,
+        "scoring_formula": "relevance×w_rel + recency×w_rec + importance×w_imp + frequency×w_freq; confidence = native TritFloat propagation"
+    }))
+}
+
+fn tool_engram_timeline(params: &Value) -> Result<Value, String> {
+    let now = now_ms();
+    let from = params["from_iso"].as_str().and_then(iso_to_unix_ms)
+        .or_else(|| params["from_ms"].as_i64()).unwrap_or(i64::MIN);
+    let to = params["to_iso"].as_str().and_then(iso_to_unix_ms)
+        .or_else(|| params["to_ms"].as_i64()).unwrap_or(now);
+
+    let store = engram().lock().map_err(|_| "engram store poisoned")?;
+    let eps: Vec<Value> = store.timeline(from, to).iter().map(|e| json!({
+        "id": e.id,
+        "t_ms": e.t_ms,
+        "stamp": e.stamp(),
+        "age": humanize_age_ms(now - e.t_ms),
+        "content": e.content,
+        "tags": e.tags,
+        "source": e.source,
+        "importance": round3(e.importance),
+        "access_count": e.access_count,
+    })).collect();
+    Ok(json!({
+        "from": if from == i64::MIN { "earliest".to_string() } else { unix_ms_to_stamp(from) },
+        "to": unix_ms_to_stamp(to),
+        "count": eps.len(),
+        "episodes": eps
+    }))
+}
+
+fn tool_engram_consolidate(params: &Value) -> Result<Value, String> {
+    let floor      = params["floor"].as_f64().unwrap_or(0.1) as f32;
+    let min_age_ms = params["min_age_ms"].as_i64().unwrap_or(24 * 60 * 60 * 1000);
+    let t          = resolve_now(params);
+
+    let mut store = engram().lock().map_err(|_| "engram store poisoned")?;
+    let r = store.consolidate(t, floor, min_age_ms).map_err(|e| e.to_string())?;
+    Ok(json!({
+        "decayed": r.decayed,
+        "evicted": r.evicted,
+        "linked": r.linked,
+        "remaining": store.len(),
+        "summary": format!("decayed {}, evicted {} (vivid memories decay slower)", r.decayed, r.evicted)
+    }))
+}
+
+fn tool_engram_forget(params: &Value) -> Result<Value, String> {
+    let mut store = engram().lock().map_err(|_| "engram store poisoned")?;
+    if let Some(id) = params["id"].as_u64() {
+        let removed = store.forget(id).map_err(|e| e.to_string())?;
+        Ok(json!({ "forgot_id": id, "removed": removed, "remaining": store.len() }))
+    } else if let Some(before) = params["before_ms"].as_i64() {
+        let n = store.forget_before(before).map_err(|e| e.to_string())?;
+        Ok(json!({ "forgot_before_ms": before, "removed": n, "remaining": store.len() }))
+    } else {
+        Err("provide either 'id' (one episode) or 'before_ms' (everything older)".into())
+    }
+}
+
+fn tool_engram_stats(_params: &Value) -> Result<Value, String> {
+    let store = engram().lock().map_err(|_| "engram store poisoned")?;
+    let s = store.stats();
+    let (anchor, latest, span) = if s.episodes > 0 {
+        (
+            unix_ms_to_stamp(s.oldest_ms),
+            unix_ms_to_stamp(s.newest_ms),
+            humanize_age_ms(s.newest_ms - s.oldest_ms).replace(" ago", ""),
+        )
+    } else {
+        ("none".into(), "none".into(), "0m".into())
+    };
+    Ok(json!({
+        "episodes": s.episodes,
+        "dim": s.dim,
+        "avg_importance": round3(s.avg_importance),
+        "avg_confidence": round3(s.avg_confidence),
+        "avg_sparsity": round3(s.avg_sparsity),
+        "now": unix_ms_to_stamp(now_ms()),
+        "anchor": anchor,                 // oldest memory — the fixed past anchor
+        "latest": latest,                 // newest memory
+        "span": span,                     // time covered by memory
+        "total_access": s.total_access,
+        "persistence": engram_path().display().to_string()
+    }))
+}
+
 fn dispatch_tool(name: &str, params: &Value) -> Result<Value, String> {
     match name {
         "trit_decide"       => tool_trit_decide(params),
@@ -1957,6 +2192,12 @@ fn dispatch_tool(name: &str, params: &Value) -> Result<Value, String> {
         "trit_plan"                => tool_trit_plan(params),
         "trit_factcheck"           => tool_trit_factcheck(params),
         "moe_full"                 => tool_moe_full(params),
+        "engram_remember"          => tool_engram_remember(params),
+        "engram_recall"            => tool_engram_recall(params),
+        "engram_timeline"          => tool_engram_timeline(params),
+        "engram_consolidate"       => tool_engram_consolidate(params),
+        "engram_forget"            => tool_engram_forget(params),
+        "engram_stats"             => tool_engram_stats(params),
         _ => Err(format!("unknown tool: {}", name)),
     }
 }
@@ -2537,6 +2778,85 @@ fn tools_list() -> Value {
                 },
                 "required": ["query"]
             }
+        },
+        {
+            "name": "engram_remember",
+            "description": "Store an episode in the agent's durable, file-backed EPISODIC memory (ternlang-engram). Unlike trit_mem_* (stateless working memory the client holds), engram persists across sessions on disk. Each memory is time-stamped and embedded with a ternary TritFloat vector whose native confidence field carries the episode's salience. Pass plain text and an importance/salience in [0,1]; an embedding is computed offline by default, or supply your own 384-dim vector.",
+            "annotations": { "title": "Engram Remember — Store a Durable Episodic Memory", "readOnlyHint": false, "idempotentHint": false, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "content":    { "type": "string", "description": "The memory text to store." },
+                    "importance": { "type": "number", "description": "Salience/vividness in [0,1]. Seeds the TritFloat confidence field; low salience → low-confidence recalls. Default 0.5." },
+                    "tags":       { "type": "array",  "items": { "type": "string" }, "description": "Optional tags for filtering and timelines." },
+                    "source":     { "type": "string", "description": "Who/what laid down the memory (agent, user, sensor). Default 'agent'." },
+                    "embedding":  { "type": "array",  "items": { "type": "number" }, "description": "Optional caller-supplied 384-dim embedding (BYO vectors). Omit to embed offline." },
+                    "iso":        { "type": "string",  "description": "Event time as ISO 8601 (2026-06-25T05:43:11Z), a bare date, an iso-tool stamp (Thu/2026-06-25T05:43:11Z/1782366191), or epoch seconds. Overrides t_ms. The episode id IS this timestamp." },
+                    "t_ms":       { "type": "integer", "description": "Event time, unix milliseconds. Used if 'iso' is absent. Default: real now." }
+                },
+                "required": ["content"]
+            }
+        },
+        {
+            "name": "engram_recall",
+            "description": "Recall the most relevant episodic memories for a query, ranked like human episodic retrieval: relevance × recency × salience × frequency. Recalled episodes are reinforced (their access count rises, slowing future decay). Each hit carries a native, propagated TritFloat confidence — the in-band certainty of the match — not a post-hoc estimate. Recall semantics depend on the embedder; the built-in offline embedder is lexical-distributional.",
+            "annotations": { "title": "Engram Recall — Composite Episodic Retrieval", "readOnlyHint": false, "idempotentHint": false, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "query":  { "type": "string",  "description": "The cue to recall against." },
+                    "top_k":  { "type": "integer", "description": "How many memories to return. Default 5." },
+                    "iso":    { "type": "string",  "description": "Time of recall as ISO 8601 / stamp / epoch (drives recency + the 'age' field). Overrides t_ms. Default: real now." },
+                    "t_ms":   { "type": "integer", "description": "Time of recall, unix ms. Used if 'iso' is absent. Default: real now." }
+                },
+                "required": ["query"]
+            }
+        },
+        {
+            "name": "engram_timeline",
+            "description": "Return episodic memories whose timestamp falls within [from_ms, to_ms], in chronological order. This is the episodic-specific query a plain vector store cannot answer: 'what happened, in what order, during this window'.",
+            "annotations": { "title": "Engram Timeline — Chronological Memory Slice", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "from_iso": { "type": "string",  "description": "Window start as ISO 8601 / bare date / stamp / epoch (e.g. '2026-06-18'). Overrides from_ms." },
+                    "to_iso":   { "type": "string",  "description": "Window end as ISO 8601 / bare date / stamp / epoch. Overrides to_ms." },
+                    "from_ms":  { "type": "integer", "description": "Window start, unix ms. Default: earliest." },
+                    "to_ms":    { "type": "integer", "description": "Window end, unix ms. Default: now." }
+                }
+            }
+        },
+        {
+            "name": "engram_consolidate",
+            "description": "Run one consolidation pass: decay each memory's salience along a forgetting curve (vivid, frequently-recalled memories decay far slower — stability grows with salience and access count) and evict memories that fall below 'floor' and are older than 'min_age_ms'. Persists the new state. This is how the store forgets the trivial while keeping the important.",
+            "annotations": { "title": "Engram Consolidate — Decay & Forget", "readOnlyHint": false, "idempotentHint": false, "destructiveHint": true, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "floor":      { "type": "number",  "description": "Salience below which an old memory is evicted. Default 0.1." },
+                    "min_age_ms": { "type": "integer", "description": "Memories younger than this are never evicted. Default 24h." },
+                    "iso":        { "type": "string",  "description": "Consolidation 'now' as ISO 8601 / stamp / epoch. Overrides t_ms. Default: real now." },
+                    "t_ms":       { "type": "integer", "description": "Consolidation time, unix ms. Used if 'iso' is absent. Default: real now." }
+                }
+            }
+        },
+        {
+            "name": "engram_forget",
+            "description": "Explicitly delete episodic memories — a GDPR right-to-erasure primitive. Provide 'id' to forget one episode, or 'before_ms' to forget everything older than a timestamp (retention policy). The deletion is recorded in the append-only journal.",
+            "annotations": { "title": "Engram Forget — Right-to-Erasure", "readOnlyHint": false, "idempotentHint": true, "destructiveHint": true, "openWorldHint": false },
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "id":        { "type": "integer", "description": "Id of a single episode to delete." },
+                    "before_ms": { "type": "integer", "description": "Delete every episode with t_ms older than this." }
+                }
+            }
+        },
+        {
+            "name": "engram_stats",
+            "description": "Health snapshot of the episodic store: episode count, embedding dimension, average salience and native confidence, average ternary sparsity (@sparseskip headroom), oldest/newest timestamps, total recalls, and the on-disk persistence path.",
+            "annotations": { "title": "Engram Stats — Memory Health", "readOnlyHint": true, "idempotentHint": true, "destructiveHint": false, "openWorldHint": false },
+            "inputSchema": { "type": "object", "properties": {} }
         }
     ]})
 }
@@ -2556,7 +2876,7 @@ fn initialize_response() -> Value {
                     "apiKey": {
                         "type": "string",
                         "title": "API Key (optional)",
-                        "description": "Required for paid tiers. Obtain at https://ternlang.com/activate. Community tier (all 34 tools) is free without a key.",
+                        "description": "Required for paid tiers. Obtain at https://ternlang.com/activate. Community tier (all 40 tools) is free without a key.",
                         "x-smithery-secret": true
                     }
                 },
@@ -2567,7 +2887,7 @@ fn initialize_response() -> Value {
             "name":        "ternlang-mcp",
             "displayName": "Ternary Intelligence Stack",
             "version":     "0.4.0",
-            "description": "Turns binary AI agents into ternary decision engines. 34 tools across 6 layers: core trit primitives, BET VM, MoE-13 orchestration, three-layer ternary memory, EcoCore + Audit, and the Last Look Back (LLB) sovereign filesystem gate. Built by RFI-IRFOS (ZVR: 1015608684), Graz, Austria. EU AI Act Articles 13/14/15 compliant design.",
+            "description": "Turns binary AI agents into ternary decision engines. 40 tools across 7 layers: core trit primitives, BET VM, MoE-13 orchestration, three-layer ternary memory, durable episodic memory (engram), EcoCore + Audit, and the Last Look Back (LLB) sovereign filesystem gate. Built by RFI-IRFOS (ZVR: 1015608684), Graz, Austria. EU AI Act Articles 13/14/15 compliant design.",
             "homepage":    "https://ternlang.com",
             "icon":        "https://ternlang.com/favicon.ico",
             "author": {

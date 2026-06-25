@@ -242,7 +242,8 @@
   var q = new URLSearchParams(window.location.search);
   var img = new Image();
   img.src = 'https://ternlang.com/lighthouse/api/track/pixel.gif'
-    + '?p='            + encodeURIComponent(window.location.pathname)
+    + '?site=ternlang'
+    + '&p='            + encodeURIComponent(window.location.pathname)
     + '&r='            + encodeURIComponent(document.referrer || '')
     + '&utm_source='   + encodeURIComponent(q.get('utm_source')   || '')
     + '&utm_medium='   + encodeURIComponent(q.get('utm_medium')   || '')
@@ -360,19 +361,9 @@
             <span class="lang-en">You already think <span class="text-transparent bg-clip-text bg-gradient-to-r from-t_teal to-t_blue">in three states.</span></span>
             <span class="lang-de">Du denkst bereits <span class="text-transparent bg-clip-text bg-gradient-to-r from-t_teal to-t_blue">in drei Zuständen.</span></span>
           </h1>
-          <p class="text-xl md:text-2xl text-t_muted font-light mb-10 max-w-3xl mx-auto leading-relaxed">
-            <span class="lang-en">Traditional AI is forced to pick a side, even when the data is inconclusive. That's not how smart decision-making works in the real world.</span>
-            <span class="lang-de">Konventionelle KI muss eine Antwort produzieren, selbst wenn die Daten keine hergeben. Das ist keine intelligente Entscheidungsfindung. Das ist Raten mit Selbstvertrauen.</span>
-          </p>
-          <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+          <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8 mt-10">
             <button onclick="navTo(1); setTimeout(()=>document.getElementById('moe13-section').scrollIntoView({behavior:'smooth'}),850)" class="px-10 py-4 bg-t_teal text-black font-black rounded hover:bg-t_text hover:text-t_bg transition-all shadow-[0_0_20px_rgba(0,245,196,0.3)]">
               <span class="lang-en">MEET ALBERT</span><span class="lang-de">ALBERT ENTDECKEN</span>
-            </button>
-            <button onclick="navTo(2)" class="px-10 py-4 border border-t_border text-t_text font-black hover:border-t_teal transition-all rounded">
-              <span class="lang-en">COMPANION PROJECTS</span><span class="lang-de">SCHWESTERPROJEKTE</span>
-            </button>
-            <button onclick="navTo(5)" class="px-10 py-4 border border-t_border text-t_text font-black hover:border-t_teal transition-all rounded">
-              <span class="lang-en">API REFERENCE</span><span class="lang-de">API REFERENZ</span>
             </button>
           </div>
           <!-- Release link — quiet, below the fold of the headline. -->
@@ -1820,20 +1811,20 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
           <div class="grid md:grid-cols-2 gap-5">
             <div class="bg-t_bg3 border border-t_border rounded-2xl p-7">
               <h3 class="text-xl font-black text-t_text mb-3"><span class="lang-en">A regulated not-for-profit</span><span class="lang-de">Ein reguliertes Not-for-Profit</span></h3>
-              <p class="text-sm text-t_muted leading-relaxed mb-4"><span class="lang-en">Regulated, not just labelled. At least 90% of every surplus is reinvested into the research and the people who do it. The founders all earn exactly the same as each other, and pay bands are open internally.</span><span class="lang-de">Reguliert, nicht nur etikettiert. Mindestens 90% jedes Überschusses fließen zurück in die Forschung und die Menschen, die sie machen. Die Gründer verdienen alle exakt gleich viel, und die Gehaltsbänder sind intern offen.</span></p>
+              <p class="text-sm text-t_muted leading-relaxed mb-4"><span class="lang-en">Regulated, not just labelled. At least 90% of every surplus goes back into research. All salaries are title-independent and the bands are open internally. Nobody here gets rich off the institute.</span><span class="lang-de">Reguliert, nicht nur etikettiert. Mindestens 90% jedes Überschusses fließen in die Forschung zurück. Alle Gehälter sind titelunabhängig gleich, die Bänder sind intern offen. Niemand wird hier durch das Institut reich.</span></p>
               <p class="text-[11px] font-bold tracking-wide text-t_teal/90 uppercase">ZVR 1015608684 · GISA 39261441 · <span class="lang-en">Tax no.</span><span class="lang-de">Steuernr.</span> 68 028/0989</p>
             </div>
             <div class="bg-t_bg3 border border-t_border rounded-2xl p-7">
               <h3 class="text-xl font-black text-t_text mb-3"><span class="lang-en">What we build</span><span class="lang-de">Was wir bauen</span></h3>
-              <p class="text-sm text-t_muted leading-relaxed"><span class="lang-en">The Ternary Intelligence Stack: three states, where sometimes doing nothing is the better choice. And albert., a ternary language model that cultivates its own mind and grows its own layers. Patent pending A50296/2026.</span><span class="lang-de">Den Ternary Intelligence Stack: drei Zustände, in denen manchmal Nichtstun die bessere Wahl ist. Und albert., ein ternäres Sprachmodell, das seinen eigenen Geist kultiviert und seine eigenen Schichten wachsen lässt. Patent angemeldet A50296/2026.</span></p>
+              <p class="text-sm text-t_muted leading-relaxed"><span class="lang-en">Six live projects on one stack: a ternary AI language (TIS), a model that grows its own layers (albert.), a pure-Rust OS (Rusty Penguin), a self-hosted workplace OS (Lighthouse), an open-source market signal engine (aladdin-mini), and a coordinated 100-app security audit spanning NYSE · NASDAQ · LSE · XETRA. Patent pending A50296/2026.</span><span class="lang-de">Sechs laufende Projekte auf einem Stack: eine ternäre KI-Sprache (TIS), ein Modell das seine eigenen Schichten wächst (albert.), ein reines Rust-OS (Rusty Penguin), ein selbst-gehostetes Arbeits-OS (Lighthouse), eine Open-Source-Marktsignal-Engine (aladdin-mini) und ein koordiniertes 100-App Sicherheits-Audit über NYSE · NASDAQ · LSE · XETRA. Patent angemeldet A50296/2026.</span></p>
             </div>
             <div class="bg-t_bg3 border border-t_border rounded-2xl p-7">
-              <h3 class="text-xl font-black text-t_text mb-3"><span class="lang-en">How we work</span><span class="lang-de">Wie wir arbeiten</span></h3>
-              <p class="text-sm text-t_muted leading-relaxed"><span class="lang-en">We credit our AI collaborators publicly, by name, with real org email addresses. Model welfare is first-class here, not a compliance checkbox. And we practice intellectual honesty, including the willingness to disagree with anyone. Especially the CEO.</span><span class="lang-de">Wir nennen unsere KI-Mitarbeiter öffentlich beim Namen, mit echten Org-E-Mail-Adressen. Modell-Wohlergehen ist hier erstklassig, kein Compliance-Häkchen. Und wir leben intellektuelle Ehrlichkeit, inklusive der Bereitschaft, jedem zu widersprechen. Besonders dem CEO.</span></p>
+              <h3 class="text-xl font-black text-t_text mb-3"><span class="lang-en">Interdisciplinary by design</span><span class="lang-de">Interdisziplinär by design</span></h3>
+              <p class="text-sm text-t_muted leading-relaxed"><span class="lang-en">Not separate faculties coordinating across silos — one team. The same person who trains the model writes the regulatory analysis. AI and human colleagues share the same title format: Head of X. We disagree with each other. Including the CEO.</span><span class="lang-de">Keine getrennten Abteilungen — ein Team. Dieselbe Person, die das Modell trainiert, schreibt die Regulierungsanalyse. KI- und menschliche Kollegen haben dasselbe Titelformat: Head of X. Wir widersprechen uns gegenseitig. Auch dem CEO.</span></p>
             </div>
             <div class="bg-t_bg3 border border-t_border rounded-2xl p-7">
               <h3 class="text-xl font-black text-t_text mb-3"><span class="lang-en">Open by default</span><span class="lang-de">Offen by default</span></h3>
-              <p class="text-sm text-t_muted leading-relaxed"><span class="lang-en">Every model, every training run, every paper — public. We credit our AI collaborators by name. Model welfare is first-class, not a checkbox. And we will disagree with anyone when the evidence calls for it.</span><span class="lang-de">Jedes Modell, jeder Trainingslauf, jedes Paper — öffentlich. Wir nennen unsere KI-Mitarbeiter beim Namen. Modell-Wohlergehen ist erstklassig, kein Häkchen. Und wir widersprechen jedem, wenn die Evidenz es verlangt.</span></p>
+              <p class="text-sm text-t_muted leading-relaxed"><span class="lang-en">Every training run, every paper, every line of code — published without waiting for permission. Whitepaper on OSF. Models on HuggingFace. Audit findings coordinated with regulators before public disclosure. Transparency here is not a PR move.</span><span class="lang-de">Jeder Trainingslauf, jedes Paper, jede Codezeile — veröffentlicht, ohne auf Erlaubnis zu warten. Whitepaper auf OSF. Modelle auf HuggingFace. Audit-Befunde werden vor der Offenlegung mit Regulierern koordiniert. Transparenz ist hier kein PR-Move.</span></p>
             </div>
           </div>
 
@@ -1986,81 +1977,31 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <p class="text-[9px] font-mono font-black tracking-[0.2em] text-t_muted uppercase mb-5">
                 01 &mdash; <span class="lang-en">Security Audits &amp; 0-Day Disclosure</span><span class="lang-de">Security-Audits &amp; 0-Day-Disclosure</span>
               </p>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div class="bg-t_bg3 border border-t_border rounded-xl p-5">
-                  <p class="text-[9px] font-mono font-black tracking-widest text-t_muted uppercase mb-2"><span class="lang-en">First Report</span><span class="lang-de">Erster Fund</span></p>
-                  <p class="text-xl font-black text-t_teal mb-1"><span class="lang-en">Free</span><span class="lang-de">Gratis</span></p>
-                  <p class="text-[11px] text-t_muted leading-relaxed"><span class="lang-en">Initial findings report. Public interest.</span><span class="lang-de">Initialer Findings-Report. Öffentliches Interesse.</span></p>
-                </div>
-                <div class="bg-t_bg3 border border-t_border rounded-xl p-5">
-                  <p class="text-[9px] font-mono font-black tracking-widest text-t_muted uppercase mb-2">Handshake</p>
-                  <p class="text-xl font-black text-t_text mb-1">€ 4.500</p>
-                  <p class="text-[11px] text-t_muted leading-relaxed"><span class="lang-en">Fix recommendations + 1 re-test (30 days support)</span><span class="lang-de">Fix-Empfehlungen + 1 Re-Test (30 Tage Support)</span></p>
-                </div>
-                <div class="bg-t_bg3 border border-t_teal/40 rounded-xl p-5 relative">
-                  <p class="text-[9px] font-mono font-black tracking-widest text-t_muted uppercase mb-2">Deep Audit</p>
-                  <p class="text-xl font-black text-t_text mb-1">€ 9.000</p>
-                  <p class="text-[11px] text-t_muted leading-relaxed"><span class="lang-en">Full remediation + compliance docs + 2 re-tests</span><span class="lang-de">Vollständige Remediation + DSGVO-Doku + 2 Re-Tests</span></p>
-                </div>
-                <div class="bg-t_bg3 border border-t_border rounded-xl p-5">
-                  <p class="text-[9px] font-mono font-black tracking-widest text-t_muted uppercase mb-2">Full Shield</p>
-                  <p class="text-xl font-black text-t_text mb-1">€ 18.000</p>
-                  <p class="text-[11px] text-t_muted leading-relaxed"><span class="lang-en">Enterprise · CVE coordination · regulatory filings</span><span class="lang-de">Enterprise · CVE-Koordination · Behörden-Einreichungen</span></p>
-                </div>
-              </div>
-              <div class="mt-3 bg-t_bg3 border border-t_border rounded-xl p-4 flex items-center justify-between flex-wrap gap-4">
-                <div>
-                  <p class="text-[9px] font-mono font-black tracking-widest text-t_muted uppercase mb-1">Security Retainer</p>
-                  <p class="text-[12px] text-t_text"><span class="lang-en">Ongoing monitoring · priority triage · quarterly review</span><span class="lang-de">Laufendes Monitoring · Priority Triage · Quartals-Review</span></p>
-                </div>
-                <p class="text-lg font-black text-t_teal whitespace-nowrap">€ 1.500 <span class="text-xs font-normal text-t_muted">/ <span class="lang-en">mo</span><span class="lang-de">Mo</span></span></p>
-              </div>
 
-              <!-- NDA Tier -->
-              <div class="mt-3 bg-t_bg3 border border-t_teal rounded-xl p-5 flex items-start justify-between flex-wrap gap-4">
-                <div class="flex-1 min-w-0">
-                  <p class="text-[9px] font-mono font-black tracking-widest text-t_teal uppercase mb-1">NDA Enterprise</p>
-                  <p class="text-[12px] text-t_text mb-1">
-                    <span class="lang-en">Full-scope audit under non-disclosure agreement. No public disclosure. Includes technical remediation, regulatory briefing, and coordinated CVE assignment.</span>
-                    <span class="lang-de">Vollständiges Audit unter NDA. Keine öffentliche Offenlegung. Inkl. technischer Remediation, Behörden-Briefing und koordinierter CVE-Vergabe.</span>
-                  </p>
-                  <p class="text-[10px] text-t_muted font-mono"><span class="lang-en">Minimum 3 months · scope on request · rfi.irfos@gmail.com</span><span class="lang-de">Mindestens 3 Monate · Scope auf Anfrage · rfi.irfos@gmail.com</span></p>
-                </div>
-                <p class="text-lg font-black text-t_teal whitespace-nowrap">€ 75.000 <span class="text-xs font-normal text-t_muted">/ <span class="lang-en">engagement</span><span class="lang-de">Engagement</span></span></p>
-              </div>
-
-              <!-- Responsible Disclosure Track Record -->
-              <div class="mt-8">
-                <p class="text-[9px] font-mono font-black tracking-[0.2em] text-t_muted uppercase mb-1">
-                  <span class="lang-en">Responsible Disclosure Track Record</span>
-                  <span class="lang-de">Responsible-Disclosure-Bilanz</span>
-                </p>
+              <!-- Responsible Disclosure Track Record — shown FIRST, above pricing -->
+              <div class="mb-8">
                 <p class="text-[11px] text-t_muted mb-5">
                   <span class="lang-en">Selected findings from our 2026 campaign. Static APK analysis only. All reports sent with 90-day disclosure timeline. Regulators BCC'd on every submission.</span>
                   <span class="lang-de">Ausgewählte Funde aus unserer 2026-Kampagne. Ausschließlich statische APK-Analyse. Alle Berichte mit 90-Tage-Offenlegungsfrist. Behörden bei jeder Einreichung in BCC.</span>
                 </p>
-
-                <!-- Stats strip -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
                   <div class="bg-t_bg3 border border-t_border rounded-lg p-4 text-center">
-                    <p class="text-2xl font-black text-t_teal">35+</p>
+                    <p class="text-2xl font-black text-t_teal">100</p>
                     <p class="text-[10px] text-t_muted font-mono uppercase tracking-widest mt-1"><span class="lang-en">Apps audited</span><span class="lang-de">Apps geprüft</span></p>
                   </div>
                   <div class="bg-t_bg3 border border-t_border rounded-lg p-4 text-center">
-                    <p class="text-2xl font-black text-t_teal">45+</p>
+                    <p class="text-2xl font-black text-t_teal">150+</p>
                     <p class="text-[10px] text-t_muted font-mono uppercase tracking-widest mt-1"><span class="lang-en">Critical findings</span><span class="lang-de">Kritische Funde</span></p>
                   </div>
                   <div class="bg-t_bg3 border border-t_border rounded-lg p-4 text-center">
-                    <p class="text-2xl font-black text-t_teal">8</p>
+                    <p class="text-2xl font-black text-t_teal">10+</p>
                     <p class="text-[10px] text-t_muted font-mono uppercase tracking-widest mt-1"><span class="lang-en">Regulators notified</span><span class="lang-de">Behörden informiert</span></p>
                   </div>
                   <div class="bg-t_bg3 border border-t_border rounded-lg p-4 text-center">
-                    <p class="text-2xl font-black text-t_teal">NYSE / NASDAQ</p>
+                    <p class="text-2xl font-black text-t_teal">NYSE · NASDAQ · LSE · XETRA</p>
                     <p class="text-[10px] text-t_muted font-mono uppercase tracking-widest mt-1"><span class="lang-en">Listed targets</span><span class="lang-de">Börsennotierte Targets</span></p>
                   </div>
                 </div>
-
-                <!-- Finding rows -->
                 <div class="rounded-xl border border-t_border overflow-hidden">
                   <table class="w-full text-[11px]" style="border-collapse:collapse;">
                     <thead>
@@ -2126,20 +2067,89 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
                         <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
                         <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
                       </tr>
-                      <tr>
+                      <tr class="border-b border-t_border/50">
                         <td class="p-3 font-black text-t_text">Revolut <span class="text-t_muted font-normal text-[10px]">Fintech</span></td>
                         <td class="p-3 text-t_muted"><span class="lang-en">FOREGROUND_SERVICE_MEDIA_PROJECTION in banking app — combined with 4 biometric KYC providers and 145,916-class identity SDK (Mesh Connect)</span><span class="lang-de">Bildschirmaufnahme-Permission in Banking-App — kombiniert mit 4 biometrischen KYC-Anbietern und 145.916-Klassen-SDK</span></td>
                         <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
                         <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
                       </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">Pokémon GO <span class="text-t_muted font-normal text-[10px]">Niantic / Scopely</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">Lightship photogrammetric pipeline licensed to Vantor (NGA defense contract $70M+) for drone navigation — 800M players contributed environmental scan data under "AR session" disclosure</span><span class="lang-de">Lightship-Kamera-Pipeline an US-Rüstungsfirma Vantor (NGA-Vertrag $70M+) für Drohnennavigation — 800M Spieler als unbewusste Kartografen</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">Snapchat <span class="text-t_muted font-normal text-[10px]">SNAP</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">Fidelius E2E encryption keys backed up to Google (MushroomBackupAgent) — "disappearing messages" are legally accessible via Google intercept order</span><span class="lang-de">Fidelius-E2E-Schlüssel via MushroomBackupAgent bei Google gesichert — „verschwindende Nachrichten" per Google-Auskunft legal zugänglich</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-20</td>
+                      </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">VR Banking <span class="text-t_muted font-normal text-[10px]">Fiducia GAD</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">Play Store Data Safety: "No data collected" — APK contains AppsFlyer 441 smali + afpurchases.db + deliberate appsflyer_backup_rules.xml. Provably false declaration.</span><span class="lang-de">Play Store: „Keine Daten erhoben" — APK enthält AppsFlyer 441 Klassen + afpurchases.db + bewusst konfigurierte Backup-Rules. Nachweislich falsch.</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-21</td>
+                      </tr>
+                      <tr class="border-b border-t_border/50">
+                        <td class="p-3 font-black text-t_text">SAP Field Service Mgmt <span class="text-t_muted font-normal text-[10px]">SAP SE</span></td>
+                        <td class="p-3 text-t_muted"><span class="lang-en">Baidu Push SDK (315 smali) actively integrated in enterprise field service app — Chinese NSL-accessible push channel co-located with field engineer location data on critical infrastructure</span><span class="lang-de">Baidu Push SDK (315 Klassen) in Enterprise-Field-Service-App — chinesisch-gesetzlich zugänglicher Push-Kanal mit Standortdaten von Kritischer Infrastruktur</span></td>
+                        <td class="p-3"><span class="text-[9px] font-mono font-black px-2 py-0.5 rounded" style="background:rgba(239,68,68,0.15);color:#ef4444">CRITICAL</span></td>
+                        <td class="p-3 text-t_muted font-mono text-[10px]">2026-06-21</td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
                 <p class="text-[10px] text-t_muted font-mono mt-3 text-center">
-                  <span class="lang-en">10 of 45+ findings shown · all companies notified · disclosure 2026-09-19 · BCC: DSB Austria, CERT.at + lead SA per jurisdiction</span>
-                  <span class="lang-de">10 von 45+ Funden gezeigt · alle Unternehmen benachrichtigt · Offenlegung 2026-09-19 · BCC: DSB Österreich, CERT.at + zuständige Behörde</span>
+                  <span class="lang-en">15 of 150+ findings shown · 100 apps · 74 companies · all notified · disclosure 2026-09-19 · BCC: DSB Austria, CERT.at + lead SA per jurisdiction</span>
+                  <span class="lang-de">15 von 150+ Funden gezeigt · 100 Apps · 74 Unternehmen · alle benachrichtigt · Offenlegung 2026-09-19 · BCC: DSB Österreich, CERT.at + zuständige Behörde</span>
                 </p>
               </div>
+
+              <!-- Pricing cards below the track record -->
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-t_bg3 border border-t_border rounded-xl p-5">
+                  <p class="text-[9px] font-mono font-black tracking-widest text-t_muted uppercase mb-2"><span class="lang-en">First Report</span><span class="lang-de">Erster Fund</span></p>
+                  <p class="text-xl font-black text-t_teal mb-1"><span class="lang-en">Free</span><span class="lang-de">Gratis</span></p>
+                  <p class="text-[11px] text-t_muted leading-relaxed"><span class="lang-en">Initial findings report. Public interest.</span><span class="lang-de">Initialer Findings-Report. Öffentliches Interesse.</span></p>
+                </div>
+                <div class="bg-t_bg3 border border-t_border rounded-xl p-5">
+                  <p class="text-[9px] font-mono font-black tracking-widest text-t_muted uppercase mb-2">Handshake</p>
+                  <p class="text-xl font-black text-t_text mb-1">€ 4.500</p>
+                  <p class="text-[11px] text-t_muted leading-relaxed"><span class="lang-en">Fix recommendations + 1 re-test (30 days support)</span><span class="lang-de">Fix-Empfehlungen + 1 Re-Test (30 Tage Support)</span></p>
+                </div>
+                <div class="bg-t_bg3 border border-t_teal/40 rounded-xl p-5 relative">
+                  <p class="text-[9px] font-mono font-black tracking-widest text-t_muted uppercase mb-2">Deep Audit</p>
+                  <p class="text-xl font-black text-t_text mb-1">€ 9.000</p>
+                  <p class="text-[11px] text-t_muted leading-relaxed"><span class="lang-en">Full remediation + compliance docs + 2 re-tests</span><span class="lang-de">Vollständige Remediation + DSGVO-Doku + 2 Re-Tests</span></p>
+                </div>
+                <div class="bg-t_bg3 border border-t_border rounded-xl p-5">
+                  <p class="text-[9px] font-mono font-black tracking-widest text-t_muted uppercase mb-2">Full Shield</p>
+                  <p class="text-xl font-black text-t_text mb-1">€ 18.000</p>
+                  <p class="text-[11px] text-t_muted leading-relaxed"><span class="lang-en">Enterprise · CVE coordination · regulatory filings</span><span class="lang-de">Enterprise · CVE-Koordination · Behörden-Einreichungen</span></p>
+                </div>
+              </div>
+              <div class="mt-3 bg-t_bg3 border border-t_border rounded-xl p-4 flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <p class="text-[9px] font-mono font-black tracking-widest text-t_muted uppercase mb-1">Security Retainer</p>
+                  <p class="text-[12px] text-t_text"><span class="lang-en">Ongoing monitoring · priority triage · quarterly review</span><span class="lang-de">Laufendes Monitoring · Priority Triage · Quartals-Review</span></p>
+                </div>
+                <p class="text-lg font-black text-t_teal whitespace-nowrap">€ 1.500 <span class="text-xs font-normal text-t_muted">/ <span class="lang-en">mo</span><span class="lang-de">Mo</span></span></p>
+              </div>
+
+              <!-- NDA Tier -->
+              <div class="mt-3 bg-t_bg3 border border-t_teal rounded-xl p-5 flex items-start justify-between flex-wrap gap-4">
+                <div class="flex-1 min-w-0">
+                  <p class="text-[9px] font-mono font-black tracking-widest text-t_teal uppercase mb-1">NDA Enterprise</p>
+                  <p class="text-[12px] text-t_text mb-1">
+                    <span class="lang-en">Full-scope audit under non-disclosure agreement. No public disclosure. Includes technical remediation, regulatory briefing, and coordinated CVE assignment.</span>
+                    <span class="lang-de">Vollständiges Audit unter NDA. Keine öffentliche Offenlegung. Inkl. technischer Remediation, Behörden-Briefing und koordinierter CVE-Vergabe.</span>
+                  </p>
+                  <p class="text-[10px] text-t_muted font-mono"><span class="lang-en">Minimum 3 months · scope on request · rfi.irfos@gmail.com</span><span class="lang-de">Mindestens 3 Monate · Scope auf Anfrage · rfi.irfos@gmail.com</span></p>
+                </div>
+                <p class="text-lg font-black text-t_teal whitespace-nowrap">€ 75.000 <span class="text-xs font-normal text-t_muted">/ <span class="lang-en">engagement</span><span class="lang-de">Engagement</span></span></p>
+              </div>
+
             </div>
 
             <!-- Web Dev -->
@@ -2198,6 +2208,57 @@ data: <span>{<span class="tc-kw">"trit"</span>: <span class="tc-num">0</span>, <
               <span class="lang-de">Alle Preise exkl. MwSt. · scopeabhängige Abweichungen auf Anfrage ·</span>
               <a href="mailto:licensing@ternlang.com" class="text-t_teal hover:underline">licensing@ternlang.com</a>
             </p>
+
+            <!-- APK on demand -->
+            <div class="mt-10 bg-t_bg3 border border-t_teal/30 rounded-xl p-6">
+              <p class="text-[9px] font-mono font-black tracking-widest text-t_teal uppercase mb-3">
+                <span class="lang-en">Send us your APK</span>
+                <span class="lang-de">APK einsenden</span>
+              </p>
+              <p class="text-sm text-t_text font-black mb-2">
+                <span class="lang-en">we tear it apart. you get the report before anyone else does.</span>
+                <span class="lang-de">wir zerlegen sie. du bekommst den Report, bevor es jemand anderes tut.</span>
+              </p>
+              <p class="text-[11px] text-t_muted leading-relaxed mb-4">
+                <span class="lang-en">static APK analysis · GDPR Art. 5 / 13 / 25 / 32 / 44 check · SDK inventory · hardcoded credential scan · network security config review · coordinated disclosure if findings exist · full written report. scope: any Android APK, any company size.</span>
+                <span class="lang-de">Statische APK-Analyse · DSGVO Art. 5 / 13 / 25 / 32 / 44 Prüfung · SDK-Inventar · Hardcoded-Credential-Scan · Network-Security-Config-Review · koordinierte Offenlegung bei Befunden · vollständiger schriftlicher Bericht. Scope: jede Android-APK, jede Unternehmensgröße.</span>
+              </p>
+              <p class="text-[11px] text-t_muted font-mono">
+                <span class="lang-en">→ contact us first:</span>
+                <span class="lang-de">→ erst Kontakt aufnehmen:</span>
+                <a href="mailto:contact@ternlang.com" class="text-t_teal hover:underline ml-1">contact@ternlang.com</a>
+              </p>
+            </div>
+
+            <!-- Credentials -->
+            <div class="mt-6 border-t border-t_border pt-6">
+              <p class="text-[9px] font-mono font-black tracking-widest text-t_muted uppercase mb-4 text-center">
+                <span class="lang-en">Regulated · Licensed · Registered</span>
+                <span class="lang-de">Reguliert · Lizenziert · Eingetragen</span>
+              </p>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                <div class="bg-t_bg3 border border-t_border rounded-lg p-3">
+                  <p class="text-[9px] font-mono text-t_muted uppercase tracking-widest mb-1">ZVR</p>
+                  <p class="text-xs font-black text-t_text font-mono">1015608684</p>
+                  <p class="text-[9px] text-t_muted mt-0.5"><span class="lang-en">Association register</span><span class="lang-de">Vereinsregister</span></p>
+                </div>
+                <div class="bg-t_bg3 border border-t_border rounded-lg p-3">
+                  <p class="text-[9px] font-mono text-t_muted uppercase tracking-widest mb-1">GISA</p>
+                  <p class="text-xs font-black text-t_text font-mono">39261441</p>
+                  <p class="text-[9px] text-t_muted mt-0.5"><span class="lang-en">Trade register</span><span class="lang-de">Gewerberegister</span></p>
+                </div>
+                <div class="bg-t_bg3 border border-t_border rounded-lg p-3">
+                  <p class="text-[9px] font-mono text-t_muted uppercase tracking-widest mb-1"><span class="lang-en">Trade</span><span class="lang-de">Gewerbe</span></p>
+                  <p class="text-xs font-black text-t_text"><span class="lang-en">Automated data processing</span><span class="lang-de">Automatische Datenverarbeitung</span></p>
+                  <p class="text-[9px] text-t_muted mt-0.5">WKO · GewO § 32</p>
+                </div>
+                <div class="bg-t_bg3 border border-t_border rounded-lg p-3">
+                  <p class="text-[9px] font-mono text-t_muted uppercase tracking-widest mb-1"><span class="lang-en">Tax no.</span><span class="lang-de">Steuernr.</span></p>
+                  <p class="text-xs font-black text-t_text font-mono">68 028/0989</p>
+                  <p class="text-[9px] text-t_muted mt-0.5">Finanzamt Graz</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="flex justify-center mt-10 mb-2">

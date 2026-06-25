@@ -13,6 +13,7 @@ CRATES=(
     "ternlang-mcp"
     "ternlang-moe"
     "ternlang-ruvector"
+    "ternlang-engram"
     "ternlang-test"
     "ternlang-hdl"
     "ternpkg"

@@ -493,6 +493,90 @@ const TOOLS = [
       required: ["record_a", "record_b"],
     },
   },
+  {
+    name: "engram_remember",
+    description:
+      "Store an episode in your PRIVATE, durable episodic memory (ternlang-engram), namespaced to your X-Ternlang-Key and persisted server-side. Time-stamped, ternary TritFloat embedding whose confidence field carries salience. The episode id IS the timestamp. Requires a valid key — your memories are isolated from every other user's.",
+    annotations: { title: "Engram Remember — Store a Durable Episodic Memory", readOnlyHint: false, idempotentHint: false, destructiveHint: false, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      required: ["content"],
+      properties: {
+        content: { type: "string", description: "The memory text to store." },
+        importance: { type: "number", description: "Salience in [0,1]; seeds the confidence field. Default 0.5." },
+        tags: { type: "array", items: { type: "string" }, description: "Optional tags for filtering and timelines." },
+        source: { type: "string", description: "Who/what laid down the memory. Default 'agent'." },
+        iso: { type: "string", description: "Event time as ISO 8601 / bare date / stamp / epoch. The id IS this timestamp. Default: now." },
+        t_ms: { type: "integer", description: "Event time, unix ms. Used if 'iso' absent. Default: now." },
+      },
+    },
+  },
+  {
+    name: "engram_recall",
+    description:
+      "Recall your most relevant private memories, ranked like human episodic retrieval: relevance × recency × salience × frequency. Recall reinforces. Each hit carries a native propagated TritFloat confidence and a human age ('3d 4h ago', future 'in 14d'). Requires a valid key.",
+    annotations: { title: "Engram Recall — Composite Episodic Retrieval", readOnlyHint: false, idempotentHint: false, destructiveHint: false, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      required: ["query"],
+      properties: {
+        query: { type: "string", description: "The cue to recall against." },
+        top_k: { type: "integer", description: "How many memories to return. Default 5." },
+        iso: { type: "string", description: "Time of recall as ISO/stamp/epoch (drives recency + age). Default: now." },
+        t_ms: { type: "integer", description: "Time of recall, unix ms. Used if 'iso' absent. Default: now." },
+      },
+    },
+  },
+  {
+    name: "engram_timeline",
+    description:
+      "Return your memories whose timestamp falls within [from, to], in chronological order — the episodic query a vector store cannot answer. Requires a valid key.",
+    annotations: { title: "Engram Timeline — Chronological Memory Slice", readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        from_iso: { type: "string", description: "Window start as ISO 8601 / bare date / stamp / epoch (e.g. '2026-06-18')." },
+        to_iso: { type: "string", description: "Window end as ISO 8601 / bare date / stamp / epoch." },
+        from_ms: { type: "integer", description: "Window start, unix ms. Default: earliest." },
+        to_ms: { type: "integer", description: "Window end, unix ms. Default: now." },
+      },
+    },
+  },
+  {
+    name: "engram_consolidate",
+    description:
+      "Run one consolidation pass on your memory: decay salience along a forgetting curve (vivid, frequently-recalled memories decay far slower) and evict memories below 'floor' older than 'min_age_ms'. Requires a valid key.",
+    annotations: { title: "Engram Consolidate — Decay & Forget", readOnlyHint: false, idempotentHint: false, destructiveHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        floor: { type: "number", description: "Salience below which an old memory is evicted. Default 0.1." },
+        min_age_ms: { type: "integer", description: "Memories younger than this are never evicted. Default 24h." },
+        iso: { type: "string", description: "Consolidation 'now' as ISO/stamp/epoch. Default: now." },
+        t_ms: { type: "integer", description: "Consolidation time, unix ms. Used if 'iso' absent. Default: now." },
+      },
+    },
+  },
+  {
+    name: "engram_forget",
+    description:
+      "Delete your memories — a GDPR right-to-erasure primitive. Provide 'id' for one episode, or 'before_ms' for everything older. Requires a valid key.",
+    annotations: { title: "Engram Forget — Right-to-Erasure", readOnlyHint: false, idempotentHint: true, destructiveHint: true, openWorldHint: false },
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "integer", description: "Id of a single episode to delete." },
+        before_ms: { type: "integer", description: "Delete every episode older than this unix-ms timestamp." },
+      },
+    },
+  },
+  {
+    name: "engram_stats",
+    description:
+      "Health snapshot of your private episodic store: episode count, salience, native confidence, ternary sparsity, time anchor/latest/span, total recalls. Requires a valid key.",
+    annotations: { title: "Engram Stats — Memory Health", readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false },
+    inputSchema: { type: "object", properties: {} },
+  },
 ];
 
 /**
