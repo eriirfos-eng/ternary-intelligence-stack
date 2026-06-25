@@ -12,6 +12,7 @@
 [workspace]
 members = [
     "ternlang-root/ternlang-ruvector",
+    "ternlang-root/ternlang-engram",
     "ternlang-root/compiler/legacy_shim/ternlang-core",
     "ternlang-root/compiler/legacy_shim/ternlang-codegen",
     "ternlang-root/compiler/legacy_shim/ternlang-cli",
@@ -62,3 +63,5 @@ ternlang-compat  = { path = "ternlang-root/ternlang-compat",  version = "1.5.0" 
 ternlang-test    = { path = "ternlang-root/ternlang-test",    version = "1.5.0" }
 ternlang-api     = { path = "ternlang-root/ternlang-api",     version = "1.5.0" }
 ternlang-compress = { path = "ternlang-root/ternlang-compress", version = "1.5.0" }
+ternlang-ruvector = { path = "ternlang-root/ternlang-ruvector", version = "1.5.0" }
+ternlang-engram   = { path = "ternlang-root/ternlang-engram",   version = "1.5.0" }
