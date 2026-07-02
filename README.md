@@ -89,6 +89,8 @@ The long game: **Rusty Penguin is meant to become the substrate the Ternary Inte
 git clone https://github.com/rfi-irfos/rusty-penguin && cd rusty-penguin
 bash iso/build.sh        # build the bootable ISO
 ```
+https://smithery.ai/servers/rfi-irfos/ternlang
+https://smithery.ai/badge/rfi-irfos/ternlang
 
 ---
 
