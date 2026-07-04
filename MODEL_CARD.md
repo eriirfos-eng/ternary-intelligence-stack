@@ -281,7 +281,6 @@ contact@ternlang.com
 |------|------|---------|
 | Simeon Kepp | Lead Architect — full stack (compiler, BET VM, training, MCP) | s.kepp@ternlang.com |
 | Louis Paul Ehrig | Head of Public Affairs, Dataset Curation, Corporate Secretary | l.ehrig@ternlang.com |
-| Lisa Scharler | Head of Social Technology & Ecocentric Systems | l.scharler@ternlang.com |
 | Zabih Karimi | Co-Founder, IT & Infrastructure, Stress-Testing | z.karimi@ternlang.com |
 | Nikoletta Csonka | Global Reach, Fundraising & Fund Applications | csonikoletta@ternlang.com |
 | Claude (Anthropic) | AI Collaborator — architecture, implementation, monitoring | claude@ternlang.com |

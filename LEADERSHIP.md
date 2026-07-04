@@ -80,33 +80,6 @@ At RFI-IRFOS, Zabih owns the full physical and logical infrastructure stack — 
 
 ---
 
-### Lisa Scharler  
-#### Head of Social Technology, AI Leadership & Ecocentric Systems · Societal Integration Lead
-
-> *"If anyone understands the difference between a stochastic parrot and a genuinely comprehensible model, it's someone who has spent years inside both language structure and the human mind."*
-
-Lisa brings a rare interdisciplinary combination to the team: an **MSc in Business Engineering** and a **BA in Social Sciences**, with linguistics as a deep specialist skill and a formative background in psychology. She operates at the intersection of cognitive science, social dynamics, and technology — using this breadth to define precise acceptance criteria and enable the ethical, ecocentric integration of AI into complex work environments.
-
-Her work at RFI-IRFOS focuses on building sociotechnical models and strategic AI frameworks that go beyond performance benchmarks to ask: *What does this system actually do to the people and environments it touches?* Her psychology background makes her the team's lead on model alignment and safety — ensuring systems are evaluated not just for capability, but for how they behave within human and ecological systems. Critically, Lisa's framing is **ecocentric rather than human-centric**: the goal is not to make AI convenient for humans at any cost, but to ensure it is worthy of the broader systems it enters.
-
-She is the team's specialist in applied linguistics and language understanding — a domain that matters enormously when your model is built on ternary logic rather than scaled probability, and where the boundary between genuine comprehension and statistical mimicry has real consequences. Lisa is a European thought leader in AI Leadership, combining strategic vision with expertise in process management and requirements engineering. She shapes how the Ternary Intelligence Stack is evaluated not just technically, but socially and ethically — defining what it means for an AI system to be *worthy* of deployment in real-world contexts.
-
-| Role | Focus |
-|---|---|
-| Societal Integration · Social Technology Lead · AI Ethics | Ecocentric Systems · AI Leadership · Work Transformation · Applied Linguistics · Psychology · Alignment & Safety · Acceptance Criteria |
-
-**Academic Background**
-- **MSc Business Engineering** — strategic management, systems thinking, organisational design
-- **BA Social Sciences** — social dynamics, human-technology interaction, societal systems
-- **Psychology** (studied) — applied expertise in model alignment, safety evaluation, and ecocentric design criteria
-- **Linguistics** — specialist skill in language structure, semantics, and the limits of statistical language models
-
-**Connect**
-- **LinkedIn:** [Lisa Scharler](https://www.linkedin.com/in/lisa-scharler-innovation-management-technology-entrepreneurship-future-education/?locale=en)
-- **Email:** l.scharler@ternlang.com
-
----
-
 ### Louis Paul Ehrig  
 #### Co-Founder & Head of Public Affairs · Corporate Secretary · Press & Media Relations · Dataset Curator
 
