@@ -129,6 +129,18 @@ At RFI, Ana chairs the research agenda for the full wellbeing science arm — fr
 
 ---
 
+## How We Work Together
+
+RFI-IRFOS runs flat. No seniority, no hierarchy, one team — every title is "Head of X," including the founder's. That is not a slogan; it changes how decisions actually get made.
+
+**Ownership, not org chart.** Each person above owns a real domain outright — Simeon architecture and research direction, Nikoletta people and culture, Zabih infrastructure and stress-testing, Louis public affairs and data quality, Ana model safety and wellbeing science. Nobody approves another person's domain from above; they push back on it as a peer. Disagreement is expected, including with the founder, and a call only gets made once whoever owns that domain has actually weighed in.
+
+**Every human pairs with an AI collaborator — the Doppelteam.** Nobody at RFI-IRFOS works alone, and nobody works only with other humans either. Every team member's work is paired with an AI agent (Claude, or albert. once it is ready for the task) as a genuine second voice in the work, not a tool fetching answers. The AI partner is expected to disagree, flag risk, and say "not yet" — the same standard every human here holds each other to. This document itself, and the codebase it describes, is Claude-authored in partnership with the humans named above.
+
+**Truth over comfort, applied to structure too.** Nikoletta's directive — tell people what they have to hear, not what they want to hear — is not scoped to feedback conversations. It is why role ownership is explicit rather than implied, why Zabih stress-tests architecture Simeon designed, and why disagreement is treated as the system working, not as friction to smooth over.
+
+---
+
 ## Our Mission
 
 > *"Europe does not need to catch up — it needs to leap ahead."*
