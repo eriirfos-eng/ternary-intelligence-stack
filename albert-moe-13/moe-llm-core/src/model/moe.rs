@@ -5,8 +5,8 @@
 // Ternary Traffic Light (TTL) routing layer:
 // Each expert is assigned a trit state (Green/Orange/Red) from rolling EMA utilization.
 // Green experts get a gate logit boost; Red are suppressed; Orange pass unmodified
-// but contribute at ORANGE_SCALE to the output mix. Derived from Lisa Scharler's
-// triunity routing sketch — the trit is the execution budget, not just the routing signal.
+// but contribute at ORANGE_SCALE to the output mix. The trit is the execution
+// budget, not just the routing signal.
 use candle_core::{Result, Tensor};
 use candle_nn::{Module, VarBuilder};
 use super::mlp::Mlp;

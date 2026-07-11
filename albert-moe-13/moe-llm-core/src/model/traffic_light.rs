@@ -1,6 +1,6 @@
 // Ternary Traffic Light Routing — per-expert execution budget controller.
 //
-// Combines Lisa Scharler's triunity routing sketch with the traffic light
+// Combines a triunity routing concept with the traffic light
 // load-balancing insight: each expert is assigned a trit execution state
 // each forward pass based on rolling EMA utilization, then:
 //

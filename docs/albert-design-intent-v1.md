@@ -194,10 +194,6 @@ Zabih Karimi — ML/Network Engineer
 
 &nbsp;
 
-Lisa Scharler — Social Tech & Accounting
-
-&nbsp;
-
 Louis Ehrig — Press & Corporate Secretary
 
 Date: _______________________
