@@ -1,5 +1,6 @@
 # TIS Session Log
 ### Project: Ternary Intelligence Stack (TIS) | RFI-IRFOS
+| 2026-07-16 · lauras-agents | **Watchtower metrics merge.** Per Simeon: gate (objective/input/overall) + run-stats (findings/locs/locomotives) → **one row**, side by side. Wrapped both in `.metrics` flex container (trit-row + stats-row, each flex:1, wrap on narrow). CSS only. Pushed. |
 | 2026-07-16 · lauras-agents | **Watchtower panel default fix.** Bug: panel had hardcoded `class="panel docked"` in HTML, showed on Runs even after show() fix. Changed to `class="panel"` (hidden default); only `show('detail')` adds docked at runtime. Now definitively hidden on Runs/Help. Pushed. |
 | 2026-07-16 · lauras-agents | **Watchtower panel scope fix.** Per Simeon: reasoning panel showed on Runs tab. Now **only on Run Detail** (`show()` docks+panel-open only for `v==='detail'`, removes for runs/help; init no longer docks). Runs/Help get full width. Pushed. |
 | 2026-07-16 · lauras-agents | **Watchtower layout tweaks.** Per Simeon: (1) Run Stats inline next to gate (3 stat-pills: findings / locs done / locomotives); (2) Reasoning panel **docked-open by default** on the right (`body.panel-open` + `.panel.docked`), stays open across view switches (X button only closes); (3) Run-card prompt bigger (line-clamp 2→4). SVG-only. Pushed. |
