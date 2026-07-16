@@ -1,5 +1,6 @@
 # TIS Session Log
 ### Project: Ternary Intelligence Stack (TIS) | RFI-IRFOS
+| 2026-07-16 · lauras-agents | **Watchtower dashboard built.** Control-Tower-style dark HTML at `/dashboard` (Palantir-grade calm, no flicker) + async mission API: `POST /mission/run` returns `run_id` immediately and runs in background (one locomotive at a time); `GET /mission/runs/{id}` polls live per-locomotive tiles (pending/running/done/error + findings count) + active locomotive + 2-view gate; `GET /mission/runs` lists the history wall. `MissionControl::run_with_progress()` reports a snapshot after every locomotive into an in-memory `RunStatus` (Arc<Mutex>). Validated live: run #5 dispatched, gate objective=HEIß / input=KALT / overall=HEIß, `sece-ng-appsec` shown active. 0 build errors, all tests pass. Total dashboard surface: ~30 crate files + dashboard.html. |
 
 Reverse chronological record of every working session (newest first). One row per session or sub-session. For roadmap and phase status see [ROADMAP.md](ROADMAP.md).
 
