@@ -1118,6 +1118,45 @@ window.renderRegistryView = renderRegistryView;
 
 // ─── Fleet (Ops / Control Tower) ─────────────────────────────────────────────
 
+// Real, always-running RFI-IRFOS autonomous systems — not TernFlow-deployed
+// .tern agents (those come from /api/agents via syncFleetRegistry), so they
+// carry their own real endpoint instead of the ternlang-api agent-call
+// pattern. `isExternal: true` is how renderFleetView tells the two apart.
+const AI_FACTORIES = [
+  {
+    id: "lauras-agents",
+    name: "Lauras Agents — 292-Agent Registry",
+    desc: "33 procedural trains across legal/BI/comms domains, dispatched via Watchtower.",
+    endpoint: "https://lauras-agents-api.fly.dev/mission/trains",
+    deployed: "2026-07-03T00:00:00Z",
+    isExternal: true,
+  },
+  {
+    id: "coevolution-factory",
+    name: "CoEvolution Factory",
+    desc: "50-center autonomous product line, live revenue + panel sessions.",
+    endpoint: "https://coevolution-factory-sparkling-mountain-1802.fly.dev/api/live-grid",
+    deployed: "2026-06-01T00:00:00Z",
+    isExternal: true,
+  },
+  {
+    id: "apex-strategy-pipeline",
+    name: "APEX Strategy Pipeline",
+    desc: "4-perspective debate + Rust consensus engine + 5 hard-fail content gates.",
+    endpoint: "local CLI (pipeline.sh) — no public HTTP endpoint yet",
+    deployed: "2026-07-18T00:00:00Z",
+    isExternal: true,
+  },
+  {
+    id: "witness-gate",
+    name: "WITNESS Gate",
+    desc: "Layer 2 human-rights case-intake framework (W0/W1).",
+    endpoint: "local — no public HTTP endpoint yet",
+    deployed: "2026-07-11T00:00:00Z",
+    isExternal: true,
+  },
+];
+
 window.selectedFleetAgentId = null;
 let fleetStats = {}; // id -> { runs: 0, errors: 0, avgConf: 0, cost: 0 }
 
@@ -1148,6 +1187,11 @@ async function renderFleetView() {
   } catch (err) {
     console.error("Fleet hydration failed:", err);
   }
+
+  // Real, always-running RFI-IRFOS systems — shown alongside whatever
+  // TernFlow-deployed .tern agents the remote sync found, not dependent on it
+  // succeeding (these are hardcoded, not fetched from ternlang-api).
+  localReg = [...localReg, ...AI_FACTORIES];
 
   if (localReg.length === 0) {
     view.innerHTML = `
@@ -1213,7 +1257,11 @@ async function renderFleetView() {
         <!-- Ops Header -->
         <div style="padding: 16px 24px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
           <div>
-            <div style="font-size:16px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--text);">${agent.name}</div>
+            <div style="font-size:16px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--text); display:flex; align-items:center; gap:8px;">
+              ${agent.name}
+              ${agent.isExternal ? `<span style="font-size:9px; padding:2px 6px; background:rgba(167,139,250,0.12); border:1px solid #a78bfa; border-radius:8px; color:#a78bfa; font-weight:700; letter-spacing:0.05em;">RFI-IRFOS SYSTEM</span>` : ''}
+            </div>
+            ${agent.desc ? `<div style="font-size:11px; color:var(--muted); margin-top:4px;">${agent.desc}</div>` : ''}
             <div style="display:flex; gap:12px; margin-top:4px; font-size:11px; color:var(--muted);">
               <span>ID: <code style="color:var(--cyan)">${agent.id}</code></span>
               <span>•</span>
@@ -1222,19 +1270,20 @@ async function renderFleetView() {
               <span style="color:var(--green)">● RUNNING</span>
             </div>
           </div>
+          ${agent.isExternal ? '' : `
           <div style="display:flex; gap:8px;">
             <button class="btn btn-ghost" onclick="switchView('flow')"><i data-lucide="edit-3" style="width:14px;"></i> Edit Graph</button>
             <button class="btn btn-ghost" style="color:var(--red)"><i data-lucide="pause-circle" style="width:14px;"></i> Pause Agent</button>
-          </div>
+          </div>`}
         </div>
 
         <!-- API Endpoint Section -->
         <div style="margin: 24px 32px 0 32px; padding: 16px; background:var(--bg1); border:1px solid var(--border2); border-radius:12px;">
-          <div style="font-size:10px; font-weight:700; color:var(--muted2); text-transform:uppercase; margin-bottom:10px;">Public API Endpoint</div>
+          <div style="font-size:10px; font-weight:700; color:var(--muted2); text-transform:uppercase; margin-bottom:10px;">${agent.isExternal ? 'Endpoint' : 'Public API Endpoint'}</div>
           <div style="display:flex; gap:10px;">
-            <input readonly value="https://ternlang-api.fly.dev/api/agent/${agent.id}" 
+            <input readonly value="${agent.endpoint || `https://ternlang-api.fly.dev/api/agent/${agent.id}`}"
                    style="flex:1; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan); outline:none;">
-            <button class="btn btn-primary" onclick="navigator.clipboard.writeText('https://ternlang-api.fly.dev/api/agent/${agent.id}'); showToast('Endpoint copied', 'ok')">
+            <button class="btn btn-primary" onclick="navigator.clipboard.writeText('${agent.endpoint || `https://ternlang-api.fly.dev/api/agent/${agent.id}`}'); showToast('Endpoint copied', 'ok')">
               <i data-lucide="copy" style="width:14px;"></i> Copy
             </button>
           </div>
@@ -2159,7 +2208,7 @@ let _flowLibOpen = {
 
 const ARCHETYPE_ONTOLOGY = {
   "Orchestration & Consensus": ["moe_13_flagship", "consensus", "industry_enterprise_risk", "recursive_refiner", "kmu_hiring_decision", "kmu_supplier_score", "kmu_customer_qual"],
-  "Evaluation & Debate": ["debate", "filter_rank", "kmu_process_opt", "sensor_gate", "industry_sme_pipeline"],
+  "Evaluation & Debate": ["apex_strategy_pipeline", "debate", "filter_rank", "kmu_process_opt", "sensor_gate", "industry_sme_pipeline"],
   "Safety & Guardrails": ["guardrail", "kmu_invoice_fraud", "industry_iot_grid"],
   "Memory & Persistence": ["local_rag_pipeline", "episodic_reflection"],
   "High-Performance Compute": ["quantized_sparse_accelerator"],
@@ -4166,6 +4215,36 @@ window.switchLibTab = switchLibTab;
 
 // ─── Archetype System ─────────────────────────────────────────────────────────
 const ARCHETYPES = [
+  {
+    id: "apex_strategy_pipeline",
+    name: "APEX: Multi-Agent Strategy Pipeline",
+    desc: "The real RFI-IRFOS pipeline. Four analysts debate before a judge merges their verdict, then five safety checks a report before it ever goes out.",
+    icon: "compass",
+    color: "#a78bfa",
+    nodes: [
+      { name: "Evidence_Coverage", type: "gate",  dx: 40,   dy: 160 },
+      { name: "Sun_Mate",          type: "agent", dx: 320,  dy: 0   },
+      { name: "OODA",              type: "agent", dx: 320,  dy: 100 },
+      { name: "Systems",           type: "agent", dx: 320,  dy: 200 },
+      { name: "Game_Theory",       type: "agent", dx: 320,  dy: 300 },
+      { name: "Debate_Round",      type: "gate",  dx: 600,  dy: 150 },
+      { name: "Consensus_Engine",  type: "gate",  dx: 860,  dy: 150 },
+      { name: "Content_Gates",     type: "gate",  dx: 1120, dy: 150 },
+      { name: "Render_PDF",        type: "agent", dx: 1380, dy: 70  },
+      { name: "Layout_Audit",      type: "gate",  dx: 1380, dy: 230 },
+      { name: "Final_Report",      type: "agent", dx: 1640, dy: 150 },
+    ],
+    wires: [
+      [0,1],[0,2],[0,3],[0,4],     // Evidence-Coverage gates all 4 agents
+      [1,5],[2,5],[3,5],[4,5],     // 4 independent analyses into the debate round
+      [5,6],                       // Debate Round -> Consensus Engine
+      [6,7],                       // Consensus -> Content Gates (fact-audit/legal-risk/tone/final-factcheck)
+      [7,8],                       // Content Gates -> Render
+      [8,9],                       // Render -> Layout Audit
+      [9,10],                      // Layout Audit -> Final Report
+    ],
+    edgeConds: ["all","all","all","all","all","all","all","all","all","all","affirm","all","affirm"]
+  },
   {
     id: "moe_13_flagship",
     name: "MoE-13 Flagship",
