@@ -1,7 +1,7 @@
 # Ternary Intelligence Stack (TIS)
 
-> **Human rights are not subject to negotiation.**
-> — RFI-IRFOS × Emergent Interaction Lab, core doctrine.
+## Human rights are not subject to negotiation.
+
 
 
 [![crates.io](https://img.shields.io/crates/v/ternlang-core.svg)](https://crates.io/crates/ternlang-core)
