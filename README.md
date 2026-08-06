@@ -89,10 +89,11 @@ A bare-metal operating system written in pure Rust, built ground-up on the same 
 
 The long game: **Rusty Penguin is meant to become the substrate the Ternary Intelligence Stack runs on** — a ternary-native OS hosting ternary-native intelligence, all the way down to the metal, with no binary substrate in between. Today it is an honest, brick-by-brick work in progress (every milestone verified in QEMU or against published vectors); the [Session Log](https://github.com/rfi-irfos/rusty-penguin/blob/main/SESSION_LOG.md) tracks exactly what is proven and what is still open.
 
+---
 ```bash
 git clone https://github.com/rfi-irfos/rusty-penguin && cd rusty-penguin
 bash iso/build.sh        # build the bootable ISO
-
+```
 ---
 
 ## Licensing
