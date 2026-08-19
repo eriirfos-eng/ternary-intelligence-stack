@@ -1,6 +1,7 @@
 [package]
 name = "token_train"
-version = "1.5.0"
+version = "2.0.0"
+description = "Token-level training utilities for the Ternary Intelligence Stack."
 edition = "2024"
 
 [dependencies]

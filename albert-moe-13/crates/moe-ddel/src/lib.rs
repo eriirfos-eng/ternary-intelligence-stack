@@ -1,3 +1,4 @@
+//! DDEL (Dynamic Data Exchange Layer) for ternary runtime communication.
 pub mod node;
 pub mod partitioner;
 pub mod scheduler;

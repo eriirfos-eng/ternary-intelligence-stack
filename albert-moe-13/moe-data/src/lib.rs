@@ -1,3 +1,4 @@
+//! Data loading and preprocessing utilities for the MoE-13 ternary machine learning pipeline.
 use std::path::{Path, PathBuf};
 use std::fs;
 use anyhow::{Result, Context};

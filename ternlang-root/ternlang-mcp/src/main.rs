@@ -1,3 +1,6 @@
+//! ternlang-mcp
+//!
+//! MCP server for ternlang — connects any AI agent to balanced ternary decision logic via trit_decide and friends.
 #![recursion_limit = "512"]
 
 /// ternlang-mcp — Model Context Protocol server (40 tools)

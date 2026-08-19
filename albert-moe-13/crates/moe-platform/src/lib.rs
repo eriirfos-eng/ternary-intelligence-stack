@@ -1,3 +1,4 @@
+//! Platform abstraction layer for MoE-13 deployments across hardware targets.
 pub mod file_loader;
 
 use anyhow::Result;

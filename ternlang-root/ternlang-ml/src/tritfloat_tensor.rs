@@ -466,7 +466,7 @@ mod tests {
         // [1, -1] × [[1, 0], [-1, 1]] = [1*1 + (-1)*(-1), 1*0 + (-1)*1] = [2, -1]
         use crate::TritMatrix;
         let acts = TritFloatTensor::from_f32_slice(&[1.0f32, -1.0], &[1, 2]);
-        let mut w = TritMatrix::new(2, 2);
+        let mut w = TritMatrix::zeros(2, 2);
         w.set(0, 0, Trit::Affirm);   // (0,0) = +1
         w.set(0, 1, Trit::Tend);     // (0,1) = 0
         w.set(1, 0, Trit::Reject);   // (1,0) = -1
@@ -593,7 +593,7 @@ mod tests {
 
         // Weight: 16 elements, exactly 4 zeros (ws = 0.25).
         // Zero positions: (row=0,col=2), (row=1,col=1), (row=2,col=0), (row=3,col=3).
-        let mut w = TritMatrix::new(k, n);
+        let mut w = TritMatrix::zeros(k, n);
         for i in 0..k { for j in 0..n { w.set(i, j, Trit::Affirm); } }
         w.set(0, 2, Trit::Tend);
         w.set(1, 1, Trit::Tend);

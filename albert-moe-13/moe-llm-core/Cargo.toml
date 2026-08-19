@@ -1,6 +1,6 @@
 [package]
 name = "moe-llm-core"
-version = "1.5.0"
+version = "2.0.0"
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
@@ -9,6 +9,11 @@ edition = "2024"
 
 [lib]
 path = "src/lib.rs"
+
+[[bin]]
+name = "albert_serve"
+path = "src/bin/albert_serve.rs"
+required-features = ["serve"]
 
 [features]
 cuda  = ["candle-core/cuda", "candle-nn/cuda"]

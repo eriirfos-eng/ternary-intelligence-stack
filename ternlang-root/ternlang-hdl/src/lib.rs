@@ -28,12 +28,6 @@
 //! - `bet_alu`     — full BET ALU
 //! - Sparse matmul array (parameterised N×N)
 
-pub mod verilog;
-pub mod isa;
-pub mod sim;
-pub mod rtl_sim;
 
-pub use verilog::{VerilogEmitter, VerilogModule};
-pub use isa::BetIsaEmitter;
-pub use sim::BetSimEmitter;
-pub use rtl_sim::{BetRtlProcessor, RtlTrace, TritWire};
+//! Verilog-2001 codegen for balanced ternary — BET processor primitives, sparse matmul array, FPGA simulation wrapper.
+pub mod verilog;

@@ -1,6 +1,7 @@
 [package]
 name = "ternlang-bridge"
 version.workspace = true
+description = "Trojan Horse Binary-to-Ternary Transpiler. Bridges legacy binary code into the BET VM."
 edition.workspace = true
 license.workspace = true
 repository.workspace = true

@@ -20,7 +20,7 @@
 // Practical recommendation: use CSR for sparsity > 75%, packed ternary otherwise.
 // The pipeline chooses automatically based on measured sparsity.
 
-use ternlang_core::trit::Trit;
+use ternlang_core::Trit;
 use serde::{Deserialize, Serialize};
 
 /// Compressed Sparse Row index for one weight matrix.

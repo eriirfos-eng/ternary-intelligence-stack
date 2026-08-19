@@ -8,7 +8,7 @@
 // as identity within the clip window — this is the "straight-through" estimate.
 
 use crate::{TernaryMLP, TritMatrix, bitnet_threshold, quantize};
-use ternlang_core::trit::Trit;
+use ternlang_core::Trit;
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
@@ -323,7 +323,7 @@ mod tests {
         assert_eq!(mlp.out_features, outf);
 
         // Forward pass smoke test
-        let input = TritMatrix::from_f32(1, inf, &lcg(inf, 99), 0.3);
+        let input = TritMatrix::from_f32(1, inf, &lcg(inf, 99), Trit::Affirm);
         let (output, _, _) = mlp.forward(&input);
         assert_eq!(output.rows, 1);
         assert_eq!(output.cols, outf);

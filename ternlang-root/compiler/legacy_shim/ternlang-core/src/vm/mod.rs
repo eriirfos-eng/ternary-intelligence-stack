@@ -1,6 +1,6 @@
 pub mod bet;
 
-use crate::trit::Trit;
+use crate::types::trit::Trit;
 use crate::vm::bet::{unpack_trits, BetFault};
 
 use std::fmt;
@@ -705,7 +705,7 @@ impl BetVm {
                             TensorData::PackedTrit(v, _) => {
                                 let byte_idx = pos / 5;
                                 let trit_idx = pos % 5;
-                                let trits = crate::trit::unpack_5_trits(v[byte_idx]);
+                                let trits = crate::types::trit::unpack_5_trits(v[byte_idx]);
                                 Value::Trit(trits[trit_idx])
                             }
                             TensorData::Float(v) => Value::Float(v[pos]),
@@ -732,13 +732,13 @@ impl BetVm {
                         (TensorData::PackedTrit(v, _), val_v) => {
                             let byte_idx = pos / 5;
                             let trit_idx = pos % 5;
-                            let mut trits = crate::trit::unpack_5_trits(v[byte_idx]);
+                            let mut trits = crate::types::trit::unpack_5_trits(v[byte_idx]);
                             trits[trit_idx] = match val_v {
                                 Value::Trit(t) => t,
                                 Value::Int(i) => if i > 0 { Trit::Affirm } else if i < 0 { Trit::Reject } else { Trit::Tend },
                                 _ => return Err(VmError::TypeMismatch { expected: "Trit or Int".into(), found: format!("{:?}", val_v) }),
                             };
-                            v[byte_idx] = crate::trit::pack_5_trits(trits);
+                            v[byte_idx] = crate::types::trit::pack_5_trits(trits);
                         }
                         (TensorData::Float(v), Value::Float(f)) => v[pos] = f,
                         (TensorData::Float(v), Value::Int(i)) => v[pos] = i as f64,
@@ -1127,13 +1127,13 @@ impl BetVm {
                             _ => return Err(VmError::TypeMismatch { expected: "Trit".into(), found: format!("{:?}", t) }),
                         };
                     }
-                    let packed = crate::trit::pack_5_trits(trits);
+                    let packed = crate::types::trit::pack_5_trits(trits);
                     self.stack.push(Value::Int(packed as i64));
                 }
                 0x51 => { // TUNPACK: pops 1 packed byte, pushes 5 trits
                     let val = self.stack.pop().ok_or(VmError::StackUnderflow)?;
                     if let Value::Int(packed) = val {
-                        let trits = crate::trit::unpack_5_trits(packed as u8);
+                        let trits = crate::types::trit::unpack_5_trits(packed as u8);
                         for t in trits {
                             self.stack.push(Value::Trit(t));
                         }
@@ -1189,7 +1189,7 @@ impl BetVm {
                                 (TensorData::PackedTrit(av, alen), TensorData::PackedTrit(bv, _)) => {
                                     let mut res_v = vec![0u8; av.len()];
                                     for i in 0..av.len() {
-                                        res_v[i] = crate::trit::packed_add(av[i], bv[i]);
+                                        res_v[i] = crate::types::trit::packed_add(av[i], bv[i]);
                                     }
                                     (a.rows, a.cols, TensorData::PackedTrit(res_v, *alen))
                                 }
@@ -1212,7 +1212,7 @@ impl BetVm {
                                 TensorData::PackedTrit(v, len) => {
                                     let mut res_v = vec![0u8; v.len()];
                                     for i in 0..v.len() {
-                                        res_v[i] = crate::trit::packed_neg(v[i]);
+                                        res_v[i] = crate::types::trit::packed_neg(v[i]);
                                     }
                                     (a.rows, a.cols, TensorData::PackedTrit(res_v, *len))
                                 }
@@ -1240,7 +1240,7 @@ impl BetVm {
                                 (TensorData::PackedTrit(av, alen), TensorData::PackedTrit(bv, _)) => {
                                     let mut res_v = vec![0u8; av.len()];
                                     for i in 0..av.len() {
-                                        res_v[i] = crate::trit::packed_consensus(av[i], bv[i]);
+                                        res_v[i] = crate::types::trit::packed_consensus(av[i], bv[i]);
                                     }
                                     (a.rows, a.cols, TensorData::PackedTrit(res_v, *alen))
                                 }

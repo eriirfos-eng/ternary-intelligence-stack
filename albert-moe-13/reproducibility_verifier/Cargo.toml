@@ -1,6 +1,7 @@
 [package]
 name = "reproducibility_verifier"
 version.workspace = true
+description = "Albert-MoE-13 Checkpoint Verifier. Loads a saved .safetensors checkpoint and verifies integrity for reproducible ML experiments."
 edition.workspace = true
 license.workspace = true
 repository.workspace = true

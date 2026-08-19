@@ -11,6 +11,12 @@ authors.workspace   = true
 keywords.workspace  = true
 categories.workspace = true
 
+[features]
+default = ["std"]
+std = []
+simd = []
+wasm = []
+
 [dependencies]
 ariadne = "0.6.0"
 logos = "0.16.1"

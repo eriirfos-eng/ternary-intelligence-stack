@@ -1,6 +1,7 @@
 [package]
 name = "moe-data"
-version = "1.5.0"
+version = "2.0.0"
+description = "Data loading and preprocessing utilities for the MoE-13 ternary machine learning pipeline."
 edition = "2024"
 license = "LGPL-3.0-or-later"
 

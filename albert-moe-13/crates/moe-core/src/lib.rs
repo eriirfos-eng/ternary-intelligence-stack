@@ -1,3 +1,4 @@
+//! Internal core engine for MoE-13 ternary inference and routing. Part of the Ternary Intelligence Stack.
 pub mod core;
 pub mod experts;
 pub mod training;

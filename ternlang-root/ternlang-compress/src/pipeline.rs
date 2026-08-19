@@ -13,7 +13,7 @@ use crate::quantize::PerLayerQuant;
 use crate::sparse::SparseIndex;
 use crate::FORMAT_VERSION;
 
-use ternlang_core::trit::Trit;
+use ternlang_core::Trit;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

@@ -4,7 +4,7 @@
 //! and virtual ternary hardware, including FPGA clusters, Harmony OS microkernels,
 //! and high-performance software emulators.
 
-use ternlang_core::trit::Trit;
+use ternlang_core::Trit;
 
 #[derive(Debug, Clone, Copy)]
 pub enum BackendType {

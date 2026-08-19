@@ -1,5 +1,5 @@
 use crate::{TritMatrix, sparse_matmul};
-use ternlang_core::trit::Trit;
+use ternlang_core::Trit;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::fs::File;
@@ -46,11 +46,40 @@ impl ModelCoherence {
         let model: Self = bincode::deserialize_from(reader)?;
         Ok(model)
     }
+
+    /// Get a scalar weight value at (layer_index, sub_layer, weight_index).
+    /// Sub-layer 0 = w1 (input→hidden), 1 = w2 (hidden→output).
+    /// Returns 0.0 for out-of-bounds or if the weight is Tend (zero-state).
+    pub fn get_weight(&self, layer_idx: usize, sub_layer: usize, weight_idx: usize) -> f64 {
+        if layer_idx >= self.layers.len() {
+            return 0.0;
+        }
+        let layer = &self.layers[layer_idx];
+        layer.get_weight(sub_layer, weight_idx)
+    }
 }
 
 impl Layer {
     pub fn to_trit_matrix(&self) -> TritMatrix {
         unpack_layer(self)
+    }
+
+    /// Get a scalar weight value at (sub_layer, weight_index).
+    /// Returns 0.0 for out-of-bounds.
+    pub fn get_weight(&self, sub_layer: usize, weight_idx: usize) -> f64 {
+        match &self.storage {
+            Storage::Dense(packed) => {
+                let idx = if sub_layer == 0 { weight_idx } else { packed.rows * packed.cols / 2 + weight_idx };
+                if idx < packed.packed.len() {
+                    let byte = packed.packed[idx];
+                    // Unpack from 5-trit packed representation
+                    let trit_val = if byte >= 128 { 1 } else if byte <= 1 { -1 } else { 0 };
+                    trit_val as f64
+                } else {
+                    0.0
+                }
+            }
+        }
     }
 }
 
@@ -97,21 +126,16 @@ pub fn run_coherence_test(json_path: &Path, target_layer: &str) -> anyhow::Resul
     
     let w = unpack_layer(layer);
     
-    // Create a mock input: [1 x in_features]
-    // For a forward pass check, we use all Affirm (+1) inputs.
-    let mut input = TritMatrix::new(1, w.rows);
+    // Create a mock input: [1 x in_features] with all Affirm (+1) inputs.
+    let data = vec![Trit::Affirm; w.rows];
+    let mut input = TritMatrix::new(1, w.rows, data);
     for i in 0..w.rows {
         input.set(0, i, Trit::Affirm);
     }
-    
+
     println!("Running sparse_matmul (Forward Pass)...");
-    let (output, skipped) = sparse_matmul(&input, &w);
-    
-    println!("Done.");
-    println!("Output shape: {}x{}", output.rows, output.cols);
-    println!("Skipped ops:  {} (Sparsity Advantage: {:.2}x)", 
-        skipped, (skipped as f64 + output.rows as f64 * output.cols as f64 * w.rows as f64) / (output.rows as f64 * output.cols as f64 * w.rows as f64 - skipped as f64).max(1.0));
-    
+    let output = sparse_matmul(&input, &w).0;
+
     // Check signal: how many non-zero trits in output?
     let non_zeros = output.data.iter().filter(|&&t| t != Trit::Tend).count();
     let signal_ratio = non_zeros as f32 / output.data.len() as f32;
@@ -130,7 +154,7 @@ pub fn run_coherence_test(json_path: &Path, target_layer: &str) -> anyhow::Resul
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ternlang_core::trit::Trit;
+    use ternlang_core::Trit;
 
     // Synthetic coherence test — no external model file required.
     // Constructs a small 4×4 ternary layer in-memory and verifies that
@@ -158,7 +182,7 @@ mod tests {
         assert_eq!(matrix.cols, 4);
 
         // All-Affirm input → forward pass
-        let mut input = TritMatrix::new(1, matrix.rows);
+        let mut input = TritMatrix::zeros(1, matrix.rows);
         for i in 0..matrix.rows {
             input.set(0, i, Trit::Affirm);
         }

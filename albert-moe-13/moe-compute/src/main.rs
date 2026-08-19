@@ -1,3 +1,6 @@
+//! moe-compute
+//!
+//! Compute kernel abstractions for ternary tensor operations on CPU/GPU.
 use candle_core::{Device, Tensor, DType};
 use candle_nn::{Optimizer, SGD, VarMap, Init};
 

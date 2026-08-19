@@ -1,6 +1,7 @@
 [package]
 name = "ternlang-time"
 version.workspace = true
+description = "Triadic Network Time Protocol (T-NTP). Replaces legacy binary NTP jitter errors with ternary consensus timing."
 edition.workspace = true
 license.workspace = true
 repository.workspace = true

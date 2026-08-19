@@ -1,6 +1,6 @@
 [package]
 name = "moe-test"
-version = "1.5.0"
+version = "2.0.0"
 license.workspace = true
 repository.workspace = true
 homepage.workspace = true
@@ -8,11 +8,10 @@ description = "Part of the MoE-13 Ternary Intelligence Stack"
 edition = "2024"
 
 [dependencies]
-moe-llm-core = { path = "../moe-llm-core", version = "1.5.0" }
+moe-llm-core = { path = "../moe-llm-core", version = "2.0.0" }
 candle-core = "0.8.4"
 candle-nn = "0.8.4"
 ratatui = "0.29"
 crossterm = "0.28"
 chrono = "0.4"
 serde_json = "1.0"
-

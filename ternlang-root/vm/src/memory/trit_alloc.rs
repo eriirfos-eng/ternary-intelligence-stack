@@ -5,7 +5,7 @@
 // Unauthorized use, copying, or distribution is prohibited.
 // Reference Patent Pending A50296/2026.
 
-use ternlang_core::trit::Trit;
+use ternlang_core::Trit;
 
 /// Raw trit allocator mapping ternary states to physical byte offsets.
 /// 

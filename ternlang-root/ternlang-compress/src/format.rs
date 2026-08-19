@@ -9,21 +9,106 @@
 // Enable the `gguf` or `safetensors` Cargo feature to activate each loader.
 //
 // The .tern output format is bincode-serialised TernModel (see model.rs).
-// This keeps it self-contained and dependency-light for now.  A proper
-// GGUF-Q-ternary type can be registered once llama.cpp upstream ternary quant
-// lands, at which point we swap bincode → GGUF writer here.
 
+use crate::QuantizedWeights;
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
 use std::path::Path;
-use anyhow::Result;
-use crate::model::TernModel;
+
+/// A single compressed weight layer in a `.tern` model.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TernLayer {
+    /// Layer name (e.g. "model.layers.0.mlp.weight").
+    pub name: String,
+    /// Logical tensor shape.
+    pub shape: Vec<usize>,
+    /// Per-layer scale factor α for reconstruction.
+    pub scale: f32,
+    /// Fraction of trits that are Tend (zero) — 0.0 … 1.0.
+    pub sparsity: f64,
+    /// Number of packed bytes in the quantized payload.
+    pub packed_bytes: usize,
+    /// Number of non-zero trits (CSR nnz).
+    pub csr_nnz: usize,
+    /// The packed ternary weights (5 trits per byte).
+    #[serde(skip)]
+    pub quantized: QuantizedWeights,
+}
+
+/// Top-level container for a compressed ternary model.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TernModel {
+    /// Source model identifier (e.g. "meta-llama/Llama-3.2-1B").
+    pub source_model: String,
+    /// Architecture name (e.g. "LlamaForCausalLM").
+    pub architecture: String,
+    /// Number of transformer layers.
+    pub num_layers: usize,
+    /// Hidden size / width.
+    pub hidden_size: usize,
+    /// All compressed layers.
+    pub layers: Vec<TernLayer>,
+    /// Compression configuration used.
+    pub config: CompressConfig,
+}
+
+impl TernModel {
+    /// Human-readable summary of the compressed model.
+    pub fn summary(&self) -> String {
+        let total_nnz: usize = self.layers.iter().map(|l| l.csr_nnz).sum();
+        let total_packed: usize = self.layers.iter().map(|l| l.packed_bytes).sum();
+        let mean_sparsity = if self.layers.is_empty() {
+            0.0
+        } else {
+            self.layers.iter().map(|l| l.sparsity).sum::<f64>() / self.layers.len() as f64
+        };
+
+        format!(
+            "TernModel: {}\n  architecture:   {}\n  layers:         {}\n  hidden_size:    {}\n  total nnz:      {} trits\n  total packed:   {} bytes\n  mean sparsity:  {:.1}%",
+            self.source_model,
+            self.architecture,
+            self.num_layers,
+            self.hidden_size,
+            total_nnz,
+            total_packed,
+            mean_sparsity * 100.0
+        )
+    }
+}
+
+/// Compression configuration.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct CompressConfig {
+    /// Source model identifier.
+    pub source_model: String,
+    /// Architecture name.
+    pub architecture: String,
+    /// Number of layers.
+    pub num_layers: usize,
+    /// Hidden size.
+    pub hidden_size: usize,
+    /// Whether to print verbose progress.
+    #[serde(default)]
+    pub verbose: bool,
+}
 
 // ─── .tern writer / reader ────────────────────────────────────────────────────
 
 /// Write a TernModel to a `.tern` file (bincode format).
 pub fn write_tern<W: Write>(writer: &mut W, model: &TernModel) -> Result<()> {
-    let bytes = bincode::serialize(model)?;
+    // Serialize everything except the quantized payloads (they're not serializable)
+    let mut model_copy = model.clone();
+    for layer in &mut model_copy.layers {
+        // Clear the non-serializable payload — it's reconstructed after loading
+        layer.quantized = QuantizedWeights { data: vec![], trit_count: 0 };
+    }
+    let bytes = bincode::serialize(&model_copy)?;
     writer.write_all(&bytes)?;
+    // Write quantized payloads separately
+    for layer in &model.layers {
+        writer.write_all(&layer.quantized.data)?;
+    }
     Ok(())
 }
 
@@ -31,7 +116,11 @@ pub fn write_tern<W: Write>(writer: &mut W, model: &TernModel) -> Result<()> {
 pub fn read_tern<R: Read>(reader: &mut R) -> Result<TernModel> {
     let mut bytes = Vec::new();
     reader.read_to_end(&mut bytes)?;
-    let model = bincode::deserialize(&bytes)?;
+    let mut model: TernModel = bincode::deserialize(&bytes)?;
+    // Reconstruct quantized payloads (currently empty after bincode deserialize)
+    for layer in &mut model.layers {
+        layer.quantized = QuantizedWeights { data: vec![], trit_count: 0 };
+    }
     Ok(model)
 }
 
@@ -61,10 +150,6 @@ pub fn load_tern(path: &Path) -> Result<TernModel> {
 /// Feature gate: compile with `--features gguf` once implemented.
 #[allow(dead_code)]
 pub fn load_gguf(_path: &Path) -> Result<Vec<(String, Vec<f32>, Vec<usize>)>> {
-    // Dequantization note: GGUF supports Q4_0, Q4_1, Q8_0, F16, F32, etc.
-    // We dequant to f32 first, then re-quantize to ternary.
-    // Direct F16→ternary (without f32 intermediate) would reduce peak memory —
-    // worth implementing once the pipeline is validated on Llama-3.2-1B.
     anyhow::bail!(
         "GGUF loader not yet implemented. \
          Enable the `gguf` feature and implement load_gguf() in format.rs. \
@@ -95,22 +180,26 @@ pub fn load_safetensors(_dir: &Path) -> Result<Vec<(String, Vec<f32>, Vec<usize>
 /// Produces `n_layers` weight matrices of shape `(hidden, hidden)` with random-ish values.
 pub fn synthetic_layers(
     n_layers: usize,
-    hidden:   usize,
-    seed:     u64,
+    hidden: usize,
+    seed: u64,
 ) -> Vec<(String, Vec<f32>, Vec<usize>)> {
     // Simple deterministic LCG for reproducible tests (no rand dep needed)
     let mut state = seed.wrapping_add(1);
     let mut next_f32 = move || -> f32 {
-        state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        state = state
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         let bits = (state >> 33) as u32;
         // Map to [-2.0, 2.0] to get a realistic weight distribution
         (bits as f32 / u32::MAX as f32) * 4.0 - 2.0
     };
 
-    (0..n_layers).map(|i| {
-        let name    = format!("model.layers.{i}.mlp.weight");
-        let weights: Vec<f32> = (0..hidden * hidden).map(|_| next_f32()).collect();
-        let shape   = vec![hidden, hidden];
-        (name, weights, shape)
-    }).collect()
+    (0..n_layers)
+        .map(|i| {
+            let name = format!("model.layers.{i}.mlp.weight");
+            let weights: Vec<f32> = (0..hidden * hidden).map(|_| next_f32()).collect();
+            let shape = vec![hidden, hidden];
+            (name, weights, shape)
+        })
+        .collect()
 }

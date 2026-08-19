@@ -5,7 +5,7 @@
 // Unauthorized use, copying, or distribution is prohibited.
 // Reference Patent Pending A50296/2026 (TIS platform patent, 10 claims; TSPARSE_MATMUL/@sparseskip = Claim 3).
 
-use ternlang_core::trit::Trit;
+use ternlang_core::Trit;
 
 /// Opcode: TSPARSE_MATMUL (0x1F)
 /// 

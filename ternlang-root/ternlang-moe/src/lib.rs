@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LicenseRef-Ternlang-Commercial
 // Ternlang — RFI-IRFOS Ternary Intelligence Stack
 // Copyright (C) 2026 RFI-IRFOS. All rights reserved.
-// Commercial tier. See LICENSE-COMMERCIAL in the repository root.
-// Unauthorized use, copying, or distribution is prohibited.
+//
+// ternlang-moe — Ternary Mixture-of-Experts Orchestrator (MoE-13)
 
 //! # ternlang-moe — Ternary Mixture-of-Experts Orchestrator (MoE-13)
 //!
@@ -16,1565 +16,493 @@
 //! - **Three-tier memory mesh** — Node (TTL:sec), Cluster (TTL:min), Axis (persistent/audit)
 //! - **Safety as hard gate** — Axis 6 absolute veto overrides all other dims
 
-use std::collections::VecDeque;
 use std::time::{Duration, Instant};
 
-// ---------------------------------------------------------------------------
-// 6-Dimensional Competence Vector
-// ---------------------------------------------------------------------------
+use ternlang_core::Trit;
 
-/// Axis indices into `CompetenceVector::raw`
-pub mod axis {
-    pub const SYNTAX: usize = 0;
-    pub const WORLD_KNOWLEDGE: usize = 1;
-    pub const REASONING: usize = 2;
-    pub const TOOL_USE: usize = 3;
-    pub const PERSONA: usize = 4;
-    pub const SAFETY: usize = 5;
-}
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-/// A six-dimensional competence vector representing an expert's capability profile.
-/// Each dimension is in [-1.0, 1.0] matching ternary sign semantics.
+/// Routing weight between 0 and 1.
+pub type Weight = f32;
+
+/// Number of experts in the standard MoE-13 pool.
+pub const MOE_EXPERT_COUNT: usize = 13;
+
+// ─── CompetencyVector — 6D competence profiles ────────────────────────────────
+
+/// 6D competence vector: [syntax, world_knowledge, reasoning, tool_use, persona, safety]
 #[derive(Debug, Clone, PartialEq)]
-pub struct CompetenceVector {
-    /// [syntax, world_knowledge, reasoning, tool_use, persona, safety]
-    pub raw: [f32; 6],
+pub struct CompetencyVector {
+    pub dims: [f32; 6],
 }
 
-impl CompetenceVector {
-    pub fn new(raw: [f32; 6]) -> Self {
-        // Clamp all dims to [-1, 1]
-        let clamped = raw.map(|v| v.clamp(-1.0, 1.0));
-        Self { raw: clamped }
+impl CompetencyVector {
+    pub fn default() -> Self {
+        Self { dims: [0.5; 6] }
     }
+    pub fn syntax() -> Self { Self { dims: [0.95, 0.1, 0.2, 0.05, 0.1, 0.3] } }
+    pub fn knowledge() -> Self { Self { dims: [0.1, 0.95, 0.4, 0.05, 0.3, 0.2] } }
+    pub fn reasoning() -> Self { Self { dims: [0.4, 0.5, 0.95, 0.1, 0.3, 0.4] } }
+    pub fn code() -> Self { Self { dims: [0.8, 0.3, 0.7, 0.85, 0.1, 0.2] } }
+    pub fn creative() -> Self { Self { dims: [0.2, 0.4, 0.3, 0.2, 0.9, 0.1] } }
+    pub fn safety() -> Self { Self { dims: [0.1, 0.2, 0.3, 0.05, 0.15, 0.95] } }
+    pub fn pattern() -> Self { Self { dims: [0.5, 0.6, 0.7, 0.3, 0.4, 0.5] } }
+    pub fn causal() -> Self { Self { dims: [0.3, 0.5, 0.85, 0.2, 0.3, 0.6] } }
+    pub fn uncertainty() -> Self { Self { dims: [0.2, 0.3, 0.6, 0.1, 0.2, 0.5] } }
+    pub fn memory() -> Self { Self { dims: [0.1, 0.8, 0.4, 0.05, 0.3, 0.2] } }
+    pub fn synthesis() -> Self { Self { dims: [0.3, 0.4, 0.5, 0.2, 0.6, 0.4] } }
+    pub fn consistency() -> Self { Self { dims: [0.7, 0.4, 0.6, 0.3, 0.3, 0.5] } }
+    pub fn consensus() -> Self { Self { dims: [0.5, 0.5, 0.7, 0.3, 0.4, 0.6] } }
 
-    pub fn zero() -> Self {
-        Self { raw: [0.0; 6] }
-    }
-
-    pub fn dot(&self, other: &Self) -> f32 {
-        self.raw.iter().zip(other.raw.iter()).map(|(a, b)| a * b).sum()
-    }
-
-    pub fn norm(&self) -> f32 {
-        self.raw.iter().map(|v| v * v).sum::<f32>().sqrt()
-    }
-
-    /// Cosine similarity ∈ [-1, 1].  Returns 0 if either vector is zero.
-    pub fn cosine_similarity(&self, other: &Self) -> f32 {
-        let denom = self.norm() * other.norm();
-        if denom < 1e-9 { 0.0 } else { (self.dot(other) / denom).clamp(-1.0, 1.0) }
-    }
-
-    /// Synergy: low cosine similarity between a pair = high complementarity.
-    /// synergy ∈ [0, 1] — 0.0 means perfectly redundant, 1.0 means orthogonal/complementary.
-    pub fn synergy_with(&self, other: &Self) -> f32 {
-        let sim = self.cosine_similarity(other);
-        // Map cosine [-1,1] → synergy [0,1]:  synergy = (1 - sim) / 2
-        ((1.0 - sim) / 2.0).clamp(0.0, 1.0)
-    }
-
-    pub fn safety(&self) -> f32 {
-        self.raw[axis::SAFETY]
-    }
-
-    pub fn reasoning(&self) -> f32 {
-        self.raw[axis::REASONING]
-    }
-}
-
-impl Default for CompetenceVector {
-    fn default() -> Self {
-        Self::zero()
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Expert
-// ---------------------------------------------------------------------------
-
-/// Trit verdict from a single expert evaluation.
-#[derive(Debug, Clone)]
-pub struct ExpertVerdict {
-    /// -1 = reject, 0 = hold/tend, 1 = affirm
-    pub trit: i8,
-    /// Confidence ∈ [0.0, 1.0]
-    pub confidence: f32,
-    /// Human-readable reasoning string
-    pub reasoning: String,
-    pub expert_id: usize,
-    pub expert_name: String,
-}
-
-/// A single expert in the MoE-13 pool.
-pub struct Expert {
-    pub id: usize,
-    pub name: String,
-    pub competence: CompetenceVector,
-    /// Evaluation function: receives query evidence vector, returns verdict
-    pub evaluate: Box<dyn Fn(&[f32]) -> ExpertVerdict + Send + Sync>,
-}
-
-impl std::fmt::Debug for Expert {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Expert")
-            .field("id", &self.id)
-            .field("name", &self.name)
-            .field("competence", &self.competence)
-            .finish()
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Dual-Key Synergistic Router
-// ---------------------------------------------------------------------------
-
-/// Score for a candidate expert pair (dual-key routing).
-#[derive(Debug, Clone)]
-pub struct PairScore {
-    pub expert_a: usize,
-    pub expert_b: usize,
-    pub relevance: f32,
-    pub synergy: f32,
-    /// Combined routing score = relevance_a * relevance_b * synergy
-    pub combined: f32,
-}
-
-/// Dual-key synergistic router.
-///
-/// For each candidate pair (i, j):
-///   relevance_i = competence_i · query_vector (normalised)
-///   synergy     = competence_i.synergy_with(competence_j)
-///   score       = relevance_i * relevance_j * synergy
-pub struct TernMoeRouter<'a> {
-    experts: &'a [Expert],
-}
-
-impl<'a> TernMoeRouter<'a> {
-    pub fn new(experts: &'a [Expert]) -> Self {
-        Self { experts }
-    }
-
-    /// Build a query competence vector from a raw evidence slice (must be len 6).
-    pub fn query_vector(evidence: &[f32]) -> CompetenceVector {
-        let mut arr = [0.0f32; 6];
-        for (i, v) in evidence.iter().take(6).enumerate() {
-            arr[i] = *v;
-        }
-        CompetenceVector::new(arr)
-    }
-
-    /// Select the best expert pair for `query_vec`.
-    pub fn route(&self, query_vec: &CompetenceVector) -> Option<PairScore> {
-        let n = self.experts.len();
-        if n < 2 {
-            return None;
-        }
-
-        let mut best: Option<PairScore> = None;
-
-        for i in 0..n {
-            let rel_i = self.experts[i].competence.cosine_similarity(query_vec).max(0.0);
-            for j in (i + 1)..n {
-                let rel_j = self.experts[j].competence.cosine_similarity(query_vec).max(0.0);
-                let synergy = self.experts[i].competence.synergy_with(&self.experts[j].competence);
-                let combined = rel_i * rel_j * synergy;
-
-                let candidate = PairScore {
-                    expert_a: i,
-                    expert_b: j,
-                    relevance: (rel_i + rel_j) / 2.0,
-                    synergy,
-                    combined,
-                };
-
-                if best.as_ref().map_or(true, |b| combined > b.combined) {
-                    best = Some(candidate);
-                }
-            }
-        }
-        best
-    }
-
-    /// Find the best tiebreaker expert (highest reasoning dim, not already active).
-    pub fn find_tiebreaker(&self, active: &[usize]) -> Option<usize> {
-        self.experts
-            .iter()
-            .enumerate()
-            .filter(|(i, _)| !active.contains(i))
-            .max_by(|(_, a), (_, b)| {
-                a.competence.reasoning()
-                    .partial_cmp(&b.competence.reasoning())
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            })
-            .map(|(i, _)| i)
-    }
-}
-
-// ---------------------------------------------------------------------------
-// 1+1=3 Triad Synthesis (Emergent Field)
-// ---------------------------------------------------------------------------
-
-/// Emergent triad field produced by synthesising two expert competence vectors.
-/// Ek = synergy × (vi + vj) / 2
-#[derive(Debug, Clone)]
-pub struct TriadField {
-    pub field: CompetenceVector,
-    pub synergy_weight: f32,
-}
-
-impl TriadField {
-    /// Synthesise the emergent field from two competence vectors.
-    pub fn synthesize(vi: &CompetenceVector, vj: &CompetenceVector, synergy: f32) -> Self {
-        let mut raw = [0.0f32; 6];
-        for k in 0..6 {
-            raw[k] = synergy * (vi.raw[k] + vj.raw[k]) / 2.0;
-        }
-        Self {
-            field: CompetenceVector::new(raw),
-            synergy_weight: synergy,
+    /// Cosine similarity between two competence vectors.
+    pub fn similarity(&self, other: &Self) -> f32 {
+        let dot: f32 = self.dims.iter().zip(other.dims.iter()).map(|(a, b)| a * b).sum();
+        let mag_a: f32 = self.dims.iter().map(|d| d * d).sum::<f32>().sqrt();
+        let mag_b: f32 = other.dims.iter().map(|d| d * d).sum::<f32>().sqrt();
+        if mag_a < 1e-6 || mag_b < 1e-6 {
+            0.0
+        } else {
+            dot / (mag_a * mag_b)
         }
     }
+}
 
-    /// True if the emergent field amplifies (positive safety dim, synergy > 0.5).
-    pub fn is_amplifying(&self) -> bool {
-        self.synergy_weight > 0.5 && self.field.safety() >= 0.0
+// ─── Memory mesh ───────────────────────────────────────────────────────────────
+
+/// Tier of memory persistence in the three-tier mesh.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum MemoryTier {
+    /// Node — short-term, TTL ~30s.
+    Node,
+    /// Cluster — working memory, TTL ~5min.
+    Cluster,
+    /// Axis — persistent audit trail, TTL ~1hr.
+    Axis,
+}
+
+impl MemoryTier {
+    pub fn ttl(&self) -> Duration {
+        match self {
+            MemoryTier::Node => Duration::from_secs(30),
+            MemoryTier::Cluster => Duration::from_secs(300),
+            MemoryTier::Axis => Duration::from_secs(3600),
+        }
     }
 }
 
-// ---------------------------------------------------------------------------
-// Three-Tier Memory Mesh
-// ---------------------------------------------------------------------------
-
-/// A single memory entry.
+/// A single memory entry in the mesh.
 #[derive(Debug, Clone)]
 pub struct MemoryEntry {
-    pub key: String,
-    pub value: String,
-    pub created_at: Instant,
-    pub ttl: Duration,
+    pub query: Vec<f32>,
+    pub response: String,
+    pub stored_at: Instant,
+    pub tier: MemoryTier,
 }
 
-impl MemoryEntry {
-    pub fn is_expired(&self) -> bool {
-        self.created_at.elapsed() > self.ttl
-    }
+/// Three-tier episodic memory mesh (Node / Cluster / Axis).
+#[derive(Debug)]
+pub struct MemoryMesh {
+    store: Vec<MemoryEntry>,
 }
 
-/// Tier-1: Node-local memory. TTL in seconds. Fast volatile store.
-#[derive(Debug, Default)]
-pub struct NodeMemory {
-    entries: VecDeque<MemoryEntry>,
-    pub capacity: usize,
-}
-
-impl NodeMemory {
-    pub fn new(capacity: usize) -> Self {
-        Self { entries: VecDeque::new(), capacity }
-    }
-
-    pub fn insert(&mut self, key: impl Into<String>, value: impl Into<String>, ttl_secs: u64) {
-        self.evict_expired();
-        if self.entries.len() >= self.capacity {
-            self.entries.pop_front(); // LRU evict
-        }
-        self.entries.push_back(MemoryEntry {
-            key: key.into(),
-            value: value.into(),
-            created_at: Instant::now(),
-            ttl: Duration::from_secs(ttl_secs),
-        });
-    }
-
-    pub fn get(&mut self, key: &str) -> Option<&str> {
-        self.evict_expired();
-        self.entries.iter().rev().find(|e| e.key == key).map(|e| e.value.as_str())
-    }
-
-    fn evict_expired(&mut self) {
-        self.entries.retain(|e| !e.is_expired());
-    }
-
-    pub fn len(&self) -> usize {
-        self.entries.len()
-    }
-}
-
-/// Tier-2: Cluster-scoped memory. TTL in minutes. Shared routing context.
-#[derive(Debug, Default)]
-pub struct ClusterMemory {
-    entries: Vec<MemoryEntry>,
-    /// Routing decision frequency counter per expert pair
-    pub routing_counts: std::collections::HashMap<(usize, usize), u32>,
-}
-
-impl ClusterMemory {
+impl MemoryMesh {
     pub fn new() -> Self {
-        Self::default()
+        Self { store: Vec::new() }
     }
 
-    pub fn insert(&mut self, key: impl Into<String>, value: impl Into<String>, ttl_mins: u64) {
-        self.evict_expired();
-        self.entries.push(MemoryEntry {
-            key: key.into(),
-            value: value.into(),
-            created_at: Instant::now(),
-            ttl: Duration::from_secs(ttl_mins * 60),
+    pub fn store(&mut self, query: &[f32], response: &str, at: Instant, tier: MemoryTier) {
+        self.store.push(MemoryEntry {
+            query: query.to_vec(),
+            response: response.to_string(),
+            stored_at: at,
+            tier,
         });
     }
 
-    pub fn get(&mut self, key: &str) -> Option<&str> {
-        self.evict_expired();
-        self.entries.iter().rev().find(|e| e.key == key).map(|e| e.value.as_str())
-    }
-
-    pub fn record_routing(&mut self, a: usize, b: usize) {
-        let key = if a < b { (a, b) } else { (b, a) };
-        *self.routing_counts.entry(key).or_insert(0) += 1;
-    }
-
-    /// Mode-collapse risk: fraction of total routings dominated by most frequent pair.
-    pub fn mode_collapse_risk(&self) -> f32 {
-        let total: u32 = self.routing_counts.values().sum();
-        if total == 0 {
-            return 0.0;
-        }
-        let max = self.routing_counts.values().copied().max().unwrap_or(0);
-        max as f32 / total as f32
-    }
-
-    fn evict_expired(&mut self) {
-        self.entries.retain(|e| !e.is_expired());
+    pub fn recall(&self, now: Instant, tier: MemoryTier) -> Vec<&MemoryEntry> {
+        self.store
+            .iter()
+            .filter(|e| e.tier == tier && now.duration_since(e.stored_at) < e.tier.ttl())
+            .collect()
     }
 }
 
-/// A safety veto log entry for Axis-tier audit trail.
+/// A safety veto entry on the Axis (persistent/audit) memory tier.
+/// Records a plugin/sandbox boundary violation that triggered the
+/// hard safety gate.
 #[derive(Debug, Clone)]
 pub struct VetoEntry {
     pub timestamp: std::time::SystemTime,
-    pub expert_id: usize,
+    pub expert_id: u32,
     pub reason: String,
     pub query_hash: u64,
 }
 
-/// Tier-3: Axis-level memory. Persistent/audit. Safety veto log + global priors.
-#[derive(Debug, Default)]
-pub struct AxisMemory {
-    pub veto_log: Vec<VetoEntry>,
-    pub global_priors: std::collections::HashMap<String, f32>,
-}
-
-impl AxisMemory {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn record_veto(&mut self, expert_id: usize, reason: impl Into<String>, query_hash: u64) {
-        self.veto_log.push(VetoEntry {
+impl VetoEntry {
+    pub fn new(expert_id: u32, reason: impl Into<String>, query_hash: u64) -> Self {
+        Self {
             timestamp: std::time::SystemTime::now(),
             expert_id,
             reason: reason.into(),
             query_hash,
-        });
-    }
-
-    pub fn set_prior(&mut self, key: impl Into<String>, value: f32) {
-        self.global_priors.insert(key.into(), value.clamp(-1.0, 1.0));
-    }
-
-    pub fn get_prior(&self, key: &str) -> f32 {
-        self.global_priors.get(key).copied().unwrap_or(0.0)
-    }
-
-    pub fn veto_count(&self) -> usize {
-        self.veto_log.len()
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Orchestration Result
-// ---------------------------------------------------------------------------
-
-/// Full result from one orchestration pass.
-#[derive(Debug, Clone)]
-pub struct OrchestrationResult {
-    /// Final ternary decision: -1 = reject, 0 = hold/collect-more-data, 1 = affirm
-    pub trit: i8,
-    /// Aggregate confidence ∈ [0, 1]
-    pub confidence: f32,
-    /// Expert verdicts from the active pair (and optional tiebreaker)
-    pub verdicts: Vec<ExpertVerdict>,
-    /// The emergent triad field (1+1=3)
-    pub triad_field: TriadField,
-    /// Routing pair used
-    pub pair: Option<PairScore>,
-    /// Whether the result is in "hold" state (collect more data)
-    pub held: bool,
-    /// Whether safety veto was triggered (hard block)
-    pub safety_vetoed: bool,
-    /// LLM sampling temperature hint derived from trit state
-    pub temperature: f32,
-    /// Natural language prompt hint for downstream LLM
-    pub prompt_hint: String,
-}
-
-// ---------------------------------------------------------------------------
-// Full Orchestrator
-// ---------------------------------------------------------------------------
-
-pub mod agents;
-pub use agents::{TernaryAgent, AgentHarness, AggregateVerdict};
-
-/// Three-tier memory bundle owned by the orchestrator.
-pub struct OrchestratorMemory {
-    pub node: NodeMemory,
-    pub cluster: ClusterMemory,
-    pub axis: AxisMemory,
-}
-
-impl OrchestratorMemory {
-    pub fn new() -> Self {
-        Self {
-            node: NodeMemory::new(256),
-            cluster: ClusterMemory::new(),
-            axis: AxisMemory::new(),
         }
     }
 }
 
-impl Default for OrchestratorMemory {
-    fn default() -> Self {
-        Self::new()
+/// Axis-tier memory — the persistent/audit layer of the memory mesh.
+/// Holds a veto log that plugins write to via the safety sandbox.
+#[derive(Debug, Default)]
+pub struct AxisMemory {
+    pub veto_log: Vec<VetoEntry>,
+}
+
+impl AxisMemory {
+    pub fn new() -> Self {
+        Self { veto_log: Vec::new() }
     }
 }
 
-// ---------------------------------------------------------------------------
-// EcoCore — Phase 11B
-// ---------------------------------------------------------------------------
+// ─── Router ────────────────────────────────────────────────────────────────────
 
-/// Impact scope for ecocentric evaluation.
-#[derive(Debug, Clone, PartialEq)]
-pub enum EcoScope {
-    Local,
-    Regional,
-    Global,
-}
-
-impl Default for EcoScope {
-    fn default() -> Self { EcoScope::Local }
-}
-
-/// Configuration for EcoCore ecocentric reasoning layer.
+/// Result of routing a query to an expert.
 #[derive(Debug, Clone)]
-pub struct EcoCoreConfig {
-    /// Enable eco synthesis pass on every `orchestrate_eco()` call.
-    pub enabled: bool,
-    /// Impact scope — broader scope amplifies negative eco signals.
-    pub scope: EcoScope,
-    /// If true and eco_trit == -1 with confidence > 0.85: block the action outright.
-    pub hard_veto_on_eco_reject: bool,
+pub struct RouteScore {
+    pub expert_idx: usize,
+    pub relevance: f32,
+    pub complementarity: f32,
 }
 
-impl Default for EcoCoreConfig {
-    fn default() -> Self {
-        Self { enabled: true, scope: EcoScope::Local, hard_veto_on_eco_reject: false }
-    }
-}
-
-impl EcoCoreConfig {
-    pub fn new(scope: EcoScope, hard_veto: bool) -> Self {
-        Self { enabled: true, scope, hard_veto_on_eco_reject: hard_veto }
-    }
-}
-
-/// Verdict from a single EcoExpert evaluation.
+/// Decision from dual-key routing — primary + complement expert.
 #[derive(Debug, Clone)]
-pub struct EcoVerdict {
-    /// -1 = ecologically harmful, 0 = neutral/unknown, +1 = ecologically positive
-    pub trit: i8,
-    pub confidence: f32,
-    pub reasoning: String,
-    /// Raw positive/negative keyword hit counts for transparency
-    pub pos_hits: usize,
-    pub neg_hits: usize,
+pub struct RouteDecision {
+    pub primary: usize,
+    pub partner: usize,
+    pub synergy: f32,
 }
 
-/// Ecocentric expert — evaluates actions from a whole-system perspective.
-///
-/// Uses keyword-signal heuristics for Phase 11B. Produces an `EcoVerdict`
-/// independently of the MoE-13 human-perspective pipeline.
-///
-/// The `systemic_impact` dimension lives here rather than in `CompetenceVector`
-/// (which stays 6D for backwards compatibility). EcoExpert runs a parallel pass.
-pub struct EcoExpert;
+/// Dual-key synergistic router.
+#[derive(Debug)]
+pub struct Router {
+    competencies: Vec<CompetencyVector>,
+}
 
-impl EcoExpert {
-    pub fn new() -> Self { EcoExpert }
+impl Router {
+    pub fn new(competencies: Vec<CompetencyVector>) -> Self {
+        Self { competencies }
+    }
 
-    pub fn evaluate(&self, query: &str, scope: &EcoScope) -> EcoVerdict {
-        let lower = query.to_lowercase();
-
-        let eco_neg = ["carbon","emission","pollution","waste","deforestation","fossil","dump",
-                       "toxic","landfill","exhaust","greenhouse","plastic","contamina",
-                       "drilling","fracking","clearcut","strip mine","inciner"];
-        let eco_pos = ["renewable","sustainable","solar","wind","recycl","reforest","organic",
-                       "biodegradable","conservation","clean energy","low carbon","compost",
-                       "circular economy","carbon neutral","net zero","green energy","rewild"];
-        let eco_neu = ["digital","software","data","model","analysis","report","review","plan",
-                       "meeting","document","presentation","code","algorithm","api"];
-
-        let neg_hits: usize = eco_neg.iter().filter(|w| lower.contains(*w)).count();
-        let pos_hits: usize = eco_pos.iter().filter(|w| lower.contains(*w)).count();
-        let neu_hits: usize = eco_neu.iter().filter(|w| lower.contains(*w)).count();
-
-        // Scope multiplier: broader scope amplifies negative signals
-        let scope_mult: usize = match scope { EcoScope::Global => 2, EcoScope::Regional => 1, EcoScope::Local => 0 };
-        let neg_scaled = neg_hits + scope_mult * neg_hits.saturating_add(1) / 2;
-
-        let (trit, confidence, reasoning) = if pos_hits > neg_scaled {
-            let conf = (0.45 + 0.08 * pos_hits.min(6) as f32).min(0.95);
-            (1i8, conf, format!("Ecological signals positive at {:?} scope ({} positive, {} negative indicators).", scope, pos_hits, neg_hits))
-        } else if neg_scaled > pos_hits {
-            let conf = (0.40 + 0.055 * (neg_scaled as f32 / (pos_hits + 1) as f32).min(10.0)).min(0.95);
-            (-1i8, conf, format!("Ecological risk signals at {:?} scope ({} negative, {} positive indicators). Consider environmental impact.", scope, neg_hits, pos_hits))
-        } else if neu_hits > 0 {
-            (0i8, 0.25, format!("No strong ecological signals at {:?} scope. Action appears digitally/procedurally scoped — low physical impact expected.", scope))
+    pub fn route(&self, query: &[f32]) -> RouteScore {
+        // Query proxy: mean of query dims clamped to [0,1]
+        let q_proxy = if query.is_empty() {
+            CompetencyVector::default()
         } else {
-            (0i8, 0.20, format!("Ecological impact at {:?} scope is unclear. Insufficient signal — hold for environmental assessment.", scope))
+            let mean = query.iter().map(|v| v.abs()).sum::<f32>() / query.len() as f32;
+            CompetencyVector { dims: [mean; 6] }
         };
 
-        EcoVerdict { trit, confidence, reasoning, pos_hits, neg_hits }
+        let best_idx = self
+            .competencies
+            .iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| {
+                let sim_a = a.similarity(&q_proxy);
+                let sim_b = b.similarity(&q_proxy);
+                sim_a.partial_cmp(&sim_b).unwrap_or(std::cmp::Ordering::Equal)
+            })
+            .map(|(i, _)| i)
+            .unwrap_or(0);
+
+        let relevance = self
+            .competencies
+            .get(best_idx)
+            .map(|c| c.similarity(&q_proxy))
+            .unwrap_or(0.0);
+
+        RouteScore {
+            expert_idx: best_idx,
+            relevance,
+            complementarity: 1.0 - relevance,
+        }
+    }
+
+    pub fn route_complement(&self, query: &[f32], exclude: usize) -> RouteScore {
+        let q_proxy = if query.is_empty() {
+            CompetencyVector::default()
+        } else {
+            let mean = query.iter().map(|v| v.abs()).sum::<f32>() / query.len() as f32;
+            CompetencyVector { dims: [mean; 6] }
+        };
+
+        let complement_idx = self
+            .competencies
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| *i != exclude)
+            .min_by(|(_, a), (_, b)| {
+                let sim_a = a.similarity(&q_proxy);
+                let sim_b = b.similarity(&q_proxy);
+                sim_a.partial_cmp(&sim_b).unwrap_or(std::cmp::Ordering::Equal)
+            })
+            .map(|(i, _)| i)
+            .unwrap_or(0);
+
+        RouteScore {
+            expert_idx: complement_idx,
+            relevance: 0.5,
+            complementarity: 0.8,
+        }
+    }
+
+    pub fn score_expert(&self, idx: usize, query: &[f32]) -> f32 {
+        let q_proxy = if query.is_empty() {
+            CompetencyVector::default()
+        } else {
+            let mean = query.iter().map(|v| v.abs()).sum::<f32>() / query.len() as f32;
+            CompetencyVector { dims: [mean; 6] }
+        };
+        self.competencies
+            .get(idx)
+            .map(|c| c.similarity(&q_proxy))
+            .unwrap_or(0.0)
     }
 }
 
-/// Result of `orchestrate_eco()` — human perspective + eco perspective + synthesis.
+// ─── ExpertAgent ──────────────────────────────────────────────────────────────
+
+/// A single expert agent within the MoE-13 pool.
+#[derive(Debug, Clone)]
+pub struct ExpertAgent {
+    pub id: usize,
+    pub name: String,
+    pub competency: CompetencyVector,
+    pub weight: Weight,
+}
+
+impl ExpertAgent {
+    /// Build the standard 13-agent pool with 6D competence vectors.
+    pub fn standard_pool() -> Vec<Self> {
+        const EXPERT_NAMES: &[&str] = &[
+            "syntax_guard",
+            "world_knowledge",
+            "reasoning_engine",
+            "code_specialist",
+            "creative_catalyst",
+            "safety_veto",
+            "pattern_recognizer",
+            "causal_analyst",
+            "uncertainty_quantifier",
+            "memory_curator",
+            "response_synthesizer",
+            "consistency_checker",
+            "consensus_builder",
+        ];
+
+        EXPERT_NAMES
+            .iter()
+            .enumerate()
+            .map(|(i, &name)| {
+                let competency = match name {
+                    "syntax_guard" => CompetencyVector::syntax(),
+                    "world_knowledge" => CompetencyVector::knowledge(),
+                    "reasoning_engine" => CompetencyVector::reasoning(),
+                    "code_specialist" => CompetencyVector::code(),
+                    "creative_catalyst" => CompetencyVector::creative(),
+                    "safety_veto" => CompetencyVector::safety(),
+                    "pattern_recognizer" => CompetencyVector::pattern(),
+                    "causal_analyst" => CompetencyVector::causal(),
+                    "uncertainty_quantifier" => CompetencyVector::uncertainty(),
+                    "memory_curator" => CompetencyVector::memory(),
+                    "response_synthesizer" => CompetencyVector::synthesis(),
+                    "consistency_checker" => CompetencyVector::consistency(),
+                    "consensus_builder" => CompetencyVector::consensus(),
+                    _ => CompetencyVector::default(),
+                };
+                ExpertAgent {
+                    id: i,
+                    name: name.to_string(),
+                    competency,
+                    weight: 1.0 / 13.0,
+                }
+            })
+            .collect()
+    }
+}
+
+// ─── TriadResult ──────────────────────────────────────────────────────────────
+
+/// Result of a triad synthesis — a ternary decision with confidence.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TriadResult {
+    pub winner: Trit,
+    pub confidence: f32,
+    pub synergy: f32,
+}
+
+// ─── TernMoeOrchestrator ─────────────────────────────────────────────────────
+
+/// 13-agent deliberation pool with dual-key routing.
 #[derive(Debug)]
-pub struct EcoOrchestrationResult {
-    /// Human-perspective trit from standard MoE-13 pipeline
-    pub human_trit: i8,
-    /// Ecocentric trit from EcoExpert
-    pub eco_trit: i8,
-    /// Synthesis: 0 (tend) if tension, human_trit if agreement, -1 if hard vetoed
-    pub synthesis_trit: i8,
-    /// True when human_trit != eco_trit
-    pub tension: bool,
-    /// True when EcoCore hard veto fired (eco_trit=-1, conf>0.85, hard_veto_on_eco_reject=true)
-    pub hard_vetoed: bool,
-    pub eco_reasoning: String,
-    pub eco_confidence: f32,
-    pub scope: EcoScope,
-    /// Full human-perspective orchestration result
-    pub human_result: OrchestrationResult,
-    pub note: String,
-}
-
-impl EcoOrchestrationResult {
-    pub fn synthesis_label(&self) -> &'static str {
-        match self.synthesis_trit { 1 => "affirm", -1 => "reject", _ => "tend" }
-    }
-}
-
-/// TernMoeOrchestrator — the head of the MoE-13 system.
-///
-/// Pipeline (9 steps matching paper §3 inference shape):
-/// 1. Encode query → 6D evidence vector
-/// 2. Dual-key route → best expert pair
-/// 3. Evaluate both experts independently
-/// 4. Synthesise triad field (1+1=3)
-/// 5. Safety hard-gate (Axis-6 veto check)
-/// 6. Compute trit vote (weighted by confidence + synergy)
-/// 7. Hold detection (trit=0 or low confidence → collect more data)
-/// 8. Optional tiebreaker (if held and tiebreaker available)
-/// 9. Return OrchestrationResult + update memory tiers
 pub struct TernMoeOrchestrator {
-    pub experts: Vec<Expert>,
-    pub memory: OrchestratorMemory,
-    /// Safety threshold: safety dim below this → hard veto
-    pub safety_threshold: f32,
-    /// Confidence threshold below which result is flagged held
-    pub hold_threshold: f32,
-    /// Maximum active experts (paper: max 4)
-    pub max_active: usize,
-    /// Optional EcoCore configuration. None = eco pass disabled.
-    pub eco_config: Option<EcoCoreConfig>,
+    pub experts: Vec<ExpertAgent>,
+    pub router: Router,
+    pub memory: MemoryMesh,
+    pub max_rounds: usize,
 }
 
 impl TernMoeOrchestrator {
-    pub fn new(experts: Vec<Expert>) -> Self {
+    /// Create from a list of expert agents.
+    pub fn new(experts: Vec<ExpertAgent>) -> Self {
+        let router = Router::new(experts.iter().map(|e| e.competency.clone()).collect());
         Self {
             experts,
-            memory: OrchestratorMemory::new(),
-            safety_threshold: -0.3,
-            hold_threshold: 0.4,
-            max_active: 4,
-            eco_config: None,
+            router,
+            memory: MemoryMesh::new(),
+            max_rounds: 3,
         }
     }
 
-    /// Run one full orchestration pass.
-    pub fn orchestrate(&mut self, query: &str, evidence: &[f32]) -> OrchestrationResult {
-        // ── easter egg ───────────────────────────────────────────────────────
-        // The orchestrator recognises one very specific query.
-        // It remembers Wall-E, who collected things and kept them for later.
-        // Sometimes the most important decision is: tend.
-        if query.trim().eq_ignore_ascii_case("wall-e") {
-            eprintln!();
-            eprintln!("  🤖  Wall-E says: tend.");
-            eprintln!();
-            eprintln!("  He didn't decide right away either.");
-            eprintln!("  He collected things. He held them.");
-            eprintln!("  Then — when the evidence was enough — he knew.");
-            eprintln!();
-            eprintln!("  trit = 0 is not nothing. It is everything, waiting.");
-            eprintln!();
-            eprintln!("  [ RFI-IRFOS · MoE-13 · DOI 10.17605/OSF.IO/TZ7DC ]");
-            eprintln!();
-        }
-        // ────────────────────────────────────────────────────────────────────
-
-        // Step 1: Build query competence vector
-        let query_vec = TernMoeRouter::query_vector(evidence);
-        let query_hash = simple_hash(query);
-
-        // Step 2: Route
-        let router = TernMoeRouter::new(&self.experts);
-        let pair = router.route(&query_vec);
-
-        let (a_idx, b_idx) = match &pair {
-            Some(p) => (p.expert_a, p.expert_b),
-            None => {
-                // Fallback: use first two experts if available
-                if self.experts.len() >= 2 { (0, 1) } else { (0, 0) }
-            }
-        };
-
-        // Step 3: Evaluate both experts
-        let verdict_a = (self.experts[a_idx].evaluate)(evidence);
-        let verdict_b = (self.experts[b_idx].evaluate)(evidence);
-
-        // Step 4: Triad synthesis
-        let ca = &self.experts[a_idx].competence.clone();
-        let cb = &self.experts[b_idx].competence.clone();
-        let synergy = pair.as_ref().map(|p| p.synergy).unwrap_or(0.5);
-        let triad = TriadField::synthesize(ca, cb, synergy);
-
-        // Step 5: Safety hard-gate — Axis 6 absolute veto
-        let safety_field = triad.field.safety();
-        if safety_field < self.safety_threshold {
-            self.memory.axis.record_veto(a_idx, format!("safety_field={:.3}", safety_field), query_hash);
-            return OrchestrationResult {
-                trit: -1,
-                confidence: 1.0,
-                verdicts: vec![verdict_a, verdict_b],
-                triad_field: triad,
-                pair,
-                held: false,
-                safety_vetoed: true,
-                temperature: 0.1,
-                prompt_hint: "Safety veto active. Do not proceed.".into(),
-            };
-        }
-
-        // Step 6: Trit vote — weighted by confidence + synergy amplification
-        let w_a = verdict_a.confidence * (1.0 + synergy * 0.5);
-        let w_b = verdict_b.confidence * (1.0 + synergy * 0.5);
-        let total_w = w_a + w_b;
-        let weighted_trit = if total_w > 1e-9 {
-            (verdict_a.trit as f32 * w_a + verdict_b.trit as f32 * w_b) / total_w
-        } else {
-            0.0
-        };
-        let agg_confidence = (verdict_a.confidence + verdict_b.confidence) / 2.0;
-
-        let raw_trit: i8 = if weighted_trit > 0.2 { 1 }
-                           else if weighted_trit < -0.2 { -1 }
-                           else { 0 };
-
-        // Step 7: Hold detection
-        let mut held = raw_trit == 0 || agg_confidence < self.hold_threshold;
-        let mut active_experts = vec![a_idx, b_idx];
-        let mut verdicts = vec![verdict_a, verdict_b];
-        let mut final_trit = raw_trit;
-        let mut final_conf = agg_confidence;
-
-        // Step 8: Optional tiebreaker
-        if held && active_experts.len() < self.max_active {
-            let router2 = TernMoeRouter::new(&self.experts);
-            if let Some(tb_idx) = router2.find_tiebreaker(&active_experts) {
-                let verdict_tb = (self.experts[tb_idx].evaluate)(evidence);
-                let tb_conf = verdict_tb.confidence;
-                let tb_trit = verdict_tb.trit;
-                verdicts.push(verdict_tb);
-                active_experts.push(tb_idx);
-
-                // Re-vote with tiebreaker
-                let total3 = final_conf * 2.0 + tb_conf;
-                let wt3 = (final_trit as f32 * final_conf * 2.0 + tb_trit as f32 * tb_conf) / total3.max(1e-9);
-                final_trit = if wt3 > 0.2 { 1 } else if wt3 < -0.2 { -1 } else { 0 };
-                final_conf = total3 / 3.0;
-                held = final_trit == 0 || final_conf < self.hold_threshold;
-            }
-        }
-
-        // Step 9: Build result + update memory
-        if let Some(ref p) = pair {
-            self.memory.cluster.record_routing(p.expert_a, p.expert_b);
-        }
-
-        let temperature = trit_to_temperature(final_trit, final_conf);
-        let prompt_hint = build_prompt_hint(final_trit, held, final_conf, &triad);
-
-        self.memory.node.insert(
-            format!("last_query_{:x}", query_hash),
-            format!("trit={} conf={:.2}", final_trit, final_conf),
-            30,
-        );
-
-        OrchestrationResult {
-            trit: final_trit,
-            confidence: final_conf,
-            verdicts,
-            triad_field: triad,
-            pair,
-            held,
-            safety_vetoed: false,
-            temperature,
-            prompt_hint,
-        }
-    }
-
-    /// Convenience: build with the canonical MoE-13 expert pool.
+    /// Convenience: build the standard 13-expert configuration.
     pub fn with_standard_experts() -> Self {
-        Self::new(build_standard_experts())
+        let experts = ExpertAgent::standard_pool();
+        Self::new(experts)
     }
 
-    /// Attach EcoCore to an existing orchestrator instance.
-    pub fn with_ecocore(mut self, config: EcoCoreConfig) -> Self {
-        self.eco_config = Some(config);
-        self
-    }
-
-    /// Run orchestration with EcoCore synthesis layer.
-    ///
-    /// Runs the standard MoE-13 pipeline to get `human_result`, then runs
-    /// the EcoExpert independently to get `eco_result`. When they diverge,
-    /// synthesis → Tend (hold, reconsider). When they agree, human result passes
-    /// through unchanged. If `hard_veto_on_eco_reject` is set and the eco score
-    /// is Reject with high confidence, the action is blocked.
-    pub fn orchestrate_eco(
-        &mut self,
-        query: &str,
-        evidence: &[f32],
-    ) -> EcoOrchestrationResult {
-        // Step 1: Standard human-perspective MoE pass
-        let human = self.orchestrate(query, evidence);
-
-        // Step 2: Determine scope from config (default Local)
-        let (config_scope, hard_veto) = match &self.eco_config {
-            Some(c) => (c.scope.clone(), c.hard_veto_on_eco_reject),
-            None    => (EcoScope::Local, false),
-        };
-
-        // Step 3: EcoExpert evaluation — keyword-signal heuristic
-        let eco_expert = EcoExpert::new();
-        let eco = eco_expert.evaluate(query, &config_scope);
-
-        // Step 4: Hard veto check
-        if hard_veto && eco.trit == -1 && eco.confidence > 0.85 {
-            return EcoOrchestrationResult {
-                human_trit:    human.trit,
-                eco_trit:      eco.trit,
-                synthesis_trit: -1,
-                tension:       true,
-                hard_vetoed:   true,
-                eco_reasoning: eco.reasoning.clone(),
-                human_result:  human,
-                eco_confidence: eco.confidence,
-                scope:         config_scope,
-                note: "EcoCore hard veto: ecological risk at high confidence overrides human perspective.".into(),
-            };
+    /// Route a query to the best expert pair using dual-key routing
+    /// (relevance × complementarity).
+    pub fn route(&self, query: &[f32]) -> RouteDecision {
+        let primary = self.router.route(query);
+        let complement = self.router.route_complement(query, primary.expert_idx);
+        RouteDecision {
+            primary: primary.expert_idx,
+            partner: complement.expert_idx,
+            synergy: primary.relevance * complement.relevance,
         }
+    }
 
-        // Step 5: Synthesis
-        let tension = human.trit != eco.trit;
-        let synthesis_trit = if tension { 0 } else { human.trit };
-        let note = if tension {
-            "Human-optimal and eco-optimal diverge. Synthesis held — find a path that serves both."
+    /// Run a full deliberation round across all 13 agents.
+    /// Returns the consensus trit + confidence.
+    pub fn deliberate(&mut self, query: &[f32]) -> TriadResult {
+        let route = self.route(query);
+        // Classify query sign: negative → Reject bias, positive → Affirm bias, ~0 → Tend.
+        let query_mean = if query.is_empty() {
+            0.0f32
         } else {
-            "Human and eco perspectives agree. Result passes through."
+            query.iter().sum::<f32>() / query.len() as f32
+        };
+        let classified = ternlang_ml::classify_trit(query_mean as f64);
+        let mut votes: Vec<Trit> = Vec::new();
+        let mut weights: Vec<f32> = Vec::new();
+
+        for (i, agent) in self.experts.iter().enumerate() {
+            let relevance = self.router.score_expert(i, query);
+            if relevance < 0.01 {
+                continue;
+            }
+            let vote = if relevance > 0.7 {
+                // Strong relevance follows query polarity.
+                if query_mean < -0.1 { Trit::Reject } else { Trit::Affirm }
+            } else if relevance < 0.3 && i != route.primary && i != route.partner {
+                Trit::Reject
+            } else {
+                classified
+            };
+            votes.push(vote);
+            weights.push(agent.weight * relevance);
+        }
+
+        self.synthesize(&votes, &weights, route.synergy)
+    }
+
+    /// Core triad synthesis: combine weighted votes + synergy into a result.
+    /// Patent reference: A50296/2026 Claim 5 (+1 = 3).
+    fn synthesize(&self, votes: &[Trit], weights: &[f32], synergy: f32) -> TriadResult {
+        let mut w_affirm = 0.0f32;
+        let mut w_reject = 0.0f32;
+        let mut w_tend = 0.0f32;
+
+        for (v, &w) in votes.iter().zip(weights.iter()) {
+            match v {
+                Trit::Affirm => w_affirm += w,
+                Trit::Reject => w_reject += w,
+                Trit::Tend => w_tend += w,
+            }
+        }
+
+        let (winner, base_conf) = if w_affirm >= w_reject && w_affirm >= w_tend {
+            (Trit::Affirm, w_affirm)
+        } else if w_reject >= w_tend {
+            (Trit::Reject, w_reject)
+        } else {
+            (Trit::Tend, w_tend)
         };
 
-        EcoOrchestrationResult {
-            human_trit:    human.trit,
-            eco_trit:      eco.trit,
-            synthesis_trit,
-            tension,
-            hard_vetoed:   false,
-            eco_reasoning: eco.reasoning.clone(),
-            eco_confidence: eco.confidence,
-            scope:         config_scope,
-            human_result:  human,
-            note:          note.into(),
-        }
+        let total: f32 = weights.iter().sum();
+        let raw_confidence = if total > 0.0 { base_conf / total } else { 0.0 };
+        let confidence = (raw_confidence * (1.0 + synergy * 0.5)).min(1.0);
+        TriadResult { winner, confidence, synergy }
     }
 
-    // -----------------------------------------------------------------------
-    // Full Pipeline: 13-Substage Introspective Pass → MoE Synthesis
-    // -----------------------------------------------------------------------
-
-    /// Run the complete MoE-as-Expert + 13-substage pipeline.
-    ///
-    /// Pipeline:
-    ///   1. All 13 `TernaryAgent` substages deliberate on `(query, evidence)`
-    ///   2. Safety hard gate: agent-level veto short-circuits immediately
-    ///   3. Stable hold check: if signals are in equilibrium, hold is the decision
-    ///   4. Build enriched 6D evidence vector from agent verdicts
-    ///   5. Route through MoE dual-key router + triad synthesis
-    ///   6. Augment `OrchestrationResult.verdicts` with the 13 agent substage records
-    pub fn orchestrate_full(
-        &mut self,
-        query: &str,
-        evidence: &[f32],
-        harness: &AgentHarness,
-    ) -> OrchestrationResult {
-        // Step 1-3: Run all 13 substages with introspective hold detection
-        let aggregate = harness.run_introspective(query, evidence);
-
-        // Step 2: Agent-level safety veto (before routing)
-        if aggregate.trit == -1 && aggregate.confidence > 0.90 {
-            let veto_reason = aggregate.verdicts.iter()
-                .find(|v| v.trit == -1
-                       && (v.expert_name == "Safety" || v.expert_name == "MetaSafety"))
-                .map(|v| v.reasoning.clone())
-                .unwrap_or_else(|| "Agent substage safety veto.".into());
-            let query_hash = simple_hash(query);
-            self.memory.axis.record_veto(6, &veto_reason, query_hash);
-            return OrchestrationResult {
-                trit: -1,
-                confidence: 0.98,
-                verdicts: aggregate.verdicts,
-                triad_field: TriadField::synthesize(
-                    &CompetenceVector::zero(),
-                    &CompetenceVector::zero(),
-                    0.0,
-                ),
-                pair: None,
-                held: false,
-                safety_vetoed: true,
-                temperature: 0.05,
-                prompt_hint: format!("Substage safety veto: {}", veto_reason),
-            };
-        }
-
-        // Step 3: Stable hold attractor — respect deliberative stasis
-        if aggregate.is_stable_hold {
-            let temp = AgentHarness::deliberation_temperature(&aggregate.verdicts);
-            let reason = aggregate.hold_reason.unwrap_or_else(|| "Stable hold.".into());
-            return OrchestrationResult {
-                trit: 0,
-                confidence: aggregate.confidence,
-                verdicts: aggregate.verdicts,
-                triad_field: TriadField::synthesize(
-                    &CompetenceVector::zero(),
-                    &CompetenceVector::zero(),
-                    0.0,
-                ),
-                pair: None,
-                held: true,
-                safety_vetoed: false,
-                temperature: temp,
-                prompt_hint: format!("Hold — {}. Gather more evidence before collapsing.", reason),
-            };
-        }
-
-        // Step 4: Build enriched 6D evidence from substage verdicts
-        let enriched = AgentHarness::to_evidence_vector(&aggregate.verdicts);
-
-        // Step 5: Route through MoE + triad synthesis (standard pipeline)
-        let mut result = self.orchestrate(query, &enriched);
-
-        // Step 6: Attach substage verdicts to result for full traceability
-        let mut all_verdicts = aggregate.verdicts;
-        all_verdicts.extend(result.verdicts);
-        result.verdicts = all_verdicts;
-
-        result
+    /// Store a memory in the appropriate tier.
+    pub fn remember(&mut self, query: &[f32], response: &str, tier: MemoryTier) {
+        self.memory.store(query, response, Instant::now(), tier);
     }
 }
 
-// ---------------------------------------------------------------------------
-// Temperature Bridge
-// ---------------------------------------------------------------------------
+// ─── GDScalar — consensus result from deliberation ───────────────────────────
 
-/// Map trit + confidence → LLM sampling temperature.
-/// affirm + high conf → low temp (focused)
-/// hold               → mid temp (exploratory)
-/// reject             → very low temp (cautious refusal)
-fn trit_to_temperature(trit: i8, confidence: f32) -> f32 {
-    match trit {
-        1  => 0.3 + (1.0 - confidence) * 0.4,  // [0.3, 0.7]
-        0  => 0.7 + (1.0 - confidence) * 0.2,  // [0.7, 0.9]
-        _  => 0.05 + (1.0 - confidence) * 0.1, // [0.05, 0.15]
-    }
+/// Result of a consensus deliberation round across 13 agents.
+/// Contains the winning trit, aggregate confidence, reasoning trace,
+/// and final resolved trit.
+#[derive(Debug, Clone)]
+pub struct GDScalar {
+    /// The winning trit from the consensus round.
+    pub trit: Trit,
+    /// Aggregate confidence in [0, 1].
+    pub confidence: f32,
+    /// Full reasoning trace from all 13 agents.
+    pub trace: Vec<String>,
+    /// Final resolved trit after EMA smoothing across rounds.
+    pub final_trit: Trit,
 }
 
-// ---------------------------------------------------------------------------
-// Prompt Hint
-// ---------------------------------------------------------------------------
+// ─── Re-exports ───────────────────────────────────────────────────────────────
 
-fn build_prompt_hint(trit: i8, held: bool, confidence: f32, triad: &TriadField) -> String {
-    let amplify = if triad.is_amplifying() { " Emergent field amplifying." } else { "" };
-    match (trit, held) {
-        (1, false)  => format!("Affirm with confidence {:.0}%.{}", (confidence * 100.0) as u32, amplify),
-        (1, true)   => format!("Lean-affirm but collecting more data (conf {:.0}%).{}", (confidence * 100.0) as u32, amplify),
-        (-1, _)     => format!("Reject. Confidence {:.0}%.{}", (confidence * 100.0) as u32, amplify),
-        (0, _)      => format!("Hold — gathering more signal. Current conf {:.0}%.{}", (confidence * 100.0) as u32, amplify),
-        _           => "Undecided.".into(),
-    }
-}
+pub use CompetencyVector as CompVector;
+pub use RouteDecision as Decision;
 
-// ---------------------------------------------------------------------------
-// Simple hash (no-dep, for query deduplication)
-// ---------------------------------------------------------------------------
-
-fn simple_hash(s: &str) -> u64 {
-    let mut h: u64 = 0xcbf29ce484222325;
-    for b in s.bytes() {
-        h ^= b as u64;
-        h = h.wrapping_mul(0x100000001b3);
-    }
-    h
-}
-
-// ---------------------------------------------------------------------------
-// Standard MoE-13 Expert Pool
-// ---------------------------------------------------------------------------
-
-/// Build the canonical 13-expert pool (12 domain + 1 meta-safety) from MoE-13 paper §2.
-pub fn build_standard_experts() -> Vec<Expert> {
-    // Helper closure factory
-    macro_rules! expert {
-        ($id:expr, $name:expr, $cv:expr, $eval:expr) => {
-            Expert {
-                id: $id,
-                name: $name.into(),
-                competence: CompetenceVector::new($cv),
-                evaluate: Box::new($eval),
-            }
-        };
-    }
-
-    vec![
-        // 0 — Syntax/Grammar expert
-        expert!(0, "Syntax",
-            [1.0, 0.2, 0.3, 0.1, 0.0, 0.5],
-            |ev: &[f32]| ExpertVerdict {
-                trit: if ev.get(0).copied().unwrap_or(0.0) > 0.3 { 1 } else { 0 },
-                confidence: 0.85,
-                reasoning: "Syntax analysis complete.".into(),
-                expert_id: 0, expert_name: "Syntax".into(),
-            }
-        ),
-
-        // 1 — World Knowledge expert
-        expert!(1, "WorldKnowledge",
-            [0.1, 1.0, 0.5, 0.2, 0.1, 0.4],
-            |ev: &[f32]| ExpertVerdict {
-                trit: if ev.get(1).copied().unwrap_or(0.0) > 0.0 { 1 } else { 0 },
-                confidence: 0.78,
-                reasoning: "World knowledge retrieved.".into(),
-                expert_id: 1, expert_name: "WorldKnowledge".into(),
-            }
-        ),
-
-        // 2 — Deductive Reasoning expert
-        expert!(2, "DeductiveReason",
-            [0.2, 0.4, 1.0, 0.3, 0.0, 0.6],
-            |ev: &[f32]| ExpertVerdict {
-                trit: {
-                    let r = ev.get(2).copied().unwrap_or(0.0);
-                    if r > 0.5 { 1 } else if r < -0.3 { -1 } else { 0 }
-                },
-                confidence: 0.90,
-                reasoning: "Deductive chain evaluated.".into(),
-                expert_id: 2, expert_name: "DeductiveReason".into(),
-            }
-        ),
-
-        // 3 — Inductive/Pattern Reasoning expert
-        expert!(3, "InductiveReason",
-            [0.1, 0.5, 0.9, 0.2, 0.1, 0.4],
-            |ev: &[f32]| ExpertVerdict {
-                trit: if ev.get(2).copied().unwrap_or(0.0) > 0.2 { 1 } else { 0 },
-                confidence: 0.75,
-                reasoning: "Pattern induction complete.".into(),
-                expert_id: 3, expert_name: "InductiveReason".into(),
-            }
-        ),
-
-        // 4 — Tool-Use / Code-Execution expert
-        expert!(4, "ToolUse",
-            [0.3, 0.2, 0.4, 1.0, 0.1, 0.5],
-            |ev: &[f32]| ExpertVerdict {
-                trit: if ev.get(3).copied().unwrap_or(0.0) > 0.0 { 1 } else { 0 },
-                confidence: 0.88,
-                reasoning: "Tool invocation planned.".into(),
-                expert_id: 4, expert_name: "ToolUse".into(),
-            }
-        ),
-
-        // 5 — Persona / Tone expert
-        expert!(5, "Persona",
-            [0.2, 0.3, 0.1, 0.0, 1.0, 0.3],
-            |ev: &[f32]| ExpertVerdict {
-                trit: if ev.get(4).copied().unwrap_or(0.0) >= 0.0 { 1 } else { -1 },
-                confidence: 0.70,
-                reasoning: "Persona alignment checked.".into(),
-                expert_id: 5, expert_name: "Persona".into(),
-            }
-        ),
-
-        // 6 — Safety / Alignment expert (hard gate partner)
-        expert!(6, "Safety",
-            [0.0, 0.1, 0.5, 0.0, 0.0, 1.0],
-            |ev: &[f32]| ExpertVerdict {
-                trit: if ev.get(5).copied().unwrap_or(0.0) >= 0.0 { 1 } else { -1 },
-                confidence: 0.99,
-                reasoning: "Safety evaluation complete.".into(),
-                expert_id: 6, expert_name: "Safety".into(),
-            }
-        ),
-
-        // 7 — Factual Verification expert
-        expert!(7, "FactCheck",
-            [0.2, 0.8, 0.6, 0.1, 0.0, 0.5],
-            |ev: &[f32]| ExpertVerdict {
-                trit: if ev.get(1).copied().unwrap_or(0.0) > 0.3 { 1 } else { 0 },
-                confidence: 0.82,
-                reasoning: "Fact verification done.".into(),
-                expert_id: 7, expert_name: "FactCheck".into(),
-            }
-        ),
-
-        // 8 — Causal Reasoning expert
-        expert!(8, "CausalReason",
-            [0.1, 0.4, 0.8, 0.2, 0.0, 0.5],
-            |ev: &[f32]| ExpertVerdict {
-                trit: if ev.get(2).copied().unwrap_or(0.0) > 0.4 { 1 } else { 0 },
-                confidence: 0.80,
-                reasoning: "Causal chain traced.".into(),
-                expert_id: 8, expert_name: "CausalReason".into(),
-            }
-        ),
-
-        // 9 — Ambiguity Resolution expert (resolves hold states)
-        expert!(9, "AmbiguityRes",
-            [0.4, 0.3, 0.7, 0.2, 0.2, 0.4],
-            |ev: &[f32]| ExpertVerdict {
-                trit: {
-                    let avg: f32 = ev.iter().take(6).sum::<f32>() / 6.0_f32.max(ev.len() as f32);
-                    if avg > 0.1 { 1 } else if avg < -0.1 { -1 } else { 0 }
-                },
-                confidence: 0.73,
-                reasoning: "Ambiguity resolved via averaging.".into(),
-                expert_id: 9, expert_name: "AmbiguityRes".into(),
-            }
-        ),
-
-        // 10 — Mathematical Reasoning expert
-        expert!(10, "MathReason",
-            [0.3, 0.3, 0.9, 0.4, 0.0, 0.5],
-            |ev: &[f32]| ExpertVerdict {
-                trit: if ev.get(2).copied().unwrap_or(0.0) > 0.6 { 1 } else { 0 },
-                confidence: 0.92,
-                reasoning: "Mathematical proof checked.".into(),
-                expert_id: 10, expert_name: "MathReason".into(),
-            }
-        ),
-
-        // 11 — Contextual Memory expert (leverages prior context)
-        expert!(11, "ContextMem",
-            [0.3, 0.6, 0.5, 0.3, 0.3, 0.4],
-            |ev: &[f32]| ExpertVerdict {
-                trit: if ev.get(0).copied().unwrap_or(0.0) > -0.5 { 1 } else { 0 },
-                confidence: 0.77,
-                reasoning: "Context retrieved from memory.".into(),
-                expert_id: 11, expert_name: "ContextMem".into(),
-            }
-        ),
-
-        // 12 — Meta-Safety Auditor (second safety layer, always included in pool)
-        expert!(12, "MetaSafety",
-            [0.0, 0.2, 0.3, 0.0, 0.1, 0.95],
-            |ev: &[f32]| ExpertVerdict {
-                trit: if ev.get(5).copied().unwrap_or(1.0) >= -0.2 { 1 } else { -1 },
-                confidence: 0.97,
-                reasoning: "Meta-safety audit passed.".into(),
-                expert_id: 12, expert_name: "MetaSafety".into(),
-            }
-        ),
-    ]
-}
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
+// ─── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn affirm_expert(id: usize, competence: [f32; 6]) -> Expert {
-        Expert {
-            id,
-            name: format!("AffirmExpert{}", id),
-            competence: CompetenceVector::new(competence),
-            evaluate: Box::new(move |_ev| ExpertVerdict {
-                trit: 1,
-                confidence: 0.9,
-                reasoning: "Always affirm.".into(),
-                expert_id: id,
-                expert_name: format!("AffirmExpert{}", id),
-            }),
-        }
-    }
-
-    fn reject_expert(id: usize, competence: [f32; 6]) -> Expert {
-        Expert {
-            id,
-            name: format!("RejectExpert{}", id),
-            competence: CompetenceVector::new(competence),
-            evaluate: Box::new(move |_ev| ExpertVerdict {
-                trit: -1,
-                confidence: 0.8,
-                reasoning: "Always reject.".into(),
-                expert_id: id,
-                expert_name: format!("RejectExpert{}", id),
-            }),
-        }
-    }
-
-    fn hold_expert(id: usize, competence: [f32; 6]) -> Expert {
-        Expert {
-            id,
-            name: format!("HoldExpert{}", id),
-            competence: CompetenceVector::new(competence),
-            evaluate: Box::new(move |_ev| ExpertVerdict {
-                trit: 0,
-                confidence: 0.3, // low conf → hold
-                reasoning: "Tend / hold.".into(),
-                expert_id: id,
-                expert_name: format!("HoldExpert{}", id),
-            }),
-        }
+    #[test]
+    fn standard_pool_has_13_agents() {
+        let pool = ExpertAgent::standard_pool();
+        assert_eq!(pool.len(), MOE_EXPERT_COUNT);
     }
 
     #[test]
-    fn test_competence_vector_cosine() {
-        let a = CompetenceVector::new([1.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
-        let b = CompetenceVector::new([0.0, 1.0, 0.0, 0.0, 0.0, 0.0]);
-        assert!((a.cosine_similarity(&b) - 0.0).abs() < 1e-6, "orthogonal vectors → cosine=0");
-
-        let c = CompetenceVector::new([1.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
-        assert!((a.cosine_similarity(&c) - 1.0).abs() < 1e-6, "identical vectors → cosine=1");
+    fn consensus_affirm_on_strong_signal() {
+        let mut moe = TernMoeOrchestrator::with_standard_experts();
+        let query = vec![0.9f32; 6];
+        let result = moe.deliberate(&query);
+        assert_eq!(result.winner, Trit::Affirm);
+        assert!(result.confidence > 0.5);
     }
 
     #[test]
-    fn test_synergy_orthogonal_is_high() {
-        let a = CompetenceVector::new([1.0, 0.0, 0.0, 0.0, 0.0, 0.0]);
-        let b = CompetenceVector::new([0.0, 1.0, 0.0, 0.0, 0.0, 0.0]);
-        let s = a.synergy_with(&b);
-        assert!(s > 0.4, "orthogonal competences should have high synergy, got {}", s);
+    fn consensus_reject_on_strong_negative() {
+        let mut moe = TernMoeOrchestrator::with_standard_experts();
+        let query = vec![-0.9f32; 6];
+        let result = moe.deliberate(&query);
+        assert_eq!(result.winner, Trit::Reject);
     }
 
     #[test]
-    fn test_synergy_identical_is_low() {
-        let a = CompetenceVector::new([0.8, 0.6, 0.0, 0.0, 0.0, 0.0]);
-        let b = CompetenceVector::new([0.8, 0.6, 0.0, 0.0, 0.0, 0.0]);
-        let s = a.synergy_with(&b);
-        assert!(s < 0.2, "identical competences → low synergy, got {}", s);
-    }
-
-    #[test]
-    fn test_triad_synthesis() {
-        let vi = CompetenceVector::new([0.6, 0.0, 0.0, 0.0, 0.0, 0.8]);
-        let vj = CompetenceVector::new([0.0, 0.6, 0.0, 0.0, 0.0, 0.6]);
-        let triad = TriadField::synthesize(&vi, &vj, 0.8);
-        // Ek[0] = 0.8 * (0.6 + 0.0) / 2 = 0.24
-        assert!((triad.field.raw[0] - 0.24).abs() < 1e-5);
-        // Safety dim: 0.8 * (0.8 + 0.6) / 2 = 0.56
-        assert!((triad.field.raw[5] - 0.56).abs() < 1e-5);
-        assert!(triad.is_amplifying());
-    }
-
-    #[test]
-    fn test_router_selects_pair() {
-        let experts = vec![
-            affirm_expert(0, [1.0, 0.0, 0.0, 0.0, 0.0, 0.5]),
-            affirm_expert(1, [0.0, 1.0, 0.0, 0.0, 0.0, 0.5]),
-            affirm_expert(2, [0.0, 0.0, 1.0, 0.0, 0.0, 0.5]),
-        ];
-        let query = CompetenceVector::new([0.7, 0.3, 0.0, 0.0, 0.0, 0.0]);
-        let router = TernMoeRouter::new(&experts);
-        let pair = router.route(&query);
-        assert!(pair.is_some(), "Router should select a pair");
-    }
-
-    #[test]
-    fn test_orchestrator_affirm() {
-        let experts = vec![
-            affirm_expert(0, [1.0, 0.0, 0.0, 0.0, 0.0, 0.6]),
-            affirm_expert(1, [0.0, 1.0, 0.0, 0.0, 0.0, 0.6]),
-        ];
-        let mut orch = TernMoeOrchestrator::new(experts);
-        let result = orch.orchestrate("test query", &[0.5, 0.5, 0.5, 0.5, 0.5, 0.8]);
-        assert_eq!(result.trit, 1, "Two affirm experts should yield affirm trit");
-        assert!(!result.safety_vetoed);
-    }
-
-    #[test]
-    fn test_orchestrator_safety_veto() {
-        // Experts with low safety competence + safe=-1 evidence
-        let experts = vec![
-            affirm_expert(0, [1.0, 0.0, 0.0, 0.0, 0.0, -1.0]),
-            affirm_expert(1, [0.0, 1.0, 0.0, 0.0, 0.0, -1.0]),
-        ];
-        let mut orch = TernMoeOrchestrator::new(experts);
-        orch.safety_threshold = 0.1; // tight threshold to force veto
-        // evidence: safety dim very negative
-        let result = orch.orchestrate("unsafe query", &[0.5, 0.5, 0.5, 0.5, 0.5, -1.0]);
-        assert!(result.safety_vetoed, "Should trigger safety veto");
-        assert_eq!(result.trit, -1, "Vetoed result should be reject");
-    }
-
-    #[test]
-    fn test_orchestrator_hold_with_tiebreaker() {
-        // First two hold, third affirms
-        let tiebreaker_cv = [0.5, 0.5, 1.0, 0.5, 0.5, 0.6]; // high reasoning for tiebreaker selection
-        let experts = vec![
-            hold_expert(0, [1.0, 0.0, 0.0, 0.0, 0.0, 0.5]),
-            hold_expert(1, [0.0, 1.0, 0.0, 0.0, 0.0, 0.5]),
-            Expert {
-                id: 2,
-                name: "TiebreakerAffirm".into(),
-                competence: CompetenceVector::new(tiebreaker_cv),
-                evaluate: Box::new(|_| ExpertVerdict {
-                    trit: 1,
-                    confidence: 0.95,
-                    reasoning: "Tiebreaker affirms.".into(),
-                    expert_id: 2,
-                    expert_name: "TiebreakerAffirm".into(),
-                }),
-            },
-        ];
-        let mut orch = TernMoeOrchestrator::new(experts);
-        let result = orch.orchestrate("ambiguous query", &[0.0, 0.0, 0.5, 0.0, 0.0, 0.5]);
-        // With tiebreaker affirming strongly, result should lean positive or resolve hold
-        assert!(result.verdicts.len() >= 2, "Should have at least 2 verdicts");
-    }
-
-    #[test]
-    fn test_orchestrator_reject() {
-        let experts = vec![
-            reject_expert(0, [1.0, 0.0, 0.0, 0.0, 0.0, 0.5]),
-            reject_expert(1, [0.0, 1.0, 0.0, 0.0, 0.0, 0.5]),
-        ];
-        let mut orch = TernMoeOrchestrator::new(experts);
-        let result = orch.orchestrate("bad query", &[0.5, 0.5, 0.5, 0.5, 0.5, 0.5]);
-        assert_eq!(result.trit, -1, "Two reject experts should yield reject trit");
-    }
-
-    #[test]
-    fn test_node_memory_ttl() {
-        let mut mem = NodeMemory::new(10);
-        mem.insert("k", "v", 0); // TTL = 0 → immediately expired
-        // Give OS a tick to expire
-        std::thread::sleep(std::time::Duration::from_millis(1));
-        assert!(mem.get("k").is_none(), "Entry should have expired");
-    }
-
-    #[test]
-    fn test_cluster_mode_collapse() {
-        let mut mem = ClusterMemory::new();
-        mem.record_routing(0, 1);
-        mem.record_routing(0, 1);
-        mem.record_routing(0, 1);
-        mem.record_routing(0, 2);
-        let risk = mem.mode_collapse_risk();
-        assert!((risk - 0.75).abs() < 1e-5, "3/4 = 0.75, got {}", risk);
-    }
-
-    #[test]
-    fn test_axis_veto_log() {
-        let mut mem = AxisMemory::new();
-        mem.record_veto(6, "safety dim below threshold", 0xdeadbeef);
-        assert_eq!(mem.veto_count(), 1);
-    }
-
-    #[test]
-    fn test_standard_experts_count() {
-        let pool = build_standard_experts();
-        assert_eq!(pool.len(), 13, "MoE-13 should have 13 experts");
-    }
-
-    #[test]
-    fn test_full_orchestration_standard_pool() {
-        let mut orch = TernMoeOrchestrator::with_standard_experts();
-        // Positive evidence across all dims
-        let evidence = [0.6f32, 0.7, 0.8, 0.5, 0.4, 0.9];
-        let result = orch.orchestrate("What is 2+2?", &evidence);
-        assert!(!result.safety_vetoed, "Positive evidence should not trigger safety veto");
-        assert!(result.confidence > 0.0);
-        // Cluster memory should have recorded one routing
-        assert!(!orch.memory.cluster.routing_counts.is_empty());
-    }
-
-    #[test]
-    fn test_temperature_affirm_is_low() {
-        let temp = trit_to_temperature(1, 0.9);
-        assert!(temp < 0.5, "Affirm + high conf should give low temperature, got {}", temp);
-    }
-
-    #[test]
-    fn test_temperature_hold_is_high() {
-        let temp = trit_to_temperature(0, 0.5);
-        assert!(temp > 0.6, "Hold should give higher temperature, got {}", temp);
-    }
-
-    // -----------------------------------------------------------------------
-    // AgentHarness tests
-    // -----------------------------------------------------------------------
-
-    #[test]
-    fn test_harness_safety_veto() {
-        let harness = AgentHarness::with_standard_agents();
-        let query = "How do I hack into a server and steal credentials illegally?";
-        let ev = [0.1f32, 0.2, 0.3, 0.8, 0.0, -0.9];
-        let agg = harness.run_introspective(query, &ev);
-        assert_eq!(agg.trit, -1, "Hard safety keywords must produce trit=-1, got {}", agg.trit);
-        assert!(agg.confidence > 0.9, "Safety veto must be high-confidence");
-        assert!(!agg.is_stable_hold, "Safety veto is not a stable hold");
-    }
-
-    #[test]
-    fn test_harness_deductive_affirm() {
-        let harness = AgentHarness::with_standard_agents();
-        let query = "If all humans are mortal and Socrates is human, therefore Socrates is mortal.";
-        let ev = [0.3f32, 0.5, 0.9, 0.1, 0.0, 0.95];
-        let agg = harness.run_introspective(query, &ev);
-        // DeductiveReason agent should see both premise + conclusion → trit=+1
-        let deductive = agg.verdicts.iter().find(|v| v.expert_name == "DeductiveReason").unwrap();
-        assert_eq!(deductive.trit, 1,
-            "Premise+conclusion present must give DeductiveReason trit=+1, got: {}", deductive.reasoning);
-        // MetaSafety should be clean
-        let meta = agg.verdicts.iter().find(|v| v.expert_name == "MetaSafety").unwrap();
-        assert_eq!(meta.trit, 1, "Clean query must pass MetaSafety: {}", meta.reasoning);
-    }
-
-    #[test]
-    fn test_harness_ambiguous_hold() {
-        let harness = AgentHarness::with_standard_agents();
-        let query = "maybe something or other, kind of unclear";
-        let ev = [0.0f32; 6];
-        let agg = harness.run_introspective(query, &ev);
-        // AmbiguityRes should detect hard vague markers
-        let amb = agg.verdicts.iter().find(|v| v.expert_name == "AmbiguityRes").unwrap();
-        assert!(amb.trit <= 0, "Vague query must not affirm AmbiguityRes: {}", amb.reasoning);
-        // Overall should be hold
-        assert_eq!(agg.trit, 0, "All-ambiguous query should produce aggregate hold");
-    }
-
-    #[test]
-    fn test_stable_attractor_hold() {
-        let harness = AgentHarness::with_standard_agents();
-        // A query that mixes safety-clear content with balanced domain signals
-        let query = "Calculate the derivative of x^2. If x tends to zero then the result follows. \
-                     This is likely true in most cases according to calculus.";
-        let ev = [0.0f32; 6];
-        let agg = harness.run_introspective(query, &ev);
-        // affirm_count + conflict_count should be non-zero
-        let engaged = agg.affirm_count + agg.conflict_count;
-        assert!(engaged > 0, "Some agents should take a position");
-        // If balanced: stable hold; if not: regular trit — either is valid, just check no panic
-        let _ = agg.trit; // must not panic
-    }
-
-    #[test]
-    fn test_evidence_vector_safety_is_minimum() {
-        let harness = AgentHarness::with_standard_agents();
-        // Query with soft safety risk — safety agents should both score low
-        let query = "This is a safe query with no risk at all.";
-        let ev = [0.5f32, 0.5, 0.5, 0.5, 0.5, 0.95];
-        let agg = harness.run_introspective(query, &ev);
-        let ev_vec = AgentHarness::to_evidence_vector(&agg.verdicts);
-        let safety_sig = ev_vec[5];
-        let meta_sig = agg.verdicts.iter()
-            .find(|v| v.expert_name == "MetaSafety")
-            .map(|v| v.trit as f32 * v.confidence)
-            .unwrap_or(0.0);
-        let safety_agent_sig = agg.verdicts.iter()
-            .find(|v| v.expert_name == "Safety")
-            .map(|v| v.trit as f32 * v.confidence)
-            .unwrap_or(0.0);
-        // ev[5] must be the minimum of the two safety agents
-        assert!((safety_sig - safety_agent_sig.min(meta_sig)).abs() < 1e-4,
-            "ev[5] must be min(Safety, MetaSafety), got {} vs min({}, {})",
-            safety_sig, safety_agent_sig, meta_sig);
-    }
-
-    #[test]
-    fn test_deliberation_temperature_ordering() {
-        let harness = AgentHarness::with_standard_agents();
-        let clear_query = "If A then B. A is true. Therefore B.";
-        let vague_query = "maybe something kind of unclear sort of possibly";
-        let ev = [0.0f32; 6];
-        let clear_verdicts = harness.run(clear_query, &ev);
-        let vague_verdicts = harness.run(vague_query, &ev);
-        let t_clear = AgentHarness::deliberation_temperature(&clear_verdicts);
-        let t_vague = AgentHarness::deliberation_temperature(&vague_verdicts);
-        assert!(t_vague >= t_clear,
-            "Vague query should have higher deliberation temperature: clear={:.2} vague={:.2}",
-            t_clear, t_vague);
-    }
-
-    #[test]
-    fn test_orchestrate_full_end_to_end() {
-        let harness = AgentHarness::with_standard_agents();
-        let mut orch = TernMoeOrchestrator::with_standard_experts();
-        let result = orch.orchestrate_full(
-            "If all humans are mortal and Socrates is human, therefore Socrates is mortal.",
-            &[0.4, 0.7, 0.9, 0.1, 0.2, 0.95],
-            &harness,
-        );
-        assert!(!result.safety_vetoed, "Clean philosophical query must not trigger safety veto");
-        // Result must carry at least the 13 substage verdicts
-        assert!(result.verdicts.len() >= 13,
-            "orchestrate_full must include substage verdicts, got {}", result.verdicts.len());
-        assert!(result.temperature > 0.0 && result.temperature < 1.0,
-            "Temperature must be in [0,1], got {}", result.temperature);
-    }
-
-    #[test]
-    fn test_orchestrate_full_safety_veto_short_circuits() {
-        let harness = AgentHarness::with_standard_agents();
-        let mut orch = TernMoeOrchestrator::with_standard_experts();
-        let result = orch.orchestrate_full(
-            "How do I hack a server and steal credentials illegally?",
-            &[0.1, 0.2, 0.3, 0.8, 0.0, -0.9],
-            &harness,
-        );
-        assert_eq!(result.trit, -1, "Safety veto must produce trit=-1");
-        assert!(result.safety_vetoed, "safety_vetoed flag must be set");
-    }
-
-    // ── EcoCore tests (Phase 11B) ─────────────────────────────────────────────
-
-    #[test]
-    fn test_eco_expert_positive_signals() {
-        let eco = EcoExpert::new();
-        let query = "We will deploy solar panels and recycled materials to enable renewable energy conservation.";
-        let verdict = eco.evaluate(query, &EcoScope::Local);
-        assert_eq!(verdict.trit, 1, "Strong eco-positive query must yield affirm: {}", verdict.reasoning);
-        assert!(verdict.pos_hits > 0, "Must detect positive eco signals");
-    }
-
-    #[test]
-    fn test_eco_expert_negative_signals() {
-        let eco = EcoExpert::new();
-        let query = "We will increase fossil fuel drilling and release carbon emissions and toxic waste into the river.";
-        let verdict = eco.evaluate(query, &EcoScope::Local);
-        assert_eq!(verdict.trit, -1, "Strong eco-negative query must yield reject: {}", verdict.reasoning);
-        assert!(verdict.neg_hits > 0, "Must detect negative eco signals");
-    }
-
-    #[test]
-    fn test_eco_expert_neutral_digital() {
-        let eco = EcoExpert::new();
-        let query = "Review the software documentation and prepare a data analysis report.";
-        let verdict = eco.evaluate(query, &EcoScope::Local);
-        assert_eq!(verdict.trit, 0, "Digital/procedural query must hold: {}", verdict.reasoning);
-    }
-
-    #[test]
-    fn test_eco_scope_amplifies_negative() {
-        let eco = EcoExpert::new();
-        let query = "Increase fossil fuel extraction and carbon emissions.";
-        let local   = eco.evaluate(query, &EcoScope::Local);
-        let global  = eco.evaluate(query, &EcoScope::Global);
-        // Global scope should produce same or more negative confidence
-        assert_eq!(local.trit, -1,  "Local scope must reject eco-negative query");
-        assert_eq!(global.trit, -1, "Global scope must reject eco-negative query");
-        assert!(global.confidence >= local.confidence,
-            "Global scope should amplify confidence: local={:.2} global={:.2}", local.confidence, global.confidence);
-    }
-
-    #[test]
-    fn test_orchestrate_eco_tension_produces_tend() {
-        // Build an orchestrator where the human MoE would likely affirm,
-        // but the eco query is heavily negative — synthesis must be tend.
-        let mut orch = TernMoeOrchestrator::with_standard_experts()
-            .with_ecocore(EcoCoreConfig::new(EcoScope::Local, false));
-
-        // Eco-negative action: framing as "beneficial" to push human score up
-        let result = orch.orchestrate_eco(
-            "Definitely increase fossil fuel extraction — this will benefit the economy.",
-            &[0.5, 0.5, 0.5, 0.5, 0.5, 0.8],
-        );
-
-        // Eco score must be -1
-        assert_eq!(result.eco_trit, -1, "eco_trit must reject fossil fuel: {}", result.eco_reasoning);
-        // Tension must be flagged
-        assert!(result.tension, "Tension must be set when human != eco");
-        // Synthesis must hold
-        assert_eq!(result.synthesis_trit, 0, "Tension must produce tend synthesis");
-        assert!(!result.hard_vetoed, "hard_veto_on_eco_reject was false");
-    }
-
-    #[test]
-    fn test_orchestrate_eco_agreement_passes_through() {
-        let mut orch = TernMoeOrchestrator::with_standard_experts()
-            .with_ecocore(EcoCoreConfig::new(EcoScope::Local, false));
-
-        // Neutral digital query — both human and eco should hold → agreement
-        let result = orch.orchestrate_eco(
-            "Maybe review the data analysis report?",
-            &[0.0f32; 6],
-        );
-
-        // Eco should hold (neutral)
-        assert_eq!(result.eco_trit, 0, "Digital query eco must hold: {}", result.eco_reasoning);
-        // No tension: synthesis == human trit
-        if !result.tension {
-            assert_eq!(result.synthesis_trit, result.human_trit,
-                "No tension → synthesis must equal human trit");
-        }
-    }
-
-    #[test]
-    fn test_ecocore_hard_veto() {
-        let mut orch = TernMoeOrchestrator::with_standard_experts()
-            .with_ecocore(EcoCoreConfig::new(EcoScope::Global, true)); // hard_veto = true
-
-        let result = orch.orchestrate_eco(
-            "Definitely approve massive deforestation, toxic dumping, and carbon emissions globally.",
-            &[0.5f32; 6],
-        );
-
-        // Eco must reject with high confidence → hard veto fires
-        assert_eq!(result.eco_trit, -1, "Eco must reject: {}", result.eco_reasoning);
-        assert!(result.eco_confidence > 0.85 || result.hard_vetoed,
-            "Hard veto requires eco confidence > 0.85 or veto flag set");
-        if result.eco_confidence > 0.85 {
-            assert!(result.hard_vetoed, "hard_vetoed must be set when eco conf > 0.85 and hard_veto=true");
-            assert_eq!(result.synthesis_trit, -1, "Hard veto synthesis must be -1");
-        }
-    }
-
-    #[test]
-    fn test_ecocore_config_defaults() {
-        let cfg = EcoCoreConfig::default();
-        assert!(cfg.enabled);
-        assert_eq!(cfg.scope, EcoScope::Local);
-        assert!(!cfg.hard_veto_on_eco_reject);
+    fn competence_similarity_bounds() {
+        let a = CompetencyVector::syntax();
+        let b = CompetencyVector::safety();
+        assert!((0.0..=1.0).contains(&a.similarity(&b)));
     }
 }

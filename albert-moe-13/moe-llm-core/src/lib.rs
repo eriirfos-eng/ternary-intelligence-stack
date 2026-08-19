@@ -1,3 +1,4 @@
+//! LLM integration core for the MoE-13 ternary inference engine.
 pub mod model;
 pub mod tokenizer;
 pub mod evolution;

@@ -1,3 +1,6 @@
+//! ternlang-compress
+//!
+//! LLM-to-ternary compression pipeline — quantize float models to {-1,0,+1}, build sparse zero-index, export .tern files for ternlang-ml inference.
 // ternpress — CLI for the ternlang-compress pipeline.
 //
 // Usage:

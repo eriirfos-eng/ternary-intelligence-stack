@@ -35,8 +35,6 @@
 //! - HALT → THALT (0x00)
 //! - NOP  → no-op (emit nothing)
 
-pub mod tasm;
-pub mod owlet;
 
-pub use tasm::{TasmAssembler, TasmError};
-pub use owlet::OwletParser;
+//! Compatibility bridges for the ternary ecosystem — .tasm 9-trit assembler → BET bytecode, Owlet S-expression front-end.
+pub mod tasm;

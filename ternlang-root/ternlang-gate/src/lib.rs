@@ -1,3 +1,4 @@
+//! Security gate and policy enforcement for the Ternary Intelligence Stack.
 #![no_std]
 
 pub enum GateType {

@@ -58,3 +58,4 @@ safetensors = []
 [[bin]]
 name = "ternpress"
 path = "src/main.rs"
+required-features = ["gguf"]

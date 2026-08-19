@@ -1,6 +1,7 @@
 [package]
 name = "ternlang-mkl"
 version.workspace = true
+description = "Ternary Math Kernels (cuTern). Sparse matrix primitives optimized for {-1, 0, +1} tensor operations."
 edition.workspace = true
 license.workspace = true
 repository.workspace = true

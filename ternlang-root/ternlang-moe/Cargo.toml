@@ -1,5 +1,7 @@
 [package]
 name = "ternlang-moe"
+description = "Ternary Mixture-of-Experts orchestrator (MoE-13). Dual-key routing, triad synthesis, safety hard gate, three-tier memory, 13-agent deliberation. DOI: 10.17605/OSF.IO/TZ7DC"
+readme = "README.md"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,9 +10,6 @@ homepage.workspace = true
 authors.workspace = true
 keywords.workspace = true
 categories.workspace = true
-
-description = "Ternary Mixture-of-Experts orchestrator (MoE-13). Dual-key routing, triad synthesis, safety hard gate, three-tier memory, 13-agent deliberation. DOI: 10.17605/OSF.IO/TZ7DC"
-readme = "README.md"
 
 [dependencies]
 ternlang-core = { workspace = true }

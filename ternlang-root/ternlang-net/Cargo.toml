@@ -1,6 +1,7 @@
 [package]
 name = "ternlang-net"
 version.workspace = true
+description = "Triadic Networking Stack for the BET VM. HTTP/TCP reimagined with ternary packet semantics and Tend-state routing."
 edition.workspace = true
 license.workspace = true
 repository.workspace = true

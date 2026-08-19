@@ -1,6 +1,6 @@
 [package]
 name = "moe-platform"
-version = "1.5.0"
+version = "2.0.0"
 edition = "2024"
 description = "Stable API for MoE-13 ternary inference and model ingestion."
 license = "LGPL-3.0-or-later"
@@ -16,5 +16,5 @@ log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 semver = "1.0"
-moe-core = { path = "../moe-core", version = "1.5.0" }
-ternlang-ml = { path = "../../../ternlang-root/ternlang-ml", version = "1.5.0" }
+moe-core = { path = "../moe-core", version = "2.0.0" }
+ternlang-ml = { path = "../../../ternlang-root/ternlang-ml", version = "2.0.0" }

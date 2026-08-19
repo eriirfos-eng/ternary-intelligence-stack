@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-Ternlang-Commercial
 // Ternlang — RFI-IRFOS Ternary Intelligence Stack
 // Copyright (C) 2026 RFI-IRFOS. All rights reserved.
-// Commercial tier. See LICENSE-COMMERCIAL in the repository root.
 
 //! ternlang-ruvector: Enterprise Bridge for Vector Database Acceleration
 //!
@@ -9,132 +8,126 @@
 //! dramatically speeding up RAG workflows by using ternary-quantized embeddings
 //! and sparse inference kernels.
 
-use ternlang_core::trit::Trit;
-use ternlang_ml::{TritMatrix, quantize, bitnet_threshold};
-use rayon::prelude::*;
-use serde::{Serialize, Deserialize};
+//! Ternary-optimized Sparse GEMV acceleration for Vector Databases (RuVector Bridge).
 
-/// A high-performance ternary-quantized vector database.
-#[derive(Serialize, Deserialize)]
+use std::collections::HashMap;
+use ternlang_core::Trit;
+
+/// A ternary-quantized sparse vector for RuVector acceleration.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TritVector {
+    /// Trit values (Affirm/Reject/Tend).
+    pub trits: Vec<ternlang_core::Trit>,
+    /// Dimensionality of the vector.
+    pub dim: usize,
+}
+
+/// A sparse vector store with ternary-quantized embeddings.
+/// Supports add, search (sparse GEMV), and bulk import.
+#[derive(Debug, Clone)]
 pub struct RuVectorDB {
-    /// The document embeddings matrix [num_docs x embedding_dim].
-    pub embeddings: TritMatrix,
-    /// Metadata associated with each document (e.g. original text or ID).
-    pub metadata: Vec<String>,
+    /// Internal storage: id → (embedding, payload)
+    vectors: HashMap<String, (TritVector, HashMap<String, String>)>,
+    /// Embedding dimensionality.
+    dim: usize,
 }
 
 impl RuVectorDB {
-    /// Create a new database from f32 embeddings.
-    pub fn from_f32(embeddings: &[Vec<f32>], metadata: Vec<String>) -> anyhow::Result<Self> {
-        if embeddings.is_empty() {
-            return Err(anyhow::anyhow!("Embeddings cannot be empty"));
+    /// Create a new empty store with the given dimensionality.
+    pub fn new(dim: usize) -> Self {
+        Self {
+            vectors: HashMap::new(),
+            dim,
         }
-        let rows = embeddings.len();
-        let cols = embeddings[0].len();
-        
-        // Flatten for quantization
-        let flat_f32: Vec<f32> = embeddings.iter().flatten().cloned().collect();
-        let threshold = bitnet_threshold(&flat_f32);
-        
-        let trit_matrix = TritMatrix::from_f32(rows, cols, &flat_f32, threshold);
-        
-        Ok(Self {
-            embeddings: trit_matrix,
-            metadata,
-        })
     }
 
-    /// Search for the top-k most similar documents using ternary Sparse GEMV.
-    ///
-    /// The query vector is quantized to ternary before search.
-    pub fn search(&self, query_f32: &[f32], top_k: usize) -> Vec<SearchResult> {
-        let threshold = bitnet_threshold(query_f32);
-        let query_trits = quantize(query_f32, threshold);
-        
-        // Similarity scores using ternary dot product
-        let scores = self.sparse_gemv_similarity(&query_trits);
-        
-        let mut results: Vec<SearchResult> = scores.into_iter()
-            .enumerate()
-            .map(|(i, score)| SearchResult {
-                index: i,
-                score,
-                metadata: self.metadata.get(i).cloned().unwrap_or_default(),
+    /// Build from f32 embeddings by quantizing each to ternary.
+    /// Each embedding is mapped to Trit via sign: >+threshold → Affirm, <+threshold → Reject, else Tend.
+    pub fn from_f32(
+        embeddings: &[Vec<f32>],
+        metadata: Vec<String>,
+    ) -> Result<Self, String> {
+        if embeddings.is_empty() {
+            return Err("no embeddings provided".into());
+        }
+        let dim = embeddings[0].len();
+        let mut db = Self::new(dim);
+        for (emb, id) in embeddings.iter().zip(metadata) {
+            let trits: Vec<ternlang_core::Trit> = emb
+                .iter()
+                .map(|&w| {
+                    if w > 0.01 {
+                        ternlang_core::Trit::Affirm
+                    } else if w < -0.01 {
+                        ternlang_core::Trit::Reject
+                    } else {
+                        ternlang_core::Trit::Tend
+                    }
+                })
+                .collect();
+            db.vectors.insert(id, (TritVector { trits, dim }, HashMap::new()));
+        }
+        Ok(db)
+    }
+
+    /// Insert a vector with a string ID and optional payload metadata.
+    pub fn insert(&mut self, id: impl Into<String>, trits: Vec<ternlang_core::Trit>) -> bool {
+        let trits: Vec<_> = trits;
+        if trits.len() != self.dim {
+            return false;
+        }
+        self.vectors.insert(id.into(), (TritVector { trits, dim: self.dim }, HashMap::new()));
+        true
+    }
+
+    /// Number of stored vectors.
+    pub fn len(&self) -> usize {
+        self.vectors.len()
+    }
+
+    /// Returns true if empty.
+    pub fn is_empty(&self) -> bool {
+        self.vectors.is_empty()
+    }
+
+    /// Search for the top-k most similar vectors using sparse ternary GEMV.
+    /// Similarity = dot product of trit vectors (Affirm=+1, Reject=-1, Tend=0).
+    pub fn search(&self, query: &[ternlang_core::Trit], k: usize) -> Vec<(String, i64)> {
+        if query.len() != self.dim {
+            return vec![];
+        }
+        let mut results: Vec<(String, i64)> = self
+            .vectors
+            .iter()
+            .map(|(id, (vec, _))| {
+                let score: i64 = vec
+                    .trits
+                    .iter()
+                    .zip(query.iter())
+                    .map(|(a, b)| (*a as i8 as i64) * (*b as i8 as i64))
+                    .sum();
+                (id.clone(), score)
             })
             .collect();
-        
-        // Sort by score descending
-        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
-        results.truncate(top_k);
-        
+        results.sort_by(|a, b| b.1.cmp(&a.1));
+        results.truncate(k);
         results
     }
-
-    /// Optimized Sparse GEMV similarity kernel.
-    /// Computes the dot product between the query vector and every row in the database.
-    fn sparse_gemv_similarity(&self, query: &[Trit]) -> Vec<f32> {
-        let num_docs = self.embeddings.rows;
-        let dim = self.embeddings.cols;
-        
-        // Flatten query to i8 for speed
-        let q_flat: Vec<i8> = query.iter().map(|&t| match t {
-            Trit::Affirm => 1,
-            Trit::Reject => -1,
-            Trit::Tend   => 0,
-        }).collect();
-
-        // Database embeddings in i8
-        let db_flat = self.embeddings.to_i8_vec();
-
-        // Parallel row similarity
-        (0..num_docs).into_par_iter().map(|row_idx| {
-            let row_data = &db_flat[row_idx * dim .. (row_idx + 1) * dim];
-            let mut acc: i32 = 0;
-            
-            // Sparse loop: skip zeros in either the query or the database row.
-            // In a production "RuVector" bridge, we'd use CSC/CSR formats here.
-            for i in 0..dim {
-                let qi = q_flat[i];
-                if qi == 0 { continue; }
-                
-                let di = row_data[i];
-                if di == 0 { continue; }
-                
-                acc += (qi * di) as i32;
-            }
-            
-            acc as f32
-        }).collect()
-    }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SearchResult {
-    pub index: usize,
-    pub score: f32,
-    pub metadata: String,
-}
+// ─── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_ruvector_search() {
-        let embeddings = vec![
-            vec![1.0, 0.0, -1.0, 0.5],
-            vec![-1.0, 1.0, 0.0, 0.0],
-            vec![0.1, 0.1, 0.1, 0.1], // Mostly zeros
-        ];
-        let metadata = vec!["Doc A".to_string(), "Doc B".to_string(), "Doc C".to_string()];
-        
-        let db = RuVectorDB::from_f32(&embeddings, metadata).unwrap();
-        
-        let query = vec![1.0, 0.0, -1.0, 0.0];
-        let results = db.search(&query, 2);
-        
-        assert_eq!(results.len(), 2);
-        assert_eq!(results[0].metadata, "Doc A");
-        assert!(results[0].score > results[1].score);
+    fn trit_vector_and_search() {
+        let mut db = RuVectorDB::new(4);
+        let _ = db.insert("a", vec![Trit::Affirm, Trit::Affirm, Trit::Tend, Trit::Reject]);
+        let _ = db.insert("b", vec![Trit::Affirm, Trit::Tend, Trit::Tend, Trit::Tend]);
+
+        let results = db.search(&[Trit::Affirm, Trit::Affirm, Trit::Tend, Trit::Tend], 2);
+        assert_eq!(results[0].0, "a");
     }
 }

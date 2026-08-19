@@ -1,3 +1,6 @@
+//! token_train
+//!
+//! Token-level training utilities for the Ternary Intelligence Stack.
 use serde_json;
 use std::collections::HashMap;
 use std::fs;

@@ -1,6 +1,7 @@
 [package]
 name = "ternlang-edu"
 version.workspace = true
+description = "The RFI-IRFOS Educational Cartel. Standardized curriculum tools for ternary literacy."
 edition.workspace = true
 license.workspace = true
 repository.workspace = true

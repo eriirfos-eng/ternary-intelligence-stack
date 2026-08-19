@@ -1,3 +1,6 @@
+//! ternlang-api
+//!
+//! Ternlang Institutional API Gateway — Core REST interface for the Ternary Intelligence Stack. Powers /api/trit_decide, /api/trit_vector, and the TaaS mesh.
 #![recursion_limit = "512"]
 // SPDX-License-Identifier: LicenseRef-Ternlang-Commercial
 // Ternlang — RFI-IRFOS Ternary Intelligence Stack

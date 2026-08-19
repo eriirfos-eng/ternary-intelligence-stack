@@ -11,7 +11,7 @@
 // The scale α is stored alongside the ternary weights so the original
 // magnitude can be approximately reconstructed: W ≈ α × W_t
 
-use ternlang_core::trit::Trit;
+use ternlang_core::Trit;
 
 /// The result of quantizing one weight tensor.
 #[derive(Debug, Clone)]

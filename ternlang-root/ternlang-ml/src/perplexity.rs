@@ -69,7 +69,7 @@ impl PerplexityEvaluator {
         let mut correct = 0usize;
 
         for (input, target) in test_samples {
-            let logits = model.forward_logits(input);
+            let logits = model.forward_logits_f32(input);
             let probs  = softmax(&logits);
 
             let target_class = argmax(target);

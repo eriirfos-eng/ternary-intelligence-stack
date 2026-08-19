@@ -1,3 +1,6 @@
+//! ternlang-translator
+//!
+//! Natural language to ternlang source translator. Converts human-readable specifications to .tern files.
 use clap::Parser;
 use regex::Regex;
 use colored::*;

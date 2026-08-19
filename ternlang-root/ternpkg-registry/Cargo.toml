@@ -1,6 +1,7 @@
 [package]
 name = "ternpkg-registry"
 version.workspace = true
+description = "Centralized package registry backend. The npm/crates.io equivalent for the Ternary Intelligence Stack."
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
